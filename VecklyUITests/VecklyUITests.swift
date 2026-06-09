@@ -28,6 +28,9 @@ final class VecklyUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.staticTexts["Veckly"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["emailField"].exists)
+        XCTAssertTrue(app.secureTextFields["passwordField"].exists)
+        XCTAssertTrue(app.buttons["emailPasswordSubmitButton"].exists)
         XCTAssertTrue(app.buttons["continueWithAppleButton"].exists)
     }
 

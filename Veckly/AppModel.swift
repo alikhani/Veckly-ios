@@ -45,6 +45,18 @@ final class AppModel {
         await loadCoreReader()
     }
 
+    func signInWithEmail(email: String, password: String) async {
+        await authSessionStore.signInWithEmail(email: email, password: password)
+        guard authSessionStore.isSignedIn else { return }
+        await loadCoreReader()
+    }
+
+    func signUpWithEmail(email: String, password: String) async {
+        await authSessionStore.signUpWithEmail(email: email, password: password)
+        guard authSessionStore.isSignedIn else { return }
+        await loadCoreReader()
+    }
+
     func loadCoreReader() async {
         await householdStore.bootstrapAndLoadHouseholds()
         guard let household = householdStore.activeHousehold else { return }
