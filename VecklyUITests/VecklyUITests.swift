@@ -23,14 +23,25 @@ final class VecklyUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testSignedOutScreenShowsAppleCTA() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        XCTAssertTrue(app.staticTexts["Veckly"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["continueWithAppleButton"].exists)
+    }
+
+    @MainActor
+    func testCoreReaderShowsWeekAndShoppingData() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Monday Pasta"].waitForExistence(timeout: 5))
+
+        app.tabBars.buttons["Shopping"].tap()
+
+        XCTAssertTrue(app.staticTexts["spaghetti"].waitForExistence(timeout: 5))
     }
 
     @MainActor

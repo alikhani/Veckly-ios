@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct VecklyApp: App {
+    @State private var appModel = AppModel(environment: .current)
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(appModel)
         }
     }
 }
