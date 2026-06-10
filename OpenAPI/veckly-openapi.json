@@ -82,8 +82,10 @@
             "type": "string"
           },
           "email": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "email"
           },
           "status": {
@@ -256,9 +258,7 @@
           },
           "payload": {
             "type": "object",
-            "additionalProperties": {
-              "nullable": true
-            }
+            "additionalProperties": true
           }
         },
         "required": [
@@ -349,9 +349,7 @@
           },
           "state": {
             "type": "object",
-            "additionalProperties": {
-              "nullable": true
-            }
+            "additionalProperties": true
           },
           "updatedAt": {
             "type": "string"
@@ -365,8 +363,10 @@
         ]
       },
       "WeekPlanSummaryRecipe": {
-        "type": "object",
-        "nullable": true,
+        "type": [
+          "object",
+          "null"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -382,12 +382,16 @@
             "type": "integer"
           },
           "prepTimeMinutes": {
-            "type": "integer",
-            "nullable": true
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "cookTimeMinutes": {
-            "type": "integer",
-            "nullable": true
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "tags": {
             "type": "array",
@@ -466,8 +470,10 @@
             "type": "string"
           },
           "updatedAt": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "days": {
             "type": "array",
@@ -579,9 +585,7 @@
           },
           "payload": {
             "type": "object",
-            "additionalProperties": {
-              "nullable": true
-            }
+            "additionalProperties": true
           }
         },
         "required": [
@@ -663,9 +667,7 @@
           },
           "state": {
             "type": "object",
-            "additionalProperties": {
-              "nullable": true
-            }
+            "additionalProperties": true
           },
           "updatedAt": {
             "type": "string"
@@ -688,12 +690,16 @@
             "type": "string"
           },
           "amount": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "unit": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "checked": {
             "type": "boolean"
@@ -748,8 +754,10 @@
             "type": "string"
           },
           "updatedAt": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "groups": {
             "type": "array",
@@ -837,28 +845,40 @@
             }
           },
           "prepTimeMinutes": {
-            "type": "integer",
-            "nullable": true
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "cookTimeMinutes": {
-            "type": "integer",
-            "nullable": true
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "cuisine": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "proteinSource": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "mealWeight": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "sourceUrl": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "source": {
             "type": "string",
@@ -946,30 +966,42 @@
             "default": []
           },
           "prepTimeMinutes": {
-            "type": "integer",
-            "nullable": true,
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 1
           },
           "cookTimeMinutes": {
-            "type": "integer",
-            "nullable": true,
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 1
           },
           "cuisine": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "proteinSource": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "mealWeight": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "sourceUrl": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uri"
           },
           "source": {
@@ -1023,30 +1055,42 @@
             }
           },
           "prepTimeMinutes": {
-            "type": "integer",
-            "nullable": true,
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 1
           },
           "cookTimeMinutes": {
-            "type": "integer",
-            "nullable": true,
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 1
           },
           "cuisine": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "proteinSource": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "mealWeight": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "sourceUrl": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uri"
           },
           "isPublic": {

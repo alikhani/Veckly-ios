@@ -698,12 +698,12 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/WeekPlanEvent/payload`.
             internal struct payloadPayload: Codable, Hashable, Sendable {
                 /// A container of undocumented properties.
-                internal var additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?]
+                internal var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
                 /// Creates a new `payloadPayload`.
                 ///
                 /// - Parameters:
                 ///   - additionalProperties: A container of undocumented properties.
-                internal init(additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?] = .init()) {
+                internal init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
                     self.additionalProperties = additionalProperties
                 }
                 internal init(from decoder: any Swift.Decoder) throws {
@@ -904,12 +904,12 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/WeekPlanProjection/state`.
             internal struct statePayload: Codable, Hashable, Sendable {
                 /// A container of undocumented properties.
-                internal var additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?]
+                internal var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
                 /// Creates a new `statePayload`.
                 ///
                 /// - Parameters:
                 ///   - additionalProperties: A container of undocumented properties.
-                internal init(additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?] = .init()) {
+                internal init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
                     self.additionalProperties = additionalProperties
                 }
                 internal init(from decoder: any Swift.Decoder) throws {
@@ -1266,12 +1266,12 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/ShoppingListEvent/payload`.
             internal struct payloadPayload: Codable, Hashable, Sendable {
                 /// A container of undocumented properties.
-                internal var additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?]
+                internal var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
                 /// Creates a new `payloadPayload`.
                 ///
                 /// - Parameters:
                 ///   - additionalProperties: A container of undocumented properties.
-                internal init(additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?] = .init()) {
+                internal init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
                     self.additionalProperties = additionalProperties
                 }
                 internal init(from decoder: any Swift.Decoder) throws {
@@ -1462,12 +1462,12 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/ShoppingListProjection/state`.
             internal struct statePayload: Codable, Hashable, Sendable {
                 /// A container of undocumented properties.
-                internal var additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?]
+                internal var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
                 /// Creates a new `statePayload`.
                 ///
                 /// - Parameters:
                 ///   - additionalProperties: A container of undocumented properties.
-                internal init(additionalProperties: [String: OpenAPIRuntime.OpenAPIValueContainer?] = .init()) {
+                internal init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
                     self.additionalProperties = additionalProperties
                 }
                 internal init(from decoder: any Swift.Decoder) throws {
