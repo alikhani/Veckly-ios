@@ -262,6 +262,197 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// List a household's active members
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/members`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)`.
+    internal func listHouseholdMembers(_ input: Operations.listHouseholdMembers.Input) async throws -> Operations.listHouseholdMembers.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.listHouseholdMembers.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/members",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.listHouseholdMembers.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ListHouseholdMembersResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Update a household member's role
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)`.
+    internal func updateHouseholdMemberRole(_ input: Operations.updateHouseholdMemberRole.Input) async throws -> Operations.updateHouseholdMemberRole.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.updateHouseholdMemberRole.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/members/{}",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.userId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.updateHouseholdMemberRole.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.HouseholdMember.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                case 409:
+                    return .conflict(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Remove a household member
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)`.
+    internal func removeHouseholdMember(_ input: Operations.removeHouseholdMember.Input) async throws -> Operations.removeHouseholdMember.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.removeHouseholdMember.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/members/{}",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.userId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                case 409:
+                    return .conflict(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// Read a household's planning profile
     ///
     /// - Remark: HTTP `GET /households/{householdId}/profile`.

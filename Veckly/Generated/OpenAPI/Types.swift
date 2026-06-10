@@ -26,6 +26,21 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /households/{id}`.
     /// - Remark: Generated from `#/paths//households/{id}/patch(renameHousehold)`.
     func renameHousehold(_ input: Operations.renameHousehold.Input) async throws -> Operations.renameHousehold.Output
+    /// List a household's active members
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/members`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)`.
+    func listHouseholdMembers(_ input: Operations.listHouseholdMembers.Input) async throws -> Operations.listHouseholdMembers.Output
+    /// Update a household member's role
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)`.
+    func updateHouseholdMemberRole(_ input: Operations.updateHouseholdMemberRole.Input) async throws -> Operations.updateHouseholdMemberRole.Output
+    /// Remove a household member
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)`.
+    func removeHouseholdMember(_ input: Operations.removeHouseholdMember.Input) async throws -> Operations.removeHouseholdMember.Output
     /// Read a household's planning profile
     ///
     /// - Remark: HTTP `GET /households/{householdId}/profile`.
@@ -143,6 +158,41 @@ extension APIProtocol {
             headers: headers,
             body: body
         ))
+    }
+    /// List a household's active members
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/members`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)`.
+    internal func listHouseholdMembers(
+        path: Operations.listHouseholdMembers.Input.Path,
+        headers: Operations.listHouseholdMembers.Input.Headers = .init()
+    ) async throws -> Operations.listHouseholdMembers.Output {
+        try await listHouseholdMembers(Operations.listHouseholdMembers.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Update a household member's role
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)`.
+    internal func updateHouseholdMemberRole(
+        path: Operations.updateHouseholdMemberRole.Input.Path,
+        headers: Operations.updateHouseholdMemberRole.Input.Headers = .init(),
+        body: Operations.updateHouseholdMemberRole.Input.Body? = nil
+    ) async throws -> Operations.updateHouseholdMemberRole.Output {
+        try await updateHouseholdMemberRole(Operations.updateHouseholdMemberRole.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Remove a household member
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)`.
+    internal func removeHouseholdMember(path: Operations.removeHouseholdMember.Input.Path) async throws -> Operations.removeHouseholdMember.Output {
+        try await removeHouseholdMember(Operations.removeHouseholdMember.Input(path: path))
     }
     /// Read a household's planning profile
     ///
@@ -452,6 +502,69 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case id
                 case name
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/HouseholdMember`.
+        internal struct HouseholdMember: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/HouseholdMember/userId`.
+            internal var userId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdMember/role`.
+            internal enum rolePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case owner = "owner"
+                case member = "member"
+            }
+            /// - Remark: Generated from `#/components/schemas/HouseholdMember/role`.
+            internal var role: Components.Schemas.HouseholdMember.rolePayload
+            /// Creates a new `HouseholdMember`.
+            ///
+            /// - Parameters:
+            ///   - userId:
+            ///   - role:
+            internal init(
+                userId: Swift.String,
+                role: Components.Schemas.HouseholdMember.rolePayload
+            ) {
+                self.userId = userId
+                self.role = role
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case userId
+                case role
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ListHouseholdMembersResponse`.
+        internal struct ListHouseholdMembersResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ListHouseholdMembersResponse/members`.
+            internal var members: [Components.Schemas.HouseholdMember]
+            /// Creates a new `ListHouseholdMembersResponse`.
+            ///
+            /// - Parameters:
+            ///   - members:
+            internal init(members: [Components.Schemas.HouseholdMember]) {
+                self.members = members
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case members
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpdateHouseholdMemberRoleRequest`.
+        internal struct UpdateHouseholdMemberRoleRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpdateHouseholdMemberRoleRequest/role`.
+            internal enum rolePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case owner = "owner"
+                case member = "member"
+            }
+            /// - Remark: Generated from `#/components/schemas/UpdateHouseholdMemberRoleRequest/role`.
+            internal var role: Components.Schemas.UpdateHouseholdMemberRoleRequest.rolePayload
+            /// Creates a new `UpdateHouseholdMemberRoleRequest`.
+            ///
+            /// - Parameters:
+            ///   - role:
+            internal init(role: Components.Schemas.UpdateHouseholdMemberRoleRequest.rolePayload) {
+                self.role = role
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case role
             }
         }
         /// - Remark: Generated from `#/components/schemas/HouseholdProfile`.
@@ -2981,6 +3094,635 @@ internal enum Operations {
                     .json
                 ]
             }
+        }
+    }
+    /// List a household's active members
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/members`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)`.
+    internal enum listHouseholdMembers {
+        internal static let id: Swift.String = "listHouseholdMembers"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/members/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.listHouseholdMembers.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/members/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listHouseholdMembers.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listHouseholdMembers.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listHouseholdMembers.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.listHouseholdMembers.Input.Path,
+                headers: Operations.listHouseholdMembers.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/members/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ListHouseholdMembersResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ListHouseholdMembersResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listHouseholdMembers.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listHouseholdMembers.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Active household members
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listHouseholdMembers.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listHouseholdMembers.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listHouseholdMembers.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/get(listHouseholdMembers)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listHouseholdMembers.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Update a household member's role
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)`.
+    internal enum updateHouseholdMemberRole {
+        internal static let id: Swift.String = "updateHouseholdMemberRole"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/path/userId`.
+                internal var userId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - userId:
+                internal init(
+                    householdId: Swift.String,
+                    userId: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.userId = userId
+                }
+            }
+            internal var path: Operations.updateHouseholdMemberRole.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updateHouseholdMemberRole.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updateHouseholdMemberRole.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.updateHouseholdMemberRole.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpdateHouseholdMemberRoleRequest)
+            }
+            internal var body: Operations.updateHouseholdMemberRole.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.updateHouseholdMemberRole.Input.Path,
+                headers: Operations.updateHouseholdMemberRole.Input.Headers = .init(),
+                body: Operations.updateHouseholdMemberRole.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.HouseholdMember)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.HouseholdMember {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updateHouseholdMemberRole.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updateHouseholdMemberRole.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Updated household member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.updateHouseholdMemberRole.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.updateHouseholdMemberRole.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid role
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.updateHouseholdMemberRole.Output.BadRequest)
+            /// Invalid role
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.updateHouseholdMemberRole.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.updateHouseholdMemberRole.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.updateHouseholdMemberRole.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Member not found or caller cannot see this household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.updateHouseholdMemberRole.Output.NotFound)
+            /// Member not found or caller cannot see this household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.updateHouseholdMemberRole.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// Creates a new `Conflict`.
+                internal init() {}
+            }
+            /// Cannot remove the last owner role
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.updateHouseholdMemberRole.Output.Conflict)
+            /// Cannot remove the last owner role
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/patch(updateHouseholdMemberRole)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            internal static var conflict: Self {
+                .conflict(.init())
+            }
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.updateHouseholdMemberRole.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Remove a household member
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/members/{userId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)`.
+    internal enum removeHouseholdMember {
+        internal static let id: Swift.String = "removeHouseholdMember"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/DELETE/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/members/{userId}/DELETE/path/userId`.
+                internal var userId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - userId:
+                internal init(
+                    householdId: Swift.String,
+                    userId: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.userId = userId
+                }
+            }
+            internal var path: Operations.removeHouseholdMember.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            internal init(path: Operations.removeHouseholdMember.Input.Path) {
+                self.path = path
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                internal init() {}
+            }
+            /// Member removed
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.removeHouseholdMember.Output.NoContent)
+            /// Member removed
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            internal static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            internal var noContent: Operations.removeHouseholdMember.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.removeHouseholdMember.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.removeHouseholdMember.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Member not found or caller cannot see this household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.removeHouseholdMember.Output.NotFound)
+            /// Member not found or caller cannot see this household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.removeHouseholdMember.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// Creates a new `Conflict`.
+                internal init() {}
+            }
+            /// Cannot remove the last owner
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.removeHouseholdMember.Output.Conflict)
+            /// Cannot remove the last owner
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/members/{userId}/delete(removeHouseholdMember)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            internal static var conflict: Self {
+                .conflict(.init())
+            }
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.removeHouseholdMember.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
     /// Read a household's planning profile
