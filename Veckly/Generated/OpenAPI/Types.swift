@@ -1250,7 +1250,16 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/WeekPlanEvent/eventType`.
             internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case week_started = "week_started"
+                case planning_request_updated = "planning_request_updated"
                 case meal_assigned = "meal_assigned"
+                case meal_unassigned = "meal_unassigned"
+                case meal_locked = "meal_locked"
+                case meal_unlocked = "meal_unlocked"
+                case meal_moved = "meal_moved"
+                case day_skipped = "day_skipped"
+                case day_unskipped = "day_unskipped"
+                case servings_changed = "servings_changed"
+                case week_plan_cleared = "week_plan_cleared"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanEvent/eventType`.
             internal var eventType: Components.Schemas.WeekPlanEvent.eventTypePayload
@@ -1361,11 +1370,189 @@ internal enum Components {
                 internal struct Case2Payload: Codable, Hashable, Sendable {
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/eventType`.
                     internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                        case meal_assigned = "meal_assigned"
+                        case planning_request_updated = "planning_request_updated"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/eventType`.
                     internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.eventTypePayload
-                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/dayOfWeek`.
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request`.
+                    internal struct requestPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household`.
+                        internal struct householdPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household/adults`.
+                            internal var adults: Swift.Int
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household/children`.
+                            internal var children: Swift.Int
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household/prioritiesPayload`.
+                            internal enum prioritiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case quick = "quick"
+                                case budget = "budget"
+                                case child_hyphen_friendly = "child-friendly"
+                                case meal_hyphen_prep = "meal-prep"
+                                case varied = "varied"
+                            }
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household/priorities`.
+                            internal typealias prioritiesPayload = [Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.householdPayload.prioritiesPayloadPayload]
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household/priorities`.
+                            internal var priorities: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.householdPayload.prioritiesPayload
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household/avoidIngredients`.
+                            internal var avoidIngredients: [Swift.String]
+                            /// Creates a new `householdPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - adults:
+                            ///   - children:
+                            ///   - priorities:
+                            ///   - avoidIngredients:
+                            internal init(
+                                adults: Swift.Int,
+                                children: Swift.Int,
+                                priorities: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.householdPayload.prioritiesPayload,
+                                avoidIngredients: [Swift.String]
+                            ) {
+                                self.adults = adults
+                                self.children = children
+                                self.priorities = priorities
+                                self.avoidIngredients = avoidIngredients
+                            }
+                            internal enum CodingKeys: String, CodingKey {
+                                case adults
+                                case children
+                                case priorities
+                                case avoidIngredients
+                            }
+                        }
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/household`.
+                        internal var household: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.householdPayload
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload`.
+                        internal struct selectedDaysPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/day`.
+                            internal enum dayPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case monday = "monday"
+                                case tuesday = "tuesday"
+                                case wednesday = "wednesday"
+                                case thursday = "thursday"
+                                case friday = "friday"
+                                case saturday = "saturday"
+                                case sunday = "sunday"
+                            }
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/day`.
+                            internal var day: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.dayPayload
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/servingsOverride`.
+                            internal var servingsOverride: Swift.Int?
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/occasion`.
+                            internal enum occasionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case standard = "standard"
+                                case guests = "guests"
+                                case treat = "treat"
+                            }
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/occasion`.
+                            internal var occasion: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.occasionPayload?
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/effortLevel`.
+                            internal enum effortLevelPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case standard = "standard"
+                                case busy = "busy"
+                            }
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/effortLevel`.
+                            internal var effortLevel: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.effortLevelPayload?
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/leftoversIntent`.
+                            internal var leftoversIntent: Swift.Bool?
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/lateEvening`.
+                            internal var lateEvening: Swift.Bool?
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/cookingTolerance`.
+                            internal enum cookingTolerancePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case standard = "standard"
+                                case relaxed = "relaxed"
+                            }
+                            /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDaysPayload/cookingTolerance`.
+                            internal var cookingTolerance: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.cookingTolerancePayload?
+                            /// Creates a new `selectedDaysPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - day:
+                            ///   - servingsOverride:
+                            ///   - occasion:
+                            ///   - effortLevel:
+                            ///   - leftoversIntent:
+                            ///   - lateEvening:
+                            ///   - cookingTolerance:
+                            internal init(
+                                day: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.dayPayload,
+                                servingsOverride: Swift.Int? = nil,
+                                occasion: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.occasionPayload? = nil,
+                                effortLevel: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.effortLevelPayload? = nil,
+                                leftoversIntent: Swift.Bool? = nil,
+                                lateEvening: Swift.Bool? = nil,
+                                cookingTolerance: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload.cookingTolerancePayload? = nil
+                            ) {
+                                self.day = day
+                                self.servingsOverride = servingsOverride
+                                self.occasion = occasion
+                                self.effortLevel = effortLevel
+                                self.leftoversIntent = leftoversIntent
+                                self.lateEvening = lateEvening
+                                self.cookingTolerance = cookingTolerance
+                            }
+                            internal enum CodingKeys: String, CodingKey {
+                                case day
+                                case servingsOverride
+                                case occasion
+                                case effortLevel
+                                case leftoversIntent
+                                case lateEvening
+                                case cookingTolerance
+                            }
+                        }
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDays`.
+                        internal typealias selectedDaysPayload = [Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayloadPayload]
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request/selectedDays`.
+                        internal var selectedDays: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayload
+                        /// Creates a new `requestPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - household:
+                        ///   - selectedDays:
+                        internal init(
+                            household: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.householdPayload,
+                            selectedDays: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload.selectedDaysPayload
+                        ) {
+                            self.household = household
+                            self.selectedDays = selectedDays
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case household
+                            case selectedDays
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/request`.
+                    internal var request: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload
+                    /// Creates a new `Case2Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - request:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.eventTypePayload,
+                        request: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.requestPayload
+                    ) {
+                        self.eventType = eventType
+                        self.request = request
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case request
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2`.
+                case case2(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3`.
+                internal struct Case3Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case meal_assigned = "meal_assigned"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/dayOfWeek`.
                     internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
                         case monday = "monday"
                         case tuesday = "tuesday"
@@ -1375,19 +1562,19 @@ internal enum Components {
                         case saturday = "saturday"
                         case sunday = "sunday"
                     }
-                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/dayOfWeek`.
-                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.dayOfWeekPayload
-                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2/recipeRef`.
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.dayOfWeekPayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/recipeRef`.
                     internal var recipeRef: Swift.String
-                    /// Creates a new `Case2Payload`.
+                    /// Creates a new `Case3Payload`.
                     ///
                     /// - Parameters:
                     ///   - eventType:
                     ///   - dayOfWeek:
                     ///   - recipeRef:
                     internal init(
-                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.eventTypePayload,
-                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload.dayOfWeekPayload,
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.dayOfWeekPayload,
                         recipeRef: Swift.String
                     ) {
                         self.eventType = eventType
@@ -1400,8 +1587,324 @@ internal enum Components {
                         case recipeRef
                     }
                 }
-                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case2`.
-                case case2(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case2Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3`.
+                case case3(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case4`.
+                internal struct Case4Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case4/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case meal_unassigned = "meal_unassigned"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case4/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case4Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case4/dayOfWeek`.
+                    internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case4/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case4Payload.dayOfWeekPayload
+                    /// Creates a new `Case4Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - dayOfWeek:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case4Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case4Payload.dayOfWeekPayload
+                    ) {
+                        self.eventType = eventType
+                        self.dayOfWeek = dayOfWeek
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case dayOfWeek
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case4`.
+                case case4(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case4Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case5`.
+                internal struct Case5Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case5/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case meal_locked = "meal_locked"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case5/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case5Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case5/dayOfWeek`.
+                    internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case5/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case5Payload.dayOfWeekPayload
+                    /// Creates a new `Case5Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - dayOfWeek:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case5Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case5Payload.dayOfWeekPayload
+                    ) {
+                        self.eventType = eventType
+                        self.dayOfWeek = dayOfWeek
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case dayOfWeek
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case5`.
+                case case5(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case5Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case6`.
+                internal struct Case6Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case6/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case meal_unlocked = "meal_unlocked"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case6/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case6Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case6/dayOfWeek`.
+                    internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case6/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case6Payload.dayOfWeekPayload
+                    /// Creates a new `Case6Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - dayOfWeek:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case6Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case6Payload.dayOfWeekPayload
+                    ) {
+                        self.eventType = eventType
+                        self.dayOfWeek = dayOfWeek
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case dayOfWeek
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case6`.
+                case case6(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case6Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7`.
+                internal struct Case7Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case meal_moved = "meal_moved"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7/fromDayOfWeek`.
+                    internal enum fromDayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7/fromDayOfWeek`.
+                    internal var fromDayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload.fromDayOfWeekPayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7/toDayOfWeek`.
+                    internal enum toDayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7/toDayOfWeek`.
+                    internal var toDayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload.toDayOfWeekPayload
+                    /// Creates a new `Case7Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - fromDayOfWeek:
+                    ///   - toDayOfWeek:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload.eventTypePayload,
+                        fromDayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload.fromDayOfWeekPayload,
+                        toDayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload.toDayOfWeekPayload
+                    ) {
+                        self.eventType = eventType
+                        self.fromDayOfWeek = fromDayOfWeek
+                        self.toDayOfWeek = toDayOfWeek
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case fromDayOfWeek
+                        case toDayOfWeek
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case7`.
+                case case7(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case7Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case8`.
+                internal struct Case8Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case8/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case day_skipped = "day_skipped"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case8/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case8Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case8/dayOfWeek`.
+                    internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case8/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case8Payload.dayOfWeekPayload
+                    /// Creates a new `Case8Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - dayOfWeek:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case8Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case8Payload.dayOfWeekPayload
+                    ) {
+                        self.eventType = eventType
+                        self.dayOfWeek = dayOfWeek
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case dayOfWeek
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case8`.
+                case case8(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case8Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case9`.
+                internal struct Case9Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case9/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case day_unskipped = "day_unskipped"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case9/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case9Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case9/dayOfWeek`.
+                    internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case9/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case9Payload.dayOfWeekPayload
+                    /// Creates a new `Case9Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - dayOfWeek:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case9Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case9Payload.dayOfWeekPayload
+                    ) {
+                        self.eventType = eventType
+                        self.dayOfWeek = dayOfWeek
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case dayOfWeek
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case9`.
+                case case9(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case9Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10`.
+                internal struct Case10Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case servings_changed = "servings_changed"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case10Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10/dayOfWeek`.
+                    internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case monday = "monday"
+                        case tuesday = "tuesday"
+                        case wednesday = "wednesday"
+                        case thursday = "thursday"
+                        case friday = "friday"
+                        case saturday = "saturday"
+                        case sunday = "sunday"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10/dayOfWeek`.
+                    internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case10Payload.dayOfWeekPayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10/servings`.
+                    internal var servings: Swift.Int
+                    /// Creates a new `Case10Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - dayOfWeek:
+                    ///   - servings:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case10Payload.eventTypePayload,
+                        dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case10Payload.dayOfWeekPayload,
+                        servings: Swift.Int
+                    ) {
+                        self.eventType = eventType
+                        self.dayOfWeek = dayOfWeek
+                        self.servings = servings
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case dayOfWeek
+                        case servings
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case10`.
+                case case10(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case10Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11`.
+                internal struct Case11Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case week_plan_cleared = "week_plan_cleared"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.eventTypePayload
+                    /// Creates a new `Case11Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.eventTypePayload) {
+                        self.eventType = eventType
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11`.
+                case case11(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload)
                 internal init(from decoder: any Swift.Decoder) throws {
                     var errors: [any Swift.Error] = []
                     do {
@@ -1412,6 +1915,60 @@ internal enum Components {
                     }
                     do {
                         self = .case2(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case3(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case4(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case5(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case6(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case7(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case8(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case9(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case10(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case11(try .init(from: decoder))
                         return
                     } catch {
                         errors.append(error)
@@ -1427,6 +1984,24 @@ internal enum Components {
                     case let .case1(value):
                         try value.encode(to: encoder)
                     case let .case2(value):
+                        try value.encode(to: encoder)
+                    case let .case3(value):
+                        try value.encode(to: encoder)
+                    case let .case4(value):
+                        try value.encode(to: encoder)
+                    case let .case5(value):
+                        try value.encode(to: encoder)
+                    case let .case6(value):
+                        try value.encode(to: encoder)
+                    case let .case7(value):
+                        try value.encode(to: encoder)
+                    case let .case8(value):
+                        try value.encode(to: encoder)
+                    case let .case9(value):
+                        try value.encode(to: encoder)
+                    case let .case10(value):
+                        try value.encode(to: encoder)
+                    case let .case11(value):
                         try value.encode(to: encoder)
                     }
                 }

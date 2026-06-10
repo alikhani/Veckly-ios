@@ -568,7 +568,16 @@
             "type": "string",
             "enum": [
               "week_started",
-              "meal_assigned"
+              "planning_request_updated",
+              "meal_assigned",
+              "meal_unassigned",
+              "meal_locked",
+              "meal_unlocked",
+              "meal_moved",
+              "day_skipped",
+              "day_unskipped",
+              "servings_changed",
+              "week_plan_cleared"
             ]
           },
           "payload": {
@@ -622,6 +631,123 @@
                   "eventType": {
                     "type": "string",
                     "enum": [
+                      "planning_request_updated"
+                    ]
+                  },
+                  "request": {
+                    "type": "object",
+                    "properties": {
+                      "household": {
+                        "type": "object",
+                        "properties": {
+                          "adults": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "children": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "priorities": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "quick",
+                                "budget",
+                                "child-friendly",
+                                "meal-prep",
+                                "varied"
+                              ]
+                            }
+                          },
+                          "avoidIngredients": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "adults",
+                          "children",
+                          "priorities",
+                          "avoidIngredients"
+                        ]
+                      },
+                      "selectedDays": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "day": {
+                              "type": "string",
+                              "enum": [
+                                "monday",
+                                "tuesday",
+                                "wednesday",
+                                "thursday",
+                                "friday",
+                                "saturday",
+                                "sunday"
+                              ]
+                            },
+                            "servingsOverride": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            "occasion": {
+                              "type": "string",
+                              "enum": [
+                                "standard",
+                                "guests",
+                                "treat"
+                              ]
+                            },
+                            "effortLevel": {
+                              "type": "string",
+                              "enum": [
+                                "standard",
+                                "busy"
+                              ]
+                            },
+                            "leftoversIntent": {
+                              "type": "boolean"
+                            },
+                            "lateEvening": {
+                              "type": "boolean"
+                            },
+                            "cookingTolerance": {
+                              "type": "string",
+                              "enum": [
+                                "standard",
+                                "relaxed"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "day"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "household",
+                      "selectedDays"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "request"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
                       "meal_assigned"
                     ]
                   },
@@ -646,6 +772,227 @@
                   "eventType",
                   "dayOfWeek",
                   "recipeRef"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "meal_unassigned"
+                    ]
+                  },
+                  "dayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "dayOfWeek"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "meal_locked"
+                    ]
+                  },
+                  "dayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "dayOfWeek"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "meal_unlocked"
+                    ]
+                  },
+                  "dayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "dayOfWeek"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "meal_moved"
+                    ]
+                  },
+                  "fromDayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  },
+                  "toDayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "fromDayOfWeek",
+                  "toDayOfWeek"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "day_skipped"
+                    ]
+                  },
+                  "dayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "dayOfWeek"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "day_unskipped"
+                    ]
+                  },
+                  "dayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "dayOfWeek"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "servings_changed"
+                    ]
+                  },
+                  "dayOfWeek": {
+                    "type": "string",
+                    "enum": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ]
+                  },
+                  "servings": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "dayOfWeek",
+                  "servings"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "week_plan_cleared"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType"
                 ]
               }
             ]
