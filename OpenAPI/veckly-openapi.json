@@ -67,6 +67,217 @@
           "name"
         ]
       },
+      "HouseholdProfile": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "householdId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adults": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "children": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "priorities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "quick",
+                "budget",
+                "child-friendly",
+                "meal-prep",
+                "varied"
+              ]
+            }
+          },
+          "avoidIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "selectedDays": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "day": {
+                  "type": "string",
+                  "enum": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday"
+                  ]
+                },
+                "servingsOverride": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "occasion": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "guests",
+                    "treat"
+                  ]
+                },
+                "effortLevel": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "busy"
+                  ]
+                },
+                "leftoversIntent": {
+                  "type": "boolean"
+                },
+                "lateEvening": {
+                  "type": "boolean"
+                },
+                "cookingTolerance": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "relaxed"
+                  ]
+                }
+              },
+              "required": [
+                "day"
+              ]
+            },
+            "minItems": 1
+          },
+          "updatedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "householdId",
+          "adults",
+          "children",
+          "priorities",
+          "avoidIngredients",
+          "selectedDays",
+          "updatedBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpsertHouseholdProfile": {
+        "type": "object",
+        "properties": {
+          "adults": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "children": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "priorities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "quick",
+                "budget",
+                "child-friendly",
+                "meal-prep",
+                "varied"
+              ]
+            }
+          },
+          "avoidIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "selectedDays": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "day": {
+                  "type": "string",
+                  "enum": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday"
+                  ]
+                },
+                "servingsOverride": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "occasion": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "guests",
+                    "treat"
+                  ]
+                },
+                "effortLevel": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "busy"
+                  ]
+                },
+                "leftoversIntent": {
+                  "type": "boolean"
+                },
+                "lateEvening": {
+                  "type": "boolean"
+                },
+                "cookingTolerance": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "relaxed"
+                  ]
+                }
+              },
+              "required": [
+                "day"
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "adults",
+          "children",
+          "priorities",
+          "avoidIngredients",
+          "selectedDays"
+        ]
+      },
       "HouseholdInvite": {
         "type": "object",
         "properties": {
@@ -1227,6 +1438,95 @@
           },
           "404": {
             "description": "Household not found or caller is not a member"
+          }
+        }
+      }
+    },
+    "/households/{householdId}/profile": {
+      "get": {
+        "operationId": "getHouseholdProfile",
+        "summary": "Read a household's planning profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The household profile, or null when no profile has been saved yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "$ref": "#/components/schemas/HouseholdProfile"
+                    }
+                  },
+                  "required": [
+                    "profile"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertHouseholdProfile",
+        "summary": "Create or update a household's planning profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertHouseholdProfile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The saved household profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
           }
         }
       }

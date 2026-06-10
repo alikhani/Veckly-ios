@@ -26,6 +26,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /households/{id}`.
     /// - Remark: Generated from `#/paths//households/{id}/patch(renameHousehold)`.
     func renameHousehold(_ input: Operations.renameHousehold.Input) async throws -> Operations.renameHousehold.Output
+    /// Read a household's planning profile
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/profile`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/profile/get(getHouseholdProfile)`.
+    func getHouseholdProfile(_ input: Operations.getHouseholdProfile.Input) async throws -> Operations.getHouseholdProfile.Output
+    /// Create or update a household's planning profile
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/profile`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/profile/put(upsertHouseholdProfile)`.
+    func upsertHouseholdProfile(_ input: Operations.upsertHouseholdProfile.Input) async throws -> Operations.upsertHouseholdProfile.Output
     /// List a household's open (pending) invites
     ///
     /// - Remark: HTTP `GET /households/{householdId}/invites`.
@@ -129,6 +139,34 @@ extension APIProtocol {
         body: Operations.renameHousehold.Input.Body
     ) async throws -> Operations.renameHousehold.Output {
         try await renameHousehold(Operations.renameHousehold.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Read a household's planning profile
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/profile`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/profile/get(getHouseholdProfile)`.
+    internal func getHouseholdProfile(
+        path: Operations.getHouseholdProfile.Input.Path,
+        headers: Operations.getHouseholdProfile.Input.Headers = .init()
+    ) async throws -> Operations.getHouseholdProfile.Output {
+        try await getHouseholdProfile(Operations.getHouseholdProfile.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Create or update a household's planning profile
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/profile`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/profile/put(upsertHouseholdProfile)`.
+    internal func upsertHouseholdProfile(
+        path: Operations.upsertHouseholdProfile.Input.Path,
+        headers: Operations.upsertHouseholdProfile.Input.Headers = .init(),
+        body: Operations.upsertHouseholdProfile.Input.Body? = nil
+    ) async throws -> Operations.upsertHouseholdProfile.Output {
+        try await upsertHouseholdProfile(Operations.upsertHouseholdProfile.Input(
             path: path,
             headers: headers,
             body: body
@@ -414,6 +452,294 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case id
                 case name
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/HouseholdProfile`.
+        internal struct HouseholdProfile: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/adults`.
+            internal var adults: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/children`.
+            internal var children: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/prioritiesPayload`.
+            internal enum prioritiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case quick = "quick"
+                case budget = "budget"
+                case child_hyphen_friendly = "child-friendly"
+                case meal_hyphen_prep = "meal-prep"
+                case varied = "varied"
+            }
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/priorities`.
+            internal typealias prioritiesPayload = [Components.Schemas.HouseholdProfile.prioritiesPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/priorities`.
+            internal var priorities: Components.Schemas.HouseholdProfile.prioritiesPayload
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/avoidIngredients`.
+            internal var avoidIngredients: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload`.
+            internal struct selectedDaysPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/day`.
+                internal enum dayPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case monday = "monday"
+                    case tuesday = "tuesday"
+                    case wednesday = "wednesday"
+                    case thursday = "thursday"
+                    case friday = "friday"
+                    case saturday = "saturday"
+                    case sunday = "sunday"
+                }
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/day`.
+                internal var day: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.dayPayload
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/servingsOverride`.
+                internal var servingsOverride: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/occasion`.
+                internal enum occasionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case standard = "standard"
+                    case guests = "guests"
+                    case treat = "treat"
+                }
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/occasion`.
+                internal var occasion: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.occasionPayload?
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/effortLevel`.
+                internal enum effortLevelPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case standard = "standard"
+                    case busy = "busy"
+                }
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/effortLevel`.
+                internal var effortLevel: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.effortLevelPayload?
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/leftoversIntent`.
+                internal var leftoversIntent: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/lateEvening`.
+                internal var lateEvening: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/cookingTolerance`.
+                internal enum cookingTolerancePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case standard = "standard"
+                    case relaxed = "relaxed"
+                }
+                /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDaysPayload/cookingTolerance`.
+                internal var cookingTolerance: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.cookingTolerancePayload?
+                /// Creates a new `selectedDaysPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - day:
+                ///   - servingsOverride:
+                ///   - occasion:
+                ///   - effortLevel:
+                ///   - leftoversIntent:
+                ///   - lateEvening:
+                ///   - cookingTolerance:
+                internal init(
+                    day: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.dayPayload,
+                    servingsOverride: Swift.Int? = nil,
+                    occasion: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.occasionPayload? = nil,
+                    effortLevel: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.effortLevelPayload? = nil,
+                    leftoversIntent: Swift.Bool? = nil,
+                    lateEvening: Swift.Bool? = nil,
+                    cookingTolerance: Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload.cookingTolerancePayload? = nil
+                ) {
+                    self.day = day
+                    self.servingsOverride = servingsOverride
+                    self.occasion = occasion
+                    self.effortLevel = effortLevel
+                    self.leftoversIntent = leftoversIntent
+                    self.lateEvening = lateEvening
+                    self.cookingTolerance = cookingTolerance
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case day
+                    case servingsOverride
+                    case occasion
+                    case effortLevel
+                    case leftoversIntent
+                    case lateEvening
+                    case cookingTolerance
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDays`.
+            internal typealias selectedDaysPayload = [Components.Schemas.HouseholdProfile.selectedDaysPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/selectedDays`.
+            internal var selectedDays: Components.Schemas.HouseholdProfile.selectedDaysPayload
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/updatedBy`.
+            internal var updatedBy: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/createdAt`.
+            internal var createdAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdProfile/updatedAt`.
+            internal var updatedAt: Swift.String
+            /// Creates a new `HouseholdProfile`.
+            ///
+            /// - Parameters:
+            ///   - householdId:
+            ///   - adults:
+            ///   - children:
+            ///   - priorities:
+            ///   - avoidIngredients:
+            ///   - selectedDays:
+            ///   - updatedBy:
+            ///   - createdAt:
+            ///   - updatedAt:
+            internal init(
+                householdId: Swift.String,
+                adults: Swift.Int,
+                children: Swift.Int,
+                priorities: Components.Schemas.HouseholdProfile.prioritiesPayload,
+                avoidIngredients: [Swift.String],
+                selectedDays: Components.Schemas.HouseholdProfile.selectedDaysPayload,
+                updatedBy: Swift.String,
+                createdAt: Swift.String,
+                updatedAt: Swift.String
+            ) {
+                self.householdId = householdId
+                self.adults = adults
+                self.children = children
+                self.priorities = priorities
+                self.avoidIngredients = avoidIngredients
+                self.selectedDays = selectedDays
+                self.updatedBy = updatedBy
+                self.createdAt = createdAt
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case householdId
+                case adults
+                case children
+                case priorities
+                case avoidIngredients
+                case selectedDays
+                case updatedBy
+                case createdAt
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile`.
+        internal struct UpsertHouseholdProfile: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/adults`.
+            internal var adults: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/children`.
+            internal var children: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/prioritiesPayload`.
+            internal enum prioritiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case quick = "quick"
+                case budget = "budget"
+                case child_hyphen_friendly = "child-friendly"
+                case meal_hyphen_prep = "meal-prep"
+                case varied = "varied"
+            }
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/priorities`.
+            internal typealias prioritiesPayload = [Components.Schemas.UpsertHouseholdProfile.prioritiesPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/priorities`.
+            internal var priorities: Components.Schemas.UpsertHouseholdProfile.prioritiesPayload
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/avoidIngredients`.
+            internal var avoidIngredients: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload`.
+            internal struct selectedDaysPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/day`.
+                internal enum dayPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case monday = "monday"
+                    case tuesday = "tuesday"
+                    case wednesday = "wednesday"
+                    case thursday = "thursday"
+                    case friday = "friday"
+                    case saturday = "saturday"
+                    case sunday = "sunday"
+                }
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/day`.
+                internal var day: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.dayPayload
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/servingsOverride`.
+                internal var servingsOverride: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/occasion`.
+                internal enum occasionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case standard = "standard"
+                    case guests = "guests"
+                    case treat = "treat"
+                }
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/occasion`.
+                internal var occasion: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.occasionPayload?
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/effortLevel`.
+                internal enum effortLevelPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case standard = "standard"
+                    case busy = "busy"
+                }
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/effortLevel`.
+                internal var effortLevel: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.effortLevelPayload?
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/leftoversIntent`.
+                internal var leftoversIntent: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/lateEvening`.
+                internal var lateEvening: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/cookingTolerance`.
+                internal enum cookingTolerancePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case standard = "standard"
+                    case relaxed = "relaxed"
+                }
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDaysPayload/cookingTolerance`.
+                internal var cookingTolerance: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.cookingTolerancePayload?
+                /// Creates a new `selectedDaysPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - day:
+                ///   - servingsOverride:
+                ///   - occasion:
+                ///   - effortLevel:
+                ///   - leftoversIntent:
+                ///   - lateEvening:
+                ///   - cookingTolerance:
+                internal init(
+                    day: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.dayPayload,
+                    servingsOverride: Swift.Int? = nil,
+                    occasion: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.occasionPayload? = nil,
+                    effortLevel: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.effortLevelPayload? = nil,
+                    leftoversIntent: Swift.Bool? = nil,
+                    lateEvening: Swift.Bool? = nil,
+                    cookingTolerance: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload.cookingTolerancePayload? = nil
+                ) {
+                    self.day = day
+                    self.servingsOverride = servingsOverride
+                    self.occasion = occasion
+                    self.effortLevel = effortLevel
+                    self.leftoversIntent = leftoversIntent
+                    self.lateEvening = lateEvening
+                    self.cookingTolerance = cookingTolerance
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case day
+                    case servingsOverride
+                    case occasion
+                    case effortLevel
+                    case leftoversIntent
+                    case lateEvening
+                    case cookingTolerance
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDays`.
+            internal typealias selectedDaysPayload = [Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdProfile/selectedDays`.
+            internal var selectedDays: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayload
+            /// Creates a new `UpsertHouseholdProfile`.
+            ///
+            /// - Parameters:
+            ///   - adults:
+            ///   - children:
+            ///   - priorities:
+            ///   - avoidIngredients:
+            ///   - selectedDays:
+            internal init(
+                adults: Swift.Int,
+                children: Swift.Int,
+                priorities: Components.Schemas.UpsertHouseholdProfile.prioritiesPayload,
+                avoidIngredients: [Swift.String],
+                selectedDays: Components.Schemas.UpsertHouseholdProfile.selectedDaysPayload
+            ) {
+                self.adults = adults
+                self.children = children
+                self.priorities = priorities
+                self.avoidIngredients = avoidIngredients
+                self.selectedDays = selectedDays
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case adults
+                case children
+                case priorities
+                case avoidIngredients
+                case selectedDays
             }
         }
         /// - Remark: Generated from `#/components/schemas/HouseholdInvite`.
@@ -2621,6 +2947,356 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Read a household's planning profile
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/profile`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/profile/get(getHouseholdProfile)`.
+    internal enum getHouseholdProfile {
+        internal static let id: Swift.String = "getHouseholdProfile"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.getHouseholdProfile.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getHouseholdProfile.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getHouseholdProfile.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getHouseholdProfile.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getHouseholdProfile.Input.Path,
+                headers: Operations.getHouseholdProfile.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/responses/200/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/responses/200/content/json/profile`.
+                        internal var profile: Components.Schemas.HouseholdProfile?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - profile:
+                        internal init(profile: Components.Schemas.HouseholdProfile? = nil) {
+                            self.profile = profile
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case profile
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/profile/GET/responses/200/content/application\/json`.
+                    case json(Operations.getHouseholdProfile.Output.Ok.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.getHouseholdProfile.Output.Ok.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getHouseholdProfile.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getHouseholdProfile.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The household profile, or null when no profile has been saved yet
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/profile/get(getHouseholdProfile)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getHouseholdProfile.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getHouseholdProfile.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/profile/get(getHouseholdProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getHouseholdProfile.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/profile/get(getHouseholdProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getHouseholdProfile.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create or update a household's planning profile
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/profile`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/profile/put(upsertHouseholdProfile)`.
+    internal enum upsertHouseholdProfile {
+        internal static let id: Swift.String = "upsertHouseholdProfile"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.upsertHouseholdProfile.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertHouseholdProfile.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertHouseholdProfile.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertHouseholdProfile.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpsertHouseholdProfile)
+            }
+            internal var body: Operations.upsertHouseholdProfile.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.upsertHouseholdProfile.Input.Path,
+                headers: Operations.upsertHouseholdProfile.Input.Headers = .init(),
+                body: Operations.upsertHouseholdProfile.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/profile/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.HouseholdProfile)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.HouseholdProfile {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertHouseholdProfile.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertHouseholdProfile.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The saved household profile
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/profile/put(upsertHouseholdProfile)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertHouseholdProfile.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertHouseholdProfile.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/profile/put(upsertHouseholdProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertHouseholdProfile.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/profile/put(upsertHouseholdProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertHouseholdProfile.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
                             response: self
                         )
                     }
