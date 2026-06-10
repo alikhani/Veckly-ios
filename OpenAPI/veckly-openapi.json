@@ -1151,6 +1151,542 @@
           "days"
         ]
       },
+      "WeekHistoryListItem": {
+        "type": "object",
+        "properties": {
+          "weekStartDate": {
+            "type": "string"
+          },
+          "weekNumber": {
+            "type": "integer"
+          },
+          "weekYear": {
+            "type": "integer"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "finalized",
+              "archived"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "generated",
+              "copied_from_previous",
+              "template_applied",
+              "manual"
+            ]
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "updatedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedDays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"
+              ]
+            }
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "household": {
+                "type": "object",
+                "properties": {
+                  "adults": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "children": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "priorities": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "quick",
+                        "budget",
+                        "child-friendly",
+                        "meal-prep",
+                        "varied"
+                      ]
+                    }
+                  },
+                  "avoidIngredients": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "adults",
+                  "children",
+                  "priorities",
+                  "avoidIngredients"
+                ]
+              },
+              "selectedDays": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "day": {
+                      "type": "string",
+                      "enum": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    },
+                    "servingsOverride": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "occasion": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "guests",
+                        "treat"
+                      ]
+                    },
+                    "effortLevel": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "busy"
+                      ]
+                    },
+                    "leftoversIntent": {
+                      "type": "boolean"
+                    },
+                    "lateEvening": {
+                      "type": "boolean"
+                    },
+                    "cookingTolerance": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "relaxed"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "day"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "household",
+              "selectedDays"
+            ]
+          },
+          "replacements": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "skippedDays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"
+              ]
+            }
+          }
+        },
+        "required": [
+          "weekStartDate",
+          "weekNumber",
+          "weekYear",
+          "timezone",
+          "status",
+          "source",
+          "updatedAt",
+          "updatedBy",
+          "plannedDays",
+          "request",
+          "replacements",
+          "skippedDays"
+        ]
+      },
+      "WeekHistoryState": {
+        "type": "object",
+        "properties": {
+          "lockedDays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"
+              ]
+            },
+            "default": []
+          },
+          "skippedDays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"
+              ]
+            },
+            "default": []
+          },
+          "replacements": {
+            "type": "object",
+            "additionalProperties": true,
+            "default": {}
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "household": {
+                "type": "object",
+                "properties": {
+                  "adults": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "children": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "priorities": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "quick",
+                        "budget",
+                        "child-friendly",
+                        "meal-prep",
+                        "varied"
+                      ]
+                    }
+                  },
+                  "avoidIngredients": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "adults",
+                  "children",
+                  "priorities",
+                  "avoidIngredients"
+                ]
+              },
+              "selectedDays": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "day": {
+                      "type": "string",
+                      "enum": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    },
+                    "servingsOverride": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "occasion": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "guests",
+                        "treat"
+                      ]
+                    },
+                    "effortLevel": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "busy"
+                      ]
+                    },
+                    "leftoversIntent": {
+                      "type": "boolean"
+                    },
+                    "lateEvening": {
+                      "type": "boolean"
+                    },
+                    "cookingTolerance": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "relaxed"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "day"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "household",
+              "selectedDays"
+            ]
+          }
+        },
+        "required": [
+          "request"
+        ]
+      },
+      "WeekHistoryPlan": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "householdId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weekStartDate": {
+            "type": "string"
+          },
+          "weekNumber": {
+            "type": "integer"
+          },
+          "weekYear": {
+            "type": "integer"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/WeekHistoryState"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "finalized",
+              "archived"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "generated",
+              "copied_from_previous",
+              "template_applied",
+              "manual"
+            ]
+          },
+          "updatedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "householdId",
+          "weekStartDate",
+          "weekNumber",
+          "weekYear",
+          "timezone",
+          "state",
+          "status",
+          "source",
+          "updatedBy",
+          "updatedAt"
+        ]
+      },
+      "WeekHistoryDetail": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "$ref": "#/components/schemas/WeekHistoryPlan"
+          }
+        },
+        "required": [
+          "week"
+        ]
+      },
+      "UpsertWeekHistoryPlanResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "weekStartDate": {
+            "type": "string"
+          },
+          "weekNumber": {
+            "type": "integer"
+          },
+          "weekYear": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "weekStartDate",
+          "weekNumber",
+          "weekYear",
+          "updatedAt"
+        ]
+      },
+      "StaleWeekHistoryPlanResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "STALE_WEEK_PLAN_STATE"
+            ]
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "updatedAt"
+        ]
+      },
+      "UpsertWeekHistoryPlan": {
+        "type": "object",
+        "properties": {
+          "expectedUpdatedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "$ref": "#/components/schemas/WeekHistoryState"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "finalized",
+              "archived"
+            ],
+            "default": "draft"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "generated",
+              "copied_from_previous",
+              "template_applied",
+              "manual"
+            ],
+            "default": "manual"
+          }
+        },
+        "required": [
+          "timezone",
+          "state"
+        ]
+      },
+      "FinalizeWeekHistoryPlanResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "weekStartDate": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "finalized"
+            ]
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "weekStartDate",
+          "status",
+          "updatedAt"
+        ]
+      },
       "ShoppingListCausedBy": {
         "oneOf": [
           {
@@ -2773,6 +3309,234 @@
           },
           "404": {
             "description": "Household not found or caller is not a member"
+          }
+        }
+      }
+    },
+    "/households/{householdId}/week-plans": {
+      "get": {
+        "operationId": "listWeekHistoryPlans",
+        "summary": "List a household's persisted week plans",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Week plans ordered by week start date descending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeekHistoryListItem"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid range"
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      }
+    },
+    "/households/{householdId}/week-plans/{weekStartDate}/history": {
+      "get": {
+        "operationId": "getWeekHistoryPlan",
+        "summary": "Get persisted week-plan history metadata and state",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": true,
+            "name": "weekStartDate",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The persisted week plan, or null when absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekHistoryDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid week start date"
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "upsertWeekHistoryPlan",
+        "summary": "Persist or update week-plan history state",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": true,
+            "name": "weekStartDate",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertWeekHistoryPlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Week history plan persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsertWeekHistoryPlanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          },
+          "409": {
+            "description": "The supplied expectedUpdatedAt value is stale",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleWeekHistoryPlanResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/households/{householdId}/week-plans/{weekStartDate}/finalize": {
+      "post": {
+        "operationId": "finalizeWeekHistoryPlan",
+        "summary": "Finalize a persisted week plan",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": true,
+            "name": "weekStartDate",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Week plan finalized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinalizeWeekHistoryPlanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid week start date"
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          },
+          "404": {
+            "description": "Week plan not found"
           }
         }
       }

@@ -1295,6 +1295,322 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// List a household's persisted week plans
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-plans`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/get(listWeekHistoryPlans)`.
+    internal func listWeekHistoryPlans(_ input: Operations.listWeekHistoryPlans.Input) async throws -> Operations.listWeekHistoryPlans.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.listWeekHistoryPlans.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/week-plans",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "from",
+                    value: input.query.from
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "to",
+                    value: input.query.to
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.listWeekHistoryPlans.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            [Components.Schemas.WeekHistoryListItem].self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Get persisted week-plan history metadata and state
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-plans/{weekStartDate}/history`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/get(getWeekHistoryPlan)`.
+    internal func getWeekHistoryPlan(_ input: Operations.getWeekHistoryPlan.Input) async throws -> Operations.getWeekHistoryPlan.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.getWeekHistoryPlan.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/week-plans/{}/history",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.getWeekHistoryPlan.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.WeekHistoryDetail.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Persist or update week-plan history state
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/week-plans/{weekStartDate}/history`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/patch(upsertWeekHistoryPlan)`.
+    internal func upsertWeekHistoryPlan(_ input: Operations.upsertWeekHistoryPlan.Input) async throws -> Operations.upsertWeekHistoryPlan.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.upsertWeekHistoryPlan.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/week-plans/{}/history",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.upsertWeekHistoryPlan.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.UpsertWeekHistoryPlanResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 409:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.upsertWeekHistoryPlan.Output.Conflict.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StaleWeekHistoryPlanResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .conflict(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Finalize a persisted week plan
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/finalize`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/finalize/post(finalizeWeekHistoryPlan)`.
+    internal func finalizeWeekHistoryPlan(_ input: Operations.finalizeWeekHistoryPlan.Input) async throws -> Operations.finalizeWeekHistoryPlan.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.finalizeWeekHistoryPlan.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/week-plans/{}/finalize",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.finalizeWeekHistoryPlan.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.FinalizeWeekHistoryPlanResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// Append an event to a household shopping list
     ///
     /// - Remark: HTTP `POST /households/{householdId}/shopping-lists/{weekStartDate}/events`.
