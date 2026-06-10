@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3C8A4E502FD9B40000A8B001 /* HTTPTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 3C8A4E4F2FD9B40000A8B001 /* HTTPTypes */; };
+		3C8A4E522FD9B40000A8B001 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 3C8A4E512FD9B40000A8B001 /* OpenAPIRuntime */; };
+		3C8A4E542FD9B40000A8B001 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 3C8A4E532FD9B40000A8B001 /* OpenAPIURLSession */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3C62B5332FD8A6FE0056AE47 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +58,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C8A4E502FD9B40000A8B001 /* HTTPTypes in Frameworks */,
+				3C8A4E522FD9B40000A8B001 /* OpenAPIRuntime in Frameworks */,
+				3C8A4E542FD9B40000A8B001 /* OpenAPIURLSession in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +121,9 @@
 			);
 			name = Veckly;
 			packageProductDependencies = (
+				3C8A4E4F2FD9B40000A8B001 /* HTTPTypes */,
+				3C8A4E512FD9B40000A8B001 /* OpenAPIRuntime */,
+				3C8A4E532FD9B40000A8B001 /* OpenAPIURLSession */,
 			);
 			productName = Veckly;
 			productReference = 3C62B5252FD8A6FB0056AE47 /* Veckly.app */;
@@ -195,6 +207,11 @@
 			);
 			mainGroup = 3C62B51C2FD8A6FB0056AE47;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3C8A4E492FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-http-types" */,
+				3C8A4E4B2FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				3C8A4E4D2FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3C62B5262FD8A6FB0056AE47 /* Products */;
 			projectDirPath = "";
@@ -570,6 +587,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3C8A4E492FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-http-types" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-http-types";
+			requirement = {
+				kind = exactVersion;
+				version = 1.6.0;
+			};
+		};
+		3C8A4E4B2FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = exactVersion;
+				version = 1.12.0;
+			};
+		};
+		3C8A4E4D2FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = exactVersion;
+				version = 1.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3C8A4E4F2FD9B40000A8B001 /* HTTPTypes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3C8A4E492FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-http-types" */;
+			productName = HTTPTypes;
+		};
+		3C8A4E512FD9B40000A8B001 /* OpenAPIRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3C8A4E4B2FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		3C8A4E532FD9B40000A8B001 /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3C8A4E4D2FD9B40000A8B001 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3C62B51D2FD8A6FB0056AE47 /* Project object */;
 }
