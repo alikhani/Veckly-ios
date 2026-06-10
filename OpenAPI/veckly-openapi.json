@@ -1905,6 +1905,34 @@
             "type": "boolean"
           }
         }
+      },
+      "RecipesEnvelope": {
+        "type": "object",
+        "properties": {
+          "recipes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipe"
+            }
+          }
+        },
+        "required": [
+          "recipes"
+        ]
+      },
+      "OkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
       }
     },
     "parameters": {}
@@ -3211,6 +3239,144 @@
           },
           "404": {
             "description": "Recipe not found or not in this household"
+          }
+        }
+      }
+    },
+    "/recipes/public": {
+      "get": {
+        "operationId": "listPublicRecipes",
+        "summary": "Search public community recipes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public recipes matching the search query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipesEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      }
+    },
+    "/recipes/saved": {
+      "get": {
+        "operationId": "listSavedRecipes",
+        "summary": "List the current user's saved recipes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved recipes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipesEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      }
+    },
+    "/recipes/{recipeId}/save": {
+      "post": {
+        "operationId": "saveRecipe",
+        "summary": "Save a readable recipe for the current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "recipeId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Recipe saved, or already saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          },
+          "404": {
+            "description": "Recipe not found or not readable by caller"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unsaveRecipe",
+        "summary": "Remove a recipe from the current user saved list",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "recipeId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recipe unsaved, or was not saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
           }
         }
       }

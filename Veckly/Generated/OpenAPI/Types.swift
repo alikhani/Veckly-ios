@@ -151,6 +151,26 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /households/{householdId}/recipes/{recipeId}`.
     /// - Remark: Generated from `#/paths//households/{householdId}/recipes/{recipeId}/patch(updateRecipe)`.
     func updateRecipe(_ input: Operations.updateRecipe.Input) async throws -> Operations.updateRecipe.Output
+    /// Search public community recipes
+    ///
+    /// - Remark: HTTP `GET /recipes/public`.
+    /// - Remark: Generated from `#/paths//recipes/public/get(listPublicRecipes)`.
+    func listPublicRecipes(_ input: Operations.listPublicRecipes.Input) async throws -> Operations.listPublicRecipes.Output
+    /// List the current user's saved recipes
+    ///
+    /// - Remark: HTTP `GET /recipes/saved`.
+    /// - Remark: Generated from `#/paths//recipes/saved/get(listSavedRecipes)`.
+    func listSavedRecipes(_ input: Operations.listSavedRecipes.Input) async throws -> Operations.listSavedRecipes.Output
+    /// Save a readable recipe for the current user
+    ///
+    /// - Remark: HTTP `POST /recipes/{recipeId}/save`.
+    /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)`.
+    func saveRecipe(_ input: Operations.saveRecipe.Input) async throws -> Operations.saveRecipe.Output
+    /// Remove a recipe from the current user saved list
+    ///
+    /// - Remark: HTTP `DELETE /recipes/{recipeId}/save`.
+    /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)`.
+    func unsaveRecipe(_ input: Operations.unsaveRecipe.Input) async throws -> Operations.unsaveRecipe.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -509,6 +529,52 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// Search public community recipes
+    ///
+    /// - Remark: HTTP `GET /recipes/public`.
+    /// - Remark: Generated from `#/paths//recipes/public/get(listPublicRecipes)`.
+    internal func listPublicRecipes(
+        query: Operations.listPublicRecipes.Input.Query = .init(),
+        headers: Operations.listPublicRecipes.Input.Headers = .init()
+    ) async throws -> Operations.listPublicRecipes.Output {
+        try await listPublicRecipes(Operations.listPublicRecipes.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// List the current user's saved recipes
+    ///
+    /// - Remark: HTTP `GET /recipes/saved`.
+    /// - Remark: Generated from `#/paths//recipes/saved/get(listSavedRecipes)`.
+    internal func listSavedRecipes(headers: Operations.listSavedRecipes.Input.Headers = .init()) async throws -> Operations.listSavedRecipes.Output {
+        try await listSavedRecipes(Operations.listSavedRecipes.Input(headers: headers))
+    }
+    /// Save a readable recipe for the current user
+    ///
+    /// - Remark: HTTP `POST /recipes/{recipeId}/save`.
+    /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)`.
+    internal func saveRecipe(
+        path: Operations.saveRecipe.Input.Path,
+        headers: Operations.saveRecipe.Input.Headers = .init()
+    ) async throws -> Operations.saveRecipe.Output {
+        try await saveRecipe(Operations.saveRecipe.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Remove a recipe from the current user saved list
+    ///
+    /// - Remark: HTTP `DELETE /recipes/{recipeId}/save`.
+    /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)`.
+    internal func unsaveRecipe(
+        path: Operations.unsaveRecipe.Input.Path,
+        headers: Operations.unsaveRecipe.Input.Headers = .init()
+    ) async throws -> Operations.unsaveRecipe.Output {
+        try await unsaveRecipe(Operations.unsaveRecipe.Input(
+            path: path,
+            headers: headers
         ))
     }
 }
@@ -3440,6 +3506,36 @@ internal enum Components {
                 case sourceUrl
                 case isPublic
                 case isArchived
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecipesEnvelope`.
+        internal struct RecipesEnvelope: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecipesEnvelope/recipes`.
+            internal var recipes: [Components.Schemas.Recipe]
+            /// Creates a new `RecipesEnvelope`.
+            ///
+            /// - Parameters:
+            ///   - recipes:
+            internal init(recipes: [Components.Schemas.Recipe]) {
+                self.recipes = recipes
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case recipes
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/OkResponse`.
+        internal struct OkResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/OkResponse/ok`.
+            internal var ok: Swift.Bool
+            /// Creates a new `OkResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            internal init(ok: Swift.Bool) {
+                self.ok = ok
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
             }
         }
     }
@@ -8767,6 +8863,675 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Search public community recipes
+    ///
+    /// - Remark: HTTP `GET /recipes/public`.
+    /// - Remark: Generated from `#/paths//recipes/public/get(listPublicRecipes)`.
+    internal enum listPublicRecipes {
+        internal static let id: Swift.String = "listPublicRecipes"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/recipes/public/GET/query`.
+            internal struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/public/GET/query/q`.
+                internal var q: Swift.String?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - q:
+                internal init(q: Swift.String? = nil) {
+                    self.q = q
+                }
+            }
+            internal var query: Operations.listPublicRecipes.Input.Query
+            /// - Remark: Generated from `#/paths/recipes/public/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listPublicRecipes.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listPublicRecipes.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listPublicRecipes.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            internal init(
+                query: Operations.listPublicRecipes.Input.Query = .init(),
+                headers: Operations.listPublicRecipes.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/public/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/public/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RecipesEnvelope)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipesEnvelope {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listPublicRecipes.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listPublicRecipes.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Public recipes matching the search query
+            ///
+            /// - Remark: Generated from `#/paths//recipes/public/get(listPublicRecipes)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listPublicRecipes.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listPublicRecipes.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/public/get(listPublicRecipes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listPublicRecipes.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/public/get(listPublicRecipes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listPublicRecipes.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List the current user's saved recipes
+    ///
+    /// - Remark: HTTP `GET /recipes/saved`.
+    /// - Remark: Generated from `#/paths//recipes/saved/get(listSavedRecipes)`.
+    internal enum listSavedRecipes {
+        internal static let id: Swift.String = "listSavedRecipes"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/recipes/saved/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listSavedRecipes.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listSavedRecipes.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listSavedRecipes.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            internal init(headers: Operations.listSavedRecipes.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/saved/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/saved/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RecipesEnvelope)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipesEnvelope {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listSavedRecipes.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listSavedRecipes.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Saved recipes
+            ///
+            /// - Remark: Generated from `#/paths//recipes/saved/get(listSavedRecipes)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listSavedRecipes.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listSavedRecipes.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/saved/get(listSavedRecipes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listSavedRecipes.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/saved/get(listSavedRecipes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listSavedRecipes.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Save a readable recipe for the current user
+    ///
+    /// - Remark: HTTP `POST /recipes/{recipeId}/save`.
+    /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)`.
+    internal enum saveRecipe {
+        internal static let id: Swift.String = "saveRecipe"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/POST/path/recipeId`.
+                internal var recipeId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - recipeId:
+                internal init(recipeId: Swift.String) {
+                    self.recipeId = recipeId
+                }
+            }
+            internal var path: Operations.saveRecipe.Input.Path
+            /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.saveRecipe.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.saveRecipe.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.saveRecipe.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.saveRecipe.Input.Path,
+                headers: Operations.saveRecipe.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/POST/responses/201/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.saveRecipe.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.saveRecipe.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Recipe saved, or already saved
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.saveRecipe.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            internal var created: Operations.saveRecipe.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.saveRecipe.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.saveRecipe.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Recipe not found or not readable by caller
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.saveRecipe.Output.NotFound)
+            /// Recipe not found or not readable by caller
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/post(saveRecipe)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.saveRecipe.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Remove a recipe from the current user saved list
+    ///
+    /// - Remark: HTTP `DELETE /recipes/{recipeId}/save`.
+    /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)`.
+    internal enum unsaveRecipe {
+        internal static let id: Swift.String = "unsaveRecipe"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/DELETE/path/recipeId`.
+                internal var recipeId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - recipeId:
+                internal init(recipeId: Swift.String) {
+                    self.recipeId = recipeId
+                }
+            }
+            internal var path: Operations.unsaveRecipe.Input.Path
+            /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/DELETE/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.unsaveRecipe.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.unsaveRecipe.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.unsaveRecipe.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.unsaveRecipe.Input.Path,
+                headers: Operations.unsaveRecipe.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/DELETE/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/{recipeId}/save/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.unsaveRecipe.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.unsaveRecipe.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Recipe unsaved, or was not saved
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.unsaveRecipe.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.unsaveRecipe.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.unsaveRecipe.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.unsaveRecipe.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
                             response: self
                         )
                     }
