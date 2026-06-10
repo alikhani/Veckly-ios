@@ -121,6 +121,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /households/{householdId}/shopping-lists/{weekStartDate}/summary`.
     /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/summary/get(getShoppingListSummary)`.
     func getShoppingListSummary(_ input: Operations.getShoppingListSummary.Input) async throws -> Operations.getShoppingListSummary.Output
+    /// Read a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)`.
+    func getShoppingListState(_ input: Operations.getShoppingListState.Input) async throws -> Operations.getShoppingListState.Output
+    /// Replace or clear a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)`.
+    func updateShoppingListState(_ input: Operations.updateShoppingListState.Input) async throws -> Operations.updateShoppingListState.Output
     /// List a household's recipes
     ///
     /// - Remark: HTTP `GET /households/{householdId}/recipes`.
@@ -413,6 +423,34 @@ extension APIProtocol {
         try await getShoppingListSummary(Operations.getShoppingListSummary.Input(
             path: path,
             headers: headers
+        ))
+    }
+    /// Read a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)`.
+    internal func getShoppingListState(
+        path: Operations.getShoppingListState.Input.Path,
+        headers: Operations.getShoppingListState.Input.Headers = .init()
+    ) async throws -> Operations.getShoppingListState.Output {
+        try await getShoppingListState(Operations.getShoppingListState.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Replace or clear a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)`.
+    internal func updateShoppingListState(
+        path: Operations.updateShoppingListState.Input.Path,
+        headers: Operations.updateShoppingListState.Input.Headers = .init(),
+        body: Operations.updateShoppingListState.Input.Body? = nil
+    ) async throws -> Operations.updateShoppingListState.Output {
+        try await updateShoppingListState(Operations.updateShoppingListState.Input(
+            path: path,
+            headers: headers,
+            body: body
         ))
     }
     /// List a household's recipes
@@ -2394,6 +2432,8 @@ internal enum Components {
             internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case list_started = "list_started"
                 case item_checked = "item_checked"
+                case shopping_state_replaced = "shopping_state_replaced"
+                case shopping_list_cleared = "shopping_list_cleared"
             }
             /// - Remark: Generated from `#/components/schemas/ShoppingListEvent/eventType`.
             internal var eventType: Components.Schemas.ShoppingListEvent.eventTypePayload
@@ -2456,6 +2496,47 @@ internal enum Components {
                 case causedBy
                 case eventType
                 case payload
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload`.
+        internal struct ShoppingStatePayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/checkedItems`.
+            internal var checkedItems: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/pantryStock`.
+            internal struct pantryStockPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                internal var additionalProperties: [String: Swift.Double]
+                /// Creates a new `pantryStockPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                internal init(additionalProperties: [String: Swift.Double] = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/pantryStock`.
+            internal var pantryStock: Components.Schemas.ShoppingStatePayload.pantryStockPayload
+            /// Creates a new `ShoppingStatePayload`.
+            ///
+            /// - Parameters:
+            ///   - checkedItems:
+            ///   - pantryStock:
+            internal init(
+                checkedItems: [Swift.String],
+                pantryStock: Components.Schemas.ShoppingStatePayload.pantryStockPayload
+            ) {
+                self.checkedItems = checkedItems
+                self.pantryStock = pantryStock
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case checkedItems
+                case pantryStock
             }
         }
         /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest`.
@@ -2535,6 +2616,56 @@ internal enum Components {
                 }
                 /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case2`.
                 case case2(Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case2Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case3`.
+                internal struct Case3Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case3/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case shopping_state_replaced = "shopping_state_replaced"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case3/eventType`.
+                    internal var eventType: Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case3Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case3/state`.
+                    internal var state: Components.Schemas.ShoppingStatePayload
+                    /// Creates a new `Case3Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - state:
+                    internal init(
+                        eventType: Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case3Payload.eventTypePayload,
+                        state: Components.Schemas.ShoppingStatePayload
+                    ) {
+                        self.eventType = eventType
+                        self.state = state
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case state
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case3`.
+                case case3(Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case3Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case4`.
+                internal struct Case4Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case4/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case shopping_list_cleared = "shopping_list_cleared"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case4/eventType`.
+                    internal var eventType: Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case4Payload.eventTypePayload
+                    /// Creates a new `Case4Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    internal init(eventType: Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case4Payload.eventTypePayload) {
+                        self.eventType = eventType
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest/value2/case4`.
+                case case4(Components.Schemas.AppendShoppingListEventRequest.Value2Payload.Case4Payload)
                 internal init(from decoder: any Swift.Decoder) throws {
                     var errors: [any Swift.Error] = []
                     do {
@@ -2545,6 +2676,18 @@ internal enum Components {
                     }
                     do {
                         self = .case2(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case3(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case4(try .init(from: decoder))
                         return
                     } catch {
                         errors.append(error)
@@ -2560,6 +2703,10 @@ internal enum Components {
                     case let .case1(value):
                         try value.encode(to: encoder)
                     case let .case2(value):
+                        try value.encode(to: encoder)
+                    case let .case3(value):
+                        try value.encode(to: encoder)
+                    case let .case4(value):
                         try value.encode(to: encoder)
                     }
                 }
@@ -2760,6 +2907,156 @@ internal enum Components {
                 case weekStartDate
                 case updatedAt
                 case groups
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ShoppingListStateResponse`.
+        internal struct ShoppingListStateResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ShoppingListStateResponse/state`.
+            internal struct statePayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/ShoppingListStateResponse/state/value1`.
+                internal var value1: Components.Schemas.ShoppingStatePayload
+                /// - Remark: Generated from `#/components/schemas/ShoppingListStateResponse/state/value2`.
+                internal var value2: OpenAPIRuntime.OpenAPIValueContainer
+                /// Creates a new `statePayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                ///   - value2:
+                internal init(
+                    value1: Components.Schemas.ShoppingStatePayload,
+                    value2: OpenAPIRuntime.OpenAPIValueContainer
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try .init(from: decoder)
+                    self.value2 = try .init(from: decoder)
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try self.value1.encode(to: encoder)
+                    try self.value2.encode(to: encoder)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/ShoppingListStateResponse/state`.
+            internal var state: Components.Schemas.ShoppingListStateResponse.statePayload
+            /// - Remark: Generated from `#/components/schemas/ShoppingListStateResponse/updatedAt`.
+            internal var updatedAt: Swift.String?
+            /// Creates a new `ShoppingListStateResponse`.
+            ///
+            /// - Parameters:
+            ///   - state:
+            ///   - updatedAt:
+            internal init(
+                state: Components.Schemas.ShoppingListStateResponse.statePayload,
+                updatedAt: Swift.String? = nil
+            ) {
+                self.state = state
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case state
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateResponse`.
+        internal struct UpdateShoppingListStateResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateResponse/ok`.
+            internal var ok: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateResponse/updatedAt`.
+            internal var updatedAt: Swift.String?
+            /// Creates a new `UpdateShoppingListStateResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            ///   - updatedAt:
+            internal init(
+                ok: Swift.Bool,
+                updatedAt: Swift.String? = nil
+            ) {
+                self.ok = ok
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/StaleShoppingListStateResponse`.
+        internal struct StaleShoppingListStateResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/StaleShoppingListStateResponse/error`.
+            internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case STALE_SHOPPING_STATE = "STALE_SHOPPING_STATE"
+            }
+            /// - Remark: Generated from `#/components/schemas/StaleShoppingListStateResponse/error`.
+            internal var error: Components.Schemas.StaleShoppingListStateResponse.errorPayload
+            /// - Remark: Generated from `#/components/schemas/StaleShoppingListStateResponse/updatedAt`.
+            internal var updatedAt: Swift.String?
+            /// Creates a new `StaleShoppingListStateResponse`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            ///   - updatedAt:
+            internal init(
+                error: Components.Schemas.StaleShoppingListStateResponse.errorPayload,
+                updatedAt: Swift.String? = nil
+            ) {
+                self.error = error
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateRequest`.
+        internal struct UpdateShoppingListStateRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateRequest/expectedUpdatedAt`.
+            internal var expectedUpdatedAt: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateRequest/state`.
+            internal struct statePayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateRequest/state/value1`.
+                internal var value1: Components.Schemas.ShoppingStatePayload
+                /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateRequest/state/value2`.
+                internal var value2: OpenAPIRuntime.OpenAPIValueContainer
+                /// Creates a new `statePayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                ///   - value2:
+                internal init(
+                    value1: Components.Schemas.ShoppingStatePayload,
+                    value2: OpenAPIRuntime.OpenAPIValueContainer
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try .init(from: decoder)
+                    self.value2 = try .init(from: decoder)
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try self.value1.encode(to: encoder)
+                    try self.value2.encode(to: encoder)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingListStateRequest/state`.
+            internal var state: Components.Schemas.UpdateShoppingListStateRequest.statePayload
+            /// Creates a new `UpdateShoppingListStateRequest`.
+            ///
+            /// - Parameters:
+            ///   - expectedUpdatedAt:
+            ///   - state:
+            internal init(
+                expectedUpdatedAt: Swift.String? = nil,
+                state: Components.Schemas.UpdateShoppingListStateRequest.statePayload
+            ) {
+                self.expectedUpdatedAt = expectedUpdatedAt
+                self.state = state
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case expectedUpdatedAt
+                case state
             }
         }
         /// - Remark: Generated from `#/components/schemas/RecipeIngredient`.
@@ -7260,6 +7557,441 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Read a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)`.
+    internal enum getShoppingListState {
+        internal static let id: Swift.String = "getShoppingListState"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.getShoppingListState.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getShoppingListState.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getShoppingListState.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getShoppingListState.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getShoppingListState.Input.Path,
+                headers: Operations.getShoppingListState.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ShoppingListStateResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ShoppingListStateResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingListState.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingListState.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The shared shopping state, or null when unset
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getShoppingListState.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getShoppingListState.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getShoppingListState.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getShoppingListState.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Replace or clear a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)`.
+    internal enum updateShoppingListState {
+        internal static let id: Swift.String = "updateShoppingListState"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.updateShoppingListState.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updateShoppingListState.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updateShoppingListState.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.updateShoppingListState.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpdateShoppingListStateRequest)
+            }
+            internal var body: Operations.updateShoppingListState.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.updateShoppingListState.Input.Path,
+                headers: Operations.updateShoppingListState.Input.Headers = .init(),
+                body: Operations.updateShoppingListState.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.UpdateShoppingListStateResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.UpdateShoppingListStateResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updateShoppingListState.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updateShoppingListState.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// State was replaced or cleared
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.updateShoppingListState.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.updateShoppingListState.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid request body
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.updateShoppingListState.Output.BadRequest)
+            /// Invalid request body
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.updateShoppingListState.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.updateShoppingListState.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.updateShoppingListState.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/409/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StaleShoppingListStateResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.StaleShoppingListStateResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updateShoppingListState.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updateShoppingListState.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// The supplied expectedUpdatedAt value is stale
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.updateShoppingListState.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.updateShoppingListState.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
                             response: self
                         )
                     }

@@ -1505,6 +1505,171 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// Read a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)`.
+    internal func getShoppingListState(_ input: Operations.getShoppingListState.Input) async throws -> Operations.getShoppingListState.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.getShoppingListState.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/shopping-lists/{}/state",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.getShoppingListState.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ShoppingListStateResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Replace or clear a household shopping list's shared checklist and pantry state
+    ///
+    /// - Remark: HTTP `PATCH /households/{householdId}/shopping-lists/{weekStartDate}/state`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)`.
+    internal func updateShoppingListState(_ input: Operations.updateShoppingListState.Input) async throws -> Operations.updateShoppingListState.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.updateShoppingListState.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/shopping-lists/{}/state",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.updateShoppingListState.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.UpdateShoppingListStateResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 409:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.updateShoppingListState.Output.Conflict.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StaleShoppingListStateResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .conflict(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// List a household's recipes
     ///
     /// - Remark: HTTP `GET /households/{householdId}/recipes`.
