@@ -11,6 +11,21 @@ import struct Foundation.Date
 #endif
 /// A type that performs HTTP operations defined by the OpenAPI document.
 internal protocol APIProtocol: Sendable {
+    /// Read a household's active week pointer
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)`.
+    func getHouseholdActiveWeek(_ input: Operations.getHouseholdActiveWeek.Input) async throws -> Operations.getHouseholdActiveWeek.Output
+    /// Set a household's active week pointer
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)`.
+    func setHouseholdActiveWeek(_ input: Operations.setHouseholdActiveWeek.Input) async throws -> Operations.setHouseholdActiveWeek.Output
+    /// Clear a household's active week pointer
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)`.
+    func clearHouseholdActiveWeek(_ input: Operations.clearHouseholdActiveWeek.Input) async throws -> Operations.clearHouseholdActiveWeek.Output
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.
@@ -130,6 +145,41 @@ internal protocol APIProtocol: Sendable {
 
 /// Convenience overloads for operation inputs.
 extension APIProtocol {
+    /// Read a household's active week pointer
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)`.
+    internal func getHouseholdActiveWeek(
+        path: Operations.getHouseholdActiveWeek.Input.Path,
+        headers: Operations.getHouseholdActiveWeek.Input.Headers = .init()
+    ) async throws -> Operations.getHouseholdActiveWeek.Output {
+        try await getHouseholdActiveWeek(Operations.getHouseholdActiveWeek.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Set a household's active week pointer
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)`.
+    internal func setHouseholdActiveWeek(
+        path: Operations.setHouseholdActiveWeek.Input.Path,
+        headers: Operations.setHouseholdActiveWeek.Input.Headers = .init(),
+        body: Operations.setHouseholdActiveWeek.Input.Body? = nil
+    ) async throws -> Operations.setHouseholdActiveWeek.Output {
+        try await setHouseholdActiveWeek(Operations.setHouseholdActiveWeek.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Clear a household's active week pointer
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)`.
+    internal func clearHouseholdActiveWeek(path: Operations.clearHouseholdActiveWeek.Input.Path) async throws -> Operations.clearHouseholdActiveWeek.Output {
+        try await clearHouseholdActiveWeek(Operations.clearHouseholdActiveWeek.Input(path: path))
+    }
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.
@@ -432,6 +482,76 @@ internal enum Servers {}
 internal enum Components {
     /// Types generated from the `#/components/schemas` section of the OpenAPI document.
     internal enum Schemas {
+        /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek`.
+        internal struct HouseholdActiveWeek: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/weekStartDate`.
+            internal var weekStartDate: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/timezone`.
+            internal var timezone: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/updatedBy`.
+            internal var updatedBy: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/createdAt`.
+            internal var createdAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/updatedAt`.
+            internal var updatedAt: Swift.String
+            /// Creates a new `HouseholdActiveWeek`.
+            ///
+            /// - Parameters:
+            ///   - householdId:
+            ///   - weekStartDate:
+            ///   - timezone:
+            ///   - updatedBy:
+            ///   - createdAt:
+            ///   - updatedAt:
+            internal init(
+                householdId: Swift.String,
+                weekStartDate: Swift.String,
+                timezone: Swift.String,
+                updatedBy: Swift.String,
+                createdAt: Swift.String,
+                updatedAt: Swift.String
+            ) {
+                self.householdId = householdId
+                self.weekStartDate = weekStartDate
+                self.timezone = timezone
+                self.updatedBy = updatedBy
+                self.createdAt = createdAt
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case householdId
+                case weekStartDate
+                case timezone
+                case updatedBy
+                case createdAt
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetHouseholdActiveWeek`.
+        internal struct SetHouseholdActiveWeek: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetHouseholdActiveWeek/weekStartDate`.
+            internal var weekStartDate: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetHouseholdActiveWeek/timezone`.
+            internal var timezone: Swift.String
+            /// Creates a new `SetHouseholdActiveWeek`.
+            ///
+            /// - Parameters:
+            ///   - weekStartDate:
+            ///   - timezone:
+            internal init(
+                weekStartDate: Swift.String,
+                timezone: Swift.String
+            ) {
+                self.weekStartDate = weekStartDate
+                self.timezone = timezone
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case weekStartDate
+                case timezone
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/Household`.
         internal struct Household: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/Household/id`.
@@ -2463,6 +2583,461 @@ internal enum Components {
 
 /// API operations, with input and output types, generated from `#/paths` in the OpenAPI document.
 internal enum Operations {
+    /// Read a household's active week pointer
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)`.
+    internal enum getHouseholdActiveWeek {
+        internal static let id: Swift.String = "getHouseholdActiveWeek"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.getHouseholdActiveWeek.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getHouseholdActiveWeek.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getHouseholdActiveWeek.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getHouseholdActiveWeek.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getHouseholdActiveWeek.Input.Path,
+                headers: Operations.getHouseholdActiveWeek.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/responses/200/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/responses/200/content/json/activeWeek`.
+                        internal var activeWeek: Components.Schemas.HouseholdActiveWeek?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - activeWeek:
+                        internal init(activeWeek: Components.Schemas.HouseholdActiveWeek? = nil) {
+                            self.activeWeek = activeWeek
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case activeWeek
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/active-week/GET/responses/200/content/application\/json`.
+                    case json(Operations.getHouseholdActiveWeek.Output.Ok.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.getHouseholdActiveWeek.Output.Ok.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getHouseholdActiveWeek.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getHouseholdActiveWeek.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The active week pointer, or null when unset
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getHouseholdActiveWeek.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getHouseholdActiveWeek.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getHouseholdActiveWeek.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getHouseholdActiveWeek.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Set a household's active week pointer
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)`.
+    internal enum setHouseholdActiveWeek {
+        internal static let id: Swift.String = "setHouseholdActiveWeek"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.setHouseholdActiveWeek.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.setHouseholdActiveWeek.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.setHouseholdActiveWeek.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.setHouseholdActiveWeek.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.SetHouseholdActiveWeek)
+            }
+            internal var body: Operations.setHouseholdActiveWeek.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.setHouseholdActiveWeek.Input.Path,
+                headers: Operations.setHouseholdActiveWeek.Input.Headers = .init(),
+                body: Operations.setHouseholdActiveWeek.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/active-week/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.HouseholdActiveWeek)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.HouseholdActiveWeek {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.setHouseholdActiveWeek.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.setHouseholdActiveWeek.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The saved active week pointer
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.setHouseholdActiveWeek.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.setHouseholdActiveWeek.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.setHouseholdActiveWeek.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.setHouseholdActiveWeek.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Clear a household's active week pointer
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)`.
+    internal enum clearHouseholdActiveWeek {
+        internal static let id: Swift.String = "clearHouseholdActiveWeek"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/active-week/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/active-week/DELETE/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.clearHouseholdActiveWeek.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            internal init(path: Operations.clearHouseholdActiveWeek.Input.Path) {
+                self.path = path
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                internal init() {}
+            }
+            /// Active week cleared, or already unset
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.clearHouseholdActiveWeek.Output.NoContent)
+            /// Active week cleared, or already unset
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            internal static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            internal var noContent: Operations.clearHouseholdActiveWeek.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.clearHouseholdActiveWeek.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.clearHouseholdActiveWeek.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.

@@ -37,6 +37,185 @@ internal struct Client: APIProtocol {
     private var converter: Converter {
         client.converter
     }
+    /// Read a household's active week pointer
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/get(getHouseholdActiveWeek)`.
+    internal func getHouseholdActiveWeek(_ input: Operations.getHouseholdActiveWeek.Input) async throws -> Operations.getHouseholdActiveWeek.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.getHouseholdActiveWeek.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/active-week",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.getHouseholdActiveWeek.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.getHouseholdActiveWeek.Output.Ok.Body.jsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Set a household's active week pointer
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/put(setHouseholdActiveWeek)`.
+    internal func setHouseholdActiveWeek(_ input: Operations.setHouseholdActiveWeek.Input) async throws -> Operations.setHouseholdActiveWeek.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.setHouseholdActiveWeek.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/active-week",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .put
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.setHouseholdActiveWeek.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.HouseholdActiveWeek.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Clear a household's active week pointer
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/active-week`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)`.
+    internal func clearHouseholdActiveWeek(_ input: Operations.clearHouseholdActiveWeek.Input) async throws -> Operations.clearHouseholdActiveWeek.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.clearHouseholdActiveWeek.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/active-week",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                case 401:
+                    return .unauthorized(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.
