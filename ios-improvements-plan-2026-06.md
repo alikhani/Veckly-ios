@@ -6,11 +6,11 @@ Recommended execution order, from highest daily-use value to lowest friction:
 
 | Fas | Titel | Status |
 |-----|-------|--------|
-| 1 | Interaktiv shoppinglista | ⬜ Ej påbörjad |
-| 2 | Ingredienser i receptvyn | ⬜ Ej påbörjad |
-| 3 | Lås/lås upp dagar (koppla befintlig knapp) | ⬜ Ej påbörjad |
-| 4 | Feedback på måltider (tumme upp/ner) | ⬜ Ej påbörjad |
-| 5 | Hoppa över en dag | ⬜ Ej påbörjad |
+| 1 | Interaktiv shoppinglista | ✅ Klart (2026-06-11) |
+| 2 | Ingredienser i receptvyn | ✅ Klart (2026-06-11) |
+| 3 | Lås/lås upp dagar (koppla befintlig knapp) | ✅ Klart (2026-06-11) |
+| 4 | Feedback på måltider (tumme upp/ner) | ⏭ Blockerad — ingen feedback-endpoint i Veckly-backend OpenAPI spec ännu |
+| 5 | Hoppa över en dag | ✅ Klart (2026-06-11) |
 
 ---
 
