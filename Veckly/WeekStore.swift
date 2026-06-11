@@ -38,6 +38,10 @@ final class WeekStore {
         }
     }
 
+    func fetchFullRecipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
+    }
+
     func reset() {
         summary = nil
         dayRows = []

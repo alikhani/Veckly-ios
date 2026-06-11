@@ -73,6 +73,22 @@ struct VecklyAPIClient {
         }
     }
 
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        let output = try await generatedClient.getRecipe(
+            path: .init(householdId: householdID, recipeId: recipeID)
+        )
+        switch output {
+        case let .ok(response):
+            return try response.body.json.appModel
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func updateShoppingListState(
         householdID: String,
         weekStartDate: String,
@@ -249,5 +265,33 @@ private extension Components.Schemas.ShoppingListSummaryItem {
             unit: unit,
             checked: checked
         )
+    }
+}
+
+private extension Components.Schemas.Recipe {
+    var appModel: FullRecipe {
+        FullRecipe(
+            id: id,
+            title: title,
+            description: description,
+            servings: servings,
+            prepTimeMinutes: prepTimeMinutes,
+            cookTimeMinutes: cookTimeMinutes,
+            tags: tags,
+            ingredients: ingredients.map(\.appModel),
+            steps: steps.map(\.appModel)
+        )
+    }
+}
+
+private extension Components.Schemas.RecipeIngredient {
+    var appModel: RecipeIngredient {
+        RecipeIngredient(item: item, amount: amount, unit: unit, category: category)
+    }
+}
+
+private extension Components.Schemas.RecipeStep {
+    var appModel: RecipeStep {
+        RecipeStep(text: text)
     }
 }

@@ -85,3 +85,26 @@ struct ShoppingListItem: Decodable, Equatable, Identifiable {
 
     var id: String { itemKey }
 }
+
+struct RecipeIngredient: Decodable, Equatable {
+    let item: String
+    let amount: String?
+    let unit: String?
+    let category: String?
+}
+
+struct RecipeStep: Decodable, Equatable {
+    let text: String
+}
+
+struct FullRecipe: Decodable, Equatable, Identifiable {
+    let id: String
+    let title: String
+    let description: String
+    let servings: Int
+    let prepTimeMinutes: Int?
+    let cookTimeMinutes: Int?
+    let tags: [String]
+    let ingredients: [RecipeIngredient]
+    let steps: [RecipeStep]
+}

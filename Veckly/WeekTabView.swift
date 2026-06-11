@@ -35,7 +35,10 @@ struct WeekTabView: View {
             .accessibilityLabel("Refresh")
         }
         .sheet(item: $selectedRecipe) { recipe in
-            RecipeDetailView(recipe: recipe)
+            RecipeDetailView(
+                recipe: recipe,
+                householdID: appModel.householdStore.activeHousehold?.id ?? ""
+            )
         }
         .onAppear {
             if expandedDayId == nil {
