@@ -8,6 +8,8 @@ final class ShoppingListStore {
 
     private(set) var summary: ShoppingListSummary?
     private(set) var groups: [ShoppingListGroup] = []
+    private(set) var checkedItems: Set<String> = []
+    private(set) var stateUpdatedAt: String?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -24,17 +26,53 @@ final class ShoppingListStore {
             let summary = try await apiClient.shoppingListSummary(householdID: household.id, weekStartDate: weekStartDate)
             self.summary = summary
             groups = ShoppingListViewModelMapper.groups(from: summary)
+            checkedItems = Set(groups.flatMap { $0.items }.filter { $0.checked }.map { $0.itemKey })
+            stateUpdatedAt = nil
         } catch APIError.notFound {
             summary = nil
             groups = []
+            checkedItems = []
         } catch {
             errorMessage = "We could not load your shopping list."
+        }
+    }
+
+    func toggleItem(key: String) async {
+        guard let summary else { return }
+        let wasChecked = checkedItems.contains(key)
+        if wasChecked { checkedItems.remove(key) } else { checkedItems.insert(key) }
+
+        do {
+            let newUpdatedAt = try await apiClient.updateShoppingListState(
+                householdID: summary.household.id,
+                weekStartDate: summary.weekStartDate,
+                checkedItems: Array(checkedItems),
+                expectedUpdatedAt: stateUpdatedAt
+            )
+            stateUpdatedAt = newUpdatedAt
+        } catch APIError.stale(let latestUpdatedAt) {
+            stateUpdatedAt = latestUpdatedAt
+            do {
+                let newUpdatedAt = try await apiClient.updateShoppingListState(
+                    householdID: summary.household.id,
+                    weekStartDate: summary.weekStartDate,
+                    checkedItems: Array(checkedItems),
+                    expectedUpdatedAt: stateUpdatedAt
+                )
+                stateUpdatedAt = newUpdatedAt
+            } catch {
+                if wasChecked { checkedItems.insert(key) } else { checkedItems.remove(key) }
+            }
+        } catch {
+            if wasChecked { checkedItems.insert(key) } else { checkedItems.remove(key) }
         }
     }
 
     func reset() {
         summary = nil
         groups = []
+        checkedItems = []
+        stateUpdatedAt = nil
         errorMessage = nil
         isLoading = false
     }
@@ -46,6 +84,7 @@ final class ShoppingListStore {
                 items: [ShoppingListItem(itemKey: "pantry:spaghetti:400:g", label: "spaghetti", amount: "400", unit: "g", checked: false)]
             ),
         ]
+        checkedItems = []
     }
 }
 

@@ -72,6 +72,43 @@ struct VecklyAPIClient {
             throw APIError.server(statusCode: statusCode)
         }
     }
+
+    func updateShoppingListState(
+        householdID: String,
+        weekStartDate: String,
+        checkedItems: [String],
+        expectedUpdatedAt: String?
+    ) async throws -> String? {
+        let shopState = Components.Schemas.ShoppingStatePayload(
+            checkedItems: checkedItems,
+            pantryStock: .init(additionalProperties: [:])
+        )
+        let stateData = try JSONEncoder().encode(shopState)
+        let requestState = try JSONDecoder().decode(
+            Components.Schemas.UpdateShoppingListStateRequest.statePayload.self,
+            from: stateData
+        )
+        let requestBody = Components.Schemas.UpdateShoppingListStateRequest(
+            expectedUpdatedAt: expectedUpdatedAt,
+            state: requestState
+        )
+        let output = try await generatedClient.updateShoppingListState(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate),
+            body: .json(requestBody)
+        )
+        switch output {
+        case let .ok(response):
+            return try response.body.json.updatedAt
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
+        case let .conflict(response):
+            throw APIError.stale(latestUpdatedAt: try response.body.json.updatedAt)
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
 }
 
 private struct AuthorizationMiddleware: ClientMiddleware {
@@ -96,6 +133,7 @@ enum APIError: Error, Equatable {
     case notFound
     case invalidResponse
     case server(statusCode: Int)
+    case stale(latestUpdatedAt: String?)
 }
 
 private extension Components.Schemas.Household {

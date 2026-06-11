@@ -20,7 +20,13 @@ struct ShoppingListTabView: View {
                     EmptyPanel(title: "Nothing to buy yet", message: "Lock in a week plan and the grouped list will appear here.")
                 } else {
                     ForEach(appModel.shoppingListStore.groups) { group in
-                        ShoppingGroupView(group: group)
+                        ShoppingGroupView(
+                            group: group,
+                            checkedItems: appModel.shoppingListStore.checkedItems,
+                            onToggle: { key in
+                                Task { await appModel.shoppingListStore.toggleItem(key: key) }
+                            }
+                        )
                     }
                 }
             }
@@ -34,6 +40,17 @@ struct ShoppingListTabView: View {
 
 struct ShoppingGroupView: View {
     let group: ShoppingListGroup
+    let checkedItems: Set<String>
+    let onToggle: (String) -> Void
+
+    private var sortedItems: [ShoppingListItem] {
+        group.items.sorted { a, b in
+            let aChecked = checkedItems.contains(a.itemKey)
+            let bChecked = checkedItems.contains(b.itemKey)
+            if aChecked == bChecked { return false }
+            return !aChecked
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -44,19 +61,27 @@ struct ShoppingGroupView: View {
 
             VecklyCard {
                 VStack(spacing: 0) {
-                    ForEach(group.items) { item in
-                        HStack {
-                            Image(systemName: item.checked ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(item.checked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
-                            Text(item.label)
-                                .strikethrough(item.checked)
-                            Spacer()
-                            Text([item.amount, item.unit].compactMap { $0 }.joined(separator: " "))
-                                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                    ForEach(sortedItems) { item in
+                        let isChecked = checkedItems.contains(item.itemKey)
+                        Button {
+                            onToggle(item.itemKey)
+                        } label: {
+                            HStack {
+                                Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                                Text(item.label)
+                                    .strikethrough(isChecked)
+                                    .foregroundStyle(isChecked ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
+                                Spacer()
+                                Text([item.amount, item.unit].compactMap { $0 }.joined(separator: " "))
+                                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                            }
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical, 8)
+                        .buttonStyle(.plain)
                     }
                 }
+                .animation(.easeInOut(duration: 0.2), value: checkedItems)
             }
         }
     }
