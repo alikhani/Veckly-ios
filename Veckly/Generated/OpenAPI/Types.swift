@@ -191,6 +191,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /recipes/{recipeId}/save`.
     /// - Remark: Generated from `#/paths//recipes/{recipeId}/save/delete(unsaveRecipe)`.
     func unsaveRecipe(_ input: Operations.unsaveRecipe.Input) async throws -> Operations.unsaveRecipe.Output
+    /// List the current user's meal feedback in a household
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-feedback`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/get(listMealFeedback)`.
+    func listMealFeedback(_ input: Operations.listMealFeedback.Input) async throws -> Operations.listMealFeedback.Output
+    /// Upsert or remove meal feedback for the current user
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-feedback`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)`.
+    func upsertMealFeedback(_ input: Operations.upsertMealFeedback.Input) async throws -> Operations.upsertMealFeedback.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -651,6 +661,34 @@ extension APIProtocol {
         try await unsaveRecipe(Operations.unsaveRecipe.Input(
             path: path,
             headers: headers
+        ))
+    }
+    /// List the current user's meal feedback in a household
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-feedback`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/get(listMealFeedback)`.
+    internal func listMealFeedback(
+        path: Operations.listMealFeedback.Input.Path,
+        headers: Operations.listMealFeedback.Input.Headers = .init()
+    ) async throws -> Operations.listMealFeedback.Output {
+        try await listMealFeedback(Operations.listMealFeedback.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Upsert or remove meal feedback for the current user
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-feedback`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)`.
+    internal func upsertMealFeedback(
+        path: Operations.upsertMealFeedback.Input.Path,
+        headers: Operations.upsertMealFeedback.Input.Headers = .init(),
+        body: Operations.upsertMealFeedback.Input.Body? = nil
+    ) async throws -> Operations.upsertMealFeedback.Output {
+        try await upsertMealFeedback(Operations.upsertMealFeedback.Input(
+            path: path,
+            headers: headers,
+            body: body
         ))
     }
 }
@@ -4385,6 +4423,175 @@ internal enum Components {
             }
             internal enum CodingKeys: String, CodingKey {
                 case ok
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/MealFeedbackVote`.
+        internal enum MealFeedbackVote: String, Codable, Hashable, Sendable, CaseIterable {
+            case up = "up"
+            case down = "down"
+        }
+        /// - Remark: Generated from `#/components/schemas/MealFeedbackSignal`.
+        internal enum MealFeedbackSignal: String, Codable, Hashable, Sendable, CaseIterable {
+            case easy_hyphen_weeknight = "easy-weeknight"
+            case family_hyphen_approved = "family-approved"
+            case good_hyphen_leftovers = "good-leftovers"
+            case too_hyphen_much_hyphen_effort = "too-much-effort"
+            case family_hyphen_pushback = "family-pushback"
+            case poor_hyphen_leftovers = "poor-leftovers"
+        }
+        /// - Remark: Generated from `#/components/schemas/MealFeedbackEntry`.
+        internal struct MealFeedbackEntry: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackEntry/vote`.
+            internal var vote: Components.Schemas.MealFeedbackVote
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackEntry/signal`.
+            internal var signal: Components.Schemas.MealFeedbackSignal?
+            /// Creates a new `MealFeedbackEntry`.
+            ///
+            /// - Parameters:
+            ///   - vote:
+            ///   - signal:
+            internal init(
+                vote: Components.Schemas.MealFeedbackVote,
+                signal: Components.Schemas.MealFeedbackSignal? = nil
+            ) {
+                self.vote = vote
+                self.signal = signal
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case vote
+                case signal
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/MealFeedbackState`.
+        internal struct MealFeedbackState: Codable, Hashable, Sendable {
+            /// A container of undocumented properties.
+            internal var additionalProperties: [String: Components.Schemas.MealFeedbackEntry]
+            /// Creates a new `MealFeedbackState`.
+            ///
+            /// - Parameters:
+            ///   - additionalProperties: A container of undocumented properties.
+            internal init(additionalProperties: [String: Components.Schemas.MealFeedbackEntry] = .init()) {
+                self.additionalProperties = additionalProperties
+            }
+            internal init(from decoder: any Swift.Decoder) throws {
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+            }
+            internal func encode(to encoder: any Swift.Encoder) throws {
+                try encoder.encodeAdditionalProperties(additionalProperties)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/MealFeedbackRecord`.
+        internal struct MealFeedbackRecord: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackRecord/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackRecord/userId`.
+            internal var userId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackRecord/mealId`.
+            internal var mealId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackRecord/feedback`.
+            internal var feedback: Components.Schemas.MealFeedbackEntry
+            /// - Remark: Generated from `#/components/schemas/MealFeedbackRecord/updatedAt`.
+            internal var updatedAt: Swift.String
+            /// Creates a new `MealFeedbackRecord`.
+            ///
+            /// - Parameters:
+            ///   - householdId:
+            ///   - userId:
+            ///   - mealId:
+            ///   - feedback:
+            ///   - updatedAt:
+            internal init(
+                householdId: Swift.String,
+                userId: Swift.String,
+                mealId: Swift.String,
+                feedback: Components.Schemas.MealFeedbackEntry,
+                updatedAt: Swift.String
+            ) {
+                self.householdId = householdId
+                self.userId = userId
+                self.mealId = mealId
+                self.feedback = feedback
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case householdId
+                case userId
+                case mealId
+                case feedback
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ListMealFeedbackResponse`.
+        internal struct ListMealFeedbackResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ListMealFeedbackResponse/feedback`.
+            internal var feedback: Components.Schemas.MealFeedbackState
+            /// - Remark: Generated from `#/components/schemas/ListMealFeedbackResponse/items`.
+            internal var items: [Components.Schemas.MealFeedbackRecord]
+            /// Creates a new `ListMealFeedbackResponse`.
+            ///
+            /// - Parameters:
+            ///   - feedback:
+            ///   - items:
+            internal init(
+                feedback: Components.Schemas.MealFeedbackState,
+                items: [Components.Schemas.MealFeedbackRecord]
+            ) {
+                self.feedback = feedback
+                self.items = items
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case feedback
+                case items
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpsertMealFeedback`.
+        internal struct UpsertMealFeedback: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpsertMealFeedback/mealId`.
+            internal var mealId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertMealFeedback/feedback`.
+            internal struct feedbackPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UpsertMealFeedback/feedback/value1`.
+                internal var value1: Components.Schemas.MealFeedbackEntry
+                /// - Remark: Generated from `#/components/schemas/UpsertMealFeedback/feedback/value2`.
+                internal var value2: OpenAPIRuntime.OpenAPIValueContainer
+                /// Creates a new `feedbackPayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                ///   - value2:
+                internal init(
+                    value1: Components.Schemas.MealFeedbackEntry,
+                    value2: OpenAPIRuntime.OpenAPIValueContainer
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try .init(from: decoder)
+                    self.value2 = try .init(from: decoder)
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try self.value1.encode(to: encoder)
+                    try self.value2.encode(to: encoder)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UpsertMealFeedback/feedback`.
+            internal var feedback: Components.Schemas.UpsertMealFeedback.feedbackPayload
+            /// Creates a new `UpsertMealFeedback`.
+            ///
+            /// - Parameters:
+            ///   - mealId:
+            ///   - feedback:
+            internal init(
+                mealId: Swift.String,
+                feedback: Components.Schemas.UpsertMealFeedback.feedbackPayload
+            ) {
+                self.mealId = mealId
+                self.feedback = feedback
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case mealId
+                case feedback
             }
         }
     }
@@ -11305,6 +11512,341 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
             internal var unauthorized: Operations.unsaveRecipe.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List the current user's meal feedback in a household
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-feedback`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/get(listMealFeedback)`.
+    internal enum listMealFeedback {
+        internal static let id: Swift.String = "listMealFeedback"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.listMealFeedback.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listMealFeedback.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listMealFeedback.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listMealFeedback.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.listMealFeedback.Input.Path,
+                headers: Operations.listMealFeedback.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ListMealFeedbackResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ListMealFeedbackResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listMealFeedback.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listMealFeedback.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Meal feedback keyed by meal id, plus ordered records
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/get(listMealFeedback)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listMealFeedback.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listMealFeedback.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/get(listMealFeedback)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listMealFeedback.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/get(listMealFeedback)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listMealFeedback.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Upsert or remove meal feedback for the current user
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-feedback`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)`.
+    internal enum upsertMealFeedback {
+        internal static let id: Swift.String = "upsertMealFeedback"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.upsertMealFeedback.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertMealFeedback.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertMealFeedback.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertMealFeedback.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpsertMealFeedback)
+            }
+            internal var body: Operations.upsertMealFeedback.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.upsertMealFeedback.Input.Path,
+                headers: Operations.upsertMealFeedback.Input.Headers = .init(),
+                body: Operations.upsertMealFeedback.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-feedback/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertMealFeedback.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertMealFeedback.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Feedback saved or removed
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertMealFeedback.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertMealFeedback.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertMealFeedback.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertMealFeedback.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):

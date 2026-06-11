@@ -12,6 +12,7 @@ final class WeekStore {
     private(set) var today: WeekDayRowViewModel?
     private(set) var lockedDays: Set<Weekday> = []
     private(set) var skippedDays: Set<Weekday> = []
+    private(set) var mealFeedback: [String: MealVote] = [:]
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -31,10 +32,12 @@ final class WeekStore {
             let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
             dayRows = mapped.days
             today = mapped.today
+            mealFeedback = (try? await apiClient.mealFeedback(householdID: household.id)) ?? [:]
         } catch APIError.notFound {
             summary = nil
             dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
+            mealFeedback = [:]
         } catch {
             errorMessage = "We could not load this week."
         }
@@ -84,12 +87,27 @@ final class WeekStore {
         try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
     }
 
+    func submitFeedback(mealID: String, vote: MealVote, household: Household) async {
+        guard mealFeedback[mealID] != vote else { return }
+
+        let previous = mealFeedback[mealID]
+        mealFeedback[mealID] = vote
+
+        do {
+            try await apiClient.submitMealFeedback(householdID: household.id, mealID: mealID, vote: vote)
+        } catch {
+            mealFeedback[mealID] = previous
+            errorMessage = "We could not save your feedback."
+        }
+    }
+
     func reset() {
         summary = nil
         dayRows = []
         today = nil
         lockedDays = []
         skippedDays = []
+        mealFeedback = [:]
         errorMessage = nil
         isLoading = false
     }

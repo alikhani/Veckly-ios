@@ -2469,6 +2469,113 @@
         "required": [
           "ok"
         ]
+      },
+      "MealFeedbackVote": {
+        "type": "string",
+        "enum": [
+          "up",
+          "down"
+        ]
+      },
+      "MealFeedbackSignal": {
+        "type": "string",
+        "enum": [
+          "easy-weeknight",
+          "family-approved",
+          "good-leftovers",
+          "too-much-effort",
+          "family-pushback",
+          "poor-leftovers"
+        ]
+      },
+      "MealFeedbackEntry": {
+        "type": "object",
+        "properties": {
+          "vote": {
+            "$ref": "#/components/schemas/MealFeedbackVote"
+          },
+          "signal": {
+            "$ref": "#/components/schemas/MealFeedbackSignal"
+          }
+        },
+        "required": [
+          "vote"
+        ]
+      },
+      "MealFeedbackState": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/MealFeedbackEntry"
+        }
+      },
+      "MealFeedbackRecord": {
+        "type": "object",
+        "properties": {
+          "householdId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mealId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/MealFeedbackEntry"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "householdId",
+          "userId",
+          "mealId",
+          "feedback",
+          "updatedAt"
+        ]
+      },
+      "ListMealFeedbackResponse": {
+        "type": "object",
+        "properties": {
+          "feedback": {
+            "$ref": "#/components/schemas/MealFeedbackState"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealFeedbackRecord"
+            }
+          }
+        },
+        "required": [
+          "feedback",
+          "items"
+        ]
+      },
+      "UpsertMealFeedback": {
+        "type": "object",
+        "properties": {
+          "mealId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "feedback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MealFeedbackEntry"
+              },
+              {}
+            ]
+          }
+        },
+        "required": [
+          "mealId",
+          "feedback"
+        ]
       }
     },
     "parameters": {}
@@ -4131,6 +4238,87 @@
         "responses": {
           "200": {
             "description": "Recipe unsaved, or was not saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      }
+    },
+    "/households/{householdId}/meal-feedback": {
+      "get": {
+        "operationId": "listMealFeedback",
+        "summary": "List the current user's meal feedback in a household",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meal feedback keyed by meal id, plus ordered records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMealFeedbackResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertMealFeedback",
+        "summary": "Upsert or remove meal feedback for the current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "householdId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMealFeedback"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback saved or removed",
             "content": {
               "application/json": {
                 "schema": {

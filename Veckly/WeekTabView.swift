@@ -103,6 +103,7 @@ struct WeekTabView: View {
                     isExpanded: expandedDayId == day.id,
                     isLocked: appModel.weekStore.lockedDays.contains(day.weekday),
                     isSkipped: appModel.weekStore.skippedDays.contains(day.weekday),
+                    selectedVote: day.recipe.flatMap { appModel.weekStore.mealFeedback[$0.id] },
                     onToggle: {
                         withAnimation(.spring(response: 0.3)) {
                             expandedDayId = expandedDayId == day.id ? nil : day.id
@@ -118,6 +119,10 @@ struct WeekTabView: View {
                         let userID = appModel.authSessionStore.userID ?? ""
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                     },
+                    onFeedback: { vote in
+                        guard let household = appModel.householdStore.activeHousehold, let mealID = day.recipe?.id else { return }
+                        Task { await appModel.weekStore.submitFeedback(mealID: mealID, vote: vote, household: household) }
+                    },
                     onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil
                 )
             }
@@ -131,9 +136,11 @@ struct WeekDayRow: View {
     let isExpanded: Bool
     let isLocked: Bool
     let isSkipped: Bool
+    let selectedVote: MealVote?
     let onToggle: () -> Void
     let onToggleLock: () -> Void
     let onToggleSkip: () -> Void
+    let onFeedback: (MealVote) -> Void
     let onViewRecipe: (() -> Void)?
 
     var body: some View {
@@ -214,6 +221,7 @@ struct WeekDayRow: View {
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
 
                 tagRow(recipe: recipe)
+                feedbackRow
 
                 if let onViewRecipe {
                     Button("View recipe", action: onViewRecipe)
@@ -234,6 +242,21 @@ struct WeekDayRow: View {
         .padding(.top, 4)
     }
 
+    private var feedbackRow: some View {
+        HStack(spacing: 10) {
+            FeedbackVoteButton(
+                vote: .up,
+                isSelected: selectedVote == .up,
+                action: { onFeedback(.up) }
+            )
+            FeedbackVoteButton(
+                vote: .down,
+                isSelected: selectedVote == .down,
+                action: { onFeedback(.down) }
+            )
+        }
+    }
+
     @ViewBuilder
     private func tagRow(recipe: WeekSummaryRecipe) -> some View {
         let hasFeedbackTag = recipe.tags.contains("based-on-feedback")
@@ -251,6 +274,52 @@ struct WeekDayRow: View {
                 }
             }
         }
+    }
+}
+
+struct FeedbackVoteButton: View {
+    let vote: MealVote
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: iconName)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 36, height: 32)
+                .foregroundStyle(isSelected ? .white : VecklyDesign.Colors.inkMid)
+                .background(isSelected ? selectedColor : VecklyDesign.Colors.canvas)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(borderColor, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var iconName: String {
+        switch vote {
+        case .up:
+            return isSelected ? "hand.thumbsup.fill" : "hand.thumbsup"
+        case .down:
+            return isSelected ? "hand.thumbsdown.fill" : "hand.thumbsdown"
+        }
+    }
+
+    private var accessibilityLabel: String {
+        switch vote {
+        case .up:
+            return "Like this meal"
+        case .down:
+            return "Not for us"
+        }
+    }
+
+    private var selectedColor: Color {
+        vote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid
+    }
+
+    private var borderColor: Color {
+        isSelected ? selectedColor : VecklyDesign.Colors.edgeLight
     }
 }
 

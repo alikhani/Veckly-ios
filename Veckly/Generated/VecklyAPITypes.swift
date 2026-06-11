@@ -115,3 +115,8 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
     let ingredients: [RecipeIngredient]
     let steps: [RecipeStep]
 }
+
+enum MealVote: String, Codable {
+    case up
+    case down
+}

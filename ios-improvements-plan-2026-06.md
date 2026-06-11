@@ -9,14 +9,14 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 1 | Interaktiv shoppinglista | ✅ Klart (2026-06-11) |
 | 2 | Ingredienser i receptvyn | ✅ Klart (2026-06-11) |
 | 3 | Lås/lås upp dagar (koppla befintlig knapp) | ✅ Klart (2026-06-11) |
-| 4 | Feedback på måltider (tumme upp/ner) | ⏭ Blockerad — ingen feedback-endpoint i Veckly-backend OpenAPI spec ännu |
+| 4 | Feedback på måltider (tumme upp/ner) | ✅ Klart (2026-06-11) |
 | 5 | Hoppa över en dag | ✅ Klart (2026-06-11) |
 
 ---
 
 ## Fas 1 — Interaktiv shoppinglista
 
-**Status:** ⬜ Ej påbörjad
+**Status:** ✅ Klart (2026-06-11)
 
 ### Mål
 
@@ -80,7 +80,7 @@ func toggleItem(key: String, householdID: String, weekStartDate: String) async
 
 ## Fas 2 — Ingredienser i receptvyn
 
-**Status:** ⬜ Ej påbörjad
+**Status:** ✅ Klart (2026-06-11)
 
 ### Mål
 
@@ -162,7 +162,7 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
 
 ## Fas 3 — Lås/lås upp dagar (koppla befintlig knapp)
 
-**Status:** ⬜ Ej påbörjad
+**Status:** ✅ Klart (2026-06-11)
 
 ### Mål
 
@@ -235,26 +235,22 @@ separat `getWeekPlan`-anrop parallellt med summary.
 
 ## Fas 4 — Feedback på måltider (tumme upp/ner)
 
-**Status:** ⬜ Ej påbörjad
+**Status:** ✅ Klart (2026-06-11)
 
 ### Mål
 
 En familj ska kunna säga "vi gillande det här" eller "inte igen" direkt i appen.
-Feedback lagras via `appendWeekPlanEvent` och påverkar nästa veckas förslag på webben.
+Feedback lagras via `PUT /households/{householdId}/meal-feedback` och påverkar nästa veckas förslag på webben.
 Feedbackknapparna visas i expanderat kortläge (under receptbeskrivning).
 
 ### Backend-kontrakt
 
-Samma `appendWeekPlanEvent` som fas 3. Event-typen för feedback är sannolikt
-`"meal_feedback"` eller liknande — verifiera mot backend-källkod i
-`MealPlanner/src/lib/planner/` eller Veckly-backend routes innan implementation.
-
-Alternativt finns `POST /households/{id}/meal-feedback` som dedicated endpoint.
-Kontrollera `VecklyAPIClient.swift` och `Types.swift` för exakt operationsnamn.
-
-**Notera:** Feedback-API:et i MealPlanner är `POST /api/meal-feedback` med body
-`{ mealId, vote: 'up'|'down', signal: string }`. Kontrollera om Veckly-backend
-exponerar motsvarande endpoint i det genererade klientkoden.
+- `GET /households/{householdId}/meal-feedback`
+  → `ListMealFeedbackResponse { feedback: { [mealId]: { vote, signal? } }, items: [...] }`
+- `PUT /households/{householdId}/meal-feedback`
+  Body: `UpsertMealFeedback { mealId, feedback: { vote: "up"|"down", signal? } | null }`
+  → `{ ok: true }`
+- Feedback är user-owned men household-scoped via RLS (`householdId + userId + mealId`).
 
 ### Filer att röra
 
@@ -287,8 +283,7 @@ HStack(spacing: 16) {
 ```
 `FeedbackButton`: `hand.thumbsup.fill` / `hand.thumbsdown.fill` SF Symbols. Markerat = hearthOrange.
 
-Befintlig röst laddas från plan-summary om backend returnerar det, annars via
-separat `GET /meal-feedback`-anrop om det finns.
+Befintlig röst laddas via separat `GET /households/{householdId}/meal-feedback`.
 
 ### Testfall
 
@@ -301,7 +296,7 @@ separat `GET /meal-feedback`-anrop om det finns.
 
 ## Fas 5 — Hoppa över en dag
 
-**Status:** ⬜ Ej påbörjad
+**Status:** ✅ Klart (2026-06-11)
 
 ### Mål
 

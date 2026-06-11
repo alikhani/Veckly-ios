@@ -116,6 +116,43 @@ struct VecklyAPIClient {
         }
     }
 
+    func mealFeedback(householdID: String) async throws -> [String: MealVote] {
+        let output = try await generatedClient.listMealFeedback(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(response):
+            return try response.body.json.feedback.additionalProperties.compactMapValues(\.appModel)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws {
+        let entry = Components.Schemas.MealFeedbackEntry(vote: vote.apiModel)
+        let entryData = try JSONEncoder().encode(entry)
+        let requestFeedback = try JSONDecoder().decode(
+            Components.Schemas.UpsertMealFeedback.feedbackPayload.self,
+            from: entryData
+        )
+        let requestBody = Components.Schemas.UpsertMealFeedback(
+            mealId: mealID,
+            feedback: requestFeedback
+        )
+        let output = try await generatedClient.upsertMealFeedback(
+            path: .init(householdId: householdID),
+            body: .json(requestBody)
+        )
+        switch output {
+        case .ok:
+            return
+        case .unauthorized:
+            throw APIError.unauthorized
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func updateShoppingListState(
         householdID: String,
         weekStartDate: String,
@@ -337,5 +374,33 @@ private extension Components.Schemas.RecipeIngredient {
 private extension Components.Schemas.RecipeStep {
     var appModel: RecipeStep {
         RecipeStep(text: text)
+    }
+}
+
+private extension Components.Schemas.MealFeedbackEntry {
+    var appModel: MealVote? {
+        vote.appModel
+    }
+}
+
+private extension Components.Schemas.MealFeedbackVote {
+    var appModel: MealVote? {
+        switch self {
+        case .up:
+            return .up
+        case .down:
+            return .down
+        }
+    }
+}
+
+private extension MealVote {
+    var apiModel: Components.Schemas.MealFeedbackVote {
+        switch self {
+        case .up:
+            return .up
+        case .down:
+            return .down
+        }
     }
 }
