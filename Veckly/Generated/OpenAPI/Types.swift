@@ -201,6 +201,26 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PUT /households/{householdId}/meal-feedback`.
     /// - Remark: Generated from `#/paths//households/{householdId}/meal-feedback/put(upsertMealFeedback)`.
     func upsertMealFeedback(_ input: Operations.upsertMealFeedback.Input) async throws -> Operations.upsertMealFeedback.Output
+    /// List the current user's saved week plan templates
+    ///
+    /// - Remark: HTTP `GET /saved-plans`.
+    /// - Remark: Generated from `#/paths//saved-plans/get(listSavedPlans)`.
+    func listSavedPlans(_ input: Operations.listSavedPlans.Input) async throws -> Operations.listSavedPlans.Output
+    /// Create or replace a saved week plan template
+    ///
+    /// - Remark: HTTP `POST /saved-plans`.
+    /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)`.
+    func upsertSavedPlan(_ input: Operations.upsertSavedPlan.Input) async throws -> Operations.upsertSavedPlan.Output
+    /// Rename a saved week plan template
+    ///
+    /// - Remark: HTTP `PATCH /saved-plans/{id}`.
+    /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)`.
+    func renameSavedPlan(_ input: Operations.renameSavedPlan.Input) async throws -> Operations.renameSavedPlan.Output
+    /// Delete a saved week plan template
+    ///
+    /// - Remark: HTTP `DELETE /saved-plans/{id}`.
+    /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)`.
+    func deleteSavedPlan(_ input: Operations.deleteSavedPlan.Input) async throws -> Operations.deleteSavedPlan.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -689,6 +709,54 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// List the current user's saved week plan templates
+    ///
+    /// - Remark: HTTP `GET /saved-plans`.
+    /// - Remark: Generated from `#/paths//saved-plans/get(listSavedPlans)`.
+    internal func listSavedPlans(headers: Operations.listSavedPlans.Input.Headers = .init()) async throws -> Operations.listSavedPlans.Output {
+        try await listSavedPlans(Operations.listSavedPlans.Input(headers: headers))
+    }
+    /// Create or replace a saved week plan template
+    ///
+    /// - Remark: HTTP `POST /saved-plans`.
+    /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)`.
+    internal func upsertSavedPlan(
+        headers: Operations.upsertSavedPlan.Input.Headers = .init(),
+        body: Operations.upsertSavedPlan.Input.Body? = nil
+    ) async throws -> Operations.upsertSavedPlan.Output {
+        try await upsertSavedPlan(Operations.upsertSavedPlan.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Rename a saved week plan template
+    ///
+    /// - Remark: HTTP `PATCH /saved-plans/{id}`.
+    /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)`.
+    internal func renameSavedPlan(
+        path: Operations.renameSavedPlan.Input.Path,
+        headers: Operations.renameSavedPlan.Input.Headers = .init(),
+        body: Operations.renameSavedPlan.Input.Body? = nil
+    ) async throws -> Operations.renameSavedPlan.Output {
+        try await renameSavedPlan(Operations.renameSavedPlan.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Delete a saved week plan template
+    ///
+    /// - Remark: HTTP `DELETE /saved-plans/{id}`.
+    /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)`.
+    internal func deleteSavedPlan(
+        path: Operations.deleteSavedPlan.Input.Path,
+        headers: Operations.deleteSavedPlan.Input.Headers = .init()
+    ) async throws -> Operations.deleteSavedPlan.Output {
+        try await deleteSavedPlan(Operations.deleteSavedPlan.Input(
+            path: path,
+            headers: headers
         ))
     }
 }
@@ -4592,6 +4660,91 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case mealId
                 case feedback
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SavedPlan`.
+        internal struct SavedPlan: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SavedPlan/id`.
+            internal var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SavedPlan/createdAt`.
+            internal var createdAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SavedPlan/label`.
+            internal var label: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SavedPlan/state`.
+            internal var state: Swift.String
+            /// Creates a new `SavedPlan`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - createdAt:
+            ///   - label:
+            ///   - state:
+            internal init(
+                id: Swift.String,
+                createdAt: Swift.String,
+                label: Swift.String,
+                state: Swift.String
+            ) {
+                self.id = id
+                self.createdAt = createdAt
+                self.label = label
+                self.state = state
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case id
+                case createdAt
+                case label
+                case state
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan`.
+        internal struct UpsertSavedPlan: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/id`.
+            internal var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/createdAt`.
+            internal var createdAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/label`.
+            internal var label: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/state`.
+            internal var state: Swift.String
+            /// Creates a new `UpsertSavedPlan`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - createdAt:
+            ///   - label:
+            ///   - state:
+            internal init(
+                id: Swift.String,
+                createdAt: Swift.String,
+                label: Swift.String,
+                state: Swift.String
+            ) {
+                self.id = id
+                self.createdAt = createdAt
+                self.label = label
+                self.state = state
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case id
+                case createdAt
+                case label
+                case state
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RenameSavedPlan`.
+        internal struct RenameSavedPlan: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RenameSavedPlan/label`.
+            internal var label: Swift.String
+            /// Creates a new `RenameSavedPlan`.
+            ///
+            /// - Parameters:
+            ///   - label:
+            internal init(label: Swift.String) {
+                self.label = label
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case label
             }
         }
     }
@@ -11847,6 +12000,677 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
             internal var unauthorized: Operations.upsertMealFeedback.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List the current user's saved week plan templates
+    ///
+    /// - Remark: HTTP `GET /saved-plans`.
+    /// - Remark: Generated from `#/paths//saved-plans/get(listSavedPlans)`.
+    internal enum listSavedPlans {
+        internal static let id: Swift.String = "listSavedPlans"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/saved-plans/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listSavedPlans.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listSavedPlans.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listSavedPlans.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            internal init(headers: Operations.listSavedPlans.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/saved-plans/GET/responses/200/content/application\/json`.
+                    case json([Components.Schemas.SavedPlan])
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: [Components.Schemas.SavedPlan] {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listSavedPlans.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listSavedPlans.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Saved plan templates
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/get(listSavedPlans)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listSavedPlans.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listSavedPlans.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/get(listSavedPlans)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listSavedPlans.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/get(listSavedPlans)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listSavedPlans.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create or replace a saved week plan template
+    ///
+    /// - Remark: HTTP `POST /saved-plans`.
+    /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)`.
+    internal enum upsertSavedPlan {
+        internal static let id: Swift.String = "upsertSavedPlan"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/saved-plans/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertSavedPlan.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertSavedPlan.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertSavedPlan.Input.Headers
+            /// - Remark: Generated from `#/paths/saved-plans/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpsertSavedPlan)
+            }
+            internal var body: Operations.upsertSavedPlan.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                headers: Operations.upsertSavedPlan.Input.Headers = .init(),
+                body: Operations.upsertSavedPlan.Input.Body? = nil
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/saved-plans/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SavedPlan)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.SavedPlan {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertSavedPlan.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertSavedPlan.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Saved plan persisted
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertSavedPlan.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertSavedPlan.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertSavedPlan.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertSavedPlan.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Rename a saved week plan template
+    ///
+    /// - Remark: HTTP `PATCH /saved-plans/{id}`.
+    /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)`.
+    internal enum renameSavedPlan {
+        internal static let id: Swift.String = "renameSavedPlan"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/path/id`.
+                internal var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                internal init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            internal var path: Operations.renameSavedPlan.Input.Path
+            /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.renameSavedPlan.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.renameSavedPlan.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.renameSavedPlan.Input.Headers
+            /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.RenameSavedPlan)
+            }
+            internal var body: Operations.renameSavedPlan.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.renameSavedPlan.Input.Path,
+                headers: Operations.renameSavedPlan.Input.Headers = .init(),
+                body: Operations.renameSavedPlan.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/saved-plans/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SavedPlan)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.SavedPlan {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.renameSavedPlan.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.renameSavedPlan.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Saved plan renamed
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.renameSavedPlan.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.renameSavedPlan.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.renameSavedPlan.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.renameSavedPlan.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Saved plan not found
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.renameSavedPlan.Output.NotFound)
+            /// Saved plan not found
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/patch(renameSavedPlan)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.renameSavedPlan.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Delete a saved week plan template
+    ///
+    /// - Remark: HTTP `DELETE /saved-plans/{id}`.
+    /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)`.
+    internal enum deleteSavedPlan {
+        internal static let id: Swift.String = "deleteSavedPlan"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/saved-plans/{id}/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/{id}/DELETE/path/id`.
+                internal var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                internal init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            internal var path: Operations.deleteSavedPlan.Input.Path
+            /// - Remark: Generated from `#/paths/saved-plans/{id}/DELETE/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.deleteSavedPlan.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.deleteSavedPlan.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.deleteSavedPlan.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.deleteSavedPlan.Input.Path,
+                headers: Operations.deleteSavedPlan.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/{id}/DELETE/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/saved-plans/{id}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.deleteSavedPlan.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.deleteSavedPlan.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Saved plan deleted, or was already absent
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.deleteSavedPlan.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.deleteSavedPlan.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.deleteSavedPlan.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.deleteSavedPlan.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
