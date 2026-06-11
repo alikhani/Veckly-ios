@@ -4,7 +4,6 @@ struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @State private var selectedRecipe: WeekSummaryRecipe?
     @State private var expandedDayId: String?
-    @State private var lockedDayIds: Set<String> = []
 
     var body: some View {
         ScrollView {
@@ -102,19 +101,16 @@ struct WeekTabView: View {
                 WeekDayRow(
                     day: day,
                     isExpanded: expandedDayId == day.id,
-                    isLocked: lockedDayIds.contains(day.id),
+                    isLocked: appModel.weekStore.lockedDays.contains(day.weekday),
                     onToggle: {
                         withAnimation(.spring(response: 0.3)) {
                             expandedDayId = expandedDayId == day.id ? nil : day.id
                         }
                     },
                     onToggleLock: {
-                        // TODO: wire to PATCH /api/weeks once backend exposes locked days
-                        if lockedDayIds.contains(day.id) {
-                            lockedDayIds.remove(day.id)
-                        } else {
-                            lockedDayIds.insert(day.id)
-                        }
+                        guard let household = appModel.householdStore.activeHousehold else { return }
+                        let userID = appModel.authSessionStore.userID ?? ""
+                        Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                     },
                     onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil
                 )

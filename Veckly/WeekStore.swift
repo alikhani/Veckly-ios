@@ -10,6 +10,7 @@ final class WeekStore {
     private(set) var summary: WeekSummary?
     private(set) var dayRows: [WeekDayRowViewModel] = []
     private(set) var today: WeekDayRowViewModel?
+    private(set) var lockedDays: Set<Weekday> = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -38,6 +39,26 @@ final class WeekStore {
         }
     }
 
+    func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        let isLocked = lockedDays.contains(day.weekday)
+        if isLocked { lockedDays.remove(day.weekday) } else { lockedDays.insert(day.weekday) }
+
+        let event: WeekPlanEventInput = isLocked
+            ? .mealUnlocked(day: day.weekday)
+            : .mealLocked(day: day.weekday)
+
+        do {
+            try await apiClient.appendWeekPlanEvent(
+                householdID: household.id,
+                weekStartDate: weekStartDate,
+                userID: userID,
+                event: event
+            )
+        } catch {
+            if isLocked { lockedDays.insert(day.weekday) } else { lockedDays.remove(day.weekday) }
+        }
+    }
+
     func fetchFullRecipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
     }
@@ -46,6 +67,7 @@ final class WeekStore {
         summary = nil
         dayRows = []
         today = nil
+        lockedDays = []
         errorMessage = nil
         isLoading = false
     }
@@ -83,6 +105,7 @@ final class WeekStore {
 
 struct WeekDayRowViewModel: Equatable, Identifiable {
     let id: String
+    let weekday: Weekday
     let weekdayLabel: String
     let dateLabel: String
     let mealTitle: String
@@ -105,6 +128,7 @@ struct WeekViewModelMapper {
             let date = WeekCalendar.addDays(to: weekStartDate, offset: index)
             return WeekDayRowViewModel(
                 id: date,
+                weekday: weekday,
                 weekdayLabel: weekday.displayName,
                 dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: date),
                 mealTitle: "No dinner planned",
@@ -121,6 +145,7 @@ struct WeekViewModelMapper {
         let recipe = day.recipe
         return WeekDayRowViewModel(
             id: day.id,
+            weekday: day.dayOfWeek,
             weekdayLabel: day.dayOfWeek.displayName,
             dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: day.date),
             mealTitle: recipe?.title ?? "No dinner planned",

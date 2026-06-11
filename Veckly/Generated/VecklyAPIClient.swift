@@ -73,6 +73,33 @@ struct VecklyAPIClient {
         }
     }
 
+    func appendWeekPlanEvent(
+        householdID: String,
+        weekStartDate: String,
+        userID: String,
+        event: WeekPlanEventInput
+    ) async throws {
+        let causedBy = Components.Schemas.CausedBy.case1(
+            .init(source: .user, userId: userID)
+        )
+        let req = Components.Schemas.AppendWeekPlanEventRequest(
+            value1: .init(causedBy: causedBy),
+            value2: event.requestValue2
+        )
+        let output = try await generatedClient.appendWeekPlanEvent(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate),
+            body: .json(req)
+        )
+        switch output {
+        case .created:
+            return
+        case .unauthorized:
+            throw APIError.unauthorized
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         let output = try await generatedClient.getRecipe(
             path: .init(householdId: householdID, recipeId: recipeID)
@@ -265,6 +292,23 @@ private extension Components.Schemas.ShoppingListSummaryItem {
             unit: unit,
             checked: checked
         )
+    }
+}
+
+private extension WeekPlanEventInput {
+    typealias V2 = Components.Schemas.AppendWeekPlanEventRequest.Value2Payload
+
+    var requestValue2: V2 {
+        switch self {
+        case .mealLocked(let day):
+            return .case5(.init(eventType: .meal_locked, dayOfWeek: .init(rawValue: day.rawValue)!))
+        case .mealUnlocked(let day):
+            return .case6(.init(eventType: .meal_unlocked, dayOfWeek: .init(rawValue: day.rawValue)!))
+        case .daySkipped(let day):
+            return .case8(.init(eventType: .day_skipped, dayOfWeek: .init(rawValue: day.rawValue)!))
+        case .dayUnskipped(let day):
+            return .case9(.init(eventType: .day_unskipped, dayOfWeek: .init(rawValue: day.rawValue)!))
+        }
     }
 }
 

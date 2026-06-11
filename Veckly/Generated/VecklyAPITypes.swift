@@ -86,6 +86,13 @@ struct ShoppingListItem: Decodable, Equatable, Identifiable {
     var id: String { itemKey }
 }
 
+enum WeekPlanEventInput {
+    case mealLocked(day: Weekday)
+    case mealUnlocked(day: Weekday)
+    case daySkipped(day: Weekday)
+    case dayUnskipped(day: Weekday)
+}
+
 struct RecipeIngredient: Decodable, Equatable {
     let item: String
     let amount: String?
