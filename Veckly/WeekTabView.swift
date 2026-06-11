@@ -102,6 +102,7 @@ struct WeekTabView: View {
                     day: day,
                     isExpanded: expandedDayId == day.id,
                     isLocked: appModel.weekStore.lockedDays.contains(day.weekday),
+                    isSkipped: appModel.weekStore.skippedDays.contains(day.weekday),
                     onToggle: {
                         withAnimation(.spring(response: 0.3)) {
                             expandedDayId = expandedDayId == day.id ? nil : day.id
@@ -111,6 +112,11 @@ struct WeekTabView: View {
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         let userID = appModel.authSessionStore.userID ?? ""
                         Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
+                    },
+                    onToggleSkip: {
+                        guard let household = appModel.householdStore.activeHousehold else { return }
+                        let userID = appModel.authSessionStore.userID ?? ""
+                        Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                     },
                     onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil
                 )
@@ -124,8 +130,10 @@ struct WeekDayRow: View {
     let day: WeekDayRowViewModel
     let isExpanded: Bool
     let isLocked: Bool
+    let isSkipped: Bool
     let onToggle: () -> Void
     let onToggleLock: () -> Void
+    let onToggleSkip: () -> Void
     let onViewRecipe: (() -> Void)?
 
     var body: some View {
@@ -138,7 +146,9 @@ struct WeekDayRow: View {
                 }
             }
         }
+        .opacity(isSkipped ? 0.5 : 1)
         .animation(.spring(response: 0.3), value: isExpanded)
+        .animation(.easeInOut(duration: 0.2), value: isSkipped)
     }
 
     private var headerRow: some View {
@@ -154,9 +164,13 @@ struct WeekDayRow: View {
                 .frame(width: 92, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(day.mealTitle)
+                    Text(isSkipped ? "Skipped" : day.mealTitle)
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(day.isEmpty ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
+                        .foregroundStyle(
+                            isSkipped
+                                ? VecklyDesign.Colors.inkFaint
+                                : (day.isEmpty ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
+                        )
                     if !isExpanded {
                         Text(day.detail)
                             .font(.footnote)
@@ -173,13 +187,15 @@ struct WeekDayRow: View {
                             .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     }
 
-                    Button(action: onToggleLock) {
-                        Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                            .font(.system(size: 14))
-                            .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                    if !isSkipped {
+                        Button(action: onToggleLock) {
+                            Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                                .font(.system(size: 14))
+                                .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
                 }
             }
         }
@@ -192,7 +208,7 @@ struct WeekDayRow: View {
             Divider()
                 .padding(.top, 8)
 
-            if let recipe = day.recipe {
+            if let recipe = day.recipe, !isSkipped {
                 Text(recipe.description)
                     .font(.body)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
@@ -204,11 +220,16 @@ struct WeekDayRow: View {
                         .buttonStyle(.bordered)
                         .tint(VecklyDesign.Colors.hearthOrange)
                 }
-            } else {
+            } else if !isSkipped {
                 Text(day.detail)
                     .font(.footnote)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             }
+
+            Button(isSkipped ? "Undo skip" : "Skip this day", action: onToggleSkip)
+                .font(.footnote)
+                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                .buttonStyle(.plain)
         }
         .padding(.top, 4)
     }

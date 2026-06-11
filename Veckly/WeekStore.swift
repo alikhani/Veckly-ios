@@ -11,6 +11,7 @@ final class WeekStore {
     private(set) var dayRows: [WeekDayRowViewModel] = []
     private(set) var today: WeekDayRowViewModel?
     private(set) var lockedDays: Set<Weekday> = []
+    private(set) var skippedDays: Set<Weekday> = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -59,6 +60,26 @@ final class WeekStore {
         }
     }
 
+    func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        let isSkipped = skippedDays.contains(day.weekday)
+        if isSkipped { skippedDays.remove(day.weekday) } else { skippedDays.insert(day.weekday) }
+
+        let event: WeekPlanEventInput = isSkipped
+            ? .dayUnskipped(day: day.weekday)
+            : .daySkipped(day: day.weekday)
+
+        do {
+            try await apiClient.appendWeekPlanEvent(
+                householdID: household.id,
+                weekStartDate: weekStartDate,
+                userID: userID,
+                event: event
+            )
+        } catch {
+            if isSkipped { skippedDays.insert(day.weekday) } else { skippedDays.remove(day.weekday) }
+        }
+    }
+
     func fetchFullRecipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
     }
@@ -68,6 +89,7 @@ final class WeekStore {
         dayRows = []
         today = nil
         lockedDays = []
+        skippedDays = []
         errorMessage = nil
         isLoading = false
     }
