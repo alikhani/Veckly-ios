@@ -4,19 +4,18 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 
 struct VecklyAPIClient {
-    let baseURL: URL
-    let accessToken: () -> String?
+    private let _client: Client
 
-    private var generatedClient: Client {
-        Client(
+    init(baseURL: URL, accessToken: @escaping @Sendable () -> String?) {
+        _client = Client(
             serverURL: baseURL,
             transport: URLSessionTransport(),
-            middlewares: [AuthorizationMiddleware(accessToken: accessToken())]
+            middlewares: [AuthorizationMiddleware(getToken: accessToken)]
         )
     }
 
     func bootstrapHousehold() async throws -> Household {
-        let output = try await generatedClient.bootstrapMyHousehold()
+        let output = try await _client.bootstrapMyHousehold()
         switch output {
         case let .ok(response):
             return try response.body.json.appModel
@@ -30,7 +29,7 @@ struct VecklyAPIClient {
     }
 
     func listHouseholds() async throws -> [Household] {
-        let output = try await generatedClient.getMyHouseholds()
+        let output = try await _client.getMyHouseholds()
         switch output {
         case let .ok(response):
             return try response.body.json.households.map(\.appModel)
@@ -42,7 +41,7 @@ struct VecklyAPIClient {
     }
 
     func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
-        let output = try await generatedClient.getWeekPlanSummary(
+        let output = try await _client.getWeekPlanSummary(
             path: .init(householdId: householdID, weekStartDate: weekStartDate)
         )
         switch output {
@@ -58,7 +57,7 @@ struct VecklyAPIClient {
     }
 
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
-        let output = try await generatedClient.getShoppingListSummary(
+        let output = try await _client.getShoppingListSummary(
             path: .init(householdId: householdID, weekStartDate: weekStartDate)
         )
         switch output {
@@ -86,7 +85,7 @@ struct VecklyAPIClient {
             value1: .init(causedBy: causedBy),
             value2: event.requestValue2
         )
-        let output = try await generatedClient.appendWeekPlanEvent(
+        let output = try await _client.appendWeekPlanEvent(
             path: .init(householdId: householdID, weekStartDate: weekStartDate),
             body: .json(req)
         )
@@ -101,7 +100,7 @@ struct VecklyAPIClient {
     }
 
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
-        let output = try await generatedClient.getRecipe(
+        let output = try await _client.getRecipe(
             path: .init(householdId: householdID, recipeId: recipeID)
         )
         switch output {
@@ -117,7 +116,7 @@ struct VecklyAPIClient {
     }
 
     func mealFeedback(householdID: String) async throws -> [String: MealVote] {
-        let output = try await generatedClient.listMealFeedback(path: .init(householdId: householdID))
+        let output = try await _client.listMealFeedback(path: .init(householdId: householdID))
         switch output {
         case let .ok(response):
             return try response.body.json.feedback.additionalProperties.compactMapValues(\.appModel)
@@ -139,7 +138,7 @@ struct VecklyAPIClient {
             mealId: mealID,
             feedback: requestFeedback
         )
-        let output = try await generatedClient.upsertMealFeedback(
+        let output = try await _client.upsertMealFeedback(
             path: .init(householdId: householdID),
             body: .json(requestBody)
         )
@@ -154,7 +153,7 @@ struct VecklyAPIClient {
     }
 
     func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe {
-        let output = try await generatedClient.createRecipe(
+        let output = try await _client.createRecipe(
             path: .init(householdId: householdID),
             body: .json(draft.createPayload)
         )
@@ -166,7 +165,7 @@ struct VecklyAPIClient {
     }
 
     func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe {
-        let output = try await generatedClient.updateRecipe(
+        let output = try await _client.updateRecipe(
             path: .init(householdId: householdID, recipeId: recipeID),
             body: .json(draft.updatePayload)
         )
@@ -179,29 +178,37 @@ struct VecklyAPIClient {
     }
 
     func fillInRecipe(title: String) async throws -> RecipeDraft {
-        let output = try await generatedClient.fillInRecipe(
+        let output = try await _client.fillInRecipe(
             body: .json(.init(title: title))
         )
         switch output {
         case let .ok(r): return try RecipeDraft(fillIn: r.body.json.recipe, originalTitle: title)
         case .unauthorized: throw APIError.unauthorized
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unprocessableContent: throw APIError.server(statusCode: 422)
+        case .tooManyRequests: throw APIError.server(statusCode: 429)
+        case .internalServerError: throw APIError.server(statusCode: 500)
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
 
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
-        let output = try await generatedClient.importRecipeFromUrl(
+        let output = try await _client.importRecipeFromUrl(
             body: .json(.init(url: urlString))
         )
         switch output {
         case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe)
         case .unauthorized: throw APIError.unauthorized
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unprocessableContent: throw APIError.server(statusCode: 422)
+        case .tooManyRequests: throw APIError.server(statusCode: 429)
+        case .internalServerError: throw APIError.server(statusCode: 500)
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
 
     func listHouseholdRecipes(householdID: String) async throws -> [FullRecipe] {
-        let output = try await generatedClient.listRecipes(
+        let output = try await _client.listRecipes(
             path: .init(householdId: householdID)
         )
         switch output {
@@ -215,7 +222,7 @@ struct VecklyAPIClient {
     }
 
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
-        let output = try await generatedClient.generateWeekPlan(
+        let output = try await _client.generateWeekPlan(
             path: .init(householdId: householdID, weekStartDate: weekStartDate),
             body: .json(.init(regenerate: regenerate))
         )
@@ -230,7 +237,7 @@ struct VecklyAPIClient {
     }
 
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
-        let output = try await generatedClient.listHouseholdMembers(path: .init(householdId: householdID))
+        let output = try await _client.listHouseholdMembers(path: .init(householdId: householdID))
         switch output {
         case let .ok(r): return try r.body.json.members.map(\.appModel)
         case .unauthorized: throw APIError.unauthorized
@@ -239,7 +246,7 @@ struct VecklyAPIClient {
     }
 
     func getProfile(householdID: String) async throws -> HouseholdProfile? {
-        let output = try await generatedClient.getHouseholdProfile(path: .init(householdId: householdID))
+        let output = try await _client.getHouseholdProfile(path: .init(householdId: householdID))
         switch output {
         case let .ok(r): return try r.body.json.profile?.appModel
         case .unauthorized: throw APIError.unauthorized
@@ -263,7 +270,7 @@ struct VecklyAPIClient {
             avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
             selectedDays: selectedDays.compactMap { DayPayload(day: .init(rawValue: $0.rawValue)!) }
         )
-        let output = try await generatedClient.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
+        let output = try await _client.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
         switch output {
         case let .ok(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
@@ -272,7 +279,7 @@ struct VecklyAPIClient {
     }
 
     func createInvite(householdID: String) async throws -> HouseholdInvite {
-        let output = try await generatedClient.createHouseholdInvite(path: .init(householdId: householdID))
+        let output = try await _client.createHouseholdInvite(path: .init(householdId: householdID))
         switch output {
         case let .created(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
@@ -281,7 +288,7 @@ struct VecklyAPIClient {
     }
 
     func listInvites(householdID: String) async throws -> [HouseholdInvite] {
-        let output = try await generatedClient.listHouseholdInvites(path: .init(householdId: householdID))
+        let output = try await _client.listHouseholdInvites(path: .init(householdId: householdID))
         switch output {
         case let .ok(r): return try r.body.json.invites.map(\.appModel)
         case .unauthorized: throw APIError.unauthorized
@@ -290,7 +297,7 @@ struct VecklyAPIClient {
     }
 
     func revokeInvite(householdID: String, inviteID: String) async throws {
-        let output = try await generatedClient.revokeHouseholdInvite(path: .init(householdId: householdID, inviteId: inviteID))
+        let output = try await _client.revokeHouseholdInvite(path: .init(householdId: householdID, inviteId: inviteID))
         switch output {
         case .noContent: return
         case .unauthorized: throw APIError.unauthorized
@@ -299,7 +306,7 @@ struct VecklyAPIClient {
     }
 
     func lookupInvite(token: String) async throws -> InviteLanding {
-        let output = try await generatedClient.getInviteLanding(path: .init(token: token))
+        let output = try await _client.getInviteLanding(path: .init(token: token))
         switch output {
         case let .ok(r):
             let json = try r.body.json
@@ -311,7 +318,7 @@ struct VecklyAPIClient {
     }
 
     func acceptInvite(token: String) async throws {
-        let output = try await generatedClient.acceptInvite(path: .init(token: token))
+        let output = try await _client.acceptInvite(path: .init(token: token))
         switch output {
         case .ok: return
         case .unauthorized: throw APIError.unauthorized
@@ -323,7 +330,7 @@ struct VecklyAPIClient {
 
     func listPrepBatches(householdID: String, from: String, to: String) async throws -> [PrepBatch] {
         typealias Op = Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches
-        let output = try await generatedClient.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
+        let output = try await _client.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
             path: .init(householdId: householdID),
             query: .init(from: from, to: to)
         )
@@ -350,7 +357,7 @@ struct VecklyAPIClient {
             totalPortions: totalPortions,
             assignments: assignments.map { AssignPayload(date: $0.date, mealType: .init(rawValue: $0.mealType.rawValue)!) }
         )
-        let output = try await generatedClient.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
+        let output = try await _client.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
             path: .init(householdId: householdID),
             body: .json(payload)
         )
@@ -364,7 +371,7 @@ struct VecklyAPIClient {
     }
 
     func deletePrepBatch(householdID: String, batchID: String) async throws {
-        let output = try await generatedClient.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(
+        let output = try await _client.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(
             path: .init(householdId: householdID, batchId: batchID)
         )
         switch output {
@@ -394,7 +401,7 @@ struct VecklyAPIClient {
             expectedUpdatedAt: expectedUpdatedAt,
             state: requestState
         )
-        let output = try await generatedClient.updateShoppingListState(
+        let output = try await _client.updateShoppingListState(
             path: .init(householdId: householdID, weekStartDate: weekStartDate),
             body: .json(requestBody)
         )
@@ -414,7 +421,7 @@ struct VecklyAPIClient {
 }
 
 private struct AuthorizationMiddleware: ClientMiddleware {
-    let accessToken: String?
+    let getToken: @Sendable () -> String?
 
     @concurrent func intercept(
         _ request: HTTPRequest,
@@ -423,7 +430,7 @@ private struct AuthorizationMiddleware: ClientMiddleware {
         operationID: String,
         next: @concurrent @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
     ) async throws -> (HTTPResponse, HTTPBody?) {
-        guard let token = accessToken else { throw APIError.unauthorized }
+        guard let token = getToken() else { throw APIError.unauthorized }
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
         return try await next(request, body, baseURL)
