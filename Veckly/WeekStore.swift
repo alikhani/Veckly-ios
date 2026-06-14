@@ -14,6 +14,7 @@ final class WeekStore {
     private(set) var skippedDays: Set<Weekday> = []
     private(set) var mealFeedback: [String: MealVote] = [:]
     private(set) var isLoading = false
+    private(set) var isGenerating = false
     private(set) var errorMessage: String?
 
     init(apiClient: VecklyAPIClient) {
@@ -80,6 +81,18 @@ final class WeekStore {
             )
         } catch {
             if isSkipped { skippedDays.insert(day.weekday) } else { skippedDays.remove(day.weekday) }
+        }
+    }
+
+    func generateWeek(household: Household, userID: String, regenerate: Bool = false) async {
+        isGenerating = true
+        defer { isGenerating = false }
+
+        do {
+            try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: weekStartDate, regenerate: regenerate)
+            await loadCurrentWeek(household: household)
+        } catch {
+            errorMessage = "We could not generate your week."
         }
     }
 

@@ -12,6 +12,8 @@ struct WeekTabView: View {
 
                 if appModel.householdStore.isLoading || appModel.weekStore.isLoading {
                     LoadingPanel(title: "Loading this week")
+                } else if appModel.weekStore.isGenerating {
+                    LoadingPanel(title: "Generating your week…")
                 } else if let errorMessage = appModel.weekStore.errorMessage ?? appModel.householdStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
                         Task { await appModel.loadCoreReader() }
@@ -26,12 +28,35 @@ struct WeekTabView: View {
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle("Week")
         .toolbar {
-            Button {
-                Task { await appModel.loadCoreReader() }
-            } label: {
-                Image(systemName: "arrow.clockwise")
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if appModel.weekStore.isGenerating {
+                    ProgressView()
+                } else {
+                    Button {
+                        guard let household = appModel.householdStore.activeHousehold else { return }
+                        let hasAnyMeal = appModel.weekStore.dayRows.contains { !$0.isEmpty }
+                        Task {
+                            await appModel.weekStore.generateWeek(
+                                household: household,
+                                userID: appModel.authSessionStore.userID ?? "",
+                                regenerate: hasAnyMeal
+                            )
+                        }
+                    } label: {
+                        Text(appModel.weekStore.dayRows.contains { !$0.isEmpty } ? "Regenerate" : "Generate")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .disabled(appModel.householdStore.activeHousehold == nil)
+
+                    Button {
+                        Task { await appModel.loadCoreReader() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .accessibilityLabel("Refresh")
+                }
             }
-            .accessibilityLabel("Refresh")
         }
         .sheet(item: $selectedRecipe) { recipe in
             RecipeDetailView(

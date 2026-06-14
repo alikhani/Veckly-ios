@@ -153,6 +153,21 @@ struct VecklyAPIClient {
         }
     }
 
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
+        let output = try await generatedClient.generateWeekPlan(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate),
+            body: .json(.init(regenerate: regenerate))
+        )
+        switch output {
+        case .ok:
+            return
+        case .unauthorized:
+            throw APIError.unauthorized
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func updateShoppingListState(
         householdID: String,
         weekStartDate: String,
