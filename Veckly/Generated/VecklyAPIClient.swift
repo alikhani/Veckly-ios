@@ -153,6 +153,20 @@ struct VecklyAPIClient {
         }
     }
 
+    func listHouseholdRecipes(householdID: String) async throws -> [FullRecipe] {
+        let output = try await generatedClient.listRecipes(
+            path: .init(householdId: householdID)
+        )
+        switch output {
+        case let .ok(response):
+            return try response.body.json.map(\.appModel)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
         let output = try await generatedClient.generateWeekPlan(
             path: .init(householdId: householdID, weekStartDate: weekStartDate),
@@ -352,6 +366,10 @@ private extension WeekPlanEventInput {
 
     var requestValue2: V2 {
         switch self {
+        case .mealAssigned(let day, let recipeID):
+            return .case3(.init(eventType: .meal_assigned, dayOfWeek: .init(rawValue: day.rawValue)!, recipeRef: recipeID))
+        case .mealUnassigned(let day):
+            return .case4(.init(eventType: .meal_unassigned, dayOfWeek: .init(rawValue: day.rawValue)!))
         case .mealLocked(let day):
             return .case5(.init(eventType: .meal_locked, dayOfWeek: .init(rawValue: day.rawValue)!))
         case .mealUnlocked(let day):

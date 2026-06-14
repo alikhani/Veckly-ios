@@ -6,6 +6,7 @@ import Observation
 final class AppModel {
     let environment: AppEnvironment
     let authSessionStore: AuthSessionStore
+    let apiClient: VecklyAPIClient
     let householdStore: HouseholdStore
     let weekStore: WeekStore
     let shoppingListStore: ShoppingListStore
@@ -20,6 +21,7 @@ final class AppModel {
         }
 
         self.authSessionStore = authSessionStore
+        self.apiClient = apiClient
         self.householdStore = HouseholdStore(apiClient: apiClient)
         self.weekStore = WeekStore(apiClient: apiClient)
         self.shoppingListStore = ShoppingListStore(apiClient: apiClient)

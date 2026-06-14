@@ -96,6 +96,34 @@ final class WeekStore {
         }
     }
 
+    func assignMeal(day: WeekDayRowViewModel, recipeID: String, household: Household, userID: String) async {
+        do {
+            try await apiClient.appendWeekPlanEvent(
+                householdID: household.id,
+                weekStartDate: weekStartDate,
+                userID: userID,
+                event: .mealAssigned(day: day.weekday, recipeID: recipeID)
+            )
+            await loadCurrentWeek(household: household)
+        } catch {
+            errorMessage = "We could not assign the meal."
+        }
+    }
+
+    func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        do {
+            try await apiClient.appendWeekPlanEvent(
+                householdID: household.id,
+                weekStartDate: weekStartDate,
+                userID: userID,
+                event: .mealUnassigned(day: day.weekday)
+            )
+            await loadCurrentWeek(household: household)
+        } catch {
+            errorMessage = "We could not clear the meal."
+        }
+    }
+
     func fetchFullRecipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
     }

@@ -87,6 +87,8 @@ struct ShoppingListItem: Decodable, Equatable, Identifiable {
 }
 
 enum WeekPlanEventInput {
+    case mealAssigned(day: Weekday, recipeID: String)
+    case mealUnassigned(day: Weekday)
     case mealLocked(day: Weekday)
     case mealUnlocked(day: Weekday)
     case daySkipped(day: Weekday)

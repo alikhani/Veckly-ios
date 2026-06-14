@@ -4,6 +4,7 @@ struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @State private var selectedRecipe: WeekSummaryRecipe?
     @State private var expandedDayId: String?
+    @State private var mealPickerDay: WeekDayRowViewModel?
 
     var body: some View {
         ScrollView {
@@ -62,6 +63,26 @@ struct WeekTabView: View {
             RecipeDetailView(
                 recipe: recipe,
                 householdID: appModel.householdStore.activeHousehold?.id ?? ""
+            )
+        }
+        .sheet(item: $mealPickerDay) { day in
+            MealPickerSheet(
+                day: day,
+                householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                apiClient: appModel.apiClient,
+                onSelect: { recipe in
+                    mealPickerDay = nil
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let userID = appModel.authSessionStore.userID ?? ""
+                    Task { await appModel.weekStore.assignMeal(day: day, recipeID: recipe.id, household: household, userID: userID) }
+                },
+                onClear: {
+                    mealPickerDay = nil
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let userID = appModel.authSessionStore.userID ?? ""
+                    Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                },
+                onDismiss: { mealPickerDay = nil }
             )
         }
         .onAppear {
@@ -148,7 +169,8 @@ struct WeekTabView: View {
                         guard let household = appModel.householdStore.activeHousehold, let mealID = day.recipe?.id else { return }
                         Task { await appModel.weekStore.submitFeedback(mealID: mealID, vote: vote, household: household) }
                     },
-                    onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil
+                    onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil,
+                    onPickMeal: { mealPickerDay = day }
                 )
             }
         }
@@ -167,6 +189,7 @@ struct WeekDayRow: View {
     let onToggleSkip: () -> Void
     let onFeedback: (MealVote) -> Void
     let onViewRecipe: (() -> Void)?
+    let onPickMeal: () -> Void
 
     var body: some View {
         VecklyCard {
@@ -248,15 +271,24 @@ struct WeekDayRow: View {
                 tagRow(recipe: recipe)
                 feedbackRow
 
-                if let onViewRecipe {
-                    Button("View recipe", action: onViewRecipe)
-                        .buttonStyle(.bordered)
-                        .tint(VecklyDesign.Colors.hearthOrange)
+                HStack(spacing: 10) {
+                    if let onViewRecipe {
+                        Button("View recipe", action: onViewRecipe)
+                            .buttonStyle(.bordered)
+                            .tint(VecklyDesign.Colors.hearthOrange)
+                    }
+                    if !isLocked {
+                        Button("Change meal", action: onPickMeal)
+                            .buttonStyle(.bordered)
+                    }
                 }
             } else if !isSkipped {
                 Text(day.detail)
                     .font(.footnote)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
+                Button("Choose meal", action: onPickMeal)
+                    .buttonStyle(VecklyPrimaryButtonStyle())
+                    .padding(.top, 4)
             }
 
             Button(isSkipped ? "Undo skip" : "Skip this day", action: onToggleSkip)
