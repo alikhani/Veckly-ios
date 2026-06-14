@@ -1,4 +1,5 @@
 import Foundation
+import Security
 import Observation
 
 @MainActor
@@ -25,8 +26,20 @@ final class AuthSessionStore {
         defer { isRestoring = false }
         if accessToken != nil { return }
         guard let session = sessionStorage.load() else { return }
-        accessToken = session.accessToken
-        userID = session.userID
+
+        if isTokenExpired(session.accessToken) {
+            guard let refreshToken = session.refreshToken else {
+                sessionStorage.clear()
+                return
+            }
+            guard await attemptRefresh(refreshToken: refreshToken) else {
+                sessionStorage.clear()
+                return
+            }
+        } else {
+            accessToken = session.accessToken
+            userID = session.userID
+        }
     }
 
     func signInWithApple(identityToken: String, nonce: String?) async {
@@ -37,9 +50,7 @@ final class AuthSessionStore {
         do {
             let session = try await SupabaseAuthClient(environment: environment)
                 .signInWithApple(identityToken: identityToken, nonce: nonce)
-            accessToken = session.accessToken
-            userID = session.userID
-            sessionStorage.save(session)
+            applySession(session)
         } catch {
             errorMessage = "We could not sign you in. Try again in a moment."
         }
@@ -53,9 +64,7 @@ final class AuthSessionStore {
         do {
             let session = try await SupabaseAuthClient(environment: environment)
                 .signInWithEmail(email: email, password: password)
-            accessToken = session.accessToken
-            userID = session.userID
-            sessionStorage.save(session)
+            applySession(session)
         } catch {
             errorMessage = "We could not sign you in. Check your email and password."
         }
@@ -69,9 +78,7 @@ final class AuthSessionStore {
         do {
             let session = try await SupabaseAuthClient(environment: environment)
                 .signUpWithEmail(email: email, password: password)
-            accessToken = session.accessToken
-            userID = session.userID
-            sessionStorage.save(session)
+            applySession(session)
         } catch SupabaseAuthError.emailConfirmationRequired {
             errorMessage = "Check your email to confirm your account, then sign in."
         } catch {
@@ -86,10 +93,58 @@ final class AuthSessionStore {
         sessionStorage.clear()
     }
 
+    // Returns true if the token was refreshed successfully and session is now valid.
+    func refreshSession() async -> Bool {
+        guard let stored = sessionStorage.load(), let refreshToken = stored.refreshToken else {
+            return false
+        }
+        return await attemptRefresh(refreshToken: refreshToken)
+    }
+
     func seedForUITests() {
         accessToken = "ui-test-token"
         userID = "11111111-1111-1111-1111-111111111111"
         isRestoring = false
+    }
+
+    // MARK: - Private
+
+    private func applySession(_ session: AuthSession) {
+        accessToken = session.accessToken
+        userID = session.userID
+        sessionStorage.save(session)
+    }
+
+    @discardableResult
+    private func attemptRefresh(refreshToken: String) async -> Bool {
+        do {
+            let session = try await SupabaseAuthClient(environment: environment)
+                .refreshSession(refreshToken: refreshToken)
+            applySession(session)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    // Decodes the JWT payload (middle segment) and checks the `exp` claim.
+    // No signature verification — that's the server's job. We just need to know
+    // if the token is worth sending before making a network call.
+    private func isTokenExpired(_ token: String) -> Bool {
+        let segments = token.split(separator: ".", omittingEmptySubsequences: false)
+        guard segments.count == 3 else { return true }
+
+        var base64 = String(segments[1])
+        let remainder = base64.count % 4
+        if remainder != 0 { base64 += String(repeating: "=", count: 4 - remainder) }
+
+        guard let data = Data(base64Encoded: base64),
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let exp = payload["exp"] as? TimeInterval else {
+            return true
+        }
+
+        return Date().timeIntervalSince1970 >= exp - 60
     }
 }
 
@@ -103,17 +158,58 @@ private struct SessionStorage {
     private let key = "veckly.auth-session"
 
     func load() -> AuthSession? {
-        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        guard let data = keychainLoad() else { return nil }
         return try? JSONDecoder().decode(AuthSession.self, from: data)
     }
 
     func save(_ session: AuthSession) {
         guard let data = try? JSONEncoder().encode(session) else { return }
-        UserDefaults.standard.set(data, forKey: key)
+        keychainSave(data)
     }
 
     func clear() {
-        UserDefaults.standard.removeObject(forKey: key)
+        keychainDelete()
+    }
+
+    // MARK: - Keychain
+
+    private func keychainLoad() -> Data? {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key,
+            kSecReturnData: true,
+            kSecMatchLimit: kSecMatchLimitOne,
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess else { return nil }
+        return result as? Data
+    }
+
+    private func keychainSave(_ data: Data) {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key,
+        ]
+        let attributes: [CFString: Any] = [
+            kSecValueData: data,
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock,
+        ]
+        let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if status == errSecItemNotFound {
+            var addQuery = query
+            addQuery[kSecValueData] = data
+            addQuery[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlock
+            SecItemAdd(addQuery as CFDictionary, nil)
+        }
+    }
+
+    private func keychainDelete() {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key,
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 }
 
@@ -151,6 +247,17 @@ private struct SupabaseAuthClient {
         return try await sendSessionRequest(request)
     }
 
+    func refreshSession(refreshToken: String) async throws -> AuthSession {
+        var components = URLComponents(url: environment.supabaseURL.appending(path: "/auth/v1/token"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]
+
+        var request = authenticatedRequest(url: components.url!)
+        request.httpMethod = "POST"
+        request.httpBody = try JSONEncoder().encode(RefreshTokenRequest(refreshToken: refreshToken))
+
+        return try await sendSessionRequest(request)
+    }
+
     private func authenticatedRequest(url: URL) -> URLRequest {
         var request = URLRequest(url: url)
         request.setValue(environment.supabaseAnonKey, forHTTPHeaderField: "apikey")
@@ -181,6 +288,14 @@ private enum SupabaseAuthError: Error {
 private struct EmailPasswordRequest: Encodable {
     let email: String
     let password: String
+}
+
+private struct RefreshTokenRequest: Encodable {
+    let refreshToken: String
+
+    enum CodingKeys: String, CodingKey {
+        case refreshToken = "refresh_token"
+    }
 }
 
 private struct SignInRequest: Encodable {
