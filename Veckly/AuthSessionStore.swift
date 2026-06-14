@@ -93,6 +93,12 @@ final class AuthSessionStore {
         sessionStorage.clear()
     }
 
+    func deleteAccount() async throws {
+        guard let token = accessToken else { return }
+        try await SupabaseAuthClient(environment: environment).deleteUser(accessToken: token)
+        signOut()
+    }
+
     // Returns true if the token was refreshed successfully and session is now valid.
     func refreshSession() async -> Bool {
         guard let stored = sessionStorage.load(), let refreshToken = stored.refreshToken else {
@@ -245,6 +251,20 @@ private struct SupabaseAuthClient {
         request.httpBody = try JSONEncoder().encode(SignInRequest(provider: "apple", idToken: identityToken, nonce: nonce))
 
         return try await sendSessionRequest(request)
+    }
+
+    func deleteUser(accessToken: String) async throws {
+        let url = environment.supabaseURL.appending(path: "/auth/v1/user")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue(environment.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
     }
 
     func refreshSession(refreshToken: String) async throws -> AuthSession {

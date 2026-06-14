@@ -79,6 +79,15 @@ final class AppModel {
         prepBatchStore.reset()
     }
 
+    func deleteAccount() async throws {
+        try await authSessionStore.deleteAccount()
+        householdStore.reset()
+        weekStore.reset()
+        shoppingListStore.reset()
+        recipeStore.reset()
+        prepBatchStore.reset()
+    }
+
     // Call when any API response returns 401. Tries to refresh the token and
     // reload data; signs out if refresh fails (dead or missing refresh token).
     func handleUnauthorized() async {
