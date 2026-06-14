@@ -11,6 +11,7 @@ final class AppModel {
     let weekStore: WeekStore
     let shoppingListStore: ShoppingListStore
     let recipeStore: RecipeStore
+    let prepBatchStore: PrepBatchStore
     private let usesSeededCoreReader: Bool
 
     init(environment: AppEnvironment) {
@@ -27,6 +28,7 @@ final class AppModel {
         self.weekStore = WeekStore(apiClient: apiClient)
         self.shoppingListStore = ShoppingListStore(apiClient: apiClient)
         self.recipeStore = RecipeStore(apiClient: apiClient)
+        self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
 
         if usesSeededCoreReader {
             authSessionStore.seedForUITests()
@@ -74,6 +76,7 @@ final class AppModel {
         weekStore.reset()
         shoppingListStore.reset()
         recipeStore.reset()
+        prepBatchStore.reset()
     }
 
     // Call when any API response returns 401. Tries to refresh the token and

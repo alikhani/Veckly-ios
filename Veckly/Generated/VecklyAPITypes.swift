@@ -169,6 +169,28 @@ struct InviteLanding: Equatable {
     let status: String
 }
 
+enum MealType: String, CaseIterable {
+    case lunch, dinner
+
+    var label: String { rawValue.capitalized }
+}
+
+struct PrepBatchAssignment: Identifiable, Equatable {
+    let id: String
+    let batchId: String
+    let date: String
+    let mealType: MealType
+}
+
+struct PrepBatch: Identifiable, Equatable {
+    let id: String
+    let householdId: String
+    let recipeId: String?
+    let cookDate: String
+    let totalPortions: Int
+    let assignments: [PrepBatchAssignment]
+}
+
 struct DraftIngredient: Identifiable {
     var id = UUID()
     var item: String = ""

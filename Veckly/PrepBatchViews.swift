@@ -1,0 +1,232 @@
+import SwiftUI
+
+// MARK: - Prep section inside Shopping tab
+
+struct PrepBatchSection: View {
+    @Environment(AppModel.self) private var appModel
+    @Binding var showPrepSheet: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Meal prep")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .textCase(.uppercase)
+                Spacer()
+                Button {
+                    showPrepSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                }
+            }
+
+            if appModel.prepBatchStore.isLoading {
+                LoadingPanel(title: "Loading prep batches")
+            } else if appModel.prepBatchStore.batches.isEmpty {
+                VecklyCard {
+                    Text("No prep batches this week.")
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 4)
+                }
+            } else {
+                VecklyCard {
+                    VStack(spacing: 0) {
+                        ForEach(appModel.prepBatchStore.batches) { batch in
+                            PrepBatchRow(batch: batch)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct PrepBatchRow: View {
+    @Environment(AppModel.self) private var appModel
+    let batch: PrepBatch
+
+    private var recipeName: String? {
+        guard let rid = batch.recipeId else { return nil }
+        return appModel.recipeStore.recipes.first(where: { $0.id == rid })?.title
+    }
+
+    private var assignmentSummary: String {
+        let sorted = batch.assignments.sorted { $0.date < $1.date }
+        let parts = sorted.map { a -> String in
+            let day = shortDay(a.date)
+            return "\(day) \(a.mealType.label)"
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "flame.fill")
+                        .font(.caption)
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    Text("Cook \(shortDay(batch.cookDate))")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    Text("· \(batch.totalPortions) portions")
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                }
+                if let name = recipeName {
+                    Text(name)
+                        .font(.caption)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                }
+                if !batch.assignments.isEmpty {
+                    Text(assignmentSummary)
+                        .font(.caption)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                }
+            }
+            Spacer()
+            Button(role: .destructive) {
+                Task { await deleteBatch() }
+            } label: {
+                Image(systemName: "trash")
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func deleteBatch() async {
+        guard let hid = appModel.householdStore.activeHousehold?.id else { return }
+        try? await appModel.prepBatchStore.delete(householdID: hid, batchID: batch.id)
+    }
+
+    private func shortDay(_ dateString: String) -> String {
+        guard let date = weekDateFormatter.date(from: dateString) else { return dateString }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE d MMM"
+        formatter.locale = Locale.current
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Create sheet
+
+struct PrepBatchFormSheet: View {
+    @Environment(AppModel.self) private var appModel
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var selectedRecipeID: String? = nil
+    @State private var cookDate = Date()
+    @State private var totalPortions = 4
+    @State private var assignedDays: Set<String> = []
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    private var weekDates: [Date] {
+        guard let start = weekDateFormatter.date(from: appModel.weekStore.weekStartDate) else { return [] }
+        return (0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: start) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Recipe (optional)") {
+                    Picker("Recipe", selection: $selectedRecipeID) {
+                        Text("None").tag(Optional<String>.none)
+                        ForEach(appModel.recipeStore.recipes) { recipe in
+                            Text(recipe.title).tag(Optional<String>.some(recipe.id))
+                        }
+                    }
+                    .labelsHidden()
+                }
+
+                Section {
+                    DatePicker("Cook date", selection: $cookDate, displayedComponents: .date)
+                    Stepper("Portions: \(totalPortions)", value: $totalPortions, in: 1...20)
+                } header: {
+                    Text("Details")
+                }
+
+                Section {
+                    ForEach(weekDates, id: \.self) { date in
+                        let key = weekDateFormatter.string(from: date)
+                        Toggle(dayLabel(date), isOn: Binding(
+                            get: { assignedDays.contains(key) },
+                            set: { if $0 { assignedDays.insert(key) } else { assignedDays.remove(key) } }
+                        ))
+                    }
+                } header: {
+                    Text("Cover these dinners")
+                } footer: {
+                    Text("The batch will be used for dinner on the selected days.")
+                }
+            }
+            .navigationTitle("New Prep Batch")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if isSaving {
+                        ProgressView()
+                    } else {
+                        Button("Add") { Task { await save() } }
+                            .disabled(assignedDays.isEmpty)
+                    }
+                }
+            }
+            .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
+                Button("OK") { errorMessage = nil }
+            }, message: { Text(errorMessage ?? "") })
+            .task {
+                guard let hid = appModel.householdStore.activeHousehold?.id else { return }
+                if appModel.recipeStore.recipes.isEmpty {
+                    await appModel.recipeStore.loadRecipes(householdID: hid)
+                }
+            }
+        }
+    }
+
+    private func save() async {
+        guard let hid = appModel.householdStore.activeHousehold?.id else { return }
+        isSaving = true
+        defer { isSaving = false }
+        let dateStr = weekDateFormatter.string(from: cookDate)
+        let assignments = assignedDays.sorted().map { (date: $0, mealType: MealType.dinner) }
+        do {
+            try await appModel.prepBatchStore.create(
+                householdID: hid,
+                weekStartDate: appModel.weekStore.weekStartDate,
+                recipeId: selectedRecipeID,
+                cookDate: dateStr,
+                totalPortions: totalPortions,
+                assignments: assignments
+            )
+            dismiss()
+        } catch {
+            errorMessage = "Could not create prep batch. Try again."
+        }
+    }
+
+    private func dayLabel(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE d MMM"
+        f.locale = Locale.current
+        return f.string(from: date)
+    }
+}
+
+private let weekDateFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "yyyy-MM-dd"
+    f.locale = Locale(identifier: "en_US_POSIX")
+    return f
+}()

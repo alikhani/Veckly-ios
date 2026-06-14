@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ShoppingListTabView: View {
     @Environment(AppModel.self) private var appModel
+    @State private var showPrepSheet = false
 
     var body: some View {
         ScrollView {
@@ -29,12 +30,24 @@ struct ShoppingListTabView: View {
                         )
                     }
                 }
+
+                PrepBatchSection(showPrepSheet: $showPrepSheet)
             }
             .padding(18)
             .accessibilityIdentifier("shoppingList")
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle("Shopping")
+        .sheet(isPresented: $showPrepSheet) {
+            PrepBatchFormSheet()
+        }
+        .task {
+            guard let household = appModel.householdStore.activeHousehold else { return }
+            let weekStart = appModel.weekStore.weekStartDate
+            if appModel.prepBatchStore.batches.isEmpty {
+                await appModel.prepBatchStore.load(householdID: household.id, weekStartDate: weekStart)
+            }
+        }
     }
 }
 

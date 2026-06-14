@@ -321,6 +321,60 @@ struct VecklyAPIClient {
         }
     }
 
+    func listPrepBatches(householdID: String, from: String, to: String) async throws -> [PrepBatch] {
+        typealias Op = Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches
+        let output = try await generatedClient.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
+            path: .init(householdId: householdID),
+            query: .init(from: from, to: to)
+        )
+        switch output {
+        case let .ok(r): return try r.body.json.batches.map(\.appModel)
+        case .unauthorized: throw APIError.unauthorized
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func createPrepBatch(
+        householdID: String,
+        recipeId: String?,
+        cookDate: String,
+        totalPortions: Int,
+        assignments: [(date: String, mealType: MealType)]
+    ) async throws -> PrepBatch {
+        typealias AssignPayload = Components.Schemas.CreatePrepBatch.assignmentsPayloadPayload
+        let payload = Components.Schemas.CreatePrepBatch(
+            recipeId: recipeId,
+            cookDate: cookDate,
+            totalPortions: totalPortions,
+            assignments: assignments.map { AssignPayload(date: $0.date, mealType: .init(rawValue: $0.mealType.rawValue)!) }
+        )
+        let output = try await generatedClient.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
+            path: .init(householdId: householdID),
+            body: .json(payload)
+        )
+        switch output {
+        case let .created(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func deletePrepBatch(householdID: String, batchID: String) async throws {
+        let output = try await generatedClient.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(
+            path: .init(householdId: householdID, batchId: batchID)
+        )
+        switch output {
+        case .ok: return
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func updateShoppingListState(
         householdID: String,
         weekStartDate: String,
@@ -594,6 +648,30 @@ private extension Components.Schemas.RecipeIngredient {
 private extension Components.Schemas.RecipeStep {
     var appModel: RecipeStep {
         RecipeStep(text: text)
+    }
+}
+
+private extension Components.Schemas.PrepBatch {
+    var appModel: PrepBatch {
+        PrepBatch(
+            id: id,
+            householdId: householdId,
+            recipeId: recipeId,
+            cookDate: cookDate,
+            totalPortions: totalPortions,
+            assignments: assignments.map(\.appModel)
+        )
+    }
+}
+
+private extension Components.Schemas.PrepBatchAssignment {
+    var appModel: PrepBatchAssignment {
+        PrepBatchAssignment(
+            id: id,
+            batchId: batchId,
+            date: date,
+            mealType: MealType(rawValue: mealType.rawValue) ?? .dinner
+        )
     }
 }
 
