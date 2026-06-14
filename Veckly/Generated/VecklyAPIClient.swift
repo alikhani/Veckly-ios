@@ -229,6 +229,98 @@ struct VecklyAPIClient {
         }
     }
 
+    func listMembers(householdID: String) async throws -> [HouseholdMember] {
+        let output = try await generatedClient.listHouseholdMembers(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(r): return try r.body.json.members.map(\.appModel)
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func getProfile(householdID: String) async throws -> HouseholdProfile? {
+        let output = try await generatedClient.getHouseholdProfile(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(r): return try r.body.json.profile?.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func saveProfile(
+        householdID: String,
+        adults: Int, children: Int,
+        priorities: [HouseholdPriority],
+        avoidIngredients: [String],
+        selectedDays: [Weekday]
+    ) async throws -> HouseholdProfile {
+        typealias DayPayload = Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload
+        typealias PrioPayload = Components.Schemas.UpsertHouseholdProfile.prioritiesPayloadPayload
+        let payload = Components.Schemas.UpsertHouseholdProfile(
+            adults: adults,
+            children: children,
+            priorities: priorities.compactMap { PrioPayload(rawValue: $0.rawValue) },
+            avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
+            selectedDays: selectedDays.compactMap { DayPayload(day: .init(rawValue: $0.rawValue)!) }
+        )
+        let output = try await generatedClient.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
+        switch output {
+        case let .ok(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func createInvite(householdID: String) async throws -> HouseholdInvite {
+        let output = try await generatedClient.createHouseholdInvite(path: .init(householdId: householdID))
+        switch output {
+        case let .created(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func listInvites(householdID: String) async throws -> [HouseholdInvite] {
+        let output = try await generatedClient.listHouseholdInvites(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(r): return try r.body.json.invites.map(\.appModel)
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func revokeInvite(householdID: String, inviteID: String) async throws {
+        let output = try await generatedClient.revokeHouseholdInvite(path: .init(householdId: householdID, inviteId: inviteID))
+        switch output {
+        case .noContent: return
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func lookupInvite(token: String) async throws -> InviteLanding {
+        let output = try await generatedClient.getInviteLanding(path: .init(token: token))
+        switch output {
+        case let .ok(r):
+            let json = try r.body.json
+            return InviteLanding(householdName: json.householdName, status: json.status.rawValue)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func acceptInvite(token: String) async throws {
+        let output = try await generatedClient.acceptInvite(path: .init(token: token))
+        switch output {
+        case .ok: return
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case .conflict: throw APIError.server(statusCode: 409)
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func updateShoppingListState(
         householdID: String,
         weekStartDate: String,
@@ -502,6 +594,31 @@ private extension Components.Schemas.RecipeIngredient {
 private extension Components.Schemas.RecipeStep {
     var appModel: RecipeStep {
         RecipeStep(text: text)
+    }
+}
+
+private extension Components.Schemas.HouseholdMember {
+    var appModel: HouseholdMember {
+        HouseholdMember(userId: userId, role: role == .owner ? .owner : .member)
+    }
+}
+
+private extension Components.Schemas.HouseholdProfile {
+    var appModel: HouseholdProfile {
+        HouseholdProfile(
+            householdId: householdId,
+            adults: adults,
+            children: children,
+            priorities: priorities.compactMap { HouseholdPriority(rawValue: $0.rawValue) },
+            avoidIngredients: avoidIngredients,
+            selectedDays: selectedDays.compactMap { Weekday(rawValue: $0.day.rawValue) }
+        )
+    }
+}
+
+private extension Components.Schemas.HouseholdInvite {
+    var appModel: HouseholdInvite {
+        HouseholdInvite(id: id, token: token, email: email, status: status.rawValue, expiresAt: expiresAt)
     }
 }
 

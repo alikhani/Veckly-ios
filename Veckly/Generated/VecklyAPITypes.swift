@@ -123,6 +123,52 @@ enum MealVote: String, Codable {
     case down
 }
 
+struct HouseholdMember: Identifiable, Equatable {
+    var id: String { userId }
+    let userId: String
+    let role: HouseholdRole
+}
+
+enum HouseholdPriority: String, CaseIterable {
+    case quick
+    case budget
+    case childFriendly = "child-friendly"
+    case mealPrep = "meal-prep"
+    case varied
+
+    var label: String {
+        switch self {
+        case .quick: return "Quick meals"
+        case .budget: return "Budget-friendly"
+        case .childFriendly: return "Child-friendly"
+        case .mealPrep: return "Meal prep"
+        case .varied: return "Varied cuisine"
+        }
+    }
+}
+
+struct HouseholdProfile: Equatable {
+    let householdId: String
+    let adults: Int
+    let children: Int
+    let priorities: [HouseholdPriority]
+    let avoidIngredients: [String]
+    let selectedDays: [Weekday]
+}
+
+struct HouseholdInvite: Identifiable, Equatable {
+    let id: String
+    let token: String
+    let email: String?
+    let status: String
+    let expiresAt: String
+}
+
+struct InviteLanding: Equatable {
+    let householdName: String
+    let status: String
+}
+
 struct DraftIngredient: Identifiable {
     var id = UUID()
     var item: String = ""

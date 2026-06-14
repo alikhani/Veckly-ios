@@ -6,7 +6,16 @@ struct SettingsTabView: View {
     var body: some View {
         Form {
             Section("Household") {
-                Text(appModel.householdStore.activeHousehold?.name ?? "No household")
+                LabeledContent("Name") {
+                    Text(appModel.householdStore.activeHousehold?.name ?? "—")
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                }
+                NavigationLink("Members & Invites") {
+                    HouseholdMembersView()
+                }
+                NavigationLink("Preferences") {
+                    HouseholdProfileView()
+                }
             }
 
             Section {

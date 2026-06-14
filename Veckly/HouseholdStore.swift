@@ -11,6 +11,10 @@ final class HouseholdStore {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
+    private(set) var members: [HouseholdMember] = []
+    private(set) var profile: HouseholdProfile?
+    private(set) var invites: [HouseholdInvite] = []
+
     init(apiClient: VecklyAPIClient) {
         self.apiClient = apiClient
     }
@@ -30,11 +34,63 @@ final class HouseholdStore {
         }
     }
 
+    func loadHouseholdDetails(householdID: String) async {
+        async let membersResult = apiClient.listMembers(householdID: householdID)
+        async let profileResult = apiClient.getProfile(householdID: householdID)
+        members = (try? await membersResult) ?? []
+        profile = try? await profileResult
+    }
+
+    func loadInvites(householdID: String) async {
+        invites = (try? await apiClient.listInvites(householdID: householdID)) ?? []
+    }
+
+    func saveProfile(
+        householdID: String,
+        adults: Int, children: Int,
+        priorities: [HouseholdPriority],
+        avoidIngredients: [String],
+        selectedDays: [Weekday]
+    ) async throws {
+        profile = try await apiClient.saveProfile(
+            householdID: householdID,
+            adults: adults, children: children,
+            priorities: priorities,
+            avoidIngredients: avoidIngredients,
+            selectedDays: selectedDays
+        )
+    }
+
+    func createInvite(householdID: String) async throws -> HouseholdInvite {
+        let invite = try await apiClient.createInvite(householdID: householdID)
+        invites.insert(invite, at: 0)
+        return invite
+    }
+
+    func revokeInvite(householdID: String, inviteID: String) async throws {
+        try await apiClient.revokeInvite(householdID: householdID, inviteID: inviteID)
+        invites.removeAll { $0.id == inviteID }
+    }
+
+    func lookupInvite(token: String) async throws -> InviteLanding {
+        try await apiClient.lookupInvite(token: token)
+    }
+
+    func acceptInvite(token: String) async throws {
+        try await apiClient.acceptInvite(token: token)
+        // Reload households so the new one appears
+        let list = try await apiClient.listHouseholds()
+        if !list.isEmpty { households = list }
+    }
+
     func reset() {
         households = []
         activeHousehold = nil
         errorMessage = nil
         isLoading = false
+        members = []
+        profile = nil
+        invites = []
     }
 
     func seedForUITests() {
