@@ -153,6 +153,53 @@ struct VecklyAPIClient {
         }
     }
 
+    func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe {
+        let output = try await generatedClient.createRecipe(
+            path: .init(householdId: householdID),
+            body: .json(draft.createPayload)
+        )
+        switch output {
+        case let .created(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe {
+        let output = try await generatedClient.updateRecipe(
+            path: .init(householdId: householdID, recipeId: recipeID),
+            body: .json(draft.updatePayload)
+        )
+        switch output {
+        case let .ok(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func fillInRecipe(title: String) async throws -> RecipeDraft {
+        let output = try await generatedClient.fillInRecipe(
+            body: .json(.init(title: title))
+        )
+        switch output {
+        case let .ok(r): return try RecipeDraft(fillIn: r.body.json.recipe, originalTitle: title)
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
+        let output = try await generatedClient.importRecipeFromUrl(
+            body: .json(.init(url: urlString))
+        )
+        switch output {
+        case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe)
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func listHouseholdRecipes(householdID: String) async throws -> [FullRecipe] {
         let output = try await generatedClient.listRecipes(
             path: .init(householdId: householdID)
@@ -243,6 +290,54 @@ enum APIError: Error, Equatable {
     case invalidResponse
     case server(statusCode: Int)
     case stale(latestUpdatedAt: String?)
+}
+
+private extension RecipeDraft {
+    var apiIngredients: [Components.Schemas.RecipeIngredient] {
+        ingredients.filter { !$0.item.isEmpty }.map {
+            .init(item: $0.item, amount: $0.amount.isEmpty ? nil : $0.amount, unit: $0.unit.isEmpty ? nil : $0.unit)
+        }
+    }
+    var apiSteps: [Components.Schemas.RecipeStep] { steps.filter { !$0.isEmpty }.map { .init(text: $0) } }
+
+    var createPayload: Components.Schemas.CreateRecipe {
+        .init(title: title, description: description.isEmpty ? nil : description,
+              servings: servings, ingredients: apiIngredients, steps: apiSteps,
+              prepTimeMinutes: prepTimeMinutes, cookTimeMinutes: cookTimeMinutes,
+              sourceUrl: sourceUrl, source: sourceUrl != nil ? .url_import : .user_created)
+    }
+    var updatePayload: Components.Schemas.UpdateRecipe {
+        .init(title: title, description: description.isEmpty ? nil : description,
+              servings: servings, ingredients: apiIngredients, steps: apiSteps,
+              prepTimeMinutes: prepTimeMinutes, cookTimeMinutes: cookTimeMinutes,
+              sourceUrl: sourceUrl)
+    }
+}
+
+private extension RecipeDraft {
+    init(fillIn r: Components.Schemas.RecipeFillInResult, originalTitle: String) throws {
+        self.init(
+            title: r.title,
+            description: "",
+            servings: 4,
+            prepTimeMinutes: r.prepTimeMinutes,
+            ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: formatAmount($0.amount), unit: $0.unit) },
+            steps: r.steps
+        )
+    }
+    init(imported r: Components.Schemas.ImportedRecipe) throws {
+        self.init(
+            title: r.title,
+            servings: 4,
+            prepTimeMinutes: r.prepTimeMinutes,
+            ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: $0.amount.map { formatAmount($0) } ?? "", unit: $0.unit ?? "") },
+            sourceUrl: r.sourceUrl
+        )
+    }
+}
+
+private func formatAmount(_ v: Double) -> String {
+    v.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", v) : String(format: "%.1f", v)
 }
 
 private extension Components.Schemas.Household {

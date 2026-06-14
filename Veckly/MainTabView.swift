@@ -18,6 +18,13 @@ struct MainTabView: View {
             }
 
             NavigationStack {
+                RecipesTabView()
+            }
+            .tabItem {
+                Label("Recipes", systemImage: "fork.knife")
+            }
+
+            NavigationStack {
                 SettingsTabView()
             }
             .tabItem {

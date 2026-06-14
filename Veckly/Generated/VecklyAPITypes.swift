@@ -122,3 +122,42 @@ enum MealVote: String, Codable {
     case up
     case down
 }
+
+struct DraftIngredient: Identifiable {
+    var id = UUID()
+    var item: String = ""
+    var amount: String = ""
+    var unit: String = ""
+}
+
+struct RecipeDraft {
+    var title: String = ""
+    var description: String = ""
+    var servings: Int = 4
+    var prepTimeMinutes: Int? = nil
+    var cookTimeMinutes: Int? = nil
+    var ingredients: [DraftIngredient] = []
+    var steps: [String] = []
+    var sourceUrl: String? = nil
+
+    static var empty: RecipeDraft { RecipeDraft() }
+
+    init(from recipe: FullRecipe) {
+        title = recipe.title
+        description = recipe.description
+        servings = recipe.servings
+        prepTimeMinutes = recipe.prepTimeMinutes
+        cookTimeMinutes = recipe.cookTimeMinutes
+        ingredients = recipe.ingredients.map { DraftIngredient(item: $0.item, amount: $0.amount ?? "", unit: $0.unit ?? "") }
+        steps = recipe.steps.map(\.text)
+        sourceUrl = nil
+    }
+
+    init(title: String = "", description: String = "", servings: Int = 4,
+         prepTimeMinutes: Int? = nil, cookTimeMinutes: Int? = nil,
+         ingredients: [DraftIngredient] = [], steps: [String] = [], sourceUrl: String? = nil) {
+        self.title = title; self.description = description; self.servings = servings
+        self.prepTimeMinutes = prepTimeMinutes; self.cookTimeMinutes = cookTimeMinutes
+        self.ingredients = ingredients; self.steps = steps; self.sourceUrl = sourceUrl
+    }
+}
