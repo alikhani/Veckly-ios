@@ -27,7 +27,7 @@ struct WeekTabView: View {
             .padding(18)
         }
         .background(VecklyDesign.Colors.canvas)
-        .navigationTitle("Week")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if appModel.weekStore.isGenerating {
