@@ -241,15 +241,15 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /saved-plans/{id}`.
     /// - Remark: Generated from `#/paths//saved-plans/{id}/delete(deleteSavedPlan)`.
     func deleteSavedPlan(_ input: Operations.deleteSavedPlan.Input) async throws -> Operations.deleteSavedPlan.Output
-    /// - Remark: HTTP `GET /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get`.
-    func get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(_ input: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input) async throws -> Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output
-    /// - Remark: HTTP `POST /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post`.
-    func post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(_ input: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input) async throws -> Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output
-    /// - Remark: HTTP `DELETE /households/{householdId}/prep-batches/{batchId}`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete`.
-    func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(_ input: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output
+    /// - Remark: HTTP `GET /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get`.
+    func get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(_ input: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input) async throws -> Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output
+    /// - Remark: HTTP `POST /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post`.
+    func post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(_ input: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input) async throws -> Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete`.
+    func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(_ input: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -842,39 +842,39 @@ extension APIProtocol {
             headers: headers
         ))
     }
-    /// - Remark: HTTP `GET /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get`.
-    internal func get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
-        path: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Path,
-        query: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Query,
-        headers: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Headers = .init()
-    ) async throws -> Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output {
-        try await get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input(
+    /// - Remark: HTTP `GET /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get`.
+    internal func get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(
+        path: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Path,
+        query: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Query,
+        headers: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Headers = .init()
+    ) async throws -> Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output {
+        try await get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input(
             path: path,
             query: query,
             headers: headers
         ))
     }
-    /// - Remark: HTTP `POST /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post`.
-    internal func post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
-        path: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Path,
-        headers: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Headers = .init(),
-        body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Body? = nil
-    ) async throws -> Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output {
-        try await post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input(
+    /// - Remark: HTTP `POST /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post`.
+    internal func post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(
+        path: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Path,
+        headers: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Headers = .init(),
+        body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Body? = nil
+    ) async throws -> Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output {
+        try await post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input(
             path: path,
             headers: headers,
             body: body
         ))
     }
-    /// - Remark: HTTP `DELETE /households/{householdId}/prep-batches/{batchId}`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete`.
-    internal func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(
-        path: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input.Path,
-        headers: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input.Headers = .init()
-    ) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output {
-        try await delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input(
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete`.
+    internal func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(
+        path: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input.Path,
+        headers: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input.Headers = .init()
+    ) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output {
+        try await delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input(
             path: path,
             headers: headers
         ))
@@ -14674,14 +14674,14 @@ internal enum Operations {
             }
         }
     }
-    /// - Remark: HTTP `GET /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get`.
-    internal enum get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches {
-        internal static let id: Swift.String = "get/households/{householdId}/prep-batches"
+    /// - Remark: HTTP `GET /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get`.
+    internal enum get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches {
+        internal static let id: Swift.String = "get/households/{householdId}/prep_batches"
         internal struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/path`.
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/path`.
             internal struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/path/householdId`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/path/householdId`.
                 internal var householdId: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -14691,12 +14691,12 @@ internal enum Operations {
                     self.householdId = householdId
                 }
             }
-            internal var path: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Path
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/query`.
+            internal var path: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/query`.
             internal struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/query/from`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/query/from`.
                 internal var from: Swift.String
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/query/to`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/query/to`.
                 internal var to: Swift.String
                 /// Creates a new `Query`.
                 ///
@@ -14711,19 +14711,19 @@ internal enum Operations {
                     self.to = to
                 }
             }
-            internal var query: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Query
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/header`.
+            internal var query: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Query
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/header`.
             internal struct Headers: Sendable, Hashable {
-                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.AcceptableContentType>]
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.AcceptableContentType>] = .defaultValues()) {
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            internal var headers: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Headers
+            internal var headers: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -14731,9 +14731,9 @@ internal enum Operations {
             ///   - query:
             ///   - headers:
             internal init(
-                path: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Path,
-                query: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Query,
-                headers: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Headers = .init()
+                path: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Path,
+                query: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Query,
+                headers: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -14742,11 +14742,11 @@ internal enum Operations {
         }
         internal enum Output: Sendable, Hashable {
             internal struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/200/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/200/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/200/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/200/content/json/batches`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/200/content/json/batches`.
                         internal var batches: [Components.Schemas.PrepBatch]
                         /// Creates a new `jsonPayload`.
                         ///
@@ -14759,13 +14759,13 @@ internal enum Operations {
                             case batches
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/200/content/application\/json`.
-                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/200/content/application\/json`.
+                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok.Body.jsonPayload {
+                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -14775,26 +14775,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok.Body
+                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok.Body) {
+                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok.Body) {
                     self.body = body
                 }
             }
             /// Prep batches in date range
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get/responses/200`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok)
+            case ok(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            internal var ok: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok {
+            internal var ok: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -14808,11 +14808,11 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/400/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/400/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/400/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/400/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/400/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/400/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -14825,13 +14825,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/400/content/application\/json`.
-                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/400/content/application\/json`.
+                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body.jsonPayload {
+                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -14841,26 +14841,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body
+                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body) {
+                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body) {
                     self.body = body
                 }
             }
             /// Invalid date range
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get/responses/400`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest)
+            case badRequest(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest)
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
             /// - SeeAlso: `.badRequest`.
-            internal var badRequest: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest {
+            internal var badRequest: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest {
                 get throws {
                     switch self {
                     case let .badRequest(response):
@@ -14874,11 +14874,11 @@ internal enum Operations {
                 }
             }
             internal struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/401/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/401/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/401/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/401/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/401/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/401/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -14891,13 +14891,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/401/content/application\/json`.
-                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/401/content/application\/json`.
+                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body.jsonPayload {
+                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -14907,26 +14907,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body
+                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body) {
+                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Unauthenticated
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get/responses/401`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized)
+            case unauthorized(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            internal var unauthorized: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized {
+            internal var unauthorized: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -14940,11 +14940,11 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/404/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/404/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/404/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/404/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/404/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/404/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -14957,13 +14957,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/GET/responses/404/content/application\/json`.
-                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/GET/responses/404/content/application\/json`.
+                    case json(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body.jsonPayload {
+                    internal var json: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -14973,26 +14973,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body
+                internal var body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body
                 /// Creates a new `NotFound`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body) {
+                internal init(body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body) {
                     self.body = body
                 }
             }
             /// Household not found or not a member
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get/responses/404`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
-            case notFound(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound)
+            case notFound(Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound)
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
-            internal var notFound: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound {
+            internal var notFound: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -15036,14 +15036,14 @@ internal enum Operations {
             }
         }
     }
-    /// - Remark: HTTP `POST /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post`.
-    internal enum post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches {
-        internal static let id: Swift.String = "post/households/{householdId}/prep-batches"
+    /// - Remark: HTTP `POST /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post`.
+    internal enum post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches {
+        internal static let id: Swift.String = "post/households/{householdId}/prep_batches"
         internal struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/path`.
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/path`.
             internal struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/path/householdId`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/path/householdId`.
                 internal var householdId: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -15053,25 +15053,25 @@ internal enum Operations {
                     self.householdId = householdId
                 }
             }
-            internal var path: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Path
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/header`.
+            internal var path: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/header`.
             internal struct Headers: Sendable, Hashable {
-                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.AcceptableContentType>]
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.AcceptableContentType>] = .defaultValues()) {
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            internal var headers: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Headers
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/requestBody`.
+            internal var headers: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/requestBody`.
             internal enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/requestBody/content/application\/json`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/requestBody/content/application\/json`.
                 case json(Components.Schemas.CreatePrepBatch)
             }
-            internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Body?
+            internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Body?
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -15079,9 +15079,9 @@ internal enum Operations {
             ///   - headers:
             ///   - body:
             internal init(
-                path: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Path,
-                headers: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Headers = .init(),
-                body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input.Body? = nil
+                path: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Path,
+                headers: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Headers = .init(),
+                body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input.Body? = nil
             ) {
                 self.path = path
                 self.headers = headers
@@ -15090,9 +15090,9 @@ internal enum Operations {
         }
         internal enum Output: Sendable, Hashable {
             internal struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/201/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/201/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/201/content/application\/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/201/content/application\/json`.
                     case json(Components.Schemas.PrepBatch)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
@@ -15108,26 +15108,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Created.Body
+                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Created.Body) {
+                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Created.Body) {
                     self.body = body
                 }
             }
             /// Prep batch created
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post/responses/201`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Created)
+            case created(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            internal var created: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Created {
+            internal var created: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -15141,11 +15141,11 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/400/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/400/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/400/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/400/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/400/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/400/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -15158,13 +15158,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/400/content/application\/json`.
-                    case json(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/400/content/application\/json`.
+                    case json(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body.jsonPayload {
+                    internal var json: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -15174,26 +15174,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body
+                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body) {
+                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body) {
                     self.body = body
                 }
             }
             /// Invalid payload
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post/responses/400`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest)
+            case badRequest(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest)
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
             /// - SeeAlso: `.badRequest`.
-            internal var badRequest: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest {
+            internal var badRequest: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest {
                 get throws {
                     switch self {
                     case let .badRequest(response):
@@ -15207,11 +15207,11 @@ internal enum Operations {
                 }
             }
             internal struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/401/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/401/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/401/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/401/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/401/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/401/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -15224,13 +15224,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/401/content/application\/json`.
-                    case json(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/401/content/application\/json`.
+                    case json(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body.jsonPayload {
+                    internal var json: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -15240,26 +15240,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body
+                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body) {
+                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Unauthenticated
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post/responses/401`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized)
+            case unauthorized(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            internal var unauthorized: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized {
+            internal var unauthorized: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -15273,11 +15273,11 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/404/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/404/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/404/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/404/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/404/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/404/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -15290,13 +15290,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/POST/responses/404/content/application\/json`.
-                    case json(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/POST/responses/404/content/application\/json`.
+                    case json(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body.jsonPayload {
+                    internal var json: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -15306,26 +15306,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body
+                internal var body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body
                 /// Creates a new `NotFound`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body) {
+                internal init(body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body) {
                     self.body = body
                 }
             }
             /// Household not found or not a member
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post/responses/404`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
-            case notFound(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound)
+            case notFound(Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound)
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
-            internal var notFound: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound {
+            internal var notFound: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -15369,16 +15369,16 @@ internal enum Operations {
             }
         }
     }
-    /// - Remark: HTTP `DELETE /households/{householdId}/prep-batches/{batchId}`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete`.
-    internal enum delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_ {
-        internal static let id: Swift.String = "delete/households/{householdId}/prep-batches/{batchId}"
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete`.
+    internal enum delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_ {
+        internal static let id: Swift.String = "delete/households/{householdId}/prep_batches/{batchId}"
         internal struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/path`.
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/path`.
             internal struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/path/householdId`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/path/householdId`.
                 internal var householdId: Swift.String
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/path/batchId`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/path/batchId`.
                 internal var batchId: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -15393,27 +15393,27 @@ internal enum Operations {
                     self.batchId = batchId
                 }
             }
-            internal var path: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input.Path
-            /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/header`.
+            internal var path: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/header`.
             internal struct Headers: Sendable, Hashable {
-                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.AcceptableContentType>]
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.AcceptableContentType>] = .defaultValues()) {
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            internal var headers: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input.Headers
+            internal var headers: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
             ///   - headers:
             internal init(
-                path: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input.Path,
-                headers: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input.Headers = .init()
+                path: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input.Path,
+                headers: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input.Headers = .init()
             ) {
                 self.path = path
                 self.headers = headers
@@ -15421,9 +15421,9 @@ internal enum Operations {
         }
         internal enum Output: Sendable, Hashable {
             internal struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/200/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/200/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/200/content/application\/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/200/content/application\/json`.
                     case json(Components.Schemas.PrepBatchOkResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
@@ -15439,26 +15439,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Ok.Body
+                internal var body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Ok.Body) {
+                internal init(body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Ok.Body) {
                     self.body = body
                 }
             }
             /// Prep batch deleted
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete/responses/200`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Ok)
+            case ok(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            internal var ok: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Ok {
+            internal var ok: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -15472,11 +15472,11 @@ internal enum Operations {
                 }
             }
             internal struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/401/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/401/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/401/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/401/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/401/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/401/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -15489,13 +15489,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/401/content/application\/json`.
-                    case json(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/401/content/application\/json`.
+                    case json(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body.jsonPayload {
+                    internal var json: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -15505,26 +15505,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body
+                internal var body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body) {
+                internal init(body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Unauthenticated
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete/responses/401`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized)
+            case unauthorized(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            internal var unauthorized: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized {
+            internal var unauthorized: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -15538,11 +15538,11 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/404/content`.
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/404/content`.
                 internal enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/404/content/json`.
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/404/content/json`.
                     internal struct jsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/404/content/json/error`.
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/404/content/json/error`.
                         internal var error: Swift.String
                         /// Creates a new `jsonPayload`.
                         ///
@@ -15555,13 +15555,13 @@ internal enum Operations {
                             case error
                         }
                     }
-                    /// - Remark: Generated from `#/paths/households/{householdId}/prep-batches/{batchId}/DELETE/responses/404/content/application\/json`.
-                    case json(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body.jsonPayload)
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/DELETE/responses/404/content/application\/json`.
+                    case json(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body.jsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    internal var json: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body.jsonPayload {
+                    internal var json: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body.jsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -15571,26 +15571,26 @@ internal enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                internal var body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body
+                internal var body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body
                 /// Creates a new `NotFound`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                internal init(body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body) {
+                internal init(body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body) {
                     self.body = body
                 }
             }
             /// Prep batch not found or not a member
             ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete/responses/404`.
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
-            case notFound(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound)
+            case notFound(Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound)
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
-            internal var notFound: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound {
+            internal var notFound: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):

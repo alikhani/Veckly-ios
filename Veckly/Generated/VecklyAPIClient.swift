@@ -329,8 +329,8 @@ struct VecklyAPIClient {
     }
 
     func listPrepBatches(householdID: String, from: String, to: String) async throws -> [PrepBatch] {
-        typealias Op = Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches
-        let output = try await _client.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
+        typealias Op = Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches
+        let output = try await _client.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(
             path: .init(householdId: householdID),
             query: .init(from: from, to: to)
         )
@@ -357,7 +357,7 @@ struct VecklyAPIClient {
             totalPortions: totalPortions,
             assignments: assignments.map { AssignPayload(date: $0.date, mealType: .init(rawValue: $0.mealType.rawValue)!) }
         )
-        let output = try await _client.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(
+        let output = try await _client.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(
             path: .init(householdId: householdID),
             body: .json(payload)
         )
@@ -371,7 +371,7 @@ struct VecklyAPIClient {
     }
 
     func deletePrepBatch(householdID: String, batchID: String) async throws {
-        let output = try await _client.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(
+        let output = try await _client.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(
             path: .init(householdId: householdID, batchId: batchID)
         )
         switch output {

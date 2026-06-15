@@ -5341,7 +5341,7 @@
         }
       }
     },
-    "/households/{householdId}/prep-batches": {
+    "/households/{householdId}/prep_batches": {
       "get": {
         "security": [
           {
@@ -5549,7 +5549,7 @@
         }
       }
     },
-    "/households/{householdId}/prep-batches/{batchId}": {
+    "/households/{householdId}/prep_batches/{batchId}": {
       "delete": {
         "security": [
           {

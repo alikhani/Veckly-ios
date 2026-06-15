@@ -3272,15 +3272,15 @@ internal struct Client: APIProtocol {
             }
         )
     }
-    /// - Remark: HTTP `GET /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/get`.
-    internal func get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(_ input: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input) async throws -> Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output {
+    /// - Remark: HTTP `GET /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/get`.
+    internal func get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(_ input: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input) async throws -> Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.id,
+            forOperation: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/households/{}/prep-batches",
+                    template: "/households/{}/prep_batches",
                     parameters: [
                         input.path.householdId
                     ]
@@ -3314,7 +3314,7 @@ internal struct Client: APIProtocol {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok.Body
+                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3324,7 +3324,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Ok.Body.jsonPayload.self,
+                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Ok.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3336,7 +3336,7 @@ internal struct Client: APIProtocol {
                     return .ok(.init(body: body))
                 case 400:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body
+                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3346,7 +3346,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body.jsonPayload.self,
+                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3358,7 +3358,7 @@ internal struct Client: APIProtocol {
                     return .badRequest(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body
+                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3368,7 +3368,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body.jsonPayload.self,
+                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3380,7 +3380,7 @@ internal struct Client: APIProtocol {
                     return .unauthorized(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body
+                    let body: Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3390,7 +3390,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body.jsonPayload.self,
+                            Operations.get_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3412,15 +3412,15 @@ internal struct Client: APIProtocol {
             }
         )
     }
-    /// - Remark: HTTP `POST /households/{householdId}/prep-batches`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/post`.
-    internal func post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches(_ input: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Input) async throws -> Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output {
+    /// - Remark: HTTP `POST /households/{householdId}/prep_batches`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/post`.
+    internal func post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(_ input: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Input) async throws -> Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.id,
+            forOperation: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/households/{}/prep-batches",
+                    template: "/households/{}/prep_batches",
                     parameters: [
                         input.path.householdId
                     ]
@@ -3451,7 +3451,7 @@ internal struct Client: APIProtocol {
                 switch response.status.code {
                 case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Created.Body
+                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3473,7 +3473,7 @@ internal struct Client: APIProtocol {
                     return .created(.init(body: body))
                 case 400:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body
+                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3483,7 +3483,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.BadRequest.Body.jsonPayload.self,
+                            Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.BadRequest.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3495,7 +3495,7 @@ internal struct Client: APIProtocol {
                     return .badRequest(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body
+                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3505,7 +3505,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.Unauthorized.Body.jsonPayload.self,
+                            Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.Unauthorized.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3517,7 +3517,7 @@ internal struct Client: APIProtocol {
                     return .unauthorized(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body
+                    let body: Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3527,7 +3527,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches.Output.NotFound.Body.jsonPayload.self,
+                            Operations.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches.Output.NotFound.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3549,15 +3549,15 @@ internal struct Client: APIProtocol {
             }
         )
     }
-    /// - Remark: HTTP `DELETE /households/{householdId}/prep-batches/{batchId}`.
-    /// - Remark: Generated from `#/paths//households/{householdId}/prep-batches/{batchId}/delete`.
-    internal func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_(_ input: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Input) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output {
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete`.
+    internal func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(_ input: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.id,
+            forOperation: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/households/{}/prep-batches/{}",
+                    template: "/households/{}/prep_batches/{}",
                     parameters: [
                         input.path.householdId,
                         input.path.batchId
@@ -3578,7 +3578,7 @@ internal struct Client: APIProtocol {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Ok.Body
+                    let body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3600,7 +3600,7 @@ internal struct Client: APIProtocol {
                     return .ok(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body
+                    let body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3610,7 +3610,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body.jsonPayload.self,
+                            Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.Unauthorized.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3622,7 +3622,7 @@ internal struct Client: APIProtocol {
                     return .unauthorized(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body
+                    let body: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3632,7 +3632,7 @@ internal struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_hyphen_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body.jsonPayload.self,
+                            Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output.NotFound.Body.jsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
