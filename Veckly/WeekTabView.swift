@@ -22,7 +22,7 @@ struct WeekTabView: View {
                 } else if appModel.weekStore.dayRows.allSatisfy({ $0.recipe == nil }) {
                     emptyWeekView
                 } else {
-                    todayPanel
+                    tonightHeroCard
                     weekList
                 }
             }
@@ -86,11 +86,6 @@ struct WeekTabView: View {
                 },
                 onDismiss: { mealPickerDay = nil }
             )
-        }
-        .onAppear {
-            if expandedDayId == nil {
-                expandedDayId = appModel.weekStore.today?.id ?? appModel.weekStore.dayRows.first?.id
-            }
         }
     }
 
@@ -177,36 +172,83 @@ struct WeekTabView: View {
         }
     }
 
-    private var todayPanel: some View {
-        VecklyCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Tonight")
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    .textCase(.uppercase)
+    private var tonightHeroDay: WeekDayRowViewModel? {
+        let rows = appModel.weekStore.dayRows
+        if let today = rows.first(where: { $0.isToday && $0.recipe != nil }) {
+            return today
+        }
+        let todayIndex = rows.firstIndex(where: { $0.isToday }) ?? -1
+        if todayIndex >= 0, let next = rows[(todayIndex + 1)...].first(where: { $0.recipe != nil }) {
+            return next
+        }
+        return rows.first(where: { $0.recipe != nil })
+    }
 
-                if let today = appModel.weekStore.today {
-                    Text(today.mealTitle)
-                        .font(.title2.weight(.semibold))
+    @ViewBuilder
+    private var tonightHeroCard: some View {
+        if let day = tonightHeroDay {
+            let isLocked = appModel.weekStore.lockedDays.contains(day.weekday)
+            VecklyCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(day.isToday ? "Tonight" : "Next up · \(day.weekdayLabel)")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .textCase(.uppercase)
+                        Spacer()
+                        if day.isToday {
+                            Text("Today")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrange, lineWidth: 1))
+                        }
+                    }
+
+                    Text(day.mealTitle)
+                        .font(VecklyDesign.Typography.displayHeading(size: 24))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
-                    Text(today.detail)
-                        .font(.body)
-                        .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    if let recipe = today.recipe {
-                        Button("View recipe") {
-                            selectedRecipe = recipe
+
+                    if !day.detail.isEmpty {
+                        Text(day.detail)
+                            .font(.body)
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    }
+
+                    HStack(spacing: 10) {
+                        Button {
+                            selectedRecipe = day.recipe
+                        } label: {
+                            Label("Recipe", systemImage: "book")
                         }
                         .buttonStyle(.bordered)
+                        .tint(VecklyDesign.Colors.inkMid)
+
+                        Button {
+                            mealPickerDay = day
+                        } label: {
+                            Label("Swap", systemImage: "arrow.2.squarepath")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(VecklyDesign.Colors.inkMid)
+
+                        Button {
+                            guard let household = appModel.householdStore.activeHousehold else { return }
+                            let userID = appModel.authSessionStore.userID ?? ""
+                            Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
+                        } label: {
+                            Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                                .frame(width: 20, height: 20)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                        .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
                     }
-                } else {
-                    Text("No dinner planned")
-                        .font(.title2.weight(.semibold))
-                    Text("Once a week exists, it will show up here first.")
-                        .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("tonightMealPanel")
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityIdentifier("todayMealPanel")
         }
     }
 
