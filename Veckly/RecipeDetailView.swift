@@ -44,7 +44,7 @@ struct RecipeDetailView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(recipe.title)
-                .font(.system(size: 28, weight: .bold, design: .serif))
+                .font(VecklyDesign.Typography.displayHeading(size: 28))
 
             let totalMinutes = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
             HStack(spacing: 16) {

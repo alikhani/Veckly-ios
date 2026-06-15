@@ -46,6 +46,12 @@ enum VecklyDesign {
         static let medium: CGFloat = 14
         static let large: CGFloat = 20
     }
+
+    enum Typography {
+        static func displayHeading(size: CGFloat) -> Font {
+            .custom("Georgia-Bold", size: size, relativeTo: .largeTitle)
+        }
+    }
 }
 
 struct VecklyPrimaryButtonStyle: ButtonStyle {

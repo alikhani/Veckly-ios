@@ -8,7 +8,7 @@ struct ShoppingListTabView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Shopping list")
-                    .font(.system(size: 34, weight: .bold, design: .serif))
+                    .font(VecklyDesign.Typography.displayHeading(size: 34))
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                 if appModel.shoppingListStore.isLoading {

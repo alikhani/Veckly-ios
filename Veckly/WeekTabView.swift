@@ -99,7 +99,7 @@ struct WeekTabView: View {
                 .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                 .textCase(.uppercase)
             Text("This week")
-                .font(.system(size: 34, weight: .bold, design: .serif))
+                .font(VecklyDesign.Typography.displayHeading(size: 34))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
         }
     }

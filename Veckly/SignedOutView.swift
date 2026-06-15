@@ -23,7 +23,7 @@ struct SignedOutView: View {
                         .accessibilityHidden(true)
 
                     Text("Veckly")
-                        .font(.custom("Georgia-Bold", size: 52))
+                        .font(VecklyDesign.Typography.displayHeading(size: 52))
                         .foregroundStyle(Color("textPrimary"))
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, 20)
