@@ -184,6 +184,17 @@ struct WeekTabView: View {
         return rows.first(where: { $0.recipe != nil })
     }
 
+    private var tonightHeroLabel: String {
+        guard let hero = tonightHeroDay else { return "" }
+        if hero.isToday { return "Tonight" }
+        let rows = appModel.weekStore.dayRows
+        let todayIndex = rows.firstIndex(where: { $0.isToday }) ?? -1
+        let heroIndex = rows.firstIndex(where: { $0.id == hero.id }) ?? -1
+        return heroIndex > todayIndex
+            ? "Next up · \(hero.weekdayLabel)"
+            : "This week · \(hero.weekdayLabel)"
+    }
+
     @ViewBuilder
     private var tonightHeroCard: some View {
         if let day = tonightHeroDay {
@@ -191,7 +202,7 @@ struct WeekTabView: View {
             VecklyCard {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(day.isToday ? "Tonight" : "Next up · \(day.weekdayLabel)")
+                        Text(tonightHeroLabel)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                             .textCase(.uppercase)
@@ -415,93 +426,3 @@ struct CompactDayRow: View {
     }
 }
 
-struct FeedbackVoteButton: View {
-    let vote: MealVote
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: iconName)
-                .font(.system(size: 16, weight: .semibold))
-                .frame(width: 36, height: 32)
-                .foregroundStyle(isSelected ? .white : VecklyDesign.Colors.inkMid)
-                .background(isSelected ? selectedColor : VecklyDesign.Colors.canvas)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(borderColor, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(accessibilityLabel)
-    }
-
-    private var iconName: String {
-        switch vote {
-        case .up:
-            return isSelected ? "hand.thumbsup.fill" : "hand.thumbsup"
-        case .down:
-            return isSelected ? "hand.thumbsdown.fill" : "hand.thumbsdown"
-        }
-    }
-
-    private var accessibilityLabel: String {
-        switch vote {
-        case .up:
-            return "Like this meal"
-        case .down:
-            return "Not for us"
-        }
-    }
-
-    private var selectedColor: Color {
-        vote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid
-    }
-
-    private var borderColor: Color {
-        isSelected ? selectedColor : VecklyDesign.Colors.edgeLight
-    }
-}
-
-struct TagPill: View {
-    let label: String
-
-    var body: some View {
-        Text(label)
-            .font(.caption.weight(.medium))
-            .foregroundStyle(VecklyDesign.Colors.inkMid)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(VecklyDesign.Colors.canvas)
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(VecklyDesign.Colors.inkFaint.opacity(0.4), lineWidth: 1))
-    }
-}
-
-struct FeedbackTagPill: View {
-    @State private var showPopover = false
-
-    var body: some View {
-        Button {
-            showPopover = true
-        } label: {
-            HStack(spacing: 4) {
-                Text("Based on your feedback")
-                    .font(.caption.weight(.medium))
-                Image(systemName: "info.circle")
-                    .font(.caption)
-            }
-            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(VecklyDesign.Colors.hearthOrange.opacity(0.08))
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrange.opacity(0.3), lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .popover(isPresented: $showPopover) {
-            Text("Vi har valt det här baserat på liknande rätter du gillat.")
-                .font(.callout)
-                .padding(16)
-                .presentationCompactAdaptation(.popover)
-        }
-    }
-}
