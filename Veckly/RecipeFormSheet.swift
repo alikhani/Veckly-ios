@@ -7,7 +7,7 @@ enum RecipeFormMode {
 
 struct RecipeFormSheet: View {
     let mode: RecipeFormMode
-    let onSave: (RecipeDraft) async -> Void
+    let onSave: (RecipeDraft) async throws -> Void
 
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
@@ -19,7 +19,7 @@ struct RecipeFormSheet: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    init(mode: RecipeFormMode, onSave: @escaping (RecipeDraft) async -> Void) {
+    init(mode: RecipeFormMode, onSave: @escaping (RecipeDraft) async throws -> Void) {
         self.mode = mode
         self.onSave = onSave
         switch mode {
@@ -187,7 +187,11 @@ struct RecipeFormSheet: View {
     private func save() async {
         isSaving = true
         defer { isSaving = false }
-        await onSave(draft)
-        dismiss()
+        do {
+            try await onSave(draft)
+            dismiss()
+        } catch {
+            errorMessage = "Could not save recipe. Please try again."
+        }
     }
 }

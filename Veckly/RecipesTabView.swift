@@ -41,13 +41,13 @@ struct RecipesTabView: View {
         .sheet(isPresented: $showAddSheet) {
             RecipeFormSheet(mode: .create) { draft in
                 guard let household = appModel.householdStore.activeHousehold else { return }
-                _ = try? await appModel.recipeStore.createRecipe(householdID: household.id, draft: draft)
+                _ = try await appModel.recipeStore.createRecipe(householdID: household.id, draft: draft)
             }
         }
         .sheet(item: $editingRecipe) { recipe in
             RecipeFormSheet(mode: .edit(recipe)) { draft in
                 guard let household = appModel.householdStore.activeHousehold else { return }
-                try? await appModel.recipeStore.updateRecipe(householdID: household.id, recipeID: recipe.id, draft: draft)
+                try await appModel.recipeStore.updateRecipe(householdID: household.id, recipeID: recipe.id, draft: draft)
             }
         }
         .task {

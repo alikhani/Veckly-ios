@@ -107,6 +107,14 @@ final class AuthSessionStore {
         return await attemptRefresh(refreshToken: refreshToken)
     }
 
+    // Returns a valid access token, refreshing it first if it is expired or about to expire.
+    func currentValidToken() async -> String? {
+        guard let token = accessToken else { return nil }
+        if !isTokenExpired(token) { return token }
+        let refreshed = await refreshSession()
+        return refreshed ? accessToken : nil
+    }
+
     func setError(_ message: String) {
         errorMessage = message
     }

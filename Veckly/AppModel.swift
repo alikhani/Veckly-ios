@@ -19,7 +19,7 @@ final class AppModel {
         self.usesSeededCoreReader = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "core-reader"
         let authSessionStore = AuthSessionStore(environment: environment)
         let apiClient = VecklyAPIClient(baseURL: environment.apiBaseURL) {
-            authSessionStore.accessToken
+            await authSessionStore.currentValidToken()
         }
 
         self.authSessionStore = authSessionStore

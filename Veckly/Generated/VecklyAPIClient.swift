@@ -6,7 +6,7 @@ import OpenAPIURLSession
 struct VecklyAPIClient {
     private let _client: Client
 
-    init(baseURL: URL, accessToken: @escaping @Sendable () -> String?) {
+    init(baseURL: URL, accessToken: @escaping @Sendable () async -> String?) {
         _client = Client(
             serverURL: baseURL,
             transport: URLSessionTransport(),
@@ -421,7 +421,7 @@ struct VecklyAPIClient {
 }
 
 private struct AuthorizationMiddleware: ClientMiddleware {
-    let getToken: @Sendable () -> String?
+    let getToken: @Sendable () async -> String?
 
     @concurrent func intercept(
         _ request: HTTPRequest,
@@ -430,7 +430,7 @@ private struct AuthorizationMiddleware: ClientMiddleware {
         operationID: String,
         next: @concurrent @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
     ) async throws -> (HTTPResponse, HTTPBody?) {
-        guard let token = getToken() else { throw APIError.unauthorized }
+        guard let token = await getToken() else { throw APIError.unauthorized }
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
         return try await next(request, body, baseURL)
