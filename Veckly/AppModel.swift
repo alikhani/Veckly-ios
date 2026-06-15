@@ -72,15 +72,15 @@ final class AppModel {
 
     func signOut() {
         authSessionStore.signOut()
-        householdStore.reset()
-        weekStore.reset()
-        shoppingListStore.reset()
-        recipeStore.reset()
-        prepBatchStore.reset()
+        resetAllStores()
     }
 
     func deleteAccount() async throws {
         try await authSessionStore.deleteAccount()
+        resetAllStores()
+    }
+
+    private func resetAllStores() {
         householdStore.reset()
         weekStore.reset()
         shoppingListStore.reset()
