@@ -6,6 +6,7 @@ import SwiftUI
 struct AppleSignInButton: View {
     let isLoading: Bool
     let onComplete: (String, String?) -> Void
+    let onFailure: () -> Void
 
     @State private var currentNonce: String?
 
@@ -16,13 +17,22 @@ struct AppleSignInButton: View {
             request.requestedScopes = [.email, .fullName]
             request.nonce = Self.sha256(nonce)
         } onCompletion: { result in
-            guard case .success(let authorization) = result,
-                  let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-                  let tokenData = credential.identityToken,
-                  let token = String(data: tokenData, encoding: .utf8) else {
-                return
+            switch result {
+            case .success(let authorization):
+                guard
+                    let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                    let tokenData = credential.identityToken,
+                    let token = String(data: tokenData, encoding: .utf8)
+                else {
+                    onFailure()
+                    return
+                }
+                onComplete(token, currentNonce)
+            case .failure(let error):
+                let code = (error as? ASAuthorizationError)?.code
+                guard code != .canceled && code != .unknown else { return }
+                onFailure()
             }
-            onComplete(token, currentNonce)
         }
         .signInWithAppleButtonStyle(.black)
         .frame(height: 48)
@@ -30,6 +40,7 @@ struct AppleSignInButton: View {
         .disabled(isLoading)
         .opacity(isLoading ? 0.7 : 1)
         .accessibilityIdentifier("continueWithAppleButton")
+        .accessibilityLabel("Continue with Apple")
     }
 
     private static func randomNonceString(length: Int = 32) -> String {

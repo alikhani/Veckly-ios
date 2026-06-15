@@ -107,6 +107,10 @@ final class AuthSessionStore {
         return await attemptRefresh(refreshToken: refreshToken)
     }
 
+    func setError(_ message: String) {
+        errorMessage = message
+    }
+
     func seedForUITests() {
         accessToken = "ui-test-token"
         userID = "11111111-1111-1111-1111-111111111111"
