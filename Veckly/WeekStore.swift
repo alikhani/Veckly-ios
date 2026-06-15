@@ -212,8 +212,8 @@ struct WeekViewModelMapper {
                 weekday: weekday,
                 weekdayLabel: weekday.displayName,
                 dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: date),
-                mealTitle: "No dinner planned",
-                detail: "Plan this day from the web app for now.",
+                mealTitle: "",
+                detail: "",
                 isToday: WeekCalendar.isToday(yyyyMmDd: date),
                 isEmpty: true,
                 recipe: nil
@@ -229,8 +229,8 @@ struct WeekViewModelMapper {
             weekday: day.dayOfWeek,
             weekdayLabel: day.dayOfWeek.displayName,
             dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: day.date),
-            mealTitle: recipe?.title ?? "No dinner planned",
-            detail: recipe.map { recipeDetail($0) } ?? "Plan this day from the web app for now.",
+            mealTitle: recipe?.title ?? "",
+            detail: recipe.map { recipeDetail($0) } ?? "",
             isToday: isToday,
             isEmpty: recipe == nil,
             recipe: recipe

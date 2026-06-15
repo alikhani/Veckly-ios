@@ -19,6 +19,8 @@ struct WeekTabView: View {
                     ErrorPanel(message: errorMessage) {
                         Task { await appModel.loadCoreReader() }
                     }
+                } else if appModel.weekStore.dayRows.allSatisfy({ $0.recipe == nil }) {
+                    emptyWeekView
                 } else {
                     todayPanel
                     weekList
@@ -101,6 +103,77 @@ struct WeekTabView: View {
             Text("This week")
                 .font(VecklyDesign.Typography.displayHeading(size: 34))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
+        }
+    }
+
+    private var emptyWeekView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VecklyCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Empty week")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        .textCase(.uppercase)
+
+                    Text("What's for dinner this week?")
+                        .font(VecklyDesign.Typography.displayHeading(size: 22))
+                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+                    Text("We'll suggest 5 dinners that fit your week — adjust from there.")
+                        .font(.body)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+                    Button("Plan my week for me") {
+                        guard let household = appModel.householdStore.activeHousehold else { return }
+                        Task {
+                            await appModel.weekStore.generateWeek(
+                                household: household,
+                                userID: appModel.authSessionStore.userID ?? "",
+                                regenerate: false
+                            )
+                        }
+                    }
+                    .buttonStyle(VecklyPrimaryButtonStyle())
+                    .padding(.top, 4)
+                    .disabled(appModel.householdStore.activeHousehold == nil)
+
+                    Button("Or choose each day") {
+                        mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.isToday })
+                            ?? appModel.weekStore.dayRows.first
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .frame(maxWidth: .infinity)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Text("The week")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                .padding(.top, 4)
+
+            ForEach(appModel.weekStore.dayRows) { day in
+                Button { mealPickerDay = day } label: {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(day.weekdayLabel)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                            Text(day.dateLabel)
+                                .font(.caption)
+                                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        }
+                        .frame(width: 72, alignment: .leading)
+
+                        Rectangle()
+                            .fill(VecklyDesign.Colors.edgeLight)
+                            .frame(height: 1)
+                    }
+                    .frame(height: 36)
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
