@@ -3,27 +3,66 @@ import SwiftUI
 struct SignedOutView: View {
     @Environment(AppModel.self) private var appModel
 
+    private let weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    private let accentDay = "Tue"
+
     var body: some View {
         ZStack {
-            VecklyDesign.Colors.canvas.ignoresSafeArea()
+            Color("canvas").ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
+            VStack(spacing: 0) {
 
-                VStack(alignment: .leading, spacing: 10) {
+                // Brand cluster — anchored in the upper portion of the screen.
+                // Chips sit inside this cluster as a subtle product hint, not a
+                // standalone control row.
+                VStack(spacing: 0) {
+                    Image("VecklyMark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 58, height: 58)
+                        .accessibilityHidden(true)
+
                     Text("Veckly")
                         .font(.custom("Georgia-Bold", size: 52))
-                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                        .foregroundStyle(Color("textPrimary"))
                         .accessibilityAddTraits(.isHeader)
+                        .padding(.top, 20)
 
-                    Text("Plan the week once. Know what dinner is before the day starts.")
+                    Text("Plan the week once. Know what's for dinner before the day starts.")
                         .font(.title3)
-                        .foregroundStyle(VecklyDesign.Colors.inkMid)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                        .foregroundStyle(Color("textMuted"))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 240)
+                        .padding(.top, 12)
 
+                    // Week chip strip — presentational only, no data binding.
+                    // Auto-width so chips read as an ambient hint, not a picker.
+                    HStack(spacing: 8) {
+                        ForEach(weekDays, id: \.self) { day in
+                            Text(day)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(day == accentDay ? Color.white : Color("textMuted"))
+                                .padding(.horizontal, 11)
+                                .padding(.vertical, 7)
+                                .background(
+                                    day == accentDay
+                                        ? VecklyDesign.Colors.hearthOrange
+                                        : Color("chipSurface")
+                                )
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.top, 20)
+                }
+                .padding(.top, 80)
+                .frame(maxWidth: .infinity)
+
+                // Deliberate breathing room — the space between brand and CTA
+                // should feel calm and intentional, not like a layout accident.
                 Spacer()
 
+                // Auth block — pressed against the bottom of the safe area
+                // so the button lands in the natural thumb zone.
                 VStack(spacing: 12) {
                     AppleSignInButton(
                         isLoading: appModel.authSessionStore.isSigningIn,
@@ -109,7 +148,7 @@ struct SignedOutView: View {
                                 .tint(VecklyDesign.Colors.hearthOrange)
                             Text("Signing in…")
                                 .font(.footnote)
-                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                                .foregroundStyle(Color("textMuted"))
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                         .accessibilityElement(children: .combine)
@@ -124,13 +163,18 @@ struct SignedOutView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityLabel("Error: \(message)")
                     }
-                }
 
-                Spacer(minLength: 56)
+                    // Legal footer — plain text; no Terms/Privacy routes yet.
+                    Text("By continuing you agree to our Terms & Privacy Policy.")
+                        .font(.caption2)
+                        .foregroundStyle(Color("textMuted"))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.bottom, 8)
             }
             .padding(.horizontal, 24)
         }
-        .preferredColorScheme(.light)
     }
 
 //    @State private var email = ""

@@ -9,6 +9,7 @@ struct AppleSignInButton: View {
     let onFailure: () -> Void
 
     @State private var currentNonce: String?
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         SignInWithAppleButton(.continue) { request in
@@ -34,7 +35,7 @@ struct AppleSignInButton: View {
                 onFailure()
             }
         }
-        .signInWithAppleButtonStyle(.black)
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
         .frame(height: 48)
         .clipShape(Capsule())
         .disabled(isLoading)
