@@ -23,7 +23,7 @@ struct WeekTabView: View {
                     emptyWeekView
                 } else {
                     tonightHeroCard
-                    weekList
+                    restOfWeekList
                 }
             }
             .padding(18)
@@ -252,19 +252,24 @@ struct WeekTabView: View {
         }
     }
 
-    private var weekList: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Plan")
-                .font(.headline)
-                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+    private var remainingDays: [WeekDayRowViewModel] {
+        let heroId = tonightHeroDay?.id
+        return appModel.weekStore.dayRows.filter { $0.id != heroId }
+    }
 
-            ForEach(appModel.weekStore.dayRows) { day in
-                WeekDayRow(
+    private var restOfWeekList: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("The rest of the week")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                .padding(.bottom, 4)
+
+            ForEach(remainingDays) { day in
+                CompactDayRow(
                     day: day,
                     isExpanded: expandedDayId == day.id,
                     isLocked: appModel.weekStore.lockedDays.contains(day.weekday),
                     isSkipped: appModel.weekStore.skippedDays.contains(day.weekday),
-                    selectedVote: day.recipe.flatMap { appModel.weekStore.mealFeedback[$0.id] },
                     onToggle: {
                         withAnimation(.spring(response: 0.3)) {
                             expandedDayId = expandedDayId == day.id ? nil : day.id
@@ -280,172 +285,133 @@ struct WeekTabView: View {
                         let userID = appModel.authSessionStore.userID ?? ""
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                     },
-                    onFeedback: { vote in
-                        guard let household = appModel.householdStore.activeHousehold, let mealID = day.recipe?.id else { return }
-                        Task { await appModel.weekStore.submitFeedback(mealID: mealID, vote: vote, household: household) }
-                    },
                     onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil,
                     onPickMeal: { mealPickerDay = day }
                 )
+                if day.id != remainingDays.last?.id {
+                    Divider().padding(.leading, 56)
+                }
             }
         }
         .accessibilityIdentifier("weekPlanList")
     }
 }
 
-struct WeekDayRow: View {
+struct CompactDayRow: View {
     let day: WeekDayRowViewModel
     let isExpanded: Bool
     let isLocked: Bool
     let isSkipped: Bool
-    let selectedVote: MealVote?
     let onToggle: () -> Void
     let onToggleLock: () -> Void
     let onToggleSkip: () -> Void
-    let onFeedback: (MealVote) -> Void
     let onViewRecipe: (() -> Void)?
     let onPickMeal: () -> Void
 
     var body: some View {
-        VecklyCard {
-            VStack(alignment: .leading, spacing: 0) {
-                headerRow
+        VStack(alignment: .leading, spacing: 0) {
+            if day.recipe == nil && !isSkipped {
+                emptyRow
+            } else {
+                Button(action: onToggle) { collapsedRow }
+                    .buttonStyle(.plain)
                 if isExpanded {
-                    expandedBody
+                    expandedDetail
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
         }
-        .opacity(isSkipped ? 0.5 : 1)
         .animation(.spring(response: 0.3), value: isExpanded)
-        .animation(.easeInOut(duration: 0.2), value: isSkipped)
+        .opacity(isSkipped ? 0.6 : 1)
     }
 
-    private var headerRow: some View {
-        Button(action: onToggle) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(day.weekdayLabel)
-                        .font(.headline)
-                    Text(day.dateLabel)
-                        .font(.caption)
-                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                }
-                .frame(width: 92, alignment: .leading)
+    private var dateColumn: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(String(day.weekdayLabel.prefix(3)))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            Text(day.dateLabel)
+                .font(.caption2)
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+        }
+        .frame(width: 44, alignment: .leading)
+    }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(isSkipped ? "Skipped" : day.mealTitle)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(
-                            isSkipped
-                                ? VecklyDesign.Colors.inkFaint
-                                : (day.isEmpty ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
-                        )
-                    if !isExpanded {
-                        Text(day.detail)
-                            .font(.footnote)
-                            .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    }
-                }
-
-                Spacer()
-
-                HStack(spacing: 8) {
-                    if day.isToday {
-                        Text("Today")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    }
-
-                    if !isSkipped {
-                        Button(action: onToggleLock) {
-                            Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                                .font(.system(size: 14))
-                                .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
-                    }
-                }
+    private var collapsedRow: some View {
+        HStack(alignment: .center, spacing: 12) {
+            dateColumn
+            Text(isSkipped ? "Skipped day" : day.mealTitle)
+                .font(.body.weight(isSkipped ? .regular : .medium))
+                .foregroundStyle(isSkipped ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
+            Spacer()
+            if isLocked && !isSkipped {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
             }
+        }
+        .padding(.vertical, 12)
+    }
+
+    private var emptyRow: some View {
+        Button(action: onPickMeal) {
+            HStack(alignment: .center, spacing: 12) {
+                dateColumn
+                Text("Add dinner")
+                    .font(.body)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                Spacer()
+                Text("Plan")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            }
+            .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
     }
 
     @ViewBuilder
-    private var expandedBody: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Divider()
-                .padding(.top, 8)
-
-            if let recipe = day.recipe, !isSkipped {
-                Text(recipe.description)
-                    .font(.body)
+    private var expandedDetail: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if isSkipped {
+                Button("Undo skip", action: onToggleSkip)
+                    .font(.footnote)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
-
-                tagRow(recipe: recipe)
-                feedbackRow
-
-                HStack(spacing: 10) {
+                    .buttonStyle(.plain)
+            } else if let recipe = day.recipe {
+                if !recipe.description.isEmpty {
+                    Text(recipe.description)
+                        .font(.footnote)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                }
+                HStack(spacing: 8) {
                     if let onViewRecipe {
                         Button("View recipe", action: onViewRecipe)
                             .buttonStyle(.bordered)
                             .tint(VecklyDesign.Colors.hearthOrange)
+                            .font(.footnote)
                     }
                     if !isLocked {
                         Button("Change meal", action: onPickMeal)
                             .buttonStyle(.bordered)
+                            .font(.footnote)
                     }
+                    Button(action: onToggleLock) {
+                        Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                    .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
                 }
-            } else if !isSkipped {
-                Text(day.detail)
+                Button("Skip this day", action: onToggleSkip)
                     .font(.footnote)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
-                Button("Choose meal", action: onPickMeal)
-                    .buttonStyle(VecklyPrimaryButtonStyle())
-                    .padding(.top, 4)
-            }
-
-            Button(isSkipped ? "Undo skip" : "Skip this day", action: onToggleSkip)
-                .font(.footnote)
-                .foregroundStyle(VecklyDesign.Colors.inkMid)
-                .buttonStyle(.plain)
-        }
-        .padding(.top, 4)
-    }
-
-    private var feedbackRow: some View {
-        HStack(spacing: 10) {
-            FeedbackVoteButton(
-                vote: .up,
-                isSelected: selectedVote == .up,
-                action: { onFeedback(.up) }
-            )
-            FeedbackVoteButton(
-                vote: .down,
-                isSelected: selectedVote == .down,
-                action: { onFeedback(.down) }
-            )
-        }
-    }
-
-    @ViewBuilder
-    private func tagRow(recipe: WeekSummaryRecipe) -> some View {
-        let hasFeedbackTag = recipe.tags.contains("based-on-feedback")
-        let otherTags = recipe.tags.filter { $0 != "based-on-feedback" }
-
-        if !otherTags.isEmpty || hasFeedbackTag {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(otherTags, id: \.self) { tag in
-                        TagPill(label: tag)
-                    }
-                    if hasFeedbackTag {
-                        FeedbackTagPill()
-                    }
-                }
+                    .buttonStyle(.plain)
             }
         }
+        .padding(.leading, 56)
+        .padding(.bottom, 10)
     }
 }
 
