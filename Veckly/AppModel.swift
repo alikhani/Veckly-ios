@@ -66,8 +66,9 @@ final class AppModel {
     func loadCoreReader() async {
         await householdStore.bootstrapAndLoadHouseholds()
         guard let household = householdStore.activeHousehold else { return }
-        await weekStore.loadCurrentWeek(household: household)
-        await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStore.weekStartDate)
+        async let week: Void = weekStore.loadCurrentWeek(household: household)
+        async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStore.weekStartDate)
+        _ = await (week, shopping)
     }
 
     func signOut() {
