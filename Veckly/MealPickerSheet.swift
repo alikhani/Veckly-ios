@@ -68,7 +68,7 @@ struct MealPickerSheet: View {
     private func loadRecipes() async {
         isLoading = true
         defer { isLoading = false }
-        recipes = (try? await apiClient.listHouseholdRecipes(householdID: householdID)) ?? []
+        recipes = (try? await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: true)) ?? []
     }
 }
 

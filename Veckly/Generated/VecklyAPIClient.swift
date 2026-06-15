@@ -207,9 +207,10 @@ struct VecklyAPIClient {
         }
     }
 
-    func listHouseholdRecipes(householdID: String) async throws -> [FullRecipe] {
+    func listHouseholdRecipes(householdID: String, includePublic: Bool = false) async throws -> [FullRecipe] {
         let output = try await _client.listRecipes(
-            path: .init(householdId: householdID)
+            path: .init(householdId: householdID),
+            query: .init(includePublic: includePublic ? ._true : nil)
         )
         switch output {
         case let .ok(response):

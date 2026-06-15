@@ -2178,7 +2178,10 @@
             "format": "uuid"
           },
           "householdId": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid"
           },
           "title": {
@@ -2249,7 +2252,8 @@
             "enum": [
               "user_created",
               "url_import",
-              "ai_generated"
+              "ai_generated",
+              "builtin"
             ]
           },
           "isPublic": {
@@ -2259,7 +2263,10 @@
             "type": "boolean"
           },
           "createdBy": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid"
           },
           "createdAt": {
@@ -4663,6 +4670,18 @@
             },
             "required": false,
             "name": "includeArchived",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "includePublic",
             "in": "query"
           }
         ],

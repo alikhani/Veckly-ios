@@ -2089,6 +2089,13 @@ internal struct Client: APIProtocol {
                     name: "includeArchived",
                     value: input.query.includeArchived
                 )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "includePublic",
+                    value: input.query.includePublic
+                )
                 converter.setAcceptHeader(
                     in: &request.headerFields,
                     contentTypes: input.headers.accept

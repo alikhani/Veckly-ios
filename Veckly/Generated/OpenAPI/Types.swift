@@ -4285,7 +4285,7 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/Recipe/id`.
             internal var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/Recipe/householdId`.
-            internal var householdId: Swift.String
+            internal var householdId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/Recipe/title`.
             internal var title: Swift.String
             /// - Remark: Generated from `#/components/schemas/Recipe/description`.
@@ -4315,6 +4315,7 @@ internal enum Components {
                 case user_created = "user_created"
                 case url_import = "url_import"
                 case ai_generated = "ai_generated"
+                case builtin = "builtin"
             }
             /// - Remark: Generated from `#/components/schemas/Recipe/source`.
             internal var source: Components.Schemas.Recipe.sourcePayload
@@ -4323,7 +4324,7 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/Recipe/isArchived`.
             internal var isArchived: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/Recipe/createdBy`.
-            internal var createdBy: Swift.String
+            internal var createdBy: Swift.String?
             /// - Remark: Generated from `#/components/schemas/Recipe/createdAt`.
             internal var createdAt: Swift.String
             /// - Remark: Generated from `#/components/schemas/Recipe/updatedAt`.
@@ -4353,7 +4354,7 @@ internal enum Components {
             ///   - updatedAt:
             internal init(
                 id: Swift.String,
-                householdId: Swift.String,
+                householdId: Swift.String? = nil,
                 title: Swift.String,
                 description: Swift.String,
                 servings: Swift.Int,
@@ -4369,7 +4370,7 @@ internal enum Components {
                 source: Components.Schemas.Recipe.sourcePayload,
                 isPublic: Swift.Bool,
                 isArchived: Swift.Bool,
-                createdBy: Swift.String,
+                createdBy: Swift.String? = nil,
                 createdAt: Swift.String,
                 updatedAt: Swift.String
             ) {
@@ -11365,12 +11366,24 @@ internal enum Operations {
                 }
                 /// - Remark: Generated from `#/paths/households/{householdId}/recipes/GET/query/includeArchived`.
                 internal var includeArchived: Operations.listRecipes.Input.Query.includeArchivedPayload?
+                /// - Remark: Generated from `#/paths/households/{householdId}/recipes/GET/query/includePublic`.
+                internal enum includePublicPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case _true = "true"
+                    case _false = "false"
+                }
+                /// - Remark: Generated from `#/paths/households/{householdId}/recipes/GET/query/includePublic`.
+                internal var includePublic: Operations.listRecipes.Input.Query.includePublicPayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
                 ///   - includeArchived:
-                internal init(includeArchived: Operations.listRecipes.Input.Query.includeArchivedPayload? = nil) {
+                ///   - includePublic:
+                internal init(
+                    includeArchived: Operations.listRecipes.Input.Query.includeArchivedPayload? = nil,
+                    includePublic: Operations.listRecipes.Input.Query.includePublicPayload? = nil
+                ) {
                     self.includeArchived = includeArchived
+                    self.includePublic = includePublic
                 }
             }
             internal var query: Operations.listRecipes.Input.Query
