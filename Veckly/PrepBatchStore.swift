@@ -7,6 +7,7 @@ final class PrepBatchStore {
     private let apiClient: VecklyAPIClient
 
     private(set) var batches: [PrepBatch] = []
+    private(set) var lastFetchedAt: Date?
     private(set) var isLoading = false
     var errorMessage: String?
 
@@ -15,11 +16,13 @@ final class PrepBatchStore {
     }
 
     func load(householdID: String, weekStartDate: String) async {
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 || batches.isEmpty else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         let to = endDate(from: weekStartDate)
         batches = (try? await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to)) ?? []
+        lastFetchedAt = Date()
     }
 
     func create(
@@ -50,6 +53,7 @@ final class PrepBatchStore {
         batches = []
         errorMessage = nil
         isLoading = false
+        lastFetchedAt = nil
     }
 
     private func endDate(from start: String) -> String {

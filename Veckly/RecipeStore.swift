@@ -9,16 +9,31 @@ final class RecipeStore {
     private(set) var recipes: [FullRecipe] = []
     private(set) var isLoading = false
     var errorMessage: String?
+    private(set) var lastFetchedAt: Date?
+    private var fullRecipeCache: [String: FullRecipe] = [:]
 
     init(apiClient: VecklyAPIClient) {
         self.apiClient = apiClient
     }
 
     func loadRecipes(householdID: String) async {
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 || recipes.isEmpty else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
-        recipes = (try? await apiClient.listHouseholdRecipes(householdID: householdID)) ?? []
+        let fetched = (try? await apiClient.listHouseholdRecipes(householdID: householdID)) ?? []
+        recipes = fetched
+        for recipe in fetched {
+            fullRecipeCache[recipe.id] = recipe
+        }
+        lastFetchedAt = Date()
+    }
+
+    func getOrFetchFull(householdID: String, recipeID: String) async throws -> FullRecipe {
+        if let cached = fullRecipeCache[recipeID] { return cached }
+        let full = try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
+        fullRecipeCache[recipeID] = full
+        return full
     }
 
     func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe {
@@ -46,5 +61,7 @@ final class RecipeStore {
         recipes = []
         errorMessage = nil
         isLoading = false
+        lastFetchedAt = nil
+        fullRecipeCache = [:]
     }
 }

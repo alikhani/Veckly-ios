@@ -76,7 +76,16 @@ struct WeekTabView: View {
                     mealPickerDay = nil
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     let userID = appModel.authSessionStore.userID ?? ""
-                    Task { await appModel.weekStore.assignMeal(day: day, recipeID: recipe.id, household: household, userID: userID) }
+                    let summaryRecipe = WeekSummaryRecipe(
+                        id: recipe.id,
+                        title: recipe.title,
+                        description: recipe.description,
+                        servings: recipe.servings,
+                        prepTimeMinutes: recipe.prepTimeMinutes,
+                        cookTimeMinutes: recipe.cookTimeMinutes,
+                        tags: recipe.tags
+                    )
+                    Task { await appModel.weekStore.assignMeal(day: day, recipe: summaryRecipe, household: household, userID: userID) }
                 },
                 onClear: {
                     mealPickerDay = nil

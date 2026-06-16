@@ -12,12 +12,14 @@ final class ShoppingListStore {
     private(set) var stateUpdatedAt: String?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
+    private(set) var lastFetchedAt: Date?
 
     init(apiClient: VecklyAPIClient) {
         self.apiClient = apiClient
     }
 
     func loadCurrentWeek(household: Household, weekStartDate: String) async {
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -25,6 +27,7 @@ final class ShoppingListStore {
         do {
             let summary = try await apiClient.shoppingListSummary(householdID: household.id, weekStartDate: weekStartDate)
             self.summary = summary
+            lastFetchedAt = Date()
             groups = ShoppingListViewModelMapper.groups(from: summary)
             checkedItems = Set(groups.flatMap { $0.items }.filter { $0.checked }.map { $0.itemKey })
             stateUpdatedAt = nil
@@ -75,6 +78,7 @@ final class ShoppingListStore {
         stateUpdatedAt = nil
         errorMessage = nil
         isLoading = false
+        lastFetchedAt = nil
     }
 
     func seedForUITests() {

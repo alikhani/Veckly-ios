@@ -16,12 +16,14 @@ final class WeekStore {
     private(set) var isLoading = false
     private(set) var isGenerating = false
     private(set) var errorMessage: String?
+    private(set) var lastFetchedAt: Date?
 
     init(apiClient: VecklyAPIClient) {
         self.apiClient = apiClient
     }
 
     func loadCurrentWeek(household: Household) async {
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
         isLoading = true
         errorMessage = nil
         weekStartDate = WeekCalendar.currentWeekStartDate()
@@ -30,6 +32,7 @@ final class WeekStore {
         do {
             let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
             self.summary = summary
+            lastFetchedAt = Date()
             let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
             dayRows = mapped.days
             today = mapped.today
@@ -90,27 +93,72 @@ final class WeekStore {
 
         do {
             try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: weekStartDate, regenerate: regenerate)
+            lastFetchedAt = nil
             await loadCurrentWeek(household: household)
         } catch {
             errorMessage = "We could not generate your week."
         }
     }
 
-    func assignMeal(day: WeekDayRowViewModel, recipeID: String, household: Household, userID: String) async {
+    func assignMeal(day: WeekDayRowViewModel, recipe: WeekSummaryRecipe, household: Household, userID: String) async {
+        let previous = dayRows.first(where: { $0.weekday == day.weekday })
+
+        let time = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
+        let detail = time > 0 ? "\(recipe.servings) servings · \(time) min" : "\(recipe.servings) servings"
+        let optimisticRow = WeekDayRowViewModel(
+            id: day.id,
+            weekday: day.weekday,
+            weekdayLabel: day.weekdayLabel,
+            dateLabel: day.dateLabel,
+            mealTitle: recipe.title,
+            detail: detail,
+            isToday: day.isToday,
+            isEmpty: false,
+            recipe: recipe
+        )
+
+        if let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+            dayRows[idx] = optimisticRow
+        }
+        if day.isToday { today = optimisticRow }
+
         do {
             try await apiClient.appendWeekPlanEvent(
                 householdID: household.id,
                 weekStartDate: weekStartDate,
                 userID: userID,
-                event: .mealAssigned(day: day.weekday, recipeID: recipeID)
+                event: .mealAssigned(day: day.weekday, recipeID: recipe.id)
             )
-            await loadCurrentWeek(household: household)
+            lastFetchedAt = Date()
         } catch {
+            if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+                dayRows[idx] = previous
+            }
+            if day.isToday { today = previous }
             errorMessage = "We could not assign the meal."
         }
     }
 
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        let previous = dayRows.first(where: { $0.weekday == day.weekday })
+
+        let emptyRow = WeekDayRowViewModel(
+            id: day.id,
+            weekday: day.weekday,
+            weekdayLabel: day.weekdayLabel,
+            dateLabel: day.dateLabel,
+            mealTitle: "",
+            detail: "",
+            isToday: day.isToday,
+            isEmpty: true,
+            recipe: nil
+        )
+
+        if let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+            dayRows[idx] = emptyRow
+        }
+        if day.isToday { today = emptyRow }
+
         do {
             try await apiClient.appendWeekPlanEvent(
                 householdID: household.id,
@@ -118,8 +166,12 @@ final class WeekStore {
                 userID: userID,
                 event: .mealUnassigned(day: day.weekday)
             )
-            await loadCurrentWeek(household: household)
+            lastFetchedAt = Date()
         } catch {
+            if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+                dayRows[idx] = previous
+            }
+            if day.isToday { today = previous }
             errorMessage = "We could not clear the meal."
         }
     }
@@ -151,6 +203,7 @@ final class WeekStore {
         mealFeedback = [:]
         errorMessage = nil
         isLoading = false
+        lastFetchedAt = nil
     }
 
     func seedForUITests() {

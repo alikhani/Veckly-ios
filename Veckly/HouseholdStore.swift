@@ -14,6 +14,7 @@ final class HouseholdStore {
     private(set) var members: [HouseholdMember] = []
     private(set) var profile: HouseholdProfile?
     private(set) var invites: [HouseholdInvite] = []
+    private(set) var detailsLastFetchedAt: Date?
 
     init(apiClient: VecklyAPIClient) {
         self.apiClient = apiClient
@@ -35,10 +36,12 @@ final class HouseholdStore {
     }
 
     func loadHouseholdDetails(householdID: String) async {
+        guard detailsLastFetchedAt == nil || Date().timeIntervalSince(detailsLastFetchedAt!) > 300 || members.isEmpty else { return }
         async let membersResult = apiClient.listMembers(householdID: householdID)
         async let profileResult = apiClient.getProfile(householdID: householdID)
         members = (try? await membersResult) ?? []
         profile = try? await profileResult
+        detailsLastFetchedAt = Date()
     }
 
     func loadInvites(householdID: String) async {
@@ -91,6 +94,7 @@ final class HouseholdStore {
         members = []
         profile = nil
         invites = []
+        detailsLastFetchedAt = nil
     }
 
     func seedForUITests() {

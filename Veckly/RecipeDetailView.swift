@@ -119,9 +119,12 @@ struct RecipeDetailView: View {
         isLoadingFull = true
         defer { isLoadingFull = false }
         do {
-            fullRecipe = try await appModel.weekStore.fetchFullRecipe(householdID: householdID, recipeID: recipe.id)
+            fullRecipe = try await appModel.recipeStore.getOrFetchFull(
+                householdID: householdID,
+                recipeID: recipe.id
+            )
         } catch {
-            // keep existing summary data; no crash on network failure
+            // header data already visible; silent failure is acceptable
         }
     }
 }
