@@ -28,7 +28,16 @@ enum WeekCalendar {
 
     static func isToday(yyyyMmDd: String, today: Date = Date()) -> Bool {
         guard let date = date(from: yyyyMmDd) else { return false }
-        return calendar.isDate(date, inSameDayAs: today)
+        // Use the device's local calendar for the day comparison so midnight
+        // boundaries follow the user's timezone, not UTC.
+        return Calendar.current.isDate(date, inSameDayAs: today)
+    }
+
+    static func isPast(yyyyMmDd: String, today: Date = Date()) -> Bool {
+        guard let date = date(from: yyyyMmDd) else { return false }
+        let localCal = Calendar.current
+        return !localCal.isDate(date, inSameDayAs: today)
+            && date < localCal.startOfDay(for: today)
     }
 
     static func date(from yyyyMmDd: String) -> Date? {

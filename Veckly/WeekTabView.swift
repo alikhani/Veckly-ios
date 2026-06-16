@@ -1,8 +1,16 @@
 import SwiftUI
 
+/// Pairs a recipe with the day it belongs to, so RecipeDetailView can offer
+/// day-level actions (skip/plan) in context.
+private struct SelectedDayRecipe: Identifiable {
+    let day: WeekDayRowViewModel
+    let recipe: WeekSummaryRecipe
+    var id: String { recipe.id + day.id }
+}
+
 struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
-    @State private var selectedRecipe: WeekSummaryRecipe?
+    @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
 
     var body: some View {
@@ -60,10 +68,17 @@ struct WeekTabView: View {
                 }
             }
         }
-        .sheet(item: $selectedRecipe) { recipe in
+        .sheet(item: $selectedDayRecipe) { pair in
             RecipeDetailView(
-                recipe: recipe,
-                householdID: appModel.householdStore.activeHousehold?.id ?? ""
+                recipe: pair.recipe,
+                householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                isSkipped: pair.day.isSkipped,
+                onSkip: {
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let userID = appModel.authSessionStore.userID ?? ""
+                    selectedDayRecipe = nil
+                    Task { await appModel.weekStore.toggleSkip(day: pair.day, household: household, userID: userID) }
+                }
             )
         }
         .sheet(item: $mealPickerDay) { day in
@@ -242,7 +257,9 @@ struct WeekTabView: View {
 
                     HStack(spacing: 10) {
                         Button {
-                            selectedRecipe = day.recipe
+                            if let recipe = day.recipe {
+                                selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                            }
                         } label: {
                             Label("Recipe", systemImage: "book")
                         }
@@ -319,12 +336,15 @@ struct CompactDayRow: View {
             rowContent
         }
         .buttonStyle(.plain)
+        .opacity(day.isPast ? 0.45 : 1)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(action: onToggleSkip) {
-                Label(day.isSkipped ? "Plan day" : "Skip", systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+            if !day.isPast {
+                Button(action: onToggleSkip) {
+                    Label(day.isSkipped ? "Plan day" : "Skip", systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+                }
+                .tint(VecklyDesign.Colors.inkMid)
+                .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
             }
-            .tint(VecklyDesign.Colors.inkMid)
-            .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
         }
     }
 
@@ -378,9 +398,11 @@ struct CompactDayRow: View {
                 .font(.body.italic())
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
             Spacer()
-            Text("Plan")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            if !day.isPast {
+                Text("Plan")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            }
         }
     }
 
@@ -390,9 +412,11 @@ struct CompactDayRow: View {
                 .font(.body)
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
             Spacer()
-            Text("Plan")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            if !day.isPast {
+                Text("Plan")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            }
         }
         .opacity(0.7)
     }

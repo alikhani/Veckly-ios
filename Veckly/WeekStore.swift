@@ -147,6 +147,7 @@ final class WeekStore {
             mealTitle: recipe.title,
             detail: detail,
             isToday: day.isToday,
+            isPast: day.isPast,
             isEmpty: false,
             isLocked: day.isLocked,
             isSkipped: false,
@@ -186,6 +187,7 @@ final class WeekStore {
             mealTitle: "",
             detail: "",
             isToday: day.isToday,
+            isPast: day.isPast,
             isEmpty: true,
             isLocked: false,
             isSkipped: false,
@@ -298,6 +300,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
     let mealTitle: String
     let detail: String
     let isToday: Bool
+    let isPast: Bool
     let isEmpty: Bool
     let isLocked: Bool
     let isSkipped: Bool
@@ -311,6 +314,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         mealTitle: String,
         detail: String,
         isToday: Bool,
+        isPast: Bool = false,
         isEmpty: Bool,
         isLocked: Bool = false,
         isSkipped: Bool = false,
@@ -323,6 +327,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.mealTitle = mealTitle
         self.detail = detail
         self.isToday = isToday
+        self.isPast = isPast
         self.isEmpty = isEmpty
         self.isLocked = isLocked
         self.isSkipped = isSkipped
@@ -338,6 +343,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             mealTitle: isSkipped ? "" : mealTitle,
             detail: isSkipped ? "" : detail,
             isToday: isToday,
+            isPast: isPast,
             isEmpty: !isSkipped && recipe == nil,
             isLocked: isSkipped ? false : isLocked,
             isSkipped: isSkipped,
@@ -354,6 +360,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             mealTitle: mealTitle,
             detail: detail,
             isToday: isToday,
+            isPast: isPast,
             isEmpty: isEmpty,
             isLocked: isLocked,
             isSkipped: isSkipped,
@@ -364,8 +371,9 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
 
 struct WeekViewModelMapper {
     static func map(summary: WeekSummary, today: Date, calendar: Calendar = WeekCalendar.calendar) -> (days: [WeekDayRowViewModel], today: WeekDayRowViewModel?) {
+        let localCal = Calendar.current
         let rows = summary.days.map { day in
-            row(from: day, today: today, calendar: calendar)
+            row(from: day, today: today, utcCalendar: calendar, localCal: localCal)
         }
         return (rows, rows.first(where: { $0.isToday }))
     }
@@ -379,17 +387,25 @@ struct WeekViewModelMapper {
                 weekdayLabel: weekday.displayName,
                 dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: date),
                 mealTitle: "",
-            detail: "",
-            isToday: WeekCalendar.isToday(yyyyMmDd: date),
-            isEmpty: true,
-            isLocked: false,
-            recipe: nil
-        )
-    }
+                detail: "",
+                isToday: WeekCalendar.isToday(yyyyMmDd: date),
+                isPast: WeekCalendar.isPast(yyyyMmDd: date),
+                isEmpty: true,
+                isLocked: false,
+                recipe: nil
+            )
+        }
     }
 
-    private static func row(from day: WeekSummaryDay, today: Date, calendar: Calendar) -> WeekDayRowViewModel {
-        let isToday = WeekCalendar.date(from: day.date).map { calendar.isDate($0, inSameDayAs: today) } ?? false
+    private static func row(from day: WeekSummaryDay, today: Date, utcCalendar: Calendar, localCal: Calendar) -> WeekDayRowViewModel {
+        let dayDate = WeekCalendar.date(from: day.date)
+        // Use the device's local calendar so midnight boundaries follow the
+        // user's timezone, not UTC.
+        let isToday = dayDate.map { localCal.isDate($0, inSameDayAs: today) } ?? false
+        let isPast = dayDate.map { date in
+            !localCal.isDate(date, inSameDayAs: today)
+                && date < localCal.startOfDay(for: today)
+        } ?? false
         let recipe = day.recipe
         let isSkipped = day.state == .skipped
         return WeekDayRowViewModel(
@@ -400,6 +416,7 @@ struct WeekViewModelMapper {
             mealTitle: recipe?.title ?? "",
             detail: recipe.map { recipeDetail($0) } ?? "",
             isToday: isToday,
+            isPast: isPast,
             isEmpty: recipe == nil && !isSkipped,
             isLocked: day.isLocked,
             isSkipped: isSkipped,

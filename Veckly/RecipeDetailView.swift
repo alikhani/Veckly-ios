@@ -3,6 +3,9 @@ import SwiftUI
 struct RecipeDetailView: View {
     let recipe: WeekSummaryRecipe
     let householdID: String
+    /// When provided, shows a "Skip / Plan this day" row at the top of the sheet.
+    var isSkipped: Bool? = nil
+    var onSkip: (() -> Void)? = nil
 
     @Environment(AppModel.self) private var appModel
     @State private var fullRecipe: FullRecipe?
@@ -12,6 +15,12 @@ struct RecipeDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    // Day-level action — surfaced before recipe content so it is
+                    // reachable without scrolling.
+                    if let isSkipped, let onSkip {
+                        skipDayRow(isSkipped: isSkipped, onSkip: onSkip)
+                    }
+
                     headerSection
 
                     if isLoadingFull {
@@ -39,6 +48,27 @@ struct RecipeDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task { await loadFull() }
         }
+    }
+
+    @ViewBuilder
+    private func skipDayRow(isSkipped: Bool, onSkip: @escaping () -> Void) -> some View {
+        Button(action: onSkip) {
+            HStack(spacing: 10) {
+                Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+                    .font(.body)
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                Text(isSkipped ? "Plan this day instead" : "Skip this day")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(VecklyDesign.Colors.surfaceStrong)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isSkipped ? "Plan this day instead" : "Skip this day")
     }
 
     private var headerSection: some View {
