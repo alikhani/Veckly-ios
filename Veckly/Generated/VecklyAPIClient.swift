@@ -177,6 +177,19 @@ struct VecklyAPIClient {
         }
     }
 
+    func archiveRecipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        let output = try await _client.updateRecipe(
+            path: .init(householdId: householdID, recipeId: recipeID),
+            body: .json(.init(isArchived: true))
+        )
+        switch output {
+        case let .ok(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func fillInRecipe(title: String) async throws -> RecipeDraft {
         let output = try await _client.fillInRecipe(
             body: .json(.init(title: title))
@@ -318,10 +331,10 @@ struct VecklyAPIClient {
         }
     }
 
-    func acceptInvite(token: String) async throws {
+    func acceptInvite(token: String) async throws -> String {
         let output = try await _client.acceptInvite(path: .init(token: token))
         switch output {
-        case .ok: return
+        case let .ok(r): return try r.body.json.householdId
         case .unauthorized: throw APIError.unauthorized
         case .notFound: throw APIError.notFound
         case .conflict: throw APIError.server(statusCode: 409)
@@ -471,8 +484,8 @@ private extension RecipeDraft {
 private extension RecipeDraft {
     init(fillIn r: Components.Schemas.RecipeFillInResult, originalTitle: String) throws {
         self.init(
-            title: r.title,
-            description: "",
+            title: r.title.isEmpty ? originalTitle : r.title,
+            description: r.notes ?? "",
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
             ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: formatAmount($0.amount), unit: $0.unit) },
@@ -528,6 +541,7 @@ private extension Components.Schemas.WeekPlanSummaryDay {
             dayOfWeek: dayOfWeek.appModel,
             date: date,
             state: state.appModel,
+            isLocked: isLocked,
             recipe: recipe?.appModel
         )
     }

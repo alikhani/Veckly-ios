@@ -4,7 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class HouseholdStore {
-    private let apiClient: VecklyAPIClient
+    private let apiClient: any HouseholdStoreAPIClient
 
     private(set) var households: [Household] = []
     private(set) var activeHousehold: Household?
@@ -15,8 +15,14 @@ final class HouseholdStore {
     private(set) var profile: HouseholdProfile?
     private(set) var invites: [HouseholdInvite] = []
     private(set) var detailsLastFetchedAt: Date?
+    private(set) var detailsHouseholdID: String?
+    private(set) var invitesHouseholdID: String?
+    private(set) var isLoadingDetails = false
+    private(set) var isLoadingInvites = false
+    private(set) var detailsErrorMessage: String?
+    private(set) var invitesErrorMessage: String?
 
-    init(apiClient: VecklyAPIClient) {
+    init(apiClient: any HouseholdStoreAPIClient) {
         self.apiClient = apiClient
     }
 
@@ -29,23 +35,53 @@ final class HouseholdStore {
             let bootstrapped = try await apiClient.bootstrapHousehold()
             let list = try await apiClient.listHouseholds()
             households = list.isEmpty ? [bootstrapped] : list
-            activeHousehold = households.first(where: { $0.id == bootstrapped.id }) ?? households.first
+            setActiveHousehold(households.first(where: { $0.id == bootstrapped.id }) ?? households.first)
         } catch {
             errorMessage = "We could not load your household."
         }
     }
 
     func loadHouseholdDetails(householdID: String) async {
-        guard detailsLastFetchedAt == nil || Date().timeIntervalSince(detailsLastFetchedAt!) > 300 || members.isEmpty else { return }
-        async let membersResult = apiClient.listMembers(householdID: householdID)
-        async let profileResult = apiClient.getProfile(householdID: householdID)
-        members = (try? await membersResult) ?? []
-        profile = try? await profileResult
-        detailsLastFetchedAt = Date()
+        let cacheIsFresh = detailsHouseholdID == householdID
+            && detailsLastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
+            && !members.isEmpty
+        guard !cacheIsFresh else { return }
+
+        if detailsHouseholdID != householdID {
+            resetDetails()
+        }
+
+        isLoadingDetails = true
+        detailsErrorMessage = nil
+        defer { isLoadingDetails = false }
+
+        do {
+            async let membersResult = apiClient.listMembers(householdID: householdID)
+            async let profileResult = apiClient.getProfile(householdID: householdID)
+            members = try await membersResult
+            profile = try await profileResult
+            detailsHouseholdID = householdID
+            detailsLastFetchedAt = Date()
+        } catch {
+            detailsErrorMessage = "We could not load household details."
+        }
     }
 
     func loadInvites(householdID: String) async {
-        invites = (try? await apiClient.listInvites(householdID: householdID)) ?? []
+        if invitesHouseholdID != householdID {
+            invites = []
+            invitesHouseholdID = householdID
+        }
+
+        isLoadingInvites = true
+        invitesErrorMessage = nil
+        defer { isLoadingInvites = false }
+
+        do {
+            invites = try await apiClient.listInvites(householdID: householdID)
+        } catch {
+            invitesErrorMessage = "We could not load invites."
+        }
     }
 
     func saveProfile(
@@ -55,35 +91,59 @@ final class HouseholdStore {
         avoidIngredients: [String],
         selectedDays: [Weekday]
     ) async throws {
-        profile = try await apiClient.saveProfile(
+        let savedProfile = try await apiClient.saveProfile(
             householdID: householdID,
             adults: adults, children: children,
             priorities: priorities,
             avoidIngredients: avoidIngredients,
             selectedDays: selectedDays
         )
+        profile = savedProfile
+        detailsHouseholdID = householdID
+        detailsLastFetchedAt = Date()
     }
 
     func createInvite(householdID: String) async throws -> HouseholdInvite {
         let invite = try await apiClient.createInvite(householdID: householdID)
+        invitesHouseholdID = householdID
         invites.insert(invite, at: 0)
         return invite
     }
 
     func revokeInvite(householdID: String, inviteID: String) async throws {
         try await apiClient.revokeInvite(householdID: householdID, inviteID: inviteID)
-        invites.removeAll { $0.id == inviteID }
+        if invitesHouseholdID == householdID {
+            invites.removeAll { $0.id == inviteID }
+        }
     }
 
     func lookupInvite(token: String) async throws -> InviteLanding {
         try await apiClient.lookupInvite(token: token)
     }
 
-    func acceptInvite(token: String) async throws {
-        try await apiClient.acceptInvite(token: token)
-        // Reload households so the new one appears
+    func acceptInvite(token: String) async throws -> String {
+        let joinedHouseholdID = try await apiClient.acceptInvite(token: token)
         let list = try await apiClient.listHouseholds()
-        if !list.isEmpty { households = list }
+        if !list.isEmpty {
+            households = list
+            setActiveHousehold(list.first(where: { $0.id == joinedHouseholdID }) ?? activeHousehold)
+        }
+        return joinedHouseholdID
+    }
+
+    func cachedProfile(for householdID: String) -> HouseholdProfile? {
+        guard detailsHouseholdID == householdID, profile?.householdId == householdID else { return nil }
+        return profile
+    }
+
+    func setActiveHousehold(_ household: Household?) {
+        guard activeHousehold?.id != household?.id else {
+            activeHousehold = household
+            return
+        }
+        activeHousehold = household
+        resetDetails()
+        resetInvites()
     }
 
     func reset() {
@@ -95,6 +155,12 @@ final class HouseholdStore {
         profile = nil
         invites = []
         detailsLastFetchedAt = nil
+        detailsHouseholdID = nil
+        invitesHouseholdID = nil
+        isLoadingDetails = false
+        isLoadingInvites = false
+        detailsErrorMessage = nil
+        invitesErrorMessage = nil
     }
 
     func seedForUITests() {
@@ -102,4 +168,40 @@ final class HouseholdStore {
         households = [household]
         activeHousehold = household
     }
+
+    private func resetDetails() {
+        members = []
+        profile = nil
+        detailsLastFetchedAt = nil
+        detailsHouseholdID = nil
+        detailsErrorMessage = nil
+    }
+
+    private func resetInvites() {
+        invites = []
+        invitesHouseholdID = nil
+        invitesErrorMessage = nil
+    }
 }
+
+protocol HouseholdStoreAPIClient {
+    func bootstrapHousehold() async throws -> Household
+    func listHouseholds() async throws -> [Household]
+    func listMembers(householdID: String) async throws -> [HouseholdMember]
+    func getProfile(householdID: String) async throws -> HouseholdProfile?
+    func saveProfile(
+        householdID: String,
+        adults: Int,
+        children: Int,
+        priorities: [HouseholdPriority],
+        avoidIngredients: [String],
+        selectedDays: [Weekday]
+    ) async throws -> HouseholdProfile
+    func createInvite(householdID: String) async throws -> HouseholdInvite
+    func listInvites(householdID: String) async throws -> [HouseholdInvite]
+    func revokeInvite(householdID: String, inviteID: String) async throws
+    func lookupInvite(token: String) async throws -> InviteLanding
+    func acceptInvite(token: String) async throws -> String
+}
+
+extension VecklyAPIClient: HouseholdStoreAPIClient {}

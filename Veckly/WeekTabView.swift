@@ -212,7 +212,6 @@ struct WeekTabView: View {
     @ViewBuilder
     private var tonightHeroCard: some View {
         if let day = tonightHeroDay {
-            let isLocked = appModel.weekStore.lockedDays.contains(day.weekday)
             VecklyCard {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
@@ -263,12 +262,12 @@ struct WeekTabView: View {
                             let userID = appModel.authSessionStore.userID ?? ""
                             Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                         } label: {
-                            Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                            Image(systemName: day.isLocked ? "lock.fill" : "lock.open")
                                 .frame(width: 20, height: 20)
                         }
                         .buttonStyle(.bordered)
-                        .tint(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
+                        .tint(day.isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                        .accessibilityLabel(day.isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -292,10 +291,8 @@ struct WeekTabView: View {
                 .padding(.bottom, 4)
 
             ForEach(listDays) { day in
-                let isLocked = appModel.weekStore.lockedDays.contains(day.weekday)
                 CompactDayRow(
                     day: day,
-                    isLocked: isLocked,
                     onTap: { mealPickerDay = day },
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
@@ -314,7 +311,6 @@ struct WeekTabView: View {
 
 struct CompactDayRow: View {
     let day: WeekDayRowViewModel
-    let isLocked: Bool
     let onTap: () -> Void
     let onToggleSkip: () -> Void
 
@@ -367,7 +363,7 @@ struct CompactDayRow: View {
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 .lineLimit(1)
             Spacer()
-            if isLocked {
+            if day.isLocked {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)

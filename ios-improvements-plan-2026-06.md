@@ -10,7 +10,9 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 2 | Ingredienser i receptvyn | ✅ Klart (2026-06-11) |
 | 3 | Lås/lås upp dagar (koppla befintlig knapp) | ✅ Klart (2026-06-11) |
 | 4 | Feedback på måltider (tumme upp/ner) | ✅ Klart (2026-06-11) |
-| 5 | Hoppa över en dag | ✅ Klart (2026-06-11) |
+| 5 | Hoppa över en dag | ✅ Klart (2026-06-11; stabilized 2026-06-16) |
+| 6 | Household-vy stabilisering | ✅ Klart (2026-06-16) |
+| 7 | Recept-vy stabilisering | ✅ Klart (2026-06-16) |
 
 ---
 
@@ -182,18 +184,18 @@ verkligt låst-state från backend vid laddning.
   }
   ```
   Och `"meal_unlocked"` för upplåsning.
-- `GET /households/{id}/week-plans/{weekStartDate}` returnerar `WeekPlan` med
-  `lockedDays: [Weekday]` (finns i `WeekHistoryState` i `Types.swift` rad ~2717).
-- Alternativt: använd `WeekPlanSummary.lockedDays` om endpoint stöder det.
-  Kontrollera vilket fält som returneras av `getWeekPlanSummary`.
+- `GET /households/{id}/week-plans/{weekStartDate}/summary` returnerar `WeekPlanSummary`
+  där varje `WeekPlanSummaryDay` har `isLocked: Bool`.
+- iOS använder `day.isLocked` på view-modellen som sanningskälla. Separata klient-side
+  set för locked state ska inte introduceras igen.
 
 ### Filer att röra
 
 | Fil | Ändring |
 |-----|---------|
 | `VecklyAPIClient.swift` | `func appendWeekPlanEvent(householdID:weekStartDate:event:)` |
-| `WeekStore.swift` | `private(set) var lockedDays: Set<String>`, ladda från summary |
-| `WeekTabView.swift` | Byt ut `@State private var lockedDayIds` mot `store.lockedDays`; anropa store-metod |
+| `WeekStore.swift` | `lockedDays` härleds från `dayRows`; `toggleLock` uppdaterar raden optimistiskt |
+| `WeekTabView.swift` | Läser `day.isLocked`; anropar store-metod |
 
 ### Detaljplan
 
@@ -210,18 +212,16 @@ Mappar `Operations.appendWeekPlanEvent` med rätt `causedBy: "user"`.
 
 **`WeekStore.swift`** — tillägg:
 ```swift
-private(set) var lockedDays: Set<String> = []
+var lockedDays: Set<Weekday> { Set(dayRows.filter(\.isLocked).map(\.weekday)) }
 
 func toggleLock(day: WeekDayRowViewModel, household: Household) async
 ```
 `toggleLock` skickar rätt event beroende på aktuell state, optimistisk uppdatering lokalt.
-`lockedDays` populeras från plan-summaryns `lockedDays`-array vid laddning — kräver att
-`getWeekPlanSummary` (eller `getWeekPlan`) inkluderar detta fält. Om inte, hämta via
-separat `getWeekPlan`-anrop parallellt med summary.
+`lockedDays` härleds från `dayRows`, som populeras från `WeekPlanSummaryDay.isLocked`.
 
 **`WeekTabView.swift`** — uppdatering:
 - Ta bort `@State private var lockedDayIds: Set<String>`.
-- `isLocked: lockedDays.contains(day.id)` läses från `appModel.weekStore.lockedDays`.
+- `isLocked` läses från `day.isLocked`.
 - `onToggleLock` anropar `Task { await appModel.weekStore.toggleLock(day: day, household: household) }`.
 
 ### Testfall
@@ -314,21 +314,21 @@ Samma `appendWeekPlanEvent` som fas 3. Event-struktur:
   "day": "tuesday"
 }
 ```
-Hämtad state: `WeekPlanSummary.skippedDays: [Weekday]` — finns i `WeekHistoryListItem`
-och `WeekHistoryState` i `Types.swift`. Verifiera att summary-endpoint returnerar det.
+Hämtad state: `WeekPlanSummaryDay.state == "skipped"` per dag. iOS ska läsa
+`day.isSkipped` från mapperns output och inte hålla en separat sanningskälla i vyn.
 
 ### Filer att röra
 
 | Fil | Ändring |
 |-----|---------|
-| `WeekStore.swift` | `private(set) var skippedDays: Set<String>`; `toggleSkip(day:household:)` |
+| `WeekStore.swift` | `skippedDays` härleds från `dayRows`; `toggleSkip(day:household:)` uppdaterar raden optimistiskt |
 | `WeekTabView.swift` | "Hoppa över"-knapp i `expandedBody`; hoppad dag = grå card + "Hoppade över" |
 
 ### Detaljplan
 
 **`WeekStore.swift`** — tillägg parallellt med fas 3:
 ```swift
-private(set) var skippedDays: Set<String> = []
+var skippedDays: Set<Weekday> { Set(dayRows.filter(\.isSkipped).map(\.weekday)) }
 
 func toggleSkip(day: WeekDayRowViewModel, household: Household) async
 ```
@@ -349,6 +349,37 @@ func toggleSkip(day: WeekDayRowViewModel, household: Household) async
 - Ångra → återgår till normal.
 - State korrekt vid app-start.
 - Hoppad dag: lås-knapp inte synlig.
+
+---
+
+## Fas 6 — Household-vy stabilisering
+
+**Status:** ✅ Klart (2026-06-16)
+
+### Utfört
+
+- `HouseholdStore` har household-scopad cache för members, profile och invites.
+- Byte av active household rensar household-scopad state så föregående hushåll inte läcker i vyn.
+- Invite-accept returnerar joined household id och väljer rätt hushåll direkt.
+- Household members/profile-vyer laddar med `.task(id: household.id)` och visar loading/error/empty-state.
+- Invite-token kan kopieras från sheeten och landing-token state nollas när input ändras.
+- Tester täcker per-household cache, invite accept och active-household byte.
+
+---
+
+## Fas 7 — Recept-vy stabilisering
+
+**Status:** ✅ Klart (2026-06-16)
+
+### Utfört
+
+- `RecipeStore` har household-scopad cache och exponerar load-fel istället för att tyst cacha tom lista.
+- Create/update håller full-recipe-cachen uppdaterad.
+- Arkivering använder optimistisk remove med rollback vid API-fel.
+- Receptlistan laddar via `.task(id: activeHousehold.id)`, har retry/empty-state och länkar rader till `RecipeDetailView`.
+- Sök matchar titel, beskrivning och tags.
+- Receptformuläret trimmar input, blockerar dubbeloperationer under save/import/fill, använder `RecipeStore` för import/AI-fill och varnar vid osparade ändringar.
+- Tester täcker household-cache, load-fel, full-recipe-cache och arkiv-rollback.
 
 ---
 

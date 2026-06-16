@@ -65,7 +65,17 @@ final class AppModel {
 
     func loadCoreReader() async {
         await householdStore.bootstrapAndLoadHouseholds()
+        await loadActiveHouseholdReaderData(resetFeatureStores: false)
+    }
+
+    func loadActiveHouseholdReaderData(resetFeatureStores: Bool = true) async {
         guard let household = householdStore.activeHousehold else { return }
+        if resetFeatureStores {
+            weekStore.reset()
+            shoppingListStore.reset()
+            recipeStore.reset()
+            prepBatchStore.reset()
+        }
         async let week: Void = weekStore.loadCurrentWeek(household: household)
         async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStore.weekStartDate)
         _ = await (week, shopping)

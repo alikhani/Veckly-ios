@@ -2595,6 +2595,8 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/state`.
             internal var state: Components.Schemas.WeekPlanSummaryDay.statePayload
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/isLocked`.
+            internal var isLocked: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/recipe`.
             internal var recipe: Components.Schemas.WeekPlanSummaryRecipe?
             /// Creates a new `WeekPlanSummaryDay`.
@@ -2603,22 +2605,26 @@ internal enum Components {
             ///   - dayOfWeek:
             ///   - date:
             ///   - state:
+            ///   - isLocked:
             ///   - recipe:
             internal init(
                 dayOfWeek: Components.Schemas.WeekPlanSummaryDay.dayOfWeekPayload,
                 date: Swift.String,
                 state: Components.Schemas.WeekPlanSummaryDay.statePayload,
+                isLocked: Swift.Bool,
                 recipe: Components.Schemas.WeekPlanSummaryRecipe? = nil
             ) {
                 self.dayOfWeek = dayOfWeek
                 self.date = date
                 self.state = state
+                self.isLocked = isLocked
                 self.recipe = recipe
             }
             internal enum CodingKeys: String, CodingKey {
                 case dayOfWeek
                 case date
                 case state
+                case isLocked
                 case recipe
             }
         }

@@ -10,7 +10,9 @@ final class WeekStore {
     private(set) var summary: WeekSummary?
     private(set) var dayRows: [WeekDayRowViewModel] = []
     private(set) var today: WeekDayRowViewModel?
-    private(set) var lockedDays: Set<Weekday> = []
+    var lockedDays: Set<Weekday> {
+        Set(dayRows.filter(\.isLocked).map(\.weekday))
+    }
     var skippedDays: Set<Weekday> {
         Set(dayRows.filter(\.isSkipped).map(\.weekday))
     }
@@ -56,8 +58,15 @@ final class WeekStore {
     }
 
     func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String) async {
-        let isLocked = lockedDays.contains(day.weekday)
-        if isLocked { lockedDays.remove(day.weekday) } else { lockedDays.insert(day.weekday) }
+        let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
+        let isLocked = current.isLocked
+        let previous = dayRows.first(where: { $0.weekday == day.weekday })
+        let optimisticRow = current.withLocked(!isLocked)
+
+        if let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+            dayRows[idx] = optimisticRow
+        }
+        if current.isToday { today = optimisticRow }
 
         let event: WeekPlanEventInput = isLocked
             ? .mealUnlocked(day: day.weekday)
@@ -70,8 +79,13 @@ final class WeekStore {
                 userID: userID,
                 event: event
             )
+            lastFetchedAt = Date()
         } catch {
-            if isLocked { lockedDays.insert(day.weekday) } else { lockedDays.remove(day.weekday) }
+            if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+                dayRows[idx] = previous
+            }
+            if current.isToday { today = previous }
+            errorMessage = isLocked ? "We could not unlock this meal." : "We could not lock this meal."
         }
     }
 
@@ -134,6 +148,7 @@ final class WeekStore {
             detail: detail,
             isToday: day.isToday,
             isEmpty: false,
+            isLocked: day.isLocked,
             isSkipped: false,
             recipe: recipe
         )
@@ -172,6 +187,7 @@ final class WeekStore {
             detail: "",
             isToday: day.isToday,
             isEmpty: true,
+            isLocked: false,
             isSkipped: false,
             recipe: nil
         )
@@ -220,7 +236,6 @@ final class WeekStore {
         summary = nil
         dayRows = []
         today = nil
-        lockedDays = []
         mealFeedback = [:]
         errorMessage = nil
         isLoading = false
@@ -242,6 +257,7 @@ final class WeekStore {
                 dayOfWeek: weekday,
                 date: WeekCalendar.addDays(to: weekStartDate, offset: index),
                 state: index == 0 ? .planned : index == 2 ? .skipped : .empty,
+                isLocked: index == 0,
                 recipe: index == 0 ? recipe : nil
             )
         }
@@ -283,6 +299,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
     let detail: String
     let isToday: Bool
     let isEmpty: Bool
+    let isLocked: Bool
     let isSkipped: Bool
     let recipe: WeekSummaryRecipe?
 
@@ -295,6 +312,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         detail: String,
         isToday: Bool,
         isEmpty: Bool,
+        isLocked: Bool = false,
         isSkipped: Bool = false,
         recipe: WeekSummaryRecipe?
     ) {
@@ -306,6 +324,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.detail = detail
         self.isToday = isToday
         self.isEmpty = isEmpty
+        self.isLocked = isLocked
         self.isSkipped = isSkipped
         self.recipe = recipe
     }
@@ -320,8 +339,25 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             detail: isSkipped ? "" : detail,
             isToday: isToday,
             isEmpty: !isSkipped && recipe == nil,
+            isLocked: isSkipped ? false : isLocked,
             isSkipped: isSkipped,
             recipe: isSkipped ? nil : recipe
+        )
+    }
+
+    func withLocked(_ isLocked: Bool) -> WeekDayRowViewModel {
+        WeekDayRowViewModel(
+            id: id,
+            weekday: weekday,
+            weekdayLabel: weekdayLabel,
+            dateLabel: dateLabel,
+            mealTitle: mealTitle,
+            detail: detail,
+            isToday: isToday,
+            isEmpty: isEmpty,
+            isLocked: isLocked,
+            isSkipped: isSkipped,
+            recipe: recipe
         )
     }
 }
@@ -343,12 +379,13 @@ struct WeekViewModelMapper {
                 weekdayLabel: weekday.displayName,
                 dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: date),
                 mealTitle: "",
-                detail: "",
-                isToday: WeekCalendar.isToday(yyyyMmDd: date),
-                isEmpty: true,
-                recipe: nil
-            )
-        }
+            detail: "",
+            isToday: WeekCalendar.isToday(yyyyMmDd: date),
+            isEmpty: true,
+            isLocked: false,
+            recipe: nil
+        )
+    }
     }
 
     private static func row(from day: WeekSummaryDay, today: Date, calendar: Calendar) -> WeekDayRowViewModel {
@@ -364,6 +401,7 @@ struct WeekViewModelMapper {
             detail: recipe.map { recipeDetail($0) } ?? "",
             isToday: isToday,
             isEmpty: recipe == nil && !isSkipped,
+            isLocked: day.isLocked,
             isSkipped: isSkipped,
             recipe: recipe
         )

@@ -5,10 +5,17 @@ struct RecipesTabView: View {
     @State private var searchText = ""
     @State private var showAddSheet = false
     @State private var editingRecipe: FullRecipe?
+    @State private var archiveCandidate: FullRecipe?
+    @State private var transientErrorMessage: String?
 
     private var filtered: [FullRecipe] {
-        guard !searchText.isEmpty else { return appModel.recipeStore.recipes }
-        return appModel.recipeStore.recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return appModel.recipeStore.recipes }
+        return appModel.recipeStore.recipes.filter {
+            $0.title.localizedCaseInsensitiveContains(query)
+                || $0.description.localizedCaseInsensitiveContains(query)
+                || $0.tags.contains { $0.localizedCaseInsensitiveContains(query) }
+        }
     }
 
     var body: some View {
@@ -16,18 +23,46 @@ struct RecipesTabView: View {
             if appModel.recipeStore.isLoading {
                 LoadingPanel(title: "Loading recipes")
                     .padding()
+            } else if let errorMessage = appModel.recipeStore.errorMessage, appModel.recipeStore.recipes.isEmpty {
+                ContentUnavailableView {
+                    Label("Could not load recipes", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(errorMessage)
+                } actions: {
+                    Button("Try again") {
+                        guard let household = appModel.householdStore.activeHousehold else { return }
+                        Task { await appModel.recipeStore.loadRecipes(householdID: household.id) }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(VecklyDesign.Colors.hearthOrange)
+                }
             } else if filtered.isEmpty {
-                ContentUnavailableView(
-                    searchText.isEmpty ? "No recipes yet" : "No results",
-                    systemImage: "fork.knife",
-                    description: Text(searchText.isEmpty ? "Tap + to add your first recipe." : "Try a different search.")
-                )
+                ContentUnavailableView {
+                    Label(searchQuery.isEmpty ? "No recipes yet" : "No results", systemImage: "fork.knife")
+                } description: {
+                    Text(searchQuery.isEmpty ? "Add your first household recipe." : "Try a different search.")
+                } actions: {
+                    if searchQuery.isEmpty {
+                        Button("Add recipe") { showAddSheet = true }
+                            .buttonStyle(.borderedProminent)
+                            .tint(VecklyDesign.Colors.hearthOrange)
+                    }
+                }
             } else {
                 List(filtered) { recipe in
-                    RecipeListRow(recipe: recipe)
+                    NavigationLink {
+                        if let household = appModel.householdStore.activeHousehold {
+                            RecipeDetailView(recipe: WeekSummaryRecipe(fullRecipe: recipe), householdID: household.id)
+                        } else {
+                            EmptyView()
+                        }
+                    } label: {
+                        RecipeListRow(recipe: recipe)
+                    }
                         .swipeActions(edge: .trailing) {
                             Button("Edit") { editingRecipe = recipe }
                                 .tint(VecklyDesign.Colors.hearthOrange)
+                            Button("Archive", role: .destructive) { archiveCandidate = recipe }
                         }
                 }
                 .listStyle(.plain)
@@ -50,12 +85,44 @@ struct RecipesTabView: View {
                 try await appModel.recipeStore.updateRecipe(householdID: household.id, recipeID: recipe.id, draft: draft)
             }
         }
-        .task {
-            guard let household = appModel.householdStore.activeHousehold else { return }
-            if appModel.recipeStore.recipes.isEmpty {
-                await appModel.recipeStore.loadRecipes(householdID: household.id)
+        .confirmationDialog(
+            "Archive this recipe?",
+            isPresented: Binding(
+                get: { archiveCandidate != nil },
+                set: { if !$0 { archiveCandidate = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Archive", role: .destructive) {
+                guard let recipe = archiveCandidate,
+                      let household = appModel.householdStore.activeHousehold else { return }
+                archiveCandidate = nil
+                Task {
+                    do {
+                        try await appModel.recipeStore.archiveRecipe(householdID: household.id, recipeID: recipe.id)
+                    } catch {
+                        transientErrorMessage = appModel.recipeStore.errorMessage ?? "Could not archive recipe."
+                    }
+                }
             }
+            Button("Cancel", role: .cancel) { archiveCandidate = nil }
         }
+        .alert("Error", isPresented: Binding(
+            get: { transientErrorMessage != nil },
+            set: { if !$0 { transientErrorMessage = nil } }
+        )) {
+            Button("OK") { transientErrorMessage = nil }
+        } message: {
+            Text(transientErrorMessage ?? "")
+        }
+        .task(id: appModel.householdStore.activeHousehold?.id) {
+            guard let household = appModel.householdStore.activeHousehold else { return }
+            await appModel.recipeStore.loadRecipes(householdID: household.id)
+        }
+    }
+
+    private var searchQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

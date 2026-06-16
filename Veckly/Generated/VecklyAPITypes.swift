@@ -31,9 +31,35 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
     let dayOfWeek: Weekday
     let date: String
     let state: WeekDayState
+    let isLocked: Bool
     let recipe: WeekSummaryRecipe?
 
     var id: String { date }
+
+    init(dayOfWeek: Weekday, date: String, state: WeekDayState, isLocked: Bool = false, recipe: WeekSummaryRecipe?) {
+        self.dayOfWeek = dayOfWeek
+        self.date = date
+        self.state = state
+        self.isLocked = isLocked
+        self.recipe = recipe
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case dayOfWeek
+        case date
+        case state
+        case isLocked
+        case recipe
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        dayOfWeek = try container.decode(Weekday.self, forKey: .dayOfWeek)
+        date = try container.decode(String.self, forKey: .date)
+        state = try container.decode(WeekDayState.self, forKey: .state)
+        isLocked = try container.decodeIfPresent(Bool.self, forKey: .isLocked) ?? false
+        recipe = try container.decodeIfPresent(WeekSummaryRecipe.self, forKey: .recipe)
+    }
 }
 
 enum Weekday: String, Decodable, CaseIterable {
@@ -60,6 +86,20 @@ struct WeekSummaryRecipe: Decodable, Equatable, Identifiable {
     let prepTimeMinutes: Int?
     let cookTimeMinutes: Int?
     let tags: [String]
+}
+
+extension WeekSummaryRecipe {
+    init(fullRecipe: FullRecipe) {
+        self.init(
+            id: fullRecipe.id,
+            title: fullRecipe.title,
+            description: fullRecipe.description,
+            servings: fullRecipe.servings,
+            prepTimeMinutes: fullRecipe.prepTimeMinutes,
+            cookTimeMinutes: fullRecipe.cookTimeMinutes,
+            tags: fullRecipe.tags
+        )
+    }
 }
 
 struct ShoppingListSummary: Decodable, Equatable {
@@ -191,14 +231,14 @@ struct PrepBatch: Identifiable, Equatable {
     let assignments: [PrepBatchAssignment]
 }
 
-struct DraftIngredient: Identifiable {
+struct DraftIngredient: Identifiable, Equatable {
     var id = UUID()
     var item: String = ""
     var amount: String = ""
     var unit: String = ""
 }
 
-struct RecipeDraft {
+struct RecipeDraft: Equatable {
     var title: String = ""
     var description: String = ""
     var servings: Int = 4

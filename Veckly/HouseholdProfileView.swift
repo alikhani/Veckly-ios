@@ -13,6 +13,7 @@ struct HouseholdProfileView: View {
     @State private var isSaving = false
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var didSave = false
 
     private var household: Household? { appModel.householdStore.activeHousehold }
 
@@ -35,14 +36,14 @@ struct HouseholdProfileView: View {
                     ProgressView()
                 } else {
                     Button("Save") { Task { await save() } }
-                        .disabled(selectedDays.isEmpty)
+                        .disabled(selectedDays.isEmpty || isLoading)
                 }
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
             Button("OK") { errorMessage = nil }
         }, message: { Text(errorMessage ?? "") })
-        .task { await loadExisting() }
+        .task(id: household?.id) { await loadExisting() }
     }
 
     private var sizeSection: some View {
@@ -80,6 +81,12 @@ struct HouseholdProfileView: View {
 
     private var avoidSection: some View {
         Section {
+            if didSave {
+                Text("Saved")
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            }
+
             ForEach(avoidIngredients, id: \.self) { ingredient in
                 Text(ingredient)
             }
@@ -99,21 +106,31 @@ struct HouseholdProfileView: View {
     }
 
     private func addIngredient() {
-        let trimmed = newIngredient.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty, !avoidIngredients.contains(trimmed) else { return }
+        let trimmed = normalizedIngredient(newIngredient)
+        guard !trimmed.isEmpty else { return }
+        guard !avoidIngredients.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else { return }
         avoidIngredients.append(trimmed)
         newIngredient = ""
+        didSave = false
     }
 
     private func loadExisting() async {
+        isLoading = true
+        errorMessage = nil
+        didSave = false
         defer { isLoading = false }
         guard let hid = household?.id else { return }
-        if let existing = appModel.householdStore.profile {
+
+        if let existing = appModel.householdStore.cachedProfile(for: hid) {
             apply(existing)
             return
         }
-        if let fetched = try? await appModel.apiClient.getProfile(householdID: hid) {
+
+        await appModel.householdStore.loadHouseholdDetails(householdID: hid)
+        if let fetched = appModel.householdStore.cachedProfile(for: hid) {
             apply(fetched)
+        } else if let message = appModel.householdStore.detailsErrorMessage {
+            errorMessage = message
         }
     }
 
@@ -128,17 +145,23 @@ struct HouseholdProfileView: View {
     private func save() async {
         guard let hid = household?.id else { return }
         isSaving = true
+        didSave = false
         defer { isSaving = false }
         do {
             try await appModel.householdStore.saveProfile(
                 householdID: hid,
                 adults: adults, children: children,
                 priorities: Array(priorities),
-                avoidIngredients: avoidIngredients,
+                avoidIngredients: avoidIngredients.map(normalizedIngredient).filter { !$0.isEmpty },
                 selectedDays: Weekday.allCases.filter { selectedDays.contains($0) }
             )
+            didSave = true
         } catch {
             errorMessage = "Could not save preferences. Try again."
         }
+    }
+
+    private func normalizedIngredient(_ raw: String) -> String {
+        raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

@@ -13,18 +13,25 @@ struct RecipeFormSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft: RecipeDraft
+    @State private var initialDraft: RecipeDraft
     @State private var urlText = ""
     @State private var isImporting = false
     @State private var isFilling = false
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var showDiscardConfirmation = false
 
     init(mode: RecipeFormMode, onSave: @escaping (RecipeDraft) async throws -> Void) {
         self.mode = mode
         self.onSave = onSave
         switch mode {
-        case .create: _draft = State(initialValue: .empty)
-        case let .edit(recipe): _draft = State(initialValue: RecipeDraft(from: recipe))
+        case .create:
+            _draft = State(initialValue: .empty)
+            _initialDraft = State(initialValue: .empty)
+        case let .edit(recipe):
+            let draft = RecipeDraft(from: recipe)
+            _draft = State(initialValue: draft)
+            _initialDraft = State(initialValue: draft)
         }
     }
 
@@ -43,20 +50,34 @@ struct RecipeFormSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        if draft == initialDraft {
+                            dismiss()
+                        } else {
+                            showDiscardConfirmation = true
+                        }
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if isSaving {
                         ProgressView()
                     } else {
                         Button("Save") { Task { await save() } }
-                            .disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
+                            .disabled(normalizedTitle.isEmpty || isSaving || isImporting || isFilling)
                     }
                 }
             }
             .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
                 Button("OK") { errorMessage = nil }
             }, message: { Text(errorMessage ?? "") })
+            .confirmationDialog(
+                "Discard changes?",
+                isPresented: $showDiscardConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Discard Changes", role: .destructive) { dismiss() }
+                Button("Cancel", role: .cancel) {}
+            }
         }
     }
 
@@ -75,7 +96,7 @@ struct RecipeFormSheet: View {
                     Text("Import recipe")
                 }
             }
-            .disabled(urlText.isEmpty || isImporting)
+            .disabled(normalizedURL.isEmpty || isImporting || isSaving || isFilling)
         }
     }
 
@@ -93,7 +114,7 @@ struct RecipeFormSheet: View {
                             .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     }
                 }
-                .disabled(isFilling)
+                .disabled(isFilling || isSaving || isImporting)
             }
             TextField("Description", text: $draft.description, axis: .vertical)
                 .lineLimit(2...5)
@@ -159,39 +180,68 @@ struct RecipeFormSheet: View {
     }
 
     private func importFromURL() async {
+        let url = normalizedURL
+        guard !url.isEmpty else { return }
         isImporting = true
         errorMessage = nil
         defer { isImporting = false }
         do {
-            draft = try await appModel.apiClient.importRecipeFromURL(urlText)
+            draft = try await appModel.recipeStore.importFromURL(url)
+            urlText = url
         } catch {
             errorMessage = "Could not import recipe from that URL."
         }
     }
 
     private func fillWithAI() async {
+        let title = normalizedTitle
+        guard !title.isEmpty else { return }
         isFilling = true
         errorMessage = nil
         defer { isFilling = false }
         do {
-            let filled = try await appModel.apiClient.fillInRecipe(title: draft.title)
+            let filled = try await appModel.recipeStore.fillIn(title: title)
+            if draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft.title = filled.title }
+            if draft.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft.description = filled.description }
+            if draft.prepTimeMinutes == nil { draft.prepTimeMinutes = filled.prepTimeMinutes }
+            if draft.cookTimeMinutes == nil { draft.cookTimeMinutes = filled.cookTimeMinutes }
             draft.ingredients = filled.ingredients
             draft.steps = filled.steps
-            if draft.description.isEmpty { draft.description = "" }
-            if draft.prepTimeMinutes == nil { draft.prepTimeMinutes = filled.prepTimeMinutes }
         } catch {
             errorMessage = "AI fill-in failed. You can fill in manually."
         }
     }
 
     private func save() async {
+        var draftToSave = draft
+        draftToSave.title = normalizedTitle
+        draftToSave.description = draft.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sourceURL = draft.sourceUrl?.trimmingCharacters(in: .whitespacesAndNewlines)
+        draftToSave.sourceUrl = sourceURL?.isEmpty == true ? nil : sourceURL
+        draftToSave.ingredients = draft.ingredients.map {
+            DraftIngredient(
+                item: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
+                amount: $0.amount.trimmingCharacters(in: .whitespacesAndNewlines),
+                unit: $0.unit.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+        }
+        draftToSave.steps = draft.steps.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
         isSaving = true
         defer { isSaving = false }
         do {
-            try await onSave(draft)
+            try await onSave(draftToSave)
             dismiss()
         } catch {
             errorMessage = "Could not save recipe. Please try again."
         }
+    }
+
+    private var normalizedTitle: String {
+        draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var normalizedURL: String {
+        urlText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

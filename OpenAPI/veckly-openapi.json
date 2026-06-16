@@ -1121,6 +1121,9 @@
               "skipped"
             ]
           },
+          "isLocked": {
+            "type": "boolean"
+          },
           "recipe": {
             "$ref": "#/components/schemas/WeekPlanSummaryRecipe"
           }
@@ -1129,6 +1132,7 @@
           "dayOfWeek",
           "date",
           "state",
+          "isLocked",
           "recipe"
         ]
       },
