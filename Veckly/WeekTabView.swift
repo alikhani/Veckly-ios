@@ -3,7 +3,6 @@ import SwiftUI
 struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @State private var selectedRecipe: WeekSummaryRecipe?
-    @State private var expandedDayId: String?
     @State private var mealPickerDay: WeekDayRowViewModel?
 
     var body: some View {
@@ -19,7 +18,7 @@ struct WeekTabView: View {
                     ErrorPanel(message: errorMessage) {
                         Task { await appModel.loadCoreReader() }
                     }
-                } else if appModel.weekStore.dayRows.allSatisfy({ $0.recipe == nil }) {
+                } else if appModel.weekStore.dayRows.allSatisfy({ $0.recipe == nil && !$0.isSkipped }) {
                     emptyWeekView
                 } else {
                     tonightHeroCard
@@ -68,8 +67,10 @@ struct WeekTabView: View {
             )
         }
         .sheet(item: $mealPickerDay) { day in
+            let isSkipped = appModel.weekStore.skippedDays.contains(day.weekday)
             MealPickerSheet(
                 day: day,
+                isSkipped: isSkipped,
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 apiClient: appModel.apiClient,
                 onSelect: { recipe in
@@ -92,6 +93,11 @@ struct WeekTabView: View {
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     let userID = appModel.authSessionStore.userID ?? ""
                     Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                },
+                onSkip: {
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let userID = appModel.authSessionStore.userID ?? ""
+                    Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                 },
                 onDismiss: { mealPickerDay = nil }
             )
@@ -285,28 +291,18 @@ struct WeekTabView: View {
                 .padding(.bottom, 4)
 
             ForEach(remainingDays) { day in
+                let isSkipped = appModel.weekStore.skippedDays.contains(day.weekday)
+                let isLocked = appModel.weekStore.lockedDays.contains(day.weekday)
                 CompactDayRow(
                     day: day,
-                    isExpanded: expandedDayId == day.id,
-                    isLocked: appModel.weekStore.lockedDays.contains(day.weekday),
-                    isSkipped: appModel.weekStore.skippedDays.contains(day.weekday),
-                    onToggle: {
-                        withAnimation(.spring(response: 0.3)) {
-                            expandedDayId = expandedDayId == day.id ? nil : day.id
-                        }
-                    },
-                    onToggleLock: {
-                        guard let household = appModel.householdStore.activeHousehold else { return }
-                        let userID = appModel.authSessionStore.userID ?? ""
-                        Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
-                    },
+                    isLocked: isLocked,
+                    isSkipped: isSkipped,
+                    onTap: { mealPickerDay = day },
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         let userID = appModel.authSessionStore.userID ?? ""
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
-                    },
-                    onViewRecipe: day.recipe != nil ? { selectedRecipe = day.recipe } : nil,
-                    onPickMeal: { mealPickerDay = day }
+                    }
                 )
                 if day.id != remainingDays.last?.id {
                     Divider().padding(.leading, 56)
@@ -319,30 +315,39 @@ struct WeekTabView: View {
 
 struct CompactDayRow: View {
     let day: WeekDayRowViewModel
-    let isExpanded: Bool
     let isLocked: Bool
     let isSkipped: Bool
-    let onToggle: () -> Void
-    let onToggleLock: () -> Void
+    let onTap: () -> Void
     let onToggleSkip: () -> Void
-    let onViewRecipe: (() -> Void)?
-    let onPickMeal: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if day.recipe == nil && !isSkipped {
-                emptyRow
+        Button(action: onTap) {
+            rowContent
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(action: onToggleSkip) {
+                Label(isSkipped ? "Unskip" : "Skip", systemImage: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+            }
+            .tint(VecklyDesign.Colors.inkMid)
+            .accessibilityLabel(isSkipped ? "Unskip \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
+        }
+    }
+
+    private var rowContent: some View {
+        HStack(alignment: .center, spacing: 12) {
+            dateColumn
+
+            if isSkipped {
+                skippedContent
+            } else if day.isEmpty {
+                emptyContent
             } else {
-                Button(action: onToggle) { collapsedRow }
-                    .buttonStyle(.plain)
-                if isExpanded {
-                    expandedDetail
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                }
+                plannedContent
             }
         }
-        .animation(.spring(response: 0.3), value: isExpanded)
-        .opacity(isSkipped ? 0.6 : 1)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
     }
 
     private var dateColumn: some View {
@@ -357,81 +362,46 @@ struct CompactDayRow: View {
         .frame(width: 44, alignment: .leading)
     }
 
-    private var collapsedRow: some View {
-        HStack(alignment: .center, spacing: 12) {
-            dateColumn
-            Text(isSkipped ? "Skipped day" : day.mealTitle)
-                .font(.body.weight(isSkipped ? .regular : .medium))
-                .foregroundStyle(isSkipped ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
+    private var plannedContent: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Text(day.mealTitle)
+                .font(.body.weight(.medium))
+                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                .lineLimit(1)
             Spacer()
-            if isLocked && !isSkipped {
+            if isLocked {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .accessibilityLabel("Locked")
             }
         }
-        .padding(.vertical, 12)
     }
 
-    private var emptyRow: some View {
-        Button(action: onPickMeal) {
-            HStack(alignment: .center, spacing: 12) {
-                dateColumn
-                Text("Add dinner")
+    private var emptyContent: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Text("Add dinner")
+                .font(.body.italic())
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            Spacer()
+            Text("Plan")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+        }
+    }
+
+    private var skippedContent: some View {
+        HStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Skipped")
                     .font(.body)
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                Spacer()
-                Text("Plan")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                Text("Not cooking this day")
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
             }
-            .padding(.vertical, 12)
+            Spacer()
         }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private var expandedDetail: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if isSkipped {
-                Button("Undo skip", action: onToggleSkip)
-                    .font(.footnote)
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    .buttonStyle(.plain)
-            } else if let recipe = day.recipe {
-                if !recipe.description.isEmpty {
-                    Text(recipe.description)
-                        .font(.footnote)
-                        .foregroundStyle(VecklyDesign.Colors.inkMid)
-                }
-                HStack(spacing: 8) {
-                    if let onViewRecipe {
-                        Button("View recipe", action: onViewRecipe)
-                            .buttonStyle(.bordered)
-                            .tint(VecklyDesign.Colors.hearthOrange)
-                            .font(.footnote)
-                    }
-                    if !isLocked {
-                        Button("Change meal", action: onPickMeal)
-                            .buttonStyle(.bordered)
-                            .font(.footnote)
-                    }
-                    Button(action: onToggleLock) {
-                        Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                            .font(.system(size: 12))
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-                    .accessibilityLabel(isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
-                }
-                Button("Skip this day", action: onToggleSkip)
-                    .font(.footnote)
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    .buttonStyle(.plain)
-            }
-        }
-        .padding(.leading, 56)
-        .padding(.bottom, 10)
+        .opacity(0.7)
     }
 }
-

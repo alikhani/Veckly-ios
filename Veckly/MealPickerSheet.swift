@@ -2,10 +2,12 @@ import SwiftUI
 
 struct MealPickerSheet: View {
     let day: WeekDayRowViewModel
+    let isSkipped: Bool
     let householdID: String
     let apiClient: VecklyAPIClient
     let onSelect: (FullRecipe) -> Void
     let onClear: () -> Void
+    let onSkip: () -> Void
     let onDismiss: () -> Void
 
     @State private var recipes: [FullRecipe] = []
@@ -29,22 +31,14 @@ struct MealPickerSheet: View {
                             .padding(.top, 8)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if filtered.isEmpty {
+                } else if filtered.isEmpty && !searchText.isEmpty {
                     ContentUnavailableView(
-                        searchText.isEmpty ? "No recipes yet" : "No results",
+                        "No results",
                         systemImage: "fork.knife",
-                        description: Text(searchText.isEmpty ? "Add recipes to your household to get started." : "Try a different search term.")
+                        description: Text("Try a different search term.")
                     )
                 } else {
-                    List(filtered) { recipe in
-                        Button {
-                            onSelect(recipe)
-                        } label: {
-                            RecipePickerRow(recipe: recipe)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .listStyle(.plain)
+                    recipeListWithFooter
                 }
             }
             .navigationTitle(day.weekdayLabel)
@@ -54,7 +48,7 @@ struct MealPickerSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onDismiss)
                 }
-                if !day.isEmpty {
+                if !day.isEmpty && !isSkipped {
                     ToolbarItem(placement: .destructiveAction) {
                         Button("Clear meal", role: .destructive, action: onClear)
                             .foregroundStyle(.red)
@@ -63,6 +57,51 @@ struct MealPickerSheet: View {
             }
         }
         .task { await loadRecipes() }
+    }
+
+    private var recipeListWithFooter: some View {
+        List {
+            if filtered.isEmpty {
+                Section {
+                    ContentUnavailableView(
+                        "No recipes yet",
+                        systemImage: "fork.knife",
+                        description: Text("Add recipes to your household to get started.")
+                    )
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            } else {
+                Section {
+                    ForEach(filtered) { recipe in
+                        Button {
+                            onSelect(recipe)
+                        } label: {
+                            RecipePickerRow(recipe: recipe)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            Section {
+                Button(action: {
+                    onSkip()
+                    onDismiss()
+                }) {
+                    HStack {
+                        Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        Text(isSkipped ? "Plan this day instead" : "Skip this day")
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isSkipped ? "Plan \(day.weekdayLabel) instead" : "Skip \(day.weekdayLabel)")
+            }
+        }
+        .listStyle(.insetGrouped)
     }
 
     private func loadRecipes() async {

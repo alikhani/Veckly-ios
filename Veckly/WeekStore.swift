@@ -246,7 +246,32 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
     let detail: String
     let isToday: Bool
     let isEmpty: Bool
+    let isSkipped: Bool
     let recipe: WeekSummaryRecipe?
+
+    init(
+        id: String,
+        weekday: Weekday,
+        weekdayLabel: String,
+        dateLabel: String,
+        mealTitle: String,
+        detail: String,
+        isToday: Bool,
+        isEmpty: Bool,
+        isSkipped: Bool = false,
+        recipe: WeekSummaryRecipe?
+    ) {
+        self.id = id
+        self.weekday = weekday
+        self.weekdayLabel = weekdayLabel
+        self.dateLabel = dateLabel
+        self.mealTitle = mealTitle
+        self.detail = detail
+        self.isToday = isToday
+        self.isEmpty = isEmpty
+        self.isSkipped = isSkipped
+        self.recipe = recipe
+    }
 }
 
 struct WeekViewModelMapper {
@@ -277,6 +302,7 @@ struct WeekViewModelMapper {
     private static func row(from day: WeekSummaryDay, today: Date, calendar: Calendar) -> WeekDayRowViewModel {
         let isToday = WeekCalendar.date(from: day.date).map { calendar.isDate($0, inSameDayAs: today) } ?? false
         let recipe = day.recipe
+        let isSkipped = day.state == .skipped
         return WeekDayRowViewModel(
             id: day.id,
             weekday: day.dayOfWeek,
@@ -285,7 +311,8 @@ struct WeekViewModelMapper {
             mealTitle: recipe?.title ?? "",
             detail: recipe.map { recipeDetail($0) } ?? "",
             isToday: isToday,
-            isEmpty: recipe == nil,
+            isEmpty: recipe == nil && !isSkipped,
+            isSkipped: isSkipped,
             recipe: recipe
         )
     }
