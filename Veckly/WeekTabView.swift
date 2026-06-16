@@ -18,11 +18,11 @@ struct WeekTabView: View {
                     ErrorPanel(message: errorMessage) {
                         Task { await appModel.loadCoreReader() }
                     }
-                } else if appModel.weekStore.dayRows.allSatisfy({ $0.recipe == nil && !$0.isSkipped }) {
+                } else if !appModel.weekStore.hasWeekContent {
                     emptyWeekView
                 } else {
                     tonightHeroCard
-                    restOfWeekList
+                    weekList
                 }
             }
             .padding(18)
@@ -36,16 +36,16 @@ struct WeekTabView: View {
                 } else {
                     Button {
                         guard let household = appModel.householdStore.activeHousehold else { return }
-                        let hasAnyMeal = appModel.weekStore.dayRows.contains { !$0.isEmpty }
+                        let hasPlannedMeals = appModel.weekStore.hasPlannedMeals
                         Task {
                             await appModel.weekStore.generateWeek(
                                 household: household,
                                 userID: appModel.authSessionStore.userID ?? "",
-                                regenerate: hasAnyMeal
+                                regenerate: hasPlannedMeals
                             )
                         }
                     } label: {
-                        Text(appModel.weekStore.dayRows.contains { !$0.isEmpty } ? "Regenerate" : "Generate")
+                        Text(appModel.weekStore.hasPlannedMeals ? "Regenerate" : "Generate")
                             .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
@@ -67,10 +67,9 @@ struct WeekTabView: View {
             )
         }
         .sheet(item: $mealPickerDay) { day in
-            let isSkipped = appModel.weekStore.skippedDays.contains(day.weekday)
             MealPickerSheet(
                 day: day,
-                isSkipped: isSkipped,
+                isSkipped: day.isSkipped,
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 apiClient: appModel.apiClient,
                 onSelect: { recipe in
@@ -278,25 +277,25 @@ struct WeekTabView: View {
         }
     }
 
-    private var remainingDays: [WeekDayRowViewModel] {
-        let heroId = tonightHeroDay?.id
+    private var listDays: [WeekDayRowViewModel] {
+        guard let heroId = tonightHeroDay?.id else {
+            return appModel.weekStore.dayRows
+        }
         return appModel.weekStore.dayRows.filter { $0.id != heroId }
     }
 
-    private var restOfWeekList: some View {
+    private var weekList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("The rest of the week")
+            Text(tonightHeroDay == nil ? "The week" : "The rest of the week")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 .padding(.bottom, 4)
 
-            ForEach(remainingDays) { day in
-                let isSkipped = appModel.weekStore.skippedDays.contains(day.weekday)
+            ForEach(listDays) { day in
                 let isLocked = appModel.weekStore.lockedDays.contains(day.weekday)
                 CompactDayRow(
                     day: day,
                     isLocked: isLocked,
-                    isSkipped: isSkipped,
                     onTap: { mealPickerDay = day },
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
@@ -304,7 +303,7 @@ struct WeekTabView: View {
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                     }
                 )
-                if day.id != remainingDays.last?.id {
+                if day.id != listDays.last?.id {
                     Divider().padding(.leading, 56)
                 }
             }
@@ -316,7 +315,6 @@ struct WeekTabView: View {
 struct CompactDayRow: View {
     let day: WeekDayRowViewModel
     let isLocked: Bool
-    let isSkipped: Bool
     let onTap: () -> Void
     let onToggleSkip: () -> Void
 
@@ -327,10 +325,10 @@ struct CompactDayRow: View {
         .buttonStyle(.plain)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(action: onToggleSkip) {
-                Label(isSkipped ? "Unskip" : "Skip", systemImage: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+                Label(day.isSkipped ? "Plan day" : "Skip", systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
             }
             .tint(VecklyDesign.Colors.inkMid)
-            .accessibilityLabel(isSkipped ? "Unskip \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
+            .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
         }
     }
 
@@ -338,7 +336,7 @@ struct CompactDayRow: View {
         HStack(alignment: .center, spacing: 12) {
             dateColumn
 
-            if isSkipped {
+            if day.isSkipped {
                 skippedContent
             } else if day.isEmpty {
                 emptyContent
@@ -392,15 +390,13 @@ struct CompactDayRow: View {
 
     private var skippedContent: some View {
         HStack(alignment: .center, spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Skipped")
-                    .font(.body)
-                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                Text("Not cooking this day")
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
-            }
+            Text("Skipped")
+                .font(.body)
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
             Spacer()
+            Text("Plan")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
         }
         .opacity(0.7)
     }

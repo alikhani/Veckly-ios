@@ -4,21 +4,29 @@ import Observation
 @MainActor
 @Observable
 final class WeekStore {
-    private let apiClient: VecklyAPIClient
+    private let apiClient: any WeekStoreAPIClient
 
     private(set) var weekStartDate: String = WeekCalendar.currentWeekStartDate()
     private(set) var summary: WeekSummary?
     private(set) var dayRows: [WeekDayRowViewModel] = []
     private(set) var today: WeekDayRowViewModel?
     private(set) var lockedDays: Set<Weekday> = []
-    private(set) var skippedDays: Set<Weekday> = []
+    var skippedDays: Set<Weekday> {
+        Set(dayRows.filter(\.isSkipped).map(\.weekday))
+    }
+    var hasPlannedMeals: Bool {
+        dayRows.contains { $0.recipe != nil }
+    }
+    var hasWeekContent: Bool {
+        dayRows.contains { $0.recipe != nil || $0.isSkipped }
+    }
     private(set) var mealFeedback: [String: MealVote] = [:]
     private(set) var isLoading = false
     private(set) var isGenerating = false
     private(set) var errorMessage: String?
     private(set) var lastFetchedAt: Date?
 
-    init(apiClient: VecklyAPIClient) {
+    init(apiClient: any WeekStoreAPIClient) {
         self.apiClient = apiClient
     }
 
@@ -68,8 +76,15 @@ final class WeekStore {
     }
 
     func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String) async {
-        let isSkipped = skippedDays.contains(day.weekday)
-        if isSkipped { skippedDays.remove(day.weekday) } else { skippedDays.insert(day.weekday) }
+        let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
+        let isSkipped = current.isSkipped
+        let previous = dayRows.first(where: { $0.weekday == day.weekday })
+        let optimisticRow = current.withSkipped(!isSkipped)
+
+        if let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+            dayRows[idx] = optimisticRow
+        }
+        if current.isToday { today = optimisticRow }
 
         let event: WeekPlanEventInput = isSkipped
             ? .dayUnskipped(day: day.weekday)
@@ -82,8 +97,13 @@ final class WeekStore {
                 userID: userID,
                 event: event
             )
+            lastFetchedAt = Date()
         } catch {
-            if isSkipped { skippedDays.insert(day.weekday) } else { skippedDays.remove(day.weekday) }
+            if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
+                dayRows[idx] = previous
+            }
+            if current.isToday { today = previous }
+            errorMessage = isSkipped ? "We could not plan this day." : "We could not skip this day."
         }
     }
 
@@ -114,6 +134,7 @@ final class WeekStore {
             detail: detail,
             isToday: day.isToday,
             isEmpty: false,
+            isSkipped: false,
             recipe: recipe
         )
 
@@ -151,6 +172,7 @@ final class WeekStore {
             detail: "",
             isToday: day.isToday,
             isEmpty: true,
+            isSkipped: false,
             recipe: nil
         )
 
@@ -199,7 +221,6 @@ final class WeekStore {
         dayRows = []
         today = nil
         lockedDays = []
-        skippedDays = []
         mealFeedback = [:]
         errorMessage = nil
         isLoading = false
@@ -220,7 +241,7 @@ final class WeekStore {
             WeekSummaryDay(
                 dayOfWeek: weekday,
                 date: WeekCalendar.addDays(to: weekStartDate, offset: index),
-                state: index == 0 ? .planned : .empty,
+                state: index == 0 ? .planned : index == 2 ? .skipped : .empty,
                 recipe: index == 0 ? recipe : nil
             )
         }
@@ -236,6 +257,22 @@ final class WeekStore {
         today = mapped.today ?? mapped.days.first
     }
 }
+
+protocol WeekStoreAPIClient {
+    func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary
+    func mealFeedback(householdID: String) async throws -> [String: MealVote]
+    func appendWeekPlanEvent(
+        householdID: String,
+        weekStartDate: String,
+        userID: String,
+        event: WeekPlanEventInput
+    ) async throws
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe
+    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws
+}
+
+extension VecklyAPIClient: WeekStoreAPIClient {}
 
 struct WeekDayRowViewModel: Equatable, Identifiable {
     let id: String
@@ -271,6 +308,21 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.isEmpty = isEmpty
         self.isSkipped = isSkipped
         self.recipe = recipe
+    }
+
+    func withSkipped(_ isSkipped: Bool) -> WeekDayRowViewModel {
+        WeekDayRowViewModel(
+            id: id,
+            weekday: weekday,
+            weekdayLabel: weekdayLabel,
+            dateLabel: dateLabel,
+            mealTitle: isSkipped ? "" : mealTitle,
+            detail: isSkipped ? "" : detail,
+            isToday: isToday,
+            isEmpty: !isSkipped && recipe == nil,
+            isSkipped: isSkipped,
+            recipe: isSkipped ? nil : recipe
+        )
     }
 }
 
