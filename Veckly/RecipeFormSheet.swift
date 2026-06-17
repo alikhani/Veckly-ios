@@ -5,6 +5,13 @@ enum RecipeFormMode {
     case edit(FullRecipe)
 }
 
+private enum RecipeFormTab: String, CaseIterable, Identifiable {
+    case write = "Write"
+    case importRecipe = "Import"
+
+    var id: Self { self }
+}
+
 struct RecipeFormSheet: View {
     let mode: RecipeFormMode
     let onSave: (RecipeDraft) async throws -> Void
@@ -14,6 +21,7 @@ struct RecipeFormSheet: View {
 
     @State private var draft: RecipeDraft
     @State private var initialDraft: RecipeDraft
+    @State private var selectedTab: RecipeFormTab
     @State private var urlText = ""
     @State private var isImporting = false
     @State private var isFilling = false
@@ -28,10 +36,12 @@ struct RecipeFormSheet: View {
         case .create:
             _draft = State(initialValue: .empty)
             _initialDraft = State(initialValue: .empty)
+            _selectedTab = State(initialValue: .write)
         case let .edit(recipe):
             let draft = RecipeDraft(from: recipe)
             _draft = State(initialValue: draft)
             _initialDraft = State(initialValue: draft)
+            _selectedTab = State(initialValue: .write)
         }
     }
 
@@ -40,11 +50,12 @@ struct RecipeFormSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                if isNew { importSection }
-                basicSection
-                timingSection
-                ingredientsSection
-                stepsSection
+                if isNew { modeSection }
+                if selectedTab == .importRecipe {
+                    importSection
+                } else {
+                    recipeFields
+                }
             }
             .navigationTitle(isNew ? "New Recipe" : "Edit Recipe")
             .navigationBarTitleDisplayMode(.inline)
@@ -81,9 +92,29 @@ struct RecipeFormSheet: View {
         }
     }
 
+    @ViewBuilder
+    private var recipeFields: some View {
+        basicSection
+        timingSection
+        ingredientsSection
+        stepsSection
+    }
+
+    private var modeSection: some View {
+        Section {
+            Picker("Mode", selection: $selectedTab) {
+                ForEach(RecipeFormTab.allCases) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(isSaving || isImporting || isFilling)
+        }
+    }
+
     private var importSection: some View {
-        Section("Import from URL") {
-            TextField("https://...", text: $urlText)
+        Section("Import") {
+            TextField("Recipe page URL", text: $urlText)
                 .keyboardType(.URL)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
@@ -93,7 +124,7 @@ struct RecipeFormSheet: View {
                 if isImporting {
                     HStack { ProgressView(); Text("Importing…") }
                 } else {
-                    Text("Import recipe")
+                    Label("Create draft", systemImage: "square.and.arrow.down")
                 }
             }
             .disabled(normalizedURL.isEmpty || isImporting || isSaving || isFilling)
@@ -188,6 +219,7 @@ struct RecipeFormSheet: View {
         do {
             draft = try await appModel.recipeStore.importFromURL(url)
             urlText = url
+            selectedTab = .write
         } catch {
             errorMessage = "Could not import recipe from that URL."
         }
