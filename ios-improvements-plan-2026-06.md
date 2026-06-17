@@ -434,6 +434,30 @@ Villkoret `if !day.isPast` inuti en `swipeActions { }` builder lämnar en osynli
 
 ---
 
+## Fas 9 — Portionsskalning efter hushållsstorlek
+
+**Status:** ✅ Klart (2026-06-17)
+
+### Mål
+
+Receptvyn och shoppinglistan ska visa skalade mängder baserat på hushållets storlek, inte grundreceptets fasta 4 portioner.
+
+### Utfört
+
+**`IngredientScaler.swift`** (ny fil) — ren utility-enum:
+- `scaleFactor(householdSize:recipeServings:)` — returnerar Double; fallback 1.0 om profil saknas
+- `scale(amount:unit:by:)` — parsar strängmängder inklusive enkla bråk ("1/2"), multiplicerar, formaterar till 1 decimal (droppar ".0"); rundar till heltal för unit "st"
+
+**`RecipeDetailView.swift`** — `householdSize` läser från `appModel.householdStore.cachedProfile(for:)`. Ingrediensmängder skalas via `IngredientScaler.scale`. Portionsraden visar hushållets räknade portioner ("3 servings") istället för grundreceptets ("4 servings"). Profil laddas i `loadFull()` om den inte är cachad.
+
+**`ShoppingListTabView.swift`** — backend returnerar råa mängder utan skalning (bekräftat i `shopping-list.ts`: ingen profil-lookup, ingredient.amount passeras verbatim). Klientsidig skalning med fast bas 4 portioner. `ShoppingGroupView` tar `scaleFactor: Double = 1.0` (default bevarar befintliga call sites).
+
+### Beslut
+
+Shoppinglistans skalning är klientsidig med hårdkodad bas 4. Om ett recept sparas med annan basservering blir skalningen inexakt — acceptabelt för nu och matchar webbappens beteende. Rätt long-term fix är att backend skalar mot hushållsprofil vid aggregering.
+
+---
+
 ## Nästa steg efter fas 5
 
 När appen är write-capable i planeringssidan är dessa naturliga nästa steg:
