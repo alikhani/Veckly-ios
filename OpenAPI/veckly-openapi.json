@@ -2784,7 +2784,9 @@
               "FETCH_FAILED",
               "NO_RECIPE_FOUND",
               "RATE_LIMITED",
-              "IMPORT_FAILED"
+              "IMPORT_FAILED",
+              "UNSUPPORTED_SOCIAL_SOURCE",
+              "CAPTION_REQUIRED"
             ]
           }
         },
