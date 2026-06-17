@@ -458,6 +458,47 @@ Shoppinglistans skalning är klientsidig med hårdkodad bas 4. Om ett recept spa
 
 ---
 
+## Fas 10 — Onboarding-flöde för nya användare
+
+**Status:** ✅ Klart (2026-06-17)
+
+### Mål
+
+Ny iOS-användare ska inte mötas av en tom veckovy utan kontext. Onboardingen samlar in hushållsstorlek och planeringsdagar, sparar profilen, och lämnar sedan användaren att själv välja om de vill generera eller lägga till recept manuellt. Ingen auto-generering — det är intrusive och tar beslut åt användaren.
+
+### Trigger
+
+Visas som `.fullScreenCover` på `MainTabView` när `appModel.needsOnboarding == true`:
+- Inloggad
+- Bootstrap klar (`householdStore.isLoading == false`)
+- Ingen sparad profil (`householdStore.cachedProfile(for: household.id) == nil`)
+
+`loadCoreReader()` hämtar nu profilen som en del av bootstrap, så `needsOnboarding` utvärderas korrekt direkt efter inloggning.
+
+Täcket försvinner automatiskt när profilen sparats (cover är bunden till `needsOnboarding` som ett read-only computed property).
+
+### Skärmar
+
+**Skärm 1 — Hushållsstorlek**
+- Stepper: antal vuxna (default 1, min 1)
+- Stepper: antal barn (default 0)
+- Continue → Skärm 2
+
+**Skärm 2 — Planeringsdagar**
+- Dag-chips mån–sön, mån–fre förvalt
+- "Set up my week" → `PUT /households/{id}/profile` → täcket stängs
+- Inget anrop till generate — användaren väljer själv i veckovyn
+
+### Filer
+
+| Åtgärd | Fil |
+|---|---|
+| Ny | `OnboardingFlowView.swift` — `OnboardingFlowView` + två privata skärm-structs |
+| Ändra | `AppModel.swift` — `needsOnboarding: Bool`, profil-fetch i `loadCoreReader()` |
+| Ändra | `RootView.swift` — `.fullScreenCover` på `MainTabView` |
+
+---
+
 ## Nästa steg efter fas 5
 
 När appen är write-capable i planeringssidan är dessa naturliga nästa steg:
