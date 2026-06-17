@@ -4926,6 +4926,8 @@ internal enum Components {
             internal var proteinSource: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ImportedRecipe/sourceUrl`.
             internal var sourceUrl: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ImportedRecipe/steps`.
+            internal var steps: [Swift.String]?
             /// - Remark: Generated from `#/components/schemas/ImportedRecipe/tags`.
             internal var tags: [Swift.String]
             /// - Remark: Generated from `#/components/schemas/ImportedRecipe/title`.
@@ -4939,6 +4941,7 @@ internal enum Components {
             ///   - prepTimeMinutes:
             ///   - proteinSource:
             ///   - sourceUrl:
+            ///   - steps:
             ///   - tags:
             ///   - title:
             internal init(
@@ -4948,6 +4951,7 @@ internal enum Components {
                 prepTimeMinutes: Swift.Int? = nil,
                 proteinSource: Swift.String? = nil,
                 sourceUrl: Swift.String? = nil,
+                steps: [Swift.String]? = nil,
                 tags: [Swift.String],
                 title: Swift.String
             ) {
@@ -4957,6 +4961,7 @@ internal enum Components {
                 self.prepTimeMinutes = prepTimeMinutes
                 self.proteinSource = proteinSource
                 self.sourceUrl = sourceUrl
+                self.steps = steps
                 self.tags = tags
                 self.title = title
             }
@@ -4967,23 +4972,97 @@ internal enum Components {
                 case prepTimeMinutes
                 case proteinSource
                 case sourceUrl
+                case steps
                 case tags
                 case title
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ImportSource`.
+        internal struct ImportSource: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ImportSource/kind`.
+            internal enum kindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case web = "web"
+                case tiktok = "tiktok"
+                case instagram = "instagram"
+            }
+            /// - Remark: Generated from `#/components/schemas/ImportSource/kind`.
+            internal var kind: Components.Schemas.ImportSource.kindPayload
+            /// - Remark: Generated from `#/components/schemas/ImportSource/url`.
+            internal var url: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ImportSource/title`.
+            internal var title: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ImportSource/authorName`.
+            internal var authorName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ImportSource/thumbnailUrl`.
+            internal var thumbnailUrl: Swift.String?
+            /// Creates a new `ImportSource`.
+            ///
+            /// - Parameters:
+            ///   - kind:
+            ///   - url:
+            ///   - title:
+            ///   - authorName:
+            ///   - thumbnailUrl:
+            internal init(
+                kind: Components.Schemas.ImportSource.kindPayload,
+                url: Swift.String,
+                title: Swift.String? = nil,
+                authorName: Swift.String? = nil,
+                thumbnailUrl: Swift.String? = nil
+            ) {
+                self.kind = kind
+                self.url = url
+                self.title = title
+                self.authorName = authorName
+                self.thumbnailUrl = thumbnailUrl
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case kind
+                case url
+                case title
+                case authorName
+                case thumbnailUrl
             }
         }
         /// - Remark: Generated from `#/components/schemas/RecipeImportEnvelope`.
         internal struct RecipeImportEnvelope: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/RecipeImportEnvelope/recipe`.
             internal var recipe: Components.Schemas.ImportedRecipe
+            /// - Remark: Generated from `#/components/schemas/RecipeImportEnvelope/source`.
+            internal var source: Components.Schemas.ImportSource?
+            /// - Remark: Generated from `#/components/schemas/RecipeImportEnvelope/warnings`.
+            internal var warnings: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/RecipeImportEnvelope/confidence`.
+            internal enum confidencePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case high = "high"
+                case medium = "medium"
+                case low = "low"
+            }
+            /// - Remark: Generated from `#/components/schemas/RecipeImportEnvelope/confidence`.
+            internal var confidence: Components.Schemas.RecipeImportEnvelope.confidencePayload
             /// Creates a new `RecipeImportEnvelope`.
             ///
             /// - Parameters:
             ///   - recipe:
-            internal init(recipe: Components.Schemas.ImportedRecipe) {
+            ///   - source:
+            ///   - warnings:
+            ///   - confidence:
+            internal init(
+                recipe: Components.Schemas.ImportedRecipe,
+                source: Components.Schemas.ImportSource? = nil,
+                warnings: [Swift.String],
+                confidence: Components.Schemas.RecipeImportEnvelope.confidencePayload
+            ) {
                 self.recipe = recipe
+                self.source = source
+                self.warnings = warnings
+                self.confidence = confidence
             }
             internal enum CodingKeys: String, CodingKey {
                 case recipe
+                case source
+                case warnings
+                case confidence
             }
         }
         /// - Remark: Generated from `#/components/schemas/RecipeImportError`.
@@ -4996,6 +5075,8 @@ internal enum Components {
                 case NO_RECIPE_FOUND = "NO_RECIPE_FOUND"
                 case RATE_LIMITED = "RATE_LIMITED"
                 case IMPORT_FAILED = "IMPORT_FAILED"
+                case UNSUPPORTED_SOCIAL_SOURCE = "UNSUPPORTED_SOCIAL_SOURCE"
+                case CAPTION_REQUIRED = "CAPTION_REQUIRED"
             }
             /// - Remark: Generated from `#/components/schemas/RecipeImportError/error`.
             internal var error: Components.Schemas.RecipeImportError.errorPayload
@@ -13484,6 +13565,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "internalServerError",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadGateway: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/502/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/502/content/application\/json`.
+                    case json(Components.Schemas.RecipeImportError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipeImportError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromUrl.Output.BadGateway.Body
+                /// Creates a new `BadGateway`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromUrl.Output.BadGateway.Body) {
+                    self.body = body
+                }
+            }
+            /// Upstream social platform unavailable
+            ///
+            /// - Remark: Generated from `#/paths//recipes/import-from-url/post(importRecipeFromUrl)/responses/502`.
+            ///
+            /// HTTP response code: `502 badGateway`.
+            case badGateway(Operations.importRecipeFromUrl.Output.BadGateway)
+            /// The associated value of the enum case if `self` is `.badGateway`.
+            ///
+            /// - Throws: An error if `self` is not `.badGateway`.
+            /// - SeeAlso: `.badGateway`.
+            internal var badGateway: Operations.importRecipeFromUrl.Output.BadGateway {
+                get throws {
+                    switch self {
+                    case let .badGateway(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badGateway",
                             response: self
                         )
                     }

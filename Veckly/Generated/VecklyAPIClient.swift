@@ -523,6 +523,7 @@ private extension RecipeDraft {
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
             ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: $0.amount.map { formatAmount($0) } ?? "", unit: $0.unit ?? "") },
+            steps: r.steps ?? [],
             sourceUrl: r.sourceUrl,
             source: source
         )

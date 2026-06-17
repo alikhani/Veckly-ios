@@ -2741,6 +2741,12 @@
               "null"
             ]
           },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "tags": {
             "type": "array",
             "items": {
@@ -4957,6 +4963,7 @@
           {
             "schema": {
               "type": "string",
+              "minLength": 2,
               "maxLength": 120
             },
             "required": false,
@@ -5193,6 +5200,16 @@
           },
           "500": {
             "description": "Could not fetch page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeImportError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream social platform unavailable",
             "content": {
               "application/json": {
                 "schema": {
