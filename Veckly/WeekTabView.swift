@@ -337,15 +337,7 @@ struct CompactDayRow: View {
         }
         .buttonStyle(.plain)
         .opacity(day.isPast ? 0.45 : 1)
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if !day.isPast {
-                Button(action: onToggleSkip) {
-                    Label(day.isSkipped ? "Plan day" : "Skip", systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
-                }
-                .tint(VecklyDesign.Colors.inkMid)
-                .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
-            }
-        }
+        .modifier(SwipeSkipModifier(day: day, onToggleSkip: onToggleSkip))
     }
 
     private var rowContent: some View {
@@ -419,5 +411,32 @@ struct CompactDayRow: View {
             }
         }
         .opacity(0.7)
+    }
+}
+
+/// Attaches a swipe-to-skip action only when the day is not in the past.
+/// The condition is resolved outside the swipeActions ViewBuilder so SwiftUI
+/// never receives a conditionally-empty modifier body, which can leave a ghost
+/// swipe handle on some versions of UIKit.
+private struct SwipeSkipModifier: ViewModifier {
+    let day: WeekDayRowViewModel
+    let onToggleSkip: () -> Void
+
+    func body(content: Content) -> some View {
+        if day.isPast {
+            content
+        } else {
+            content
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(action: onToggleSkip) {
+                        Label(
+                            day.isSkipped ? "Plan day" : "Skip",
+                            systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus"
+                        )
+                    }
+                    .tint(VecklyDesign.Colors.inkMid)
+                    .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
+                }
+        }
     }
 }
