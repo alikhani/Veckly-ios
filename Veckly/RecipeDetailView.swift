@@ -11,6 +11,29 @@ struct RecipeDetailView: View {
     @State private var fullRecipe: FullRecipe?
     @State private var isLoadingFull = false
 
+    // MARK: - Scaling
+
+    /// Total people in the household — 0 means profile not loaded yet (no scaling).
+    private var householdSize: Int {
+        guard let hid = appModel.householdStore.activeHousehold?.id,
+              let profile = appModel.householdStore.cachedProfile(for: hid) else { return 0 }
+        return profile.adults + profile.children
+    }
+
+    /// Base servings from the full recipe; falls back to the summary field.
+    private var baseServings: Int {
+        fullRecipe?.servings ?? recipe.servings
+    }
+
+    /// The servings count to display: household size when known, otherwise the base.
+    private var displayServings: Int {
+        householdSize > 0 ? householdSize : baseServings
+    }
+
+    private var scaleFactor: Double {
+        IngredientScaler.scaleFactor(householdSize: displayServings, recipeServings: baseServings)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -78,7 +101,7 @@ struct RecipeDetailView: View {
 
             let totalMinutes = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
             HStack(spacing: 16) {
-                Label("\(recipe.servings) servings", systemImage: "person.2")
+                Label("\(displayServings) servings", systemImage: "person.2")
                 if totalMinutes > 0 {
                     Label("\(totalMinutes) min", systemImage: "clock")
                 }
@@ -104,7 +127,8 @@ struct RecipeDetailView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(ingredients.enumerated()), id: \.offset) { index, ing in
                         HStack(spacing: 12) {
-                            Text([ing.amount, ing.unit].compactMap { $0 }.joined(separator: " "))
+                            let scaledAmount = IngredientScaler.scale(amount: ing.amount, unit: ing.unit, by: scaleFactor)
+                            Text([scaledAmount, ing.unit].compactMap { $0 }.joined(separator: " "))
                                 .font(.footnote.weight(.medium))
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
                                 .frame(width: 64, alignment: .trailing)
@@ -145,6 +169,9 @@ struct RecipeDetailView: View {
     }
 
     private func loadFull() async {
+        // Ensure household profile is loaded so scaling is available.
+        await appModel.householdStore.loadHouseholdDetails(householdID: householdID)
+
         guard fullRecipe == nil else { return }
         isLoadingFull = true
         defer { isLoadingFull = false }
