@@ -92,6 +92,10 @@ final class RecipeStore {
         try await apiClient.importRecipeFromURL(urlString)
     }
 
+    func importFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
+        try await apiClient.importRecipeFromText(text, sourceURL: sourceURL)
+    }
+
     func reset() {
         clearRecipeState()
     }
@@ -114,6 +118,7 @@ protocol RecipeStoreAPIClient {
     func archiveRecipe(householdID: String, recipeID: String) async throws -> FullRecipe
     func fillInRecipe(title: String) async throws -> RecipeDraft
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft
+    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft
 }
 
 extension VecklyAPIClient: RecipeStoreAPIClient {}

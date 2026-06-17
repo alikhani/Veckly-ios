@@ -210,7 +210,22 @@ struct VecklyAPIClient {
             body: .json(.init(url: urlString))
         )
         switch output {
-        case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe)
+        case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe, source: .urlImport)
+        case .unauthorized: throw APIError.unauthorized
+        case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .internalServerError(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
+        let output = try await _client.importRecipeFromText(
+            body: .json(.init(text: text, sourceUrl: sourceURL))
+        )
+        switch output {
+        case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe, source: .aiGenerated)
         case .unauthorized: throw APIError.unauthorized
         case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
@@ -481,7 +496,7 @@ private extension RecipeDraft {
         .init(title: title, description: description.isEmpty ? nil : description,
               servings: servings, ingredients: apiIngredients, steps: apiSteps,
               prepTimeMinutes: prepTimeMinutes, cookTimeMinutes: cookTimeMinutes,
-              sourceUrl: sourceUrl, source: sourceUrl != nil ? .url_import : .user_created)
+              sourceUrl: sourceUrl, source: apiSource)
     }
     var updatePayload: Components.Schemas.UpdateRecipe {
         .init(title: title, description: description.isEmpty ? nil : description,
@@ -502,14 +517,25 @@ private extension RecipeDraft {
             steps: r.steps
         )
     }
-    init(imported r: Components.Schemas.ImportedRecipe) throws {
+    init(imported r: Components.Schemas.ImportedRecipe, source: RecipeDraftSource) throws {
         self.init(
             title: r.title,
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
             ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: $0.amount.map { formatAmount($0) } ?? "", unit: $0.unit ?? "") },
-            sourceUrl: r.sourceUrl
+            sourceUrl: r.sourceUrl,
+            source: source
         )
+    }
+}
+
+private extension RecipeDraft {
+    var apiSource: Components.Schemas.CreateRecipe.sourcePayload {
+        switch source {
+        case .userCreated: return .user_created
+        case .urlImport: return .url_import
+        case .aiGenerated: return .ai_generated
+        }
     }
 }
 

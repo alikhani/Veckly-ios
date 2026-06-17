@@ -12,6 +12,13 @@ private enum RecipeFormTab: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+private enum RecipeImportInputMode: String, CaseIterable, Identifiable {
+    case link = "Link"
+    case text = "Text"
+
+    var id: Self { self }
+}
+
 struct RecipeFormSheet: View {
     let mode: RecipeFormMode
     let onSave: (RecipeDraft) async throws -> Void
@@ -22,7 +29,10 @@ struct RecipeFormSheet: View {
     @State private var draft: RecipeDraft
     @State private var initialDraft: RecipeDraft
     @State private var selectedTab: RecipeFormTab
+    @State private var selectedImportMode: RecipeImportInputMode = .link
     @State private var urlText = ""
+    @State private var importText = ""
+    @State private var importSourceURLText = ""
     @State private var isImporting = false
     @State private var isFilling = false
     @State private var isSaving = false
@@ -115,8 +125,27 @@ struct RecipeFormSheet: View {
         }
     }
 
+    @ViewBuilder
     private var importSection: some View {
-        Section("Import") {
+        Section {
+            Picker("Import type", selection: $selectedImportMode) {
+                ForEach(RecipeImportInputMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(isSaving || isImporting || isFilling)
+        }
+
+        if selectedImportMode == .link {
+            linkImportSection
+        } else {
+            textImportSection
+        }
+    }
+
+    private var linkImportSection: some View {
+        Section("Link") {
             TextField("Recipe page URL", text: $urlText)
                 .keyboardType(.URL)
                 .autocorrectionDisabled()
@@ -131,6 +160,35 @@ struct RecipeFormSheet: View {
                 }
             }
             .disabled(normalizedURL.isEmpty || isImporting || isSaving || isFilling)
+        }
+    }
+
+    private var textImportSection: some View {
+        Section("Text") {
+            TextEditor(text: $importText)
+                .frame(minHeight: 140)
+                .overlay(alignment: .topLeading) {
+                    if normalizedImportText.isEmpty {
+                        Text("Paste recipe text")
+                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                    }
+                }
+            TextField("Source URL", text: $importSourceURLText)
+                .keyboardType(.URL)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+            Button {
+                Task { await importFromText() }
+            } label: {
+                if isImporting {
+                    HStack { ProgressView(); Text("Importing…") }
+                } else {
+                    Label("Create draft", systemImage: "text.page")
+                }
+            }
+            .disabled(normalizedImportText.isEmpty || isImporting || isSaving || isFilling)
         }
     }
 
@@ -241,6 +299,23 @@ struct RecipeFormSheet: View {
         }
     }
 
+    private func importFromText() async {
+        let text = normalizedImportText
+        guard !text.isEmpty else { return }
+        isImporting = true
+        errorMessage = nil
+        defer { isImporting = false }
+        do {
+            draft = try await appModel.recipeStore.importFromText(text, sourceURL: normalizedImportSourceURL)
+            importText = text
+            selectedTab = .write
+        } catch APIError.recipeImport(let failure) {
+            errorMessage = failure.message
+        } catch {
+            errorMessage = "Could not create a draft from that text."
+        }
+    }
+
     private func fillWithAI() async {
         let title = normalizedTitle
         guard !title.isEmpty else { return }
@@ -266,6 +341,9 @@ struct RecipeFormSheet: View {
         draftToSave.description = draft.description.trimmingCharacters(in: .whitespacesAndNewlines)
         let sourceURL = draft.sourceUrl?.trimmingCharacters(in: .whitespacesAndNewlines)
         draftToSave.sourceUrl = sourceURL?.isEmpty == true ? nil : sourceURL
+        if draftToSave.sourceUrl == nil && draftToSave.source == .urlImport {
+            draftToSave.source = .userCreated
+        }
         draftToSave.ingredients = draft.ingredients.map {
             DraftIngredient(
                 item: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -291,6 +369,15 @@ struct RecipeFormSheet: View {
 
     private var normalizedURL: String {
         urlText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var normalizedImportText: String {
+        importText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var normalizedImportSourceURL: String? {
+        let sourceURL = importSourceURLText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return sourceURL.isEmpty ? nil : sourceURL
     }
 }
 

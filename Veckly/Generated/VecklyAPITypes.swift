@@ -238,6 +238,12 @@ struct DraftIngredient: Identifiable, Equatable {
     var unit: String = ""
 }
 
+enum RecipeDraftSource: Equatable {
+    case userCreated
+    case urlImport
+    case aiGenerated
+}
+
 struct RecipeDraft: Equatable {
     var title: String = ""
     var description: String = ""
@@ -247,6 +253,7 @@ struct RecipeDraft: Equatable {
     var ingredients: [DraftIngredient] = []
     var steps: [String] = []
     var sourceUrl: String? = nil
+    var source: RecipeDraftSource = .userCreated
 
     static var empty: RecipeDraft { RecipeDraft() }
 
@@ -259,13 +266,16 @@ struct RecipeDraft: Equatable {
         ingredients = recipe.ingredients.map { DraftIngredient(item: $0.item, amount: $0.amount ?? "", unit: $0.unit ?? "") }
         steps = recipe.steps.map(\.text)
         sourceUrl = nil
+        source = .userCreated
     }
 
     init(title: String = "", description: String = "", servings: Int = 4,
          prepTimeMinutes: Int? = nil, cookTimeMinutes: Int? = nil,
-         ingredients: [DraftIngredient] = [], steps: [String] = [], sourceUrl: String? = nil) {
+         ingredients: [DraftIngredient] = [], steps: [String] = [], sourceUrl: String? = nil,
+         source: RecipeDraftSource = .userCreated) {
         self.title = title; self.description = description; self.servings = servings
         self.prepTimeMinutes = prepTimeMinutes; self.cookTimeMinutes = cookTimeMinutes
         self.ingredients = ingredients; self.steps = steps; self.sourceUrl = sourceUrl
+        self.source = source
     }
 }
