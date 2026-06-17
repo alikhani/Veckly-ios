@@ -16,7 +16,7 @@ final class PrepBatchStore {
     }
 
     func load(householdID: String, weekStartDate: String) async {
-        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 || batches.isEmpty else { return }
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
