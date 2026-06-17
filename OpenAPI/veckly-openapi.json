@@ -2762,15 +2762,63 @@
           "title"
         ]
       },
+      "ImportSource": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "web",
+              "tiktok",
+              "instagram"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "url"
+        ]
+      },
       "RecipeImportEnvelope": {
         "type": "object",
         "properties": {
           "recipe": {
             "$ref": "#/components/schemas/ImportedRecipe"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ImportSource"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
           }
         },
         "required": [
-          "recipe"
+          "recipe",
+          "warnings",
+          "confidence"
         ]
       },
       "RecipeImportError": {
