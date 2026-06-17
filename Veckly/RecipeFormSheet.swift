@@ -94,6 +94,9 @@ struct RecipeFormSheet: View {
 
     @ViewBuilder
     private var recipeFields: some View {
+        if isNew, let sourceURL = draft.sourceUrl, !sourceURL.isEmpty {
+            sourceSection(sourceURL)
+        }
         basicSection
         timingSection
         ingredientsSection
@@ -128,6 +131,17 @@ struct RecipeFormSheet: View {
                 }
             }
             .disabled(normalizedURL.isEmpty || isImporting || isSaving || isFilling)
+        }
+    }
+
+    private func sourceSection(_ sourceURL: String) -> some View {
+        Section {
+            LabeledContent("Draft source") {
+                Text(sourceURL)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            }
         }
     }
 
@@ -220,8 +234,10 @@ struct RecipeFormSheet: View {
             draft = try await appModel.recipeStore.importFromURL(url)
             urlText = url
             selectedTab = .write
+        } catch APIError.recipeImport(let failure) {
+            errorMessage = failure.message
         } catch {
-            errorMessage = "Could not import recipe from that URL."
+            errorMessage = "Could not create a draft from that URL."
         }
     }
 
@@ -275,5 +291,24 @@ struct RecipeFormSheet: View {
 
     private var normalizedURL: String {
         urlText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+private extension RecipeImportFailure {
+    var message: String {
+        switch self {
+        case .invalidURL:
+            return "Enter a valid recipe page URL."
+        case .unsupportedURL:
+            return "This kind of link is not supported yet."
+        case .fetchFailed:
+            return "We could not access that page."
+        case .noRecipeFound:
+            return "We could not find enough recipe detail on that page."
+        case .rateLimited:
+            return "Wait a moment before importing another recipe."
+        case .importFailed:
+            return "Could not create a draft from that URL."
+        }
     }
 }

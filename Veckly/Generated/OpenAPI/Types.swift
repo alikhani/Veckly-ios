@@ -4968,6 +4968,30 @@ internal enum Components {
                 case recipe
             }
         }
+        /// - Remark: Generated from `#/components/schemas/RecipeImportError`.
+        internal struct RecipeImportError: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecipeImportError/error`.
+            internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case INVALID_URL = "INVALID_URL"
+                case UNSUPPORTED_URL = "UNSUPPORTED_URL"
+                case FETCH_FAILED = "FETCH_FAILED"
+                case NO_RECIPE_FOUND = "NO_RECIPE_FOUND"
+                case RATE_LIMITED = "RATE_LIMITED"
+                case IMPORT_FAILED = "IMPORT_FAILED"
+            }
+            /// - Remark: Generated from `#/components/schemas/RecipeImportError/error`.
+            internal var error: Components.Schemas.RecipeImportError.errorPayload
+            /// Creates a new `RecipeImportError`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            internal init(error: Components.Schemas.RecipeImportError.errorPayload) {
+                self.error = error
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/RecipeImportRequest`.
         internal struct RecipeImportRequest: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/RecipeImportRequest/url`.
@@ -13186,8 +13210,32 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.RecipeImportError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipeImportError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromUrl.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromUrl.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
             /// Invalid URL
             ///
@@ -13195,14 +13243,6 @@ internal enum Operations {
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.importRecipeFromUrl.Output.BadRequest)
-            /// Invalid URL
-            ///
-            /// - Remark: Generated from `#/paths//recipes/import-from-url/post(importRecipeFromUrl)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -13256,8 +13296,32 @@ internal enum Operations {
                 }
             }
             internal struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/422/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.RecipeImportError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipeImportError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromUrl.Output.UnprocessableContent.Body
                 /// Creates a new `UnprocessableContent`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromUrl.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
             }
             /// Could not parse recipe from fetched page
             ///
@@ -13265,14 +13329,6 @@ internal enum Operations {
             ///
             /// HTTP response code: `422 unprocessableContent`.
             case unprocessableContent(Operations.importRecipeFromUrl.Output.UnprocessableContent)
-            /// Could not parse recipe from fetched page
-            ///
-            /// - Remark: Generated from `#/paths//recipes/import-from-url/post(importRecipeFromUrl)/responses/422`.
-            ///
-            /// HTTP response code: `422 unprocessableContent`.
-            internal static var unprocessableContent: Self {
-                .unprocessableContent(.init())
-            }
             /// The associated value of the enum case if `self` is `.unprocessableContent`.
             ///
             /// - Throws: An error if `self` is not `.unprocessableContent`.
@@ -13291,8 +13347,32 @@ internal enum Operations {
                 }
             }
             internal struct TooManyRequests: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/429/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/429/content/application\/json`.
+                    case json(Components.Schemas.RecipeImportError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipeImportError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromUrl.Output.TooManyRequests.Body
                 /// Creates a new `TooManyRequests`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromUrl.Output.TooManyRequests.Body) {
+                    self.body = body
+                }
             }
             /// Rate limited
             ///
@@ -13300,14 +13380,6 @@ internal enum Operations {
             ///
             /// HTTP response code: `429 tooManyRequests`.
             case tooManyRequests(Operations.importRecipeFromUrl.Output.TooManyRequests)
-            /// Rate limited
-            ///
-            /// - Remark: Generated from `#/paths//recipes/import-from-url/post(importRecipeFromUrl)/responses/429`.
-            ///
-            /// HTTP response code: `429 tooManyRequests`.
-            internal static var tooManyRequests: Self {
-                .tooManyRequests(.init())
-            }
             /// The associated value of the enum case if `self` is `.tooManyRequests`.
             ///
             /// - Throws: An error if `self` is not `.tooManyRequests`.
@@ -13326,8 +13398,32 @@ internal enum Operations {
                 }
             }
             internal struct InternalServerError: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/500/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/500/content/application\/json`.
+                    case json(Components.Schemas.RecipeImportError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RecipeImportError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromUrl.Output.InternalServerError.Body
                 /// Creates a new `InternalServerError`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromUrl.Output.InternalServerError.Body) {
+                    self.body = body
+                }
             }
             /// Could not fetch page
             ///
@@ -13335,14 +13431,6 @@ internal enum Operations {
             ///
             /// HTTP response code: `500 internalServerError`.
             case internalServerError(Operations.importRecipeFromUrl.Output.InternalServerError)
-            /// Could not fetch page
-            ///
-            /// - Remark: Generated from `#/paths//recipes/import-from-url/post(importRecipeFromUrl)/responses/500`.
-            ///
-            /// HTTP response code: `500 internalServerError`.
-            internal static var internalServerError: Self {
-                .internalServerError(.init())
-            }
             /// The associated value of the enum case if `self` is `.internalServerError`.
             ///
             /// - Throws: An error if `self` is not `.internalServerError`.

@@ -212,10 +212,10 @@ struct VecklyAPIClient {
         switch output {
         case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe)
         case .unauthorized: throw APIError.unauthorized
-        case .badRequest: throw APIError.server(statusCode: 400)
-        case .unprocessableContent: throw APIError.server(statusCode: 422)
-        case .tooManyRequests: throw APIError.server(statusCode: 429)
-        case .internalServerError: throw APIError.server(statusCode: 500)
+        case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .internalServerError(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
@@ -457,6 +457,16 @@ enum APIError: Error, Equatable {
     case invalidResponse
     case server(statusCode: Int)
     case stale(latestUpdatedAt: String?)
+    case recipeImport(RecipeImportFailure)
+}
+
+enum RecipeImportFailure: Equatable {
+    case invalidURL
+    case unsupportedURL
+    case fetchFailed
+    case noRecipeFound
+    case rateLimited
+    case importFailed
 }
 
 private extension RecipeDraft {
@@ -500,6 +510,19 @@ private extension RecipeDraft {
             ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: $0.amount.map { formatAmount($0) } ?? "", unit: $0.unit ?? "") },
             sourceUrl: r.sourceUrl
         )
+    }
+}
+
+private extension Components.Schemas.RecipeImportError.errorPayload {
+    var appModel: RecipeImportFailure {
+        switch self {
+        case .INVALID_URL: return .invalidURL
+        case .UNSUPPORTED_URL: return .unsupportedURL
+        case .FETCH_FAILED: return .fetchFailed
+        case .NO_RECIPE_FOUND: return .noRecipeFound
+        case .RATE_LIMITED: return .rateLimited
+        case .IMPORT_FAILED: return .importFailed
+        }
     }
 }
 
