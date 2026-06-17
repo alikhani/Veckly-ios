@@ -63,8 +63,18 @@ final class AppModel {
         await loadCoreReader()
     }
 
+    var needsOnboarding: Bool {
+        guard authSessionStore.isSignedIn,
+              !householdStore.isLoading,
+              let household = householdStore.activeHousehold else { return false }
+        return householdStore.cachedProfile(for: household.id) == nil
+    }
+
     func loadCoreReader() async {
         await householdStore.bootstrapAndLoadHouseholds()
+        if let household = householdStore.activeHousehold {
+            await householdStore.loadHouseholdDetails(householdID: household.id)
+        }
         await loadActiveHouseholdReaderData(resetFeatureStores: false)
     }
 

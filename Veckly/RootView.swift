@@ -9,6 +9,13 @@ struct RootView: View {
                 LoadingView(title: "Opening Veckly")
             } else if appModel.authSessionStore.isSignedIn {
                 MainTabView()
+                    .fullScreenCover(isPresented: Binding(
+                        get: { appModel.needsOnboarding },
+                        set: { _ in }
+                    )) {
+                        OnboardingFlowView()
+                            .environment(appModel)
+                    }
             } else {
                 SignedOutView()
             }
