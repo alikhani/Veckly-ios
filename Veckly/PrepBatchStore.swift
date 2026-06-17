@@ -21,8 +21,10 @@ final class PrepBatchStore {
         errorMessage = nil
         defer { isLoading = false }
         let to = endDate(from: weekStartDate)
-        batches = (try? await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to)) ?? []
-        lastFetchedAt = Date()
+        if let result = try? await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to) {
+            batches = result
+            lastFetchedAt = Date()
+        }
     }
 
     func create(

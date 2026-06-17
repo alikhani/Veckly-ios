@@ -122,8 +122,8 @@ struct ShoppingListTabView: View {
                         )
                     }
 
-                    // Meal prep — only shown when there are batches or loading
-                    if !appModel.prepBatchStore.batches.isEmpty || appModel.prepBatchStore.isLoading {
+                    // Meal prep — shown once we've had a successful load (even if empty)
+                    if appModel.prepBatchStore.isLoading || appModel.prepBatchStore.lastFetchedAt != nil {
                         PrepBatchSection(showPrepSheet: $showPrepSheet)
                     }
                 }
