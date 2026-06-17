@@ -13,6 +13,60 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 5 | Hoppa över en dag | ✅ Klart (2026-06-11; stabilized 2026-06-16) |
 | 6 | Household-vy stabilisering | ✅ Klart (2026-06-16) |
 | 7 | Recept-vy stabilisering | ✅ Klart (2026-06-16) |
+| 8 | Veckovy UX-polish (Tonight-fix, historik-dimning, swipe) | ✅ Klart (2026-06-16) |
+| 9 | Ingrediensskalning efter hushållsstorlek | ✅ Klart (2026-06-16) |
+| 10 | Onboarding-flöde (hushållsstorlek + planeringsdagar) | ✅ Klart (2026-06-16) |
+| 11 | Shopping list redesign (kategorigruppering, progress, staples) | ✅ Klart (2026-06-17) |
+
+---
+
+## Fas 11 — Shopping list redesign
+
+**Status:** ✅ Klart (2026-06-17)
+
+### Mål
+
+Omskriva shopping list-vyn från en enda `OTHER`-hink till en kategorigrupperad, butiksorienterad lista kopplad till veckokontexten.
+
+### Vad som gjordes
+
+**Kategorigruppering (P1)**
+- `ShoppingCategory` enum med `from(_:)` (mappar backend-strängar `"produce"`, `"protein"`, `"dairy"`, `"pantry"`, `"frozen"` till typad kategori; `"Other"` och okänt → `.other`)
+- `displayLabel` per kategori på engelska: Fruit & veg, Meat & fish, Dairy & eggs, Pantry, Frozen, Bakery, Other
+- Sorteringsordning: Fruit & veg → Meat & fish → Dairy & eggs → Pantry → Frozen → Bakery → Other
+- Category-headers är nu `inkMid` (neutral, inte orange) — Hearth Orange reserveras för progress-bar och week-context-rad
+
+**Dubblerad header fixad (P1)**
+- `Text("Shopping list")` i scroll-innehållet borttagen; ersatt av week-context-rad + titel-block
+
+**Meal prep-sektion dold när tom (P1)**
+- `PrepBatchSection` renderas bara när `!batches.isEmpty || isLoading` — "No prep batches this week" visas aldrig
+
+**Progress-indikator (P2)**
+- `ProgressView(value:total:)` med Hearth Orange-tint + `X / Y`-räknare i en `HStack`
+- VoiceOver-label: "\(checked) of \(total) items checked"
+
+**Week-context-rad (P2)**
+- Format: `WEEK 25 · MON–FRI · 5 MEALS` i Hearth Orange, `.caption.weight(.semibold)`
+- Härleds från `weekStore.weekStartDate` (ISO-veckonummer), låsta dagar (span), och `lockedDays.count`
+- Döljs helt om inga dagar är låsta eller datum ej tillgängligt
+
+**"Likely at home"-grupp (P3)**
+- Hårdkodad staples-lista (sv + en): salt, peppar, vatten/water, olja/oil, mjöl/flour, socker/sugar m.fl.
+- Matchas mot `item.label` (lowercased, trimmed) — matchande items filtreras ur huvudlistan
+- `StaplesGroupView`: kollapsad som default, chevron, items i `VecklyCard` med `inkFaint`-stil
+- `vatten` och liknande "köps aldrig"-ingredienser försvinner ur inköpslistan
+
+### Filer som ändrades
+
+| Fil | Ändring |
+|-----|---------|
+| `ShoppingListStore.swift` | `ShoppingCategory` enum, `stapledItems`, `ShoppingListViewModelMapper.map()` med staple-filter + aisle-sortering |
+| `ShoppingListTabView.swift` | Week-context-rad, progress-indikator, `StaplesGroupView`, muted category-headers, dold prep-sektion |
+
+### Kategorisering — designbeslut
+
+Category-data kommer från backend (AI fill-in returnerar `produce | dairy | protein | pantry | frozen | other`). Gamla recept utan kategori fallbackar till `"Other"`. Ingen klient-side keyword-classifier — kategoriseringen ägs av backend/AI-prompten. iOS läser `category`-strängen och mappar till display-label + sorteringsordning.
 
 ---
 
