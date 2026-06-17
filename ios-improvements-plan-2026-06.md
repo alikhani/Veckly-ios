@@ -403,6 +403,37 @@ Veckly-backend (Vercel)
 - Alla nya fält i `WeekDayRowViewModel` läggs till som optionals för att inte bryta
   `WeekViewModelMapper`-testerna (`WeekViewModelMapperTests.swift`).
 
+---
+
+## Fas 8 — Veckovy UX-polish
+
+**Status:** ✅ Klart (2026-06-17)
+
+### Utfört
+
+**Datumgräns vid midnatt (timezone-fix)**
+`WeekCalendar.swift` och `WeekStore.swift` använde UTC-kalender för dagjämförelser. I Stockholm (UTC+2) innebär det att kl 00:55 onsdag fortfarande räknas som tisdag. Bytt till `Calendar.current` (enhetens lokaltid) genomgående i `isToday` och `isPast`.
+
+**Passerade dagar tonas ner**
+`WeekDayRowViewModel` har ett nytt fält `isPast: Bool`. `CompactDayRow` applicerar `opacity(0.45)` på hela raden när `isPast` är sant. Det orangea "Plan"-alternativet döljs för passerade dagar. Swipe-action är borttagen för passerade dagar via `SwipeSkipModifier` (ViewModifier som branchar på modifier-nivå snarare än inuti `swipeActions { }` — undviker ghost-hitregioner i UIKit).
+
+**"Skip this day" tillgänglig utan scroll**
+`RecipeDetailView` renderar nu ett skip/plan-alternativ allra överst i sheeten, ovanför receptets titel och innehåll. Tidigare krävdes scroll hela vägen ned. Parametrarna `isSkipped: Bool?` och `onSkip: (() -> Void)?` är optional med nil-default, så call sites som inte skickar in dag-kontext (t.ex. receptfliken) påverkas inte.
+
+**Swipe-guard via ViewModifier**
+Villkoret `if !day.isPast` inuti en `swipeActions { }` builder lämnar en osynlig hit-testregion på cellen i UIKit. Ersatt med `SwipeSkipModifier: ViewModifier` som inte dekorerar cellen alls när `isPast` är sant.
+
+### Filer som ändrades
+
+| Fil | Vad |
+|-----|-----|
+| `WeekCalendar.swift` | `isToday` och `isPast` använder `Calendar.current` |
+| `WeekStore.swift` | `isPast` i `WeekDayRowViewModel`; `WeekViewModelMapper` beräknar det från lokal kalender |
+| `WeekTabView.swift` | `SelectedDayRecipe` struct för dag+recept-kontext; `SwipeSkipModifier`; opacity/Plan-dölj för past rows |
+| `RecipeDetailView.swift` | `skipDayRow` längst upp i scroll-innehållet; optional `isSkipped`/`onSkip` parametrar |
+
+---
+
 ## Nästa steg efter fas 5
 
 När appen är write-capable i planeringssidan är dessa naturliga nästa steg:
