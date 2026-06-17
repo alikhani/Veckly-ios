@@ -4,7 +4,7 @@ struct HouseholdProfileView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
 
-    @State private var adults = 2
+    @State private var adults = 1
     @State private var children = 0
     @State private var selectedDays: Set<Weekday> = [.monday, .tuesday, .wednesday, .thursday, .friday]
     @State private var priorities: Set<HouseholdPriority> = []
