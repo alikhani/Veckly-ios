@@ -7,6 +7,7 @@ final class FeedbackStore {
     private let apiClient: VecklyAPIClient
     // recipeID → vote
     private var votes: [String: MealVote] = [:]
+    private(set) var errorMessage: String?
 
     init(apiClient: VecklyAPIClient) {
         self.apiClient = apiClient
@@ -21,8 +22,13 @@ final class FeedbackStore {
     }
 
     func loadFeedback(householdID: String) async {
-        guard let result = try? await apiClient.mealFeedback(householdID: householdID) else { return }
-        votes = result
+        errorMessage = nil
+        do {
+            let result = try await apiClient.mealFeedback(householdID: householdID)
+            votes = result
+        } catch {
+            errorMessage = "Could not load your recipe ratings."
+        }
     }
 
     func setVote(householdID: String, recipeID: String, vote: MealVote?) async {
@@ -56,5 +62,6 @@ final class FeedbackStore {
 
     func reset() {
         votes = [:]
+        errorMessage = nil
     }
 }

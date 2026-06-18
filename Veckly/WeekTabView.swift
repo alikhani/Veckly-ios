@@ -65,11 +65,15 @@ struct WeekTabView: View {
                 } else {
                     Button {
                         guard let household = appModel.householdStore.activeHousehold else { return }
+                        guard let userID = appModel.authSessionStore.userID else {
+                            Task { await appModel.handleUnauthorized() }
+                            return
+                        }
                         let regenerate = !appModel.weekStore.hasEmptyDays
                         Task {
                             await appModel.weekStore.generateWeek(
                                 household: household,
-                                userID: appModel.authSessionStore.userID ?? "",
+                                userID: userID,
                                 regenerate: regenerate
                             )
                         }
@@ -97,9 +101,12 @@ struct WeekTabView: View {
                     isSkipped: pair.day.isSkipped,
                     onSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
-                        let userID = appModel.authSessionStore.userID ?? ""
-                        selectedDayRecipe = nil
-                        Task { await appModel.weekStore.toggleSkip(day: pair.day, household: household, userID: userID) }
+                        if let userID = appModel.authSessionStore.userID {
+                            selectedDayRecipe = nil
+                            Task { await appModel.weekStore.toggleSkip(day: pair.day, household: household, userID: userID) }
+                        } else {
+                            Task { await appModel.handleUnauthorized() }
+                        }
                     }
                 )
             }
@@ -110,30 +117,39 @@ struct WeekTabView: View {
                 isSkipped: day.isSkipped,
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 onSelect: { recipe in
-                    mealPickerDay = nil
                     guard let household = appModel.householdStore.activeHousehold else { return }
-                    let userID = appModel.authSessionStore.userID ?? ""
-                    let summaryRecipe = WeekSummaryRecipe(
-                        id: recipe.id,
-                        title: recipe.title,
-                        description: recipe.description,
-                        servings: recipe.servings,
-                        prepTimeMinutes: recipe.prepTimeMinutes,
-                        cookTimeMinutes: recipe.cookTimeMinutes,
-                        tags: recipe.tags
-                    )
-                    Task { await appModel.weekStore.assignMeal(day: day, recipe: summaryRecipe, household: household, userID: userID) }
+                    if let userID = appModel.authSessionStore.userID {
+                        mealPickerDay = nil
+                        let summaryRecipe = WeekSummaryRecipe(
+                            id: recipe.id,
+                            title: recipe.title,
+                            description: recipe.description,
+                            servings: recipe.servings,
+                            prepTimeMinutes: recipe.prepTimeMinutes,
+                            cookTimeMinutes: recipe.cookTimeMinutes,
+                            tags: recipe.tags
+                        )
+                        Task { await appModel.weekStore.assignMeal(day: day, recipe: summaryRecipe, household: household, userID: userID) }
+                    } else {
+                        Task { await appModel.handleUnauthorized() }
+                    }
                 },
                 onClear: {
-                    mealPickerDay = nil
                     guard let household = appModel.householdStore.activeHousehold else { return }
-                    let userID = appModel.authSessionStore.userID ?? ""
-                    Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                    if let userID = appModel.authSessionStore.userID {
+                        mealPickerDay = nil
+                        Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                    } else {
+                        Task { await appModel.handleUnauthorized() }
+                    }
                 },
                 onSkip: {
                     guard let household = appModel.householdStore.activeHousehold else { return }
-                    let userID = appModel.authSessionStore.userID ?? ""
-                    Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                    if let userID = appModel.authSessionStore.userID {
+                        Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                    } else {
+                        Task { await appModel.handleUnauthorized() }
+                    }
                 },
                 onDismiss: { mealPickerDay = nil }
             )
@@ -160,14 +176,20 @@ struct WeekTabView: View {
                 },
                 onSkip: {
                     guard let household = appModel.householdStore.activeHousehold else { return }
-                    let userID = appModel.authSessionStore.userID ?? ""
-                    Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                    if let userID = appModel.authSessionStore.userID {
+                        Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                    } else {
+                        Task { await appModel.handleUnauthorized() }
+                    }
                 },
                 onClear: {
-                    selectedDayForDetail = nil
                     guard let household = appModel.householdStore.activeHousehold else { return }
-                    let userID = appModel.authSessionStore.userID ?? ""
-                    Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                    if let userID = appModel.authSessionStore.userID {
+                        selectedDayForDetail = nil
+                        Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                    } else {
+                        Task { await appModel.handleUnauthorized() }
+                    }
                 },
                 onDismiss: { selectedDayForDetail = nil }
             )
@@ -209,10 +231,14 @@ struct WeekTabView: View {
 
                     Button("Plan my week for me") {
                         guard let household = appModel.householdStore.activeHousehold else { return }
+                        guard let userID = appModel.authSessionStore.userID else {
+                            Task { await appModel.handleUnauthorized() }
+                            return
+                        }
                         Task {
                             await appModel.weekStore.generateWeek(
                                 household: household,
-                                userID: appModel.authSessionStore.userID ?? "",
+                                userID: userID,
                                 regenerate: false
                             )
                         }
@@ -339,7 +365,10 @@ struct WeekTabView: View {
 
                         Button {
                             guard let household = appModel.householdStore.activeHousehold else { return }
-                            let userID = appModel.authSessionStore.userID ?? ""
+                            guard let userID = appModel.authSessionStore.userID else {
+                                Task { await appModel.handleUnauthorized() }
+                                return
+                            }
                             appModel.weekStore.clearMutationError()
                             Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                         } label: {
@@ -380,9 +409,12 @@ struct WeekTabView: View {
                     },
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
-                        let userID = appModel.authSessionStore.userID ?? ""
-                        appModel.weekStore.clearMutationError()
-                        Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                        if let userID = appModel.authSessionStore.userID {
+                            appModel.weekStore.clearMutationError()
+                            Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                        } else {
+                            Task { await appModel.handleUnauthorized() }
+                        }
                     }
                 )
                 if day.id != listDays.last?.id {
