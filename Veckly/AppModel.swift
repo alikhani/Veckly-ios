@@ -86,8 +86,9 @@ final class AppModel {
             recipeStore.reset()
             prepBatchStore.reset()
         }
+        let weekStartDate = WeekCalendar.currentWeekStartDate()
         async let week: Void = weekStore.loadCurrentWeek(household: household)
-        async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStore.weekStartDate)
+        async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
         _ = await (week, shopping)
     }
 

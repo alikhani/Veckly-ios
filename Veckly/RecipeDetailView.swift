@@ -10,6 +10,7 @@ struct RecipeDetailView: View {
     @Environment(AppModel.self) private var appModel
     @State private var fullRecipe: FullRecipe?
     @State private var isLoadingFull = false
+    @State private var loadFailed = false
 
     // MARK: - Scaling
 
@@ -57,6 +58,18 @@ struct RecipeDetailView: View {
                         if !full.steps.isEmpty {
                             stepsSection(full.steps)
                         }
+                    } else if loadFailed {
+                        Button {
+                            loadFailed = false
+                            Task { await loadFull() }
+                        } label: {
+                            Label("Could not load recipe details. Tap to retry.", systemImage: "arrow.clockwise")
+                                .font(.subheadline)
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.vertical, 4)
                     }
 
                     if !recipe.tags.isEmpty {
@@ -181,7 +194,7 @@ struct RecipeDetailView: View {
                 recipeID: recipe.id
             )
         } catch {
-            // header data already visible; silent failure is acceptable
+            loadFailed = true
         }
     }
 }

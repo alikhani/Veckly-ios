@@ -86,7 +86,6 @@ struct WeekTabView: View {
                 day: day,
                 isSkipped: day.isSkipped,
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                apiClient: appModel.apiClient,
                 onSelect: { recipe in
                     mealPickerDay = nil
                     guard let household = appModel.householdStore.activeHousehold else { return }

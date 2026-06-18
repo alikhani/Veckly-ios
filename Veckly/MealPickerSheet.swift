@@ -4,15 +4,15 @@ struct MealPickerSheet: View {
     let day: WeekDayRowViewModel
     let isSkipped: Bool
     let householdID: String
-    let apiClient: VecklyAPIClient
     let onSelect: (FullRecipe) -> Void
     let onClear: () -> Void
     let onSkip: () -> Void
     let onDismiss: () -> Void
 
-    @State private var recipes: [FullRecipe] = []
-    @State private var isLoading = true
+    @Environment(AppModel.self) private var appModel
     @State private var searchText = ""
+
+    private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
 
     var filtered: [FullRecipe] {
         guard !searchText.isEmpty else { return recipes }
@@ -22,7 +22,7 @@ struct MealPickerSheet: View {
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
+                if appModel.recipeStore.isLoading {
                     VStack {
                         ProgressView()
                             .tint(VecklyDesign.Colors.hearthOrange)
@@ -105,9 +105,7 @@ struct MealPickerSheet: View {
     }
 
     private func loadRecipes() async {
-        isLoading = true
-        defer { isLoading = false }
-        recipes = (try? await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: true)) ?? []
+        await appModel.recipeStore.loadRecipes(householdID: householdID)
     }
 }
 
