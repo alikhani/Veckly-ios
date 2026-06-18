@@ -396,6 +396,10 @@ private extension RecipeImportFailure {
             return "Wait a moment before importing another recipe."
         case .importFailed:
             return "Could not create a draft from that URL."
+        case .unsupportedSocialSource:
+            return "This social platform is not supported yet."
+        case .captionRequired:
+            return "Paste the caption or text from the post to import the recipe."
         }
     }
 }
