@@ -156,6 +156,9 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
     let tags: [String]
     let ingredients: [RecipeIngredient]
     let steps: [RecipeStep]
+    let userVote: String? // "up" | "down" | nil
+
+    var isLiked: Bool { userVote == "up" }
 }
 
 enum MealVote: String, Codable {

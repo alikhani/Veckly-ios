@@ -12,6 +12,7 @@ final class AppModel {
     let shoppingListStore: ShoppingListStore
     let recipeStore: RecipeStore
     let prepBatchStore: PrepBatchStore
+    let feedbackStore: FeedbackStore
     private let usesSeededCoreReader: Bool
 
     init(environment: AppEnvironment) {
@@ -29,6 +30,7 @@ final class AppModel {
         self.shoppingListStore = ShoppingListStore(apiClient: apiClient)
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
+        self.feedbackStore = FeedbackStore(apiClient: apiClient)
 
         if usesSeededCoreReader {
             authSessionStore.seedForUITests()
@@ -85,11 +87,13 @@ final class AppModel {
             shoppingListStore.reset()
             recipeStore.reset()
             prepBatchStore.reset()
+            feedbackStore.reset()
         }
         let weekStartDate = WeekCalendar.currentWeekStartDate()
         async let week: Void = weekStore.loadCurrentWeek(household: household)
         async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
-        _ = await (week, shopping)
+        async let feedback: Void = feedbackStore.loadFeedback(householdID: household.id)
+        _ = await (week, shopping, feedback)
     }
 
     func signOut() {
@@ -108,6 +112,7 @@ final class AppModel {
         shoppingListStore.reset()
         recipeStore.reset()
         prepBatchStore.reset()
+        feedbackStore.reset()
     }
 
     // Call when any API response returns 401. Tries to refresh the token and

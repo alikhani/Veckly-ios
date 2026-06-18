@@ -191,7 +191,7 @@ struct VecklyAPIClient {
     }
 
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient] = [], existingSteps: [String] = []) async throws -> RecipeDraft {
-        let apiIngredients: [Components.Schemas.RecipeFillInRequest.ExistingIngredientsPayloadPayload]? = existingIngredients.isEmpty ? nil :
+        let apiIngredients: [Components.Schemas.RecipeFillInRequest.existingIngredientsPayloadPayload]? = existingIngredients.isEmpty ? nil :
             existingIngredients.map { .init(name: $0.item, amount: $0.amount.isEmpty ? nil : $0.amount, unit: $0.unit.isEmpty ? nil : $0.unit) }
         let apiSteps: [String]? = existingSteps.isEmpty ? nil : existingSteps
         let output = try await _client.fillInRecipe(
@@ -717,7 +717,8 @@ private extension Components.Schemas.Recipe {
             cookTimeMinutes: cookTimeMinutes,
             tags: tags,
             ingredients: ingredients.map(\.appModel),
-            steps: steps.map(\.appModel)
+            steps: steps.map(\.appModel),
+            userVote: userVote?.rawValue
         )
     }
 }

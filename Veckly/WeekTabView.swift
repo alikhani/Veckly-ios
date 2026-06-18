@@ -12,6 +12,7 @@ struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
+    @State private var selectedDayForDetail: WeekDayRowViewModel?
 
     var body: some View {
         ScrollView {
@@ -113,6 +114,34 @@ struct WeekTabView: View {
                     Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                 },
                 onDismiss: { mealPickerDay = nil }
+            )
+        }
+        .sheet(item: $selectedDayForDetail) { day in
+            DayDetailSheet(
+                day: day,
+                householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                onViewRecipe: {
+                    if let recipe = day.recipe {
+                        selectedDayForDetail = nil
+                        selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                    }
+                },
+                onSwap: {
+                    selectedDayForDetail = nil
+                    mealPickerDay = day
+                },
+                onSkip: {
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let userID = appModel.authSessionStore.userID ?? ""
+                    Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
+                },
+                onClear: {
+                    selectedDayForDetail = nil
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let userID = appModel.authSessionStore.userID ?? ""
+                    Task { await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID) }
+                },
+                onDismiss: { selectedDayForDetail = nil }
             )
         }
     }
@@ -310,7 +339,10 @@ struct WeekTabView: View {
             ForEach(listDays) { day in
                 CompactDayRow(
                     day: day,
-                    onTap: { mealPickerDay = day },
+                    onTap: {
+                        if day.recipe != nil { selectedDayForDetail = day }
+                        else { mealPickerDay = day }
+                    },
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         let userID = appModel.authSessionStore.userID ?? ""

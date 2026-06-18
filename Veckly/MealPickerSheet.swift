@@ -19,6 +19,14 @@ struct MealPickerSheet: View {
         return recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
     }
 
+    private var likedRecipes: [FullRecipe] {
+        filtered.filter { $0.isLiked }
+    }
+
+    private var otherRecipes: [FullRecipe] {
+        filtered.filter { !$0.isLiked }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -72,14 +80,20 @@ struct MealPickerSheet: View {
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
             } else {
-                Section {
-                    ForEach(filtered) { recipe in
-                        Button {
-                            onSelect(recipe)
-                        } label: {
-                            RecipePickerRow(recipe: recipe)
+                if !likedRecipes.isEmpty {
+                    Section("Liked") {
+                        ForEach(likedRecipes) { recipe in
+                            Button { onSelect(recipe) } label: { RecipePickerRow(recipe: recipe) }
+                                .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                    }
+                }
+                if !otherRecipes.isEmpty {
+                    Section(likedRecipes.isEmpty ? "" : "All recipes") {
+                        ForEach(otherRecipes) { recipe in
+                            Button { onSelect(recipe) } label: { RecipePickerRow(recipe: recipe) }
+                                .buttonStyle(.plain)
+                        }
                     }
                 }
             }

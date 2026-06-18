@@ -4372,6 +4372,13 @@ internal enum Components {
             internal var createdAt: Swift.String
             /// - Remark: Generated from `#/components/schemas/Recipe/updatedAt`.
             internal var updatedAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/userVote`.
+            internal enum userVotePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case up = "up"
+                case down = "down"
+            }
+            /// - Remark: Generated from `#/components/schemas/Recipe/userVote`.
+            internal var userVote: Components.Schemas.Recipe.userVotePayload?
             /// Creates a new `Recipe`.
             ///
             /// - Parameters:
@@ -4395,6 +4402,7 @@ internal enum Components {
             ///   - createdBy:
             ///   - createdAt:
             ///   - updatedAt:
+            ///   - userVote:
             internal init(
                 id: Swift.String,
                 householdId: Swift.String? = nil,
@@ -4415,7 +4423,8 @@ internal enum Components {
                 isArchived: Swift.Bool,
                 createdBy: Swift.String? = nil,
                 createdAt: Swift.String,
-                updatedAt: Swift.String
+                updatedAt: Swift.String,
+                userVote: Components.Schemas.Recipe.userVotePayload? = nil
             ) {
                 self.id = id
                 self.householdId = householdId
@@ -4437,6 +4446,7 @@ internal enum Components {
                 self.createdBy = createdBy
                 self.createdAt = createdAt
                 self.updatedAt = updatedAt
+                self.userVote = userVote
             }
             internal enum CodingKeys: String, CodingKey {
                 case id
@@ -4459,6 +4469,7 @@ internal enum Components {
                 case createdBy
                 case createdAt
                 case updatedAt
+                case userVote
             }
         }
         /// - Remark: Generated from `#/components/schemas/CreateRecipe`.
