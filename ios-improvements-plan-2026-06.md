@@ -17,6 +17,47 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 9 | Ingrediensskalning efter hushållsstorlek | ✅ Klart (2026-06-16) |
 | 10 | Onboarding-flöde (hushållsstorlek + planeringsdagar) | ✅ Klart (2026-06-16) |
 | 11 | Shopping list redesign (kategorigruppering, progress, staples) | ✅ Klart (2026-06-17) |
+| 12 | Systemspråk: engelska/svenska lokalisering | ✅ Klart (2026-06-18) |
+
+---
+
+## Fas 12 — Systemspråk: engelska/svenska lokalisering
+
+**Status:** ✅ Klart (2026-06-18)
+
+### Mål
+
+Göra engelska till fortsatt fallback/default och visa svensk UI-copy när användarens iOS-språk är svenska, utan att lägga till en in-app language picker.
+
+### Vad som gjordes
+
+**String Catalog**
+- `Veckly/Localizable.xcstrings` skapad med `en` och `sv`.
+- Xcode-projektet behåller `developmentRegion = en` och har `sv` i `knownRegions`.
+- Nycklar är semantiska (`common.save`, `tabs.shopping`, `recipeForm.importText`) i stället för engelska meningar.
+
+**SwiftUI-copy**
+- Centrala vyer migrerade från hårdkodad UI-copy till lokaliseringsnycklar: signed-out, onboarding, tabs, week, shopping, recipes, recipe form/detail, household, prep och settings.
+- Enum-display labels och testbara/dynamiska strängar går via `String(localized:)`/`L10n`.
+- Recepttitlar, ingredienser, importerad text, tags och backend-returnerat innehåll översätts inte i klienten.
+
+**Datum och veckodagar**
+- Veckodagar använder `Locale.current` så svenska iOS-inställningar visar svenska dagförkortningar och engelska inställningar visar engelska.
+
+**API language signal**
+- `AppLocalePreference` bygger `Accept-Language` från `Locale.preferredLanguages`, med `en` som fallback.
+- Genererade API-anrop och manuella `URLSession`-anrop skickar samma header, så backend/AI kan börja anpassa framtida svar efter användarens språk.
+
+### Test/Verifiering
+
+- `Localizable.xcstrings` validerad som JSON.
+- App-build verifierad med `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'generic/platform=iOS Simulator' build`.
+- UI-test för svensk launchmiljö lades till med `-AppleLanguages (sv)` och `-AppleLocale sv_SE`.
+- Full testkörning blockerades av CoreSimulator/Xcode test-finalisering (`Invalid device state`) efter att testerna startat; builden är grön.
+
+### Designbeslut
+
+Ingen in-app language picker i första versionen. iOS systemspråk styr. Engelska är canonical fallback och ska vara komplett. Svensk copy ska följa Vecklys röst: lugn, tydlig, praktisk.
 
 ---
 
