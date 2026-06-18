@@ -534,12 +534,14 @@ private extension RecipeDraft {
     var createPayload: Components.Schemas.CreateRecipe {
         .init(title: title, description: description.isEmpty ? nil : description,
               servings: servings, ingredients: apiIngredients, steps: apiSteps,
+              tags: tags.isEmpty ? nil : tags,
               prepTimeMinutes: prepTimeMinutes, cookTimeMinutes: cookTimeMinutes,
               sourceUrl: sourceUrl, source: apiSource)
     }
     var updatePayload: Components.Schemas.UpdateRecipe {
         .init(title: title, description: description.isEmpty ? nil : description,
               servings: servings, ingredients: apiIngredients, steps: apiSteps,
+              tags: tags.isEmpty ? nil : tags,
               prepTimeMinutes: prepTimeMinutes, cookTimeMinutes: cookTimeMinutes,
               sourceUrl: sourceUrl)
     }

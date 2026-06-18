@@ -33,6 +33,7 @@ struct RecipeFormSheet: View {
     @State private var urlText = ""
     @State private var importText = ""
     @State private var importSourceURLText = ""
+    @State private var tagsText = ""
     @State private var isImporting = false
     @State private var isFilling = false
     @State private var isSaving = false
@@ -47,11 +48,13 @@ struct RecipeFormSheet: View {
             _draft = State(initialValue: .empty)
             _initialDraft = State(initialValue: .empty)
             _selectedTab = State(initialValue: .write)
+            _tagsText = State(initialValue: "")
         case let .edit(recipe):
             let draft = RecipeDraft(from: recipe)
             _draft = State(initialValue: draft)
             _initialDraft = State(initialValue: draft)
             _selectedTab = State(initialValue: .write)
+            _tagsText = State(initialValue: recipe.tags.joined(separator: ", "))
         }
     }
 
@@ -111,6 +114,7 @@ struct RecipeFormSheet: View {
         timingSection
         ingredientsSection
         stepsSection
+        tagsSection
     }
 
     private var modeSection: some View {
@@ -282,6 +286,13 @@ struct RecipeFormSheet: View {
         }
     }
 
+    private var tagsSection: some View {
+        Section("Tags") {
+            TextField("e.g. quick, vegetarian, kid-friendly", text: $tagsText)
+                .autocorrectionDisabled()
+        }
+    }
+
     private func importFromURL() async {
         let url = normalizedURL
         guard !url.isEmpty else { return }
@@ -353,6 +364,7 @@ struct RecipeFormSheet: View {
             )
         }
         draftToSave.steps = draft.steps.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        draftToSave.tags = tagsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
 
         isSaving = true
         defer { isSaving = false }

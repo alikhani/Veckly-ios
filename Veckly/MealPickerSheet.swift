@@ -39,6 +39,19 @@ struct MealPickerSheet: View {
                             .padding(.top, 8)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let errorMessage = appModel.recipeStore.errorMessage {
+                    VStack(spacing: 12) {
+                        Text(errorMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            .multilineTextAlignment(.center)
+                        Button("Try again") {
+                            Task { await loadRecipes() }
+                        }
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
                 } else if filtered.isEmpty && !searchText.isEmpty {
                     ContentUnavailableView(
                         "No results",

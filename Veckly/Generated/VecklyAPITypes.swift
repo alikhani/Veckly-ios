@@ -255,6 +255,7 @@ struct RecipeDraft: Equatable {
     var cookTimeMinutes: Int? = nil
     var ingredients: [DraftIngredient] = []
     var steps: [String] = []
+    var tags: [String] = []
     var sourceUrl: String? = nil
     var source: RecipeDraftSource = .userCreated
 
@@ -268,17 +269,18 @@ struct RecipeDraft: Equatable {
         cookTimeMinutes = recipe.cookTimeMinutes
         ingredients = recipe.ingredients.map { DraftIngredient(item: $0.item, amount: $0.amount ?? "", unit: $0.unit ?? "") }
         steps = recipe.steps.map(\.text)
+        tags = recipe.tags
         sourceUrl = nil
         source = .userCreated
     }
 
     init(title: String = "", description: String = "", servings: Int = 4,
          prepTimeMinutes: Int? = nil, cookTimeMinutes: Int? = nil,
-         ingredients: [DraftIngredient] = [], steps: [String] = [], sourceUrl: String? = nil,
-         source: RecipeDraftSource = .userCreated) {
+         ingredients: [DraftIngredient] = [], steps: [String] = [], tags: [String] = [],
+         sourceUrl: String? = nil, source: RecipeDraftSource = .userCreated) {
         self.title = title; self.description = description; self.servings = servings
         self.prepTimeMinutes = prepTimeMinutes; self.cookTimeMinutes = cookTimeMinutes
-        self.ingredients = ingredients; self.steps = steps; self.sourceUrl = sourceUrl
-        self.source = source
+        self.ingredients = ingredients; self.steps = steps; self.tags = tags
+        self.sourceUrl = sourceUrl; self.source = source
     }
 }
