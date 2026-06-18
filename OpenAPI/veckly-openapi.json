@@ -2281,10 +2281,7 @@
             "type": "boolean"
           },
           "createdBy": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": "string",
             "format": "uuid"
           },
           "createdAt": {
