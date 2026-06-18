@@ -187,11 +187,15 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
         return recipe
     }
 
-    func fillInRecipe(title: String) async throws -> RecipeDraft {
-        RecipeDraft(title: title, description: "Filled")
+    func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
+        RecipeDraft(title: title, description: "Filled", ingredients: existingIngredients, steps: existingSteps)
     }
 
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
         RecipeDraft(title: "Imported", sourceUrl: urlString)
+    }
+
+    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
+        RecipeDraft(title: "Imported text", sourceUrl: sourceURL, source: .aiGenerated)
     }
 }

@@ -2,3 +2,4 @@ OpenAPI/Codegen/.build/
 .DS_Store
 build/
 *.xcuserstate
+Config/DeveloperOverrides.xcconfig

@@ -1,0 +1,11 @@
+// Copy this file to `Config/DeveloperOverrides.xcconfig` for local-only values.
+//
+// This is the intended place to point Debug/simulator builds at a shared staging
+// environment, for example the MealPlanner Supabase project during the transition
+// period before Veckly has its own dedicated staging Auth/data setup.
+//
+// Example:
+// VECKLY_STAGING_API_BASE_URL = https://your-staging-backend.vercel.app
+// VECKLY_STAGING_SUPABASE_URL = https://your-shared-staging-project.supabase.co
+// VECKLY_STAGING_SUPABASE_ANON_KEY = your-shared-staging-anon-key
+

@@ -30,6 +30,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3C4D10012FEA100000A8B001 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
+		3C4D10022FEA100000A8B002 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Debug.xcconfig; sourceTree = "<group>"; };
+		3C4D10032FEA100000A8B003 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Release.xcconfig; sourceTree = "<group>"; };
 		3C62B5252FD8A6FB0056AE47 /* Veckly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Veckly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C62B5322FD8A6FE0056AE47 /* VecklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VecklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C62B53C2FD8A6FE0056AE47 /* VecklyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VecklyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +87,9 @@
 		3C62B51C2FD8A6FB0056AE47 = {
 			isa = PBXGroup;
 			children = (
+				3C4D10012FEA100000A8B001 /* Base.xcconfig */,
+				3C4D10022FEA100000A8B002 /* Debug.xcconfig */,
+				3C4D10032FEA100000A8B003 /* Release.xcconfig */,
 				3C62B5272FD8A6FB0056AE47 /* Veckly */,
 				3C62B5352FD8A6FE0056AE47 /* VecklyTests */,
 				3C62B53F2FD8A6FE0056AE47 /* VecklyUITests */,
@@ -288,6 +294,7 @@
 /* Begin XCBuildConfiguration section */
 		3C62B5442FD8A6FE0056AE47 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10022FEA100000A8B002 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -351,6 +358,7 @@
 		};
 		3C62B5452FD8A6FE0056AE47 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10032FEA100000A8B003 /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -407,6 +415,7 @@
 		};
 		3C62B5472FD8A6FE0056AE47 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10022FEA100000A8B002 /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -416,6 +425,11 @@
 				DEVELOPMENT_TEAM = TCAU729S7P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_VECKLY_API_BASE_URL = "$(VECKLY_API_BASE_URL)";
+				INFOPLIST_KEY_VECKLY_ENABLE_DEV_LOGIN = "$(VECKLY_ENABLE_DEV_LOGIN)";
+				INFOPLIST_KEY_VECKLY_ENVIRONMENT = "$(VECKLY_ENVIRONMENT)";
+				INFOPLIST_KEY_VECKLY_SUPABASE_ANON_KEY = "$(VECKLY_SUPABASE_ANON_KEY)";
+				INFOPLIST_KEY_VECKLY_SUPABASE_URL = "$(VECKLY_SUPABASE_URL)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -440,6 +454,7 @@
 		};
 		3C62B5482FD8A6FE0056AE47 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10032FEA100000A8B003 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -449,6 +464,11 @@
 				DEVELOPMENT_TEAM = TCAU729S7P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_VECKLY_API_BASE_URL = "$(VECKLY_API_BASE_URL)";
+				INFOPLIST_KEY_VECKLY_ENABLE_DEV_LOGIN = "$(VECKLY_ENABLE_DEV_LOGIN)";
+				INFOPLIST_KEY_VECKLY_ENVIRONMENT = "$(VECKLY_ENVIRONMENT)";
+				INFOPLIST_KEY_VECKLY_SUPABASE_ANON_KEY = "$(VECKLY_SUPABASE_ANON_KEY)";
+				INFOPLIST_KEY_VECKLY_SUPABASE_URL = "$(VECKLY_SUPABASE_URL)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -473,6 +493,7 @@
 		};
 		3C62B54A2FD8A6FE0056AE47 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10022FEA100000A8B002 /* Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -494,6 +515,7 @@
 		};
 		3C62B54B2FD8A6FE0056AE47 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10032FEA100000A8B003 /* Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -515,6 +537,7 @@
 		};
 		3C62B54D2FD8A6FE0056AE47 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10022FEA100000A8B002 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -534,6 +557,7 @@
 		};
 		3C62B54E2FD8A6FE0056AE47 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C4D10032FEA100000A8B003 /* Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

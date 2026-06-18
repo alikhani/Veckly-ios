@@ -28,10 +28,8 @@ final class VecklyUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.staticTexts["Veckly"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.textFields["emailField"].exists)
-        XCTAssertTrue(app.secureTextFields["passwordField"].exists)
-        XCTAssertTrue(app.buttons["emailPasswordSubmitButton"].exists)
         XCTAssertTrue(app.buttons["continueWithAppleButton"].exists)
+        XCTAssertTrue(app.buttons["signInAsDevButton"].exists)
     }
 
     @MainActor
@@ -45,6 +43,20 @@ final class VecklyUITests: XCTestCase {
         app.tabBars.buttons["Shopping"].tap()
 
         XCTAssertTrue(app.staticTexts["spaghetti"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testDevLoginButtonCanEnterSeededApp() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UIReset", "-UITestUserId=11111111-1111-1111-1111-111111111111"]
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "dev-login"
+        app.launch()
+
+        let devButton = app.buttons["signInAsDevButton"]
+        XCTAssertTrue(devButton.waitForExistence(timeout: 5))
+        devButton.tap()
+
+        XCTAssertTrue(app.staticTexts["Monday Pasta"].waitForExistence(timeout: 5))
     }
 
     @MainActor

@@ -86,6 +86,20 @@ final class AuthSessionStore {
         }
     }
 
+    func signInAsDev(userID: String?) async {
+        isSigningIn = true
+        errorMessage = nil
+        defer { isSigningIn = false }
+
+        do {
+            let session = try await DevAuthClient(environment: environment)
+                .signInAsDev(userID: userID)
+            applySession(session)
+        } catch {
+            errorMessage = "We could not sign in as the staging dev user."
+        }
+    }
+
     func signOut() {
         accessToken = nil
         userID = nil
@@ -123,6 +137,16 @@ final class AuthSessionStore {
         accessToken = "ui-test-token"
         userID = "11111111-1111-1111-1111-111111111111"
         isRestoring = false
+    }
+
+    func seedForUITests(userID: String) {
+        accessToken = "ui-test-token"
+        self.userID = userID
+        isRestoring = false
+    }
+
+    static func resetStoredSessionForUITests() {
+        SessionStorage().clear()
     }
 
     // MARK: - Private
@@ -172,7 +196,7 @@ struct AuthSession: Codable, Equatable {
     let userID: String
 }
 
-private struct SessionStorage {
+struct SessionStorage {
     private let key = "veckly.auth-session"
 
     func load() -> AuthSession? {
@@ -311,6 +335,43 @@ private struct SupabaseAuthClient {
 
         return AuthSession(accessToken: accessToken, refreshToken: payload.refreshToken, userID: payload.user.id)
     }
+}
+
+private struct DevAuthClient {
+    let environment: AppEnvironment
+
+    func signInAsDev(userID: String?) async throws -> AuthSession {
+        let url = environment.apiBaseURL.appending(path: "/auth/dev-token")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(DevTokenRequest(userId: userID))
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw URLError(.userAuthenticationRequired)
+        }
+
+        let payload = try JSONDecoder().decode(DevTokenResponse.self, from: data)
+        return AuthSession(
+            accessToken: payload.accessToken,
+            refreshToken: payload.refreshToken,
+            userID: payload.userId
+        )
+    }
+}
+
+private struct DevTokenRequest: Encodable {
+    let userId: String?
+}
+
+private struct DevTokenResponse: Decodable {
+    let accessToken: String
+    let refreshToken: String?
+    let userId: String
 }
 
 private enum SupabaseAuthError: Error {

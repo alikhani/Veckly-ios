@@ -74,6 +74,20 @@ struct SignedOutView: View {
                         }
                     )
 
+                    if appModel.environment.enableDevLogin {
+                        Button {
+                            Task { await appModel.signInAsDev() }
+                        } label: {
+                            Text("Sign in as dev")
+                                .font(.subheadline)
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                                .underline()
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(appModel.authSessionStore.isSigningIn)
+                        .accessibilityIdentifier("signInAsDevButton")
+                    }
+
 //                    Button {
 //                        withAnimation(.spring(duration: 0.28)) { showEmailForm.toggle() }
 //                    } label: {

@@ -1,0 +1,25 @@
+// Shared Veckly app configuration.
+// Debug resolves to staging values in Debug.xcconfig.
+// Release/TestFlight resolves to production values in Release.xcconfig.
+//
+// Developers can create `Config/DeveloperOverrides.xcconfig` locally to point the
+// Debug build at a shared staging environment (for example the MealPlanner
+// Supabase project during the transition period) without committing secrets.
+
+VECKLY_PRODUCTION_API_BASE_URL = https://veckly-backend.vercel.app
+VECKLY_PRODUCTION_SUPABASE_URL = https://ydzykuwqfslzewxisliv.supabase.co
+VECKLY_PRODUCTION_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkenlrdXdxZnNsemV3eGlzbGl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MzA5MzIsImV4cCI6MjA5NjUwNjkzMn0.OFn2P6Y0Ye5nP3QA0mZkljoon_eKnd3Z_RJaZTPI8ps
+
+// Intentionally invalid defaults so Debug never silently points at production
+// if real staging values have not been provisioned yet.
+VECKLY_STAGING_API_BASE_URL = https://staging-backend.example.invalid
+VECKLY_STAGING_SUPABASE_URL = https://staging-supabase.example.invalid
+VECKLY_STAGING_SUPABASE_ANON_KEY = replace-with-staging-anon-key
+
+VECKLY_API_BASE_URL = $(VECKLY_PRODUCTION_API_BASE_URL)
+VECKLY_SUPABASE_URL = $(VECKLY_PRODUCTION_SUPABASE_URL)
+VECKLY_SUPABASE_ANON_KEY = $(VECKLY_PRODUCTION_SUPABASE_ANON_KEY)
+VECKLY_ENVIRONMENT = production
+VECKLY_ENABLE_DEV_LOGIN = NO
+
+#include? "DeveloperOverrides.xcconfig"

@@ -14,10 +14,14 @@ final class AppModel {
     let prepBatchStore: PrepBatchStore
     let feedbackStore: FeedbackStore
     private let usesSeededCoreReader: Bool
+    private let usesSeededDevLogin: Bool
+    private let uiTestDevUserID: String?
 
     init(environment: AppEnvironment) {
         self.environment = environment
         self.usesSeededCoreReader = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "core-reader"
+        self.usesSeededDevLogin = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "dev-login"
+        self.uiTestDevUserID = UserDefaults.standard.string(forKey: "ui_test_dev_user_id")
         let authSessionStore = AuthSessionStore(environment: environment)
         let apiClient = VecklyAPIClient(baseURL: environment.apiBaseURL) {
             await authSessionStore.currentValidToken()
@@ -49,6 +53,21 @@ final class AppModel {
 
     func completeSignInWithApple(identityToken: String, nonce: String?) async {
         await authSessionStore.signInWithApple(identityToken: identityToken, nonce: nonce)
+        guard authSessionStore.isSignedIn else { return }
+        await loadCoreReader()
+    }
+
+    func signInAsDev() async {
+        if usesSeededDevLogin {
+            let userID = uiTestDevUserID ?? "11111111-1111-1111-1111-111111111111"
+            authSessionStore.seedForUITests(userID: userID)
+            householdStore.seedForUITests()
+            weekStore.seedForUITests()
+            shoppingListStore.seedForUITests()
+            return
+        }
+
+        await authSessionStore.signInAsDev(userID: uiTestDevUserID)
         guard authSessionStore.isSignedIn else { return }
         await loadCoreReader()
     }

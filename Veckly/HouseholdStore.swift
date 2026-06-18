@@ -167,6 +167,16 @@ final class HouseholdStore {
         let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
         households = [household]
         activeHousehold = household
+        profile = HouseholdProfile(
+            householdId: household.id,
+            adults: 2,
+            children: 1,
+            priorities: [.quick],
+            avoidIngredients: [],
+            selectedDays: Weekday.allCases
+        )
+        detailsHouseholdID = household.id
+        detailsLastFetchedAt = Date()
     }
 
     private func resetDetails() {
