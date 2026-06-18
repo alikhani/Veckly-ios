@@ -25,7 +25,6 @@ final class WeekStore {
     var hasEmptyDays: Bool {
         dayRows.contains { $0.recipe == nil && !$0.isSkipped }
     }
-    private(set) var mealFeedback: [String: MealVote] = [:]
     private(set) var isLoading = false
     private(set) var isGenerating = false
     private(set) var errorMessage: String?
@@ -49,12 +48,10 @@ final class WeekStore {
             let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
             dayRows = mapped.days
             today = mapped.today
-            mealFeedback = (try? await apiClient.mealFeedback(householdID: household.id)) ?? [:]
         } catch APIError.notFound {
             summary = nil
             dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
-            mealFeedback = [:]
         } catch {
             errorMessage = "We could not load this week."
         }
@@ -229,25 +226,10 @@ final class WeekStore {
         try await apiClient.recipe(householdID: householdID, recipeID: recipeID)
     }
 
-    func submitFeedback(mealID: String, vote: MealVote, household: Household) async {
-        guard mealFeedback[mealID] != vote else { return }
-        errorMessage = nil
-        let previous = mealFeedback[mealID]
-        mealFeedback[mealID] = vote
-
-        do {
-            try await apiClient.submitMealFeedback(householdID: household.id, mealID: mealID, vote: vote)
-        } catch {
-            mealFeedback[mealID] = previous
-            errorMessage = "We could not save your feedback."
-        }
-    }
-
     func reset() {
         summary = nil
         dayRows = []
         today = nil
-        mealFeedback = [:]
         errorMessage = nil
         isLoading = false
         lastFetchedAt = nil
@@ -287,7 +269,6 @@ final class WeekStore {
 
 protocol WeekStoreAPIClient {
     func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary
-    func mealFeedback(householdID: String) async throws -> [String: MealVote]
     func appendWeekPlanEvent(
         householdID: String,
         weekStartDate: String,
@@ -296,7 +277,6 @@ protocol WeekStoreAPIClient {
     ) async throws
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe
-    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws
 }
 
 extension VecklyAPIClient: WeekStoreAPIClient {}

@@ -121,14 +121,20 @@ struct WeekTabView: View {
                 day: day,
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 onViewRecipe: {
-                    if let recipe = day.recipe {
-                        selectedDayForDetail = nil
-                        selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                    selectedDayForDetail = nil
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(50))
+                        if let recipe = day.recipe {
+                            selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                        }
                     }
                 },
                 onSwap: {
                     selectedDayForDetail = nil
-                    mealPickerDay = day
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(50))
+                        mealPickerDay = day
+                    }
                 },
                 onSkip: {
                     guard let household = appModel.householdStore.activeHousehold else { return }

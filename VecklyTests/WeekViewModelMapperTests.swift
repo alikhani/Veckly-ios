@@ -245,10 +245,6 @@ private final class FailingWeekStoreAPIClient: WeekStoreAPIClient {
         throw APIError.server(statusCode: 500)
     }
 
-    func mealFeedback(householdID: String) async throws -> [String: MealVote] {
-        [:]
-    }
-
     func appendWeekPlanEvent(
         householdID: String,
         weekStartDate: String,
@@ -263,10 +259,6 @@ private final class FailingWeekStoreAPIClient: WeekStoreAPIClient {
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         throw APIError.notFound
     }
-
-    func submitFeedback(mealID: String, vote: MealVote, household: Household) async {}
-
-    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws {}
 }
 
 private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
@@ -274,10 +266,6 @@ private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
 
     func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
         throw APIError.notFound
-    }
-
-    func mealFeedback(householdID: String) async throws -> [String: MealVote] {
-        [:]
     }
 
     func appendWeekPlanEvent(
@@ -294,6 +282,4 @@ private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         throw APIError.notFound
     }
-
-    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws {}
 }
