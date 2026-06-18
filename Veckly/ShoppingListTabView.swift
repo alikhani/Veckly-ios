@@ -41,11 +41,11 @@ struct ShoppingListTabView: View {
         let weekNumber = utcCal.component(.weekOfYear, from: weekStartDate)
 
         let dayRows = appModel.weekStore.dayRows
-        let lockedRows = dayRows.filter { $0.isLocked }
-        let mealCount = lockedRows.count
+        let plannedRows = dayRows.filter { $0.recipe != nil }
+        let mealCount = plannedRows.count
 
         var dayRange: String? = nil
-        if let first = lockedRows.first, let last = lockedRows.last {
+        if let first = plannedRows.first, let last = plannedRows.last {
             let abbrev: (WeekDayRowViewModel) -> String = { row in
                 String(row.weekdayLabel.prefix(3)).uppercased()
             }

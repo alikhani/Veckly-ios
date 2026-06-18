@@ -2678,6 +2678,38 @@
               "adults",
               "children"
             ]
+          },
+          "existingIngredients": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                "amount": {
+                  "type": "string",
+                  "maxLength": 20
+                },
+                "unit": {
+                  "type": "string",
+                  "maxLength": 20
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "maxItems": 50
+          },
+          "existingSteps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "maxItems": 30
           }
         },
         "required": [

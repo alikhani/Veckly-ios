@@ -4879,21 +4879,64 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/householdProfile`.
             internal var householdProfile: Components.Schemas.RecipeFillInRequest.householdProfilePayload?
+            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload`.
+            internal struct existingIngredientsPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload/name`.
+                internal var name: Swift.String
+                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload/amount`.
+                internal var amount: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload/unit`.
+                internal var unit: Swift.String?
+                /// Creates a new `existingIngredientsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - name:
+                ///   - amount:
+                ///   - unit:
+                internal init(
+                    name: Swift.String,
+                    amount: Swift.String? = nil,
+                    unit: Swift.String? = nil
+                ) {
+                    self.name = name
+                    self.amount = amount
+                    self.unit = unit
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case name
+                    case amount
+                    case unit
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredients`.
+            internal typealias existingIngredientsPayload = [Components.Schemas.RecipeFillInRequest.existingIngredientsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredients`.
+            internal var existingIngredients: Components.Schemas.RecipeFillInRequest.existingIngredientsPayload?
+            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingSteps`.
+            internal var existingSteps: [Swift.String]?
             /// Creates a new `RecipeFillInRequest`.
             ///
             /// - Parameters:
             ///   - title:
             ///   - householdProfile:
+            ///   - existingIngredients:
+            ///   - existingSteps:
             internal init(
                 title: Swift.String,
-                householdProfile: Components.Schemas.RecipeFillInRequest.householdProfilePayload? = nil
+                householdProfile: Components.Schemas.RecipeFillInRequest.householdProfilePayload? = nil,
+                existingIngredients: Components.Schemas.RecipeFillInRequest.existingIngredientsPayload? = nil,
+                existingSteps: [Swift.String]? = nil
             ) {
                 self.title = title
                 self.householdProfile = householdProfile
+                self.existingIngredients = existingIngredients
+                self.existingSteps = existingSteps
             }
             internal enum CodingKeys: String, CodingKey {
                 case title
                 case householdProfile
+                case existingIngredients
+                case existingSteps
             }
         }
         /// - Remark: Generated from `#/components/schemas/ImportedRecipeIngredient`.

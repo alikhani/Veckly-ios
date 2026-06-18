@@ -61,6 +61,7 @@ final class WeekStore {
     }
 
     func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        errorMessage = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
         let isLocked = current.isLocked
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
@@ -93,6 +94,7 @@ final class WeekStore {
     }
 
     func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        errorMessage = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
         let isSkipped = current.isSkipped
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
@@ -140,6 +142,7 @@ final class WeekStore {
     }
 
     func assignMeal(day: WeekDayRowViewModel, recipe: WeekSummaryRecipe, household: Household, userID: String) async {
+        errorMessage = nil
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
         let time = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
@@ -182,6 +185,7 @@ final class WeekStore {
     }
 
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String) async {
+        errorMessage = nil
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
         let emptyRow = WeekDayRowViewModel(
@@ -227,7 +231,7 @@ final class WeekStore {
 
     func submitFeedback(mealID: String, vote: MealVote, household: Household) async {
         guard mealFeedback[mealID] != vote else { return }
-
+        errorMessage = nil
         let previous = mealFeedback[mealID]
         mealFeedback[mealID] = vote
 

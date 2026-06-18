@@ -84,8 +84,12 @@ final class RecipeStore {
         }
     }
 
-    func fillIn(title: String) async throws -> RecipeDraft {
-        try await apiClient.fillInRecipe(title: title)
+    func fillIn(draft: RecipeDraft) async throws -> RecipeDraft {
+        try await apiClient.fillInRecipe(
+            title: draft.title,
+            existingIngredients: draft.ingredients.filter { !$0.item.isEmpty },
+            existingSteps: draft.steps.filter { !$0.isEmpty }
+        )
     }
 
     func importFromURL(_ urlString: String) async throws -> RecipeDraft {
@@ -116,7 +120,7 @@ protocol RecipeStoreAPIClient {
     func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe
     func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe
     func archiveRecipe(householdID: String, recipeID: String) async throws -> FullRecipe
-    func fillInRecipe(title: String) async throws -> RecipeDraft
+    func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft
     func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft
 }

@@ -323,8 +323,9 @@ struct RecipeFormSheet: View {
         errorMessage = nil
         defer { isFilling = false }
         do {
-            let filled = try await appModel.recipeStore.fillIn(title: title)
-            if draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft.title = filled.title }
+            var context = draft
+            context.title = title
+            let filled = try await appModel.recipeStore.fillIn(draft: context)
             if draft.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft.description = filled.description }
             if draft.prepTimeMinutes == nil { draft.prepTimeMinutes = filled.prepTimeMinutes }
             if draft.cookTimeMinutes == nil { draft.cookTimeMinutes = filled.cookTimeMinutes }

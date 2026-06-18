@@ -165,6 +165,7 @@ struct WeekTabView: View {
                         mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.isToday })
                             ?? appModel.weekStore.dayRows.first
                     }
+                    .disabled(appModel.weekStore.dayRows.isEmpty)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     .frame(maxWidth: .infinity)

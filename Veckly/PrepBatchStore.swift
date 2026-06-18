@@ -21,8 +21,11 @@ final class PrepBatchStore {
         errorMessage = nil
         defer { isLoading = false }
         let to = endDate(from: weekStartDate)
-        if let result = try? await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to) {
-            batches = result
+        do {
+            batches = try await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to)
+            lastFetchedAt = Date()
+        } catch {
+            errorMessage = "Could not load meal prep."
             lastFetchedAt = Date()
         }
     }
@@ -60,7 +63,9 @@ final class PrepBatchStore {
 
     private func endDate(from start: String) -> String {
         guard let date = weekDateFormatter.date(from: start) else { return start }
-        let end = Calendar.current.date(byAdding: .day, value: 6, to: date) ?? date
+        var utcCal = Calendar(identifier: .gregorian)
+        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
+        let end = utcCal.date(byAdding: .day, value: 6, to: date) ?? date
         return weekDateFormatter.string(from: end)
     }
 }
