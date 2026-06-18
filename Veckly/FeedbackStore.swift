@@ -30,7 +30,12 @@ final class FeedbackStore {
         // Optimistic update
         votes[recipeID] = vote
         guard let vote else {
-            // No "remove vote" endpoint — skip the API call for nil
+            do {
+                try await apiClient.removeMealFeedback(householdID: householdID, mealID: recipeID)
+            } catch {
+                // Roll back on failure
+                votes[recipeID] = previous
+            }
             return
         }
         do {

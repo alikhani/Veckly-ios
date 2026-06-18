@@ -10,9 +10,13 @@ struct DayDetailSheet: View {
     let onDismiss: () -> Void
 
     @Environment(AppModel.self) private var appModel
-    @State private var currentVote: MealVote?
 
     private var recipe: WeekSummaryRecipe? { day.recipe }
+
+    private var currentVote: MealVote? {
+        guard let recipe else { return nil }
+        return appModel.feedbackStore.vote(for: recipe.id)
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,11 +39,6 @@ struct DayDetailSheet: View {
                     }
                     .foregroundStyle(.red)
                 }
-            }
-        }
-        .onAppear {
-            if let recipe {
-                currentVote = appModel.feedbackStore.vote(for: recipe.id)
             }
         }
     }
@@ -157,7 +156,6 @@ struct DayDetailSheet: View {
 
     private func toggleVote(_ vote: MealVote, recipeID: String) async {
         let newVote: MealVote? = currentVote == vote ? nil : vote
-        currentVote = newVote
         await appModel.feedbackStore.setVote(
             householdID: householdID,
             recipeID: recipeID,

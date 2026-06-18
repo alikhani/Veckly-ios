@@ -20,11 +20,11 @@ struct MealPickerSheet: View {
     }
 
     private var likedRecipes: [FullRecipe] {
-        filtered.filter { $0.isLiked }
+        filtered.filter { appModel.feedbackStore.vote(for: $0.id) == .up }
     }
 
     private var otherRecipes: [FullRecipe] {
-        filtered.filter { !$0.isLiked }
+        filtered.filter { appModel.feedbackStore.vote(for: $0.id) != .up }
     }
 
     var body: some View {

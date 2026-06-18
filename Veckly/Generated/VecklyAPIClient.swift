@@ -5,8 +5,12 @@ import OpenAPIURLSession
 
 struct VecklyAPIClient {
     private let _client: Client
+    private let baseURL: URL
+    private let getToken: @Sendable () async -> String?
 
     init(baseURL: URL, accessToken: @escaping @Sendable () async -> String?) {
+        self.baseURL = baseURL
+        self.getToken = accessToken
         _client = Client(
             serverURL: baseURL,
             transport: URLSessionTransport(),
@@ -124,6 +128,32 @@ struct VecklyAPIClient {
             throw APIError.unauthorized
         case let .undocumented(statusCode, _):
             throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func removeMealFeedback(householdID: String, mealID: String) async throws {
+        // The generated UpsertMealFeedback type cannot express feedback: null because
+        // the OpenAPI spec doesn't mark the field nullable (a spec/generator gap).
+        // The backend accepts { mealId, feedback: null } on the same PUT endpoint to
+        // delete feedback. We send the request manually via URLSession, mirroring the
+        // same auth token the generated client uses.
+        guard let token = await getToken() else { throw APIError.unauthorized }
+        let url = baseURL.appendingPathComponent("households/\(householdID)/meal-feedback")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        // JSONSerialization cannot express null values in a Swift dictionary.
+        // Build the JSON body directly as a string.
+        let escapedMealID = mealID.replacingOccurrences(of: "\"", with: "\\\"")
+        let jsonString = #"{"mealId":"\#(escapedMealID)","feedback":null}"#
+        request.httpBody = Data(jsonString.utf8)
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        switch http.statusCode {
+        case 200: return
+        case 401: throw APIError.unauthorized
+        default: throw APIError.server(statusCode: http.statusCode)
         }
     }
 
