@@ -46,6 +46,14 @@ final class FeedbackStore {
         }
     }
 
+    /// Seeds the vote for a recipe from its stored userVote field, but only
+    /// if no value is already present (preserves a fresher optimistic update).
+    func seedVote(for recipeID: String, vote: MealVote?) {
+        if votes[recipeID] == nil, let vote {
+            votes[recipeID] = vote
+        }
+    }
+
     func reset() {
         votes = [:]
     }

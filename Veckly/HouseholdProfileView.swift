@@ -40,9 +40,11 @@ struct HouseholdProfileView: View {
                 }
             }
         }
-        .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
-            Button("OK") { errorMessage = nil }
-        }, message: { Text(errorMessage ?? "") })
+        .alert("Error",
+            isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
+            actions: { Button("OK") { errorMessage = nil } },
+            message: { Text(errorMessage ?? "") }
+        )
         .task(id: household?.id) { await loadExisting() }
     }
 

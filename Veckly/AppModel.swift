@@ -115,6 +115,18 @@ final class AppModel {
         feedbackStore.reset()
     }
 
+    /// Loads recipes for the household then seeds FeedbackStore from the
+    /// userVote field on each recipe — so the vote UI is consistent whether
+    /// the user opens the Recipes tab before or after FeedbackStore is loaded.
+    func loadRecipesAndSeedFeedback(householdID: String) async {
+        await recipeStore.loadRecipes(householdID: householdID)
+        for recipe in recipeStore.recipes {
+            if let voteString = recipe.userVote, let vote = MealVote(rawValue: voteString) {
+                feedbackStore.seedVote(for: recipe.id, vote: vote)
+            }
+        }
+    }
+
     // Call when any API response returns 401. Tries to refresh the token and
     // reload data; signs out if refresh fails (dead or missing refresh token).
     func handleUnauthorized() async {

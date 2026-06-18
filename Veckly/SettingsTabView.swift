@@ -61,11 +61,11 @@ struct SettingsTabView: View {
         } message: {
             Text("Your account and all household data will be permanently deleted.")
         }
-        .alert("Could not delete account", isPresented: .constant(deleteErrorMessage != nil)) {
-            Button("OK") { deleteErrorMessage = nil }
-        } message: {
-            Text(deleteErrorMessage ?? "")
-        }
+        .alert("Could not delete account",
+            isPresented: Binding(get: { deleteErrorMessage != nil }, set: { if !$0 { deleteErrorMessage = nil } }),
+            actions: { Button("OK") { deleteErrorMessage = nil } },
+            message: { Text(deleteErrorMessage ?? "") }
+        )
     }
 
     private func deleteAccount() async {

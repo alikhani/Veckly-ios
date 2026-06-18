@@ -10,6 +10,7 @@ struct DayDetailSheet: View {
     let onDismiss: () -> Void
 
     @Environment(AppModel.self) private var appModel
+    @State private var showClearConfirmation = false
 
     private var recipe: WeekSummaryRecipe? { day.recipe }
 
@@ -35,10 +36,14 @@ struct DayDetailSheet: View {
                 }
                 ToolbarItem(placement: .destructiveAction) {
                     Button("Clear meal", role: .destructive) {
-                        onClear()
+                        showClearConfirmation = true
                     }
                     .foregroundStyle(.red)
                 }
+            }
+            .confirmationDialog("Remove this meal?", isPresented: $showClearConfirmation, titleVisibility: .visible) {
+                Button("Clear meal", role: .destructive) { onClear() }
+                Button("Cancel", role: .cancel) {}
             }
         }
     }

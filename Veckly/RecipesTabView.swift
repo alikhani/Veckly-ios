@@ -117,7 +117,7 @@ struct RecipesTabView: View {
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }
-            await appModel.recipeStore.loadRecipes(householdID: household.id)
+            await appModel.loadRecipesAndSeedFeedback(householdID: household.id)
         }
     }
 

@@ -24,9 +24,11 @@ struct HouseholdMembersView: View {
             joinSection
         }
         .navigationTitle("Members")
-        .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
-            Button("OK") { errorMessage = nil }
-        }, message: { Text(errorMessage ?? "") })
+        .alert("Error",
+            isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
+            actions: { Button("OK") { errorMessage = nil } },
+            message: { Text(errorMessage ?? "") }
+        )
         .sheet(item: $newInvite) { invite in
             InviteShareSheet(invite: invite)
         }
@@ -65,8 +67,7 @@ struct HouseholdMembersView: View {
                                 Text("You")
                                     .font(.body.weight(.medium))
                             } else {
-                                Text(member.userId.prefix(8) + "…")
-                                    .font(.body.monospaced())
+                                Text("Household member")
                                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                             }
                         }

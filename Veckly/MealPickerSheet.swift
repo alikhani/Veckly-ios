@@ -132,7 +132,7 @@ struct MealPickerSheet: View {
     }
 
     private func loadRecipes() async {
-        await appModel.recipeStore.loadRecipes(householdID: householdID)
+        await appModel.loadRecipesAndSeedFeedback(householdID: householdID)
     }
 }
 
