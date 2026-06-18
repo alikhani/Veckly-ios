@@ -4367,7 +4367,7 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/Recipe/isArchived`.
             internal var isArchived: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/Recipe/createdBy`.
-            internal var createdBy: Swift.String?
+            internal var createdBy: Swift.String
             /// - Remark: Generated from `#/components/schemas/Recipe/createdAt`.
             internal var createdAt: Swift.String
             /// - Remark: Generated from `#/components/schemas/Recipe/updatedAt`.
@@ -4421,7 +4421,7 @@ internal enum Components {
                 source: Components.Schemas.Recipe.sourcePayload,
                 isPublic: Swift.Bool,
                 isArchived: Swift.Bool,
-                createdBy: Swift.String? = nil,
+                createdBy: Swift.String,
                 createdAt: Swift.String,
                 updatedAt: Swift.String,
                 userVote: Components.Schemas.Recipe.userVotePayload? = nil
