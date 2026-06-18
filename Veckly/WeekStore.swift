@@ -38,10 +38,11 @@ final class WeekStore {
     func clearMutationError() { mutationError = nil }
 
     func loadCurrentWeek(household: Household) async {
+        weekStartDate = WeekCalendar.currentWeekStartDate()
+        guard !isLoading else { return }
         guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
         isLoading = true
         errorMessage = nil
-        weekStartDate = WeekCalendar.currentWeekStartDate()
         defer { isLoading = false }
 
         do {

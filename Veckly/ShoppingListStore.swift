@@ -70,6 +70,7 @@ final class ShoppingListStore {
     }
 
     func loadCurrentWeek(household: Household, weekStartDate: String) async {
+        guard !isLoading else { return }
         guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
         isLoading = true
         errorMessage = nil
