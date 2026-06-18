@@ -47,6 +47,8 @@ struct RecipeDetailView: View {
 
                     headerSection
 
+                    voteRow
+
                     if isLoadingFull {
                         ProgressView()
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -126,6 +128,44 @@ struct RecipeDetailView: View {
                 Text(recipe.description)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             }
+        }
+    }
+
+    // MARK: - Voting
+
+    private var currentVote: MealVote? {
+        appModel.feedbackStore.vote(for: recipe.id)
+    }
+
+    private func toggleVote(_ vote: MealVote) async {
+        let newVote: MealVote? = currentVote == vote ? nil : vote
+        await appModel.feedbackStore.setVote(householdID: householdID, recipeID: recipe.id, vote: newVote)
+    }
+
+    @ViewBuilder
+    private var voteRow: some View {
+        HStack(spacing: 12) {
+            Button {
+                Task { await toggleVote(.up) }
+            } label: {
+                Label("Thumbs up", systemImage: "hand.thumbsup")
+            }
+            .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            .buttonStyle(.bordered)
+            .labelStyle(.iconOnly)
+            .font(.title3)
+            .accessibilityLabel(currentVote == .up ? "Remove thumbs up vote" : "Thumbs up")
+
+            Button {
+                Task { await toggleVote(.down) }
+            } label: {
+                Label("Thumbs down", systemImage: "hand.thumbsdown")
+            }
+            .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            .buttonStyle(.bordered)
+            .labelStyle(.iconOnly)
+            .font(.title3)
+            .accessibilityLabel(currentVote == .down ? "Remove thumbs down vote" : "Thumbs down")
         }
     }
 
