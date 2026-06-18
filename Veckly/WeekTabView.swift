@@ -44,16 +44,16 @@ struct WeekTabView: View {
                 } else {
                     Button {
                         guard let household = appModel.householdStore.activeHousehold else { return }
-                        let hasPlannedMeals = appModel.weekStore.hasPlannedMeals
+                        let regenerate = !appModel.weekStore.hasEmptyDays
                         Task {
                             await appModel.weekStore.generateWeek(
                                 household: household,
                                 userID: appModel.authSessionStore.userID ?? "",
-                                regenerate: hasPlannedMeals
+                                regenerate: regenerate
                             )
                         }
                     } label: {
-                        Text(appModel.weekStore.hasPlannedMeals ? "Regenerate" : "Generate")
+                        Text(appModel.weekStore.hasEmptyDays || !appModel.weekStore.hasWeekContent ? "Generate" : "Regenerate")
                             .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)

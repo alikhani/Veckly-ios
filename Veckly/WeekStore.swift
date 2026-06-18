@@ -22,6 +22,9 @@ final class WeekStore {
     var hasWeekContent: Bool {
         dayRows.contains { $0.recipe != nil || $0.isSkipped }
     }
+    var hasEmptyDays: Bool {
+        dayRows.contains { $0.recipe == nil && !$0.isSkipped }
+    }
     private(set) var mealFeedback: [String: MealVote] = [:]
     private(set) var isLoading = false
     private(set) var isGenerating = false
@@ -129,6 +132,8 @@ final class WeekStore {
             try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: weekStartDate, regenerate: regenerate)
             lastFetchedAt = nil
             await loadCurrentWeek(household: household)
+        } catch APIError.noRecipesForGeneration {
+            errorMessage = "Add some recipes first — then we can plan your week."
         } catch {
             errorMessage = "We could not generate your week."
         }

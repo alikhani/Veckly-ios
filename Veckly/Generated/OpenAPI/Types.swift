@@ -1540,6 +1540,25 @@ internal enum Components {
                 case ok
             }
         }
+        /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanError`.
+        internal struct GenerateWeekPlanError: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanError/error`.
+            internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case NO_RECIPES = "NO_RECIPES"
+            }
+            /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanError/error`.
+            internal var error: Components.Schemas.GenerateWeekPlanError.errorPayload
+            /// Creates a new `GenerateWeekPlanError`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            internal init(error: Components.Schemas.GenerateWeekPlanError.errorPayload) {
+                self.error = error
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanRequest`.
         internal struct GenerateWeekPlanRequest: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanRequest/regenerate`.
@@ -8856,7 +8875,7 @@ internal enum Operations {
                     self.body = body
                 }
             }
-            /// Week plan generated
+            /// Week plan generated (or nothing to do — all days already filled)
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/generate/post(generateWeekPlan)/responses/200`.
             ///
@@ -8909,6 +8928,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/422/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.GenerateWeekPlanError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.GenerateWeekPlanError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.generateWeekPlan.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.generateWeekPlan.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// No recipes available to plan with
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/generate/post(generateWeekPlan)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.generateWeekPlan.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            internal var unprocessableContent: Operations.generateWeekPlan.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
                             response: self
                         )
                     }

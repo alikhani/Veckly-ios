@@ -491,6 +491,20 @@
           "ok"
         ]
       },
+      "GenerateWeekPlanError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "NO_RECIPES"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
       "GenerateWeekPlanRequest": {
         "type": "object",
         "properties": {
@@ -4076,7 +4090,7 @@
         },
         "responses": {
           "200": {
-            "description": "Week plan generated",
+            "description": "Week plan generated (or nothing to do — all days already filled)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4087,6 +4101,16 @@
           },
           "401": {
             "description": "Missing or invalid session"
+          },
+          "422": {
+            "description": "No recipes available to plan with",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateWeekPlanError"
+                }
+              }
+            }
           }
         }
       }

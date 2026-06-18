@@ -216,6 +216,7 @@ struct VecklyAPIClient {
         case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .internalServerError(r): throw APIError.recipeImport(try r.body.json.error.appModel)
+        case let .badGateway(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
@@ -258,6 +259,8 @@ struct VecklyAPIClient {
         switch output {
         case .ok:
             return
+        case .unprocessableContent:
+            throw APIError.noRecipesForGeneration
         case .unauthorized:
             throw APIError.unauthorized
         case let .undocumented(statusCode, _):
@@ -473,6 +476,7 @@ enum APIError: Error, Equatable {
     case server(statusCode: Int)
     case stale(latestUpdatedAt: String?)
     case recipeImport(RecipeImportFailure)
+    case noRecipesForGeneration
 }
 
 enum RecipeImportFailure: Equatable {
@@ -482,6 +486,8 @@ enum RecipeImportFailure: Equatable {
     case noRecipeFound
     case rateLimited
     case importFailed
+    case unsupportedSocialSource
+    case captionRequired
 }
 
 private extension RecipeDraft {
@@ -549,6 +555,8 @@ private extension Components.Schemas.RecipeImportError.errorPayload {
         case .NO_RECIPE_FOUND: return .noRecipeFound
         case .RATE_LIMITED: return .rateLimited
         case .IMPORT_FAILED: return .importFailed
+        case .UNSUPPORTED_SOCIAL_SOURCE: return .unsupportedSocialSource
+        case .CAPTION_REQUIRED: return .captionRequired
         }
     }
 }
