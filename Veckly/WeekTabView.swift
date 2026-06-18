@@ -17,6 +17,26 @@ struct WeekTabView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let err = appModel.weekStore.mutationError {
+                    HStack(spacing: 10) {
+                        Text(err)
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                        Spacer()
+                        Button {
+                            appModel.weekStore.clearMutationError()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        }
+                        .accessibilityLabel("Dismiss error")
+                    }
+                    .padding(12)
+                    .background(VecklyDesign.Colors.surfaceStrong)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+
                 header
 
                 if appModel.householdStore.isLoading || appModel.weekStore.isLoading {
@@ -314,6 +334,7 @@ struct WeekTabView: View {
                         Button {
                             guard let household = appModel.householdStore.activeHousehold else { return }
                             let userID = appModel.authSessionStore.userID ?? ""
+                            appModel.weekStore.clearMutationError()
                             Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                         } label: {
                             Image(systemName: day.isLocked ? "lock.fill" : "lock.open")
@@ -354,6 +375,7 @@ struct WeekTabView: View {
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         let userID = appModel.authSessionStore.userID ?? ""
+                        appModel.weekStore.clearMutationError()
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID) }
                     }
                 )

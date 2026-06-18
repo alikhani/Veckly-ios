@@ -28,11 +28,14 @@ final class WeekStore {
     private(set) var isLoading = false
     private(set) var isGenerating = false
     private(set) var errorMessage: String?
+    private(set) var mutationError: String?
     private(set) var lastFetchedAt: Date?
 
     init(apiClient: any WeekStoreAPIClient) {
         self.apiClient = apiClient
     }
+
+    func clearMutationError() { mutationError = nil }
 
     func loadCurrentWeek(household: Household) async {
         guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
@@ -58,7 +61,7 @@ final class WeekStore {
     }
 
     func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String) async {
-        errorMessage = nil
+        mutationError = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
         let isLocked = current.isLocked
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
@@ -86,12 +89,12 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if current.isToday { today = previous }
-            errorMessage = isLocked ? "We could not unlock this meal." : "We could not lock this meal."
+            mutationError = isLocked ? "We could not unlock this meal." : "We could not lock this meal."
         }
     }
 
     func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String) async {
-        errorMessage = nil
+        mutationError = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
         let isSkipped = current.isSkipped
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
@@ -119,7 +122,7 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if current.isToday { today = previous }
-            errorMessage = isSkipped ? "We could not plan this day." : "We could not skip this day."
+            mutationError = isSkipped ? "We could not plan this day." : "We could not skip this day."
         }
     }
 
@@ -132,14 +135,14 @@ final class WeekStore {
             lastFetchedAt = nil
             await loadCurrentWeek(household: household)
         } catch APIError.noRecipesForGeneration {
-            errorMessage = "Add some recipes first — then we can plan your week."
+            mutationError = "Add some recipes first — then we can plan your week."
         } catch {
-            errorMessage = "We could not generate your week."
+            mutationError = "We could not generate your week."
         }
     }
 
     func assignMeal(day: WeekDayRowViewModel, recipe: WeekSummaryRecipe, household: Household, userID: String) async {
-        errorMessage = nil
+        mutationError = nil
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
         let time = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
@@ -177,12 +180,12 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if day.isToday { today = previous }
-            errorMessage = "We could not assign the meal."
+            mutationError = "We could not assign the meal."
         }
     }
 
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String) async {
-        errorMessage = nil
+        mutationError = nil
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
         let emptyRow = WeekDayRowViewModel(
@@ -218,7 +221,7 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if day.isToday { today = previous }
-            errorMessage = "We could not clear the meal."
+            mutationError = "We could not clear the meal."
         }
     }
 
@@ -231,6 +234,7 @@ final class WeekStore {
         dayRows = []
         today = nil
         errorMessage = nil
+        mutationError = nil
         isLoading = false
         lastFetchedAt = nil
     }
