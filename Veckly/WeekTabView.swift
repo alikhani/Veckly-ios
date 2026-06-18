@@ -172,6 +172,10 @@ struct WeekTabView: View {
                 onDismiss: { selectedDayForDetail = nil }
             )
         }
+        .task(id: appModel.householdStore.activeHousehold?.id) {
+            guard let household = appModel.householdStore.activeHousehold else { return }
+            await appModel.weekStore.loadCurrentWeek(household: household)
+        }
     }
 
     private var header: some View {
@@ -322,6 +326,7 @@ struct WeekTabView: View {
                         }
                         .buttonStyle(.bordered)
                         .tint(VecklyDesign.Colors.inkMid)
+                        .accessibilityLabel("View recipe for \(day.mealTitle)")
 
                         Button {
                             mealPickerDay = day
@@ -330,6 +335,7 @@ struct WeekTabView: View {
                         }
                         .buttonStyle(.bordered)
                         .tint(VecklyDesign.Colors.inkMid)
+                        .accessibilityLabel("Swap meal for \(day.weekdayLabel)")
 
                         Button {
                             guard let household = appModel.householdStore.activeHousehold else { return }

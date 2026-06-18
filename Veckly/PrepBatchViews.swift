@@ -25,6 +25,21 @@ struct PrepBatchSection: View {
 
             if appModel.prepBatchStore.isLoading {
                 LoadingPanel(title: "Loading prep batches")
+            } else if let error = appModel.prepBatchStore.errorMessage {
+                VecklyCard {
+                    Button {
+                        guard let hid = appModel.householdStore.activeHousehold?.id else { return }
+                        let weekStart = appModel.weekStore.weekStartDate
+                        Task { await appModel.prepBatchStore.load(householdID: hid, weekStartDate: weekStart) }
+                    } label: {
+                        Label(error + " Tap to retry.", systemImage: "arrow.clockwise")
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 4)
+                }
             } else if appModel.prepBatchStore.batches.isEmpty {
                 VecklyCard {
                     Text("No prep batches this week.")
@@ -183,9 +198,11 @@ struct PrepBatchFormSheet: View {
                     }
                 }
             }
-            .alert("Error", isPresented: .constant(errorMessage != nil), actions: {
-                Button("OK") { errorMessage = nil }
-            }, message: { Text(errorMessage ?? "") })
+            .alert("Error",
+                isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
+                actions: { Button("OK") { errorMessage = nil } },
+                message: { Text(errorMessage ?? "") }
+            )
             .task {
                 guard let hid = appModel.householdStore.activeHousehold?.id else { return }
                 if appModel.recipeStore.recipes.isEmpty {

@@ -26,7 +26,6 @@ final class PrepBatchStore {
             lastFetchedAt = Date()
         } catch {
             errorMessage = "Could not load meal prep."
-            lastFetchedAt = Date()
         }
     }
 

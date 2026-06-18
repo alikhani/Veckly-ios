@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppModel.self) private var appModel
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -22,6 +23,10 @@ struct RootView: View {
         }
         .task {
             await appModel.restoreSession()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active, appModel.authSessionStore.isSignedIn else { return }
+            Task { await appModel.loadCoreReader() }
         }
     }
 }

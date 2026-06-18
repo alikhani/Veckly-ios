@@ -136,7 +136,7 @@ struct ShoppingListTabView: View {
         .sheet(isPresented: $showPrepSheet) {
             PrepBatchFormSheet()
         }
-        .task {
+        .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }
             let weekStart = appModel.weekStore.weekStartDate
             // Load profile so shoppingScaleFactor is accurate.
