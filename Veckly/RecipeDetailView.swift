@@ -36,56 +36,54 @@ struct RecipeDetailView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Day-level action — surfaced before recipe content so it is
-                    // reachable without scrolling.
-                    if let isSkipped, let onSkip {
-                        skipDayRow(isSkipped: isSkipped, onSkip: onSkip)
-                    }
-
-                    headerSection
-
-                    voteRow
-
-                    if isLoadingFull {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.vertical, 12)
-                    } else if let full = fullRecipe {
-                        if !full.ingredients.isEmpty {
-                            ingredientsSection(full.ingredients)
-                        }
-                        if !full.steps.isEmpty {
-                            stepsSection(full.steps)
-                        }
-                    } else if loadFailed {
-                        Button {
-                            loadFailed = false
-                            Task { await loadFull() }
-                        } label: {
-                            Label("Could not load recipe details. Tap to retry.", systemImage: "arrow.clockwise")
-                                .font(.subheadline)
-                                .foregroundStyle(VecklyDesign.Colors.inkMid)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.vertical, 4)
-                    }
-
-                    if !recipe.tags.isEmpty {
-                        FlowTags(tags: recipe.tags)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Day-level action — surfaced before recipe content so it is
+                // reachable without scrolling.
+                if let isSkipped, let onSkip {
+                    skipDayRow(isSkipped: isSkipped, onSkip: onSkip)
                 }
-                .padding(18)
-                .frame(maxWidth: .infinity, alignment: .leading)
+
+                headerSection
+
+                voteRow
+
+                if isLoadingFull {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 12)
+                } else if let full = fullRecipe {
+                    if !full.ingredients.isEmpty {
+                        ingredientsSection(full.ingredients)
+                    }
+                    if !full.steps.isEmpty {
+                        stepsSection(full.steps)
+                    }
+                } else if loadFailed {
+                    Button {
+                        loadFailed = false
+                        Task { await loadFull() }
+                    } label: {
+                        Label("Could not load recipe details. Tap to retry.", systemImage: "arrow.clockwise")
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 4)
+                }
+
+                if !recipe.tags.isEmpty {
+                    FlowTags(tags: recipe.tags)
+                }
             }
-            .background(VecklyDesign.Colors.canvas)
-            .navigationTitle("Recipe")
-            .navigationBarTitleDisplayMode(.inline)
-            .task { await loadFull() }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .background(VecklyDesign.Colors.canvas)
+        .navigationTitle("Recipe")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await loadFull() }
     }
 
     @ViewBuilder

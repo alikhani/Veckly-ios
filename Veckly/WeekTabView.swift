@@ -70,17 +70,19 @@ struct WeekTabView: View {
             }
         }
         .sheet(item: $selectedDayRecipe) { pair in
-            RecipeDetailView(
-                recipe: pair.recipe,
-                householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                isSkipped: pair.day.isSkipped,
-                onSkip: {
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    let userID = appModel.authSessionStore.userID ?? ""
-                    selectedDayRecipe = nil
-                    Task { await appModel.weekStore.toggleSkip(day: pair.day, household: household, userID: userID) }
-                }
-            )
+            NavigationStack {
+                RecipeDetailView(
+                    recipe: pair.recipe,
+                    householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                    isSkipped: pair.day.isSkipped,
+                    onSkip: {
+                        guard let household = appModel.householdStore.activeHousehold else { return }
+                        let userID = appModel.authSessionStore.userID ?? ""
+                        selectedDayRecipe = nil
+                        Task { await appModel.weekStore.toggleSkip(day: pair.day, household: household, userID: userID) }
+                    }
+                )
+            }
         }
         .sheet(item: $mealPickerDay) { day in
             MealPickerSheet(
