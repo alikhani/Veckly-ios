@@ -2292,6 +2292,16 @@
           },
           "updatedAt": {
             "type": "string"
+          },
+          "userVote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "up",
+              "down"
+            ]
           }
         },
         "required": [
@@ -2314,7 +2324,8 @@
           "isArchived",
           "createdBy",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "userVote"
         ]
       },
       "CreateRecipe": {
