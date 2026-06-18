@@ -109,7 +109,8 @@ private enum TestRecipes {
             cookTimeMinutes: 20,
             tags: ["quick"],
             ingredients: [RecipeIngredient(item: "Carrot", amount: "2", unit: nil, category: nil)],
-            steps: [RecipeStep(text: "Cook it")]
+            steps: [RecipeStep(text: "Cook it")],
+            userVote: nil
         )
     }
 
@@ -130,7 +131,8 @@ private enum TestRecipes {
                     category: nil
                 )
             },
-            steps: draft.steps.map { RecipeStep(text: $0) }
+            steps: draft.steps.map { RecipeStep(text: $0) },
+            userVote: nil
         )
     }
 }
@@ -187,11 +189,15 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
         return recipe
     }
 
-    func fillInRecipe(title: String) async throws -> RecipeDraft {
+    func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
         RecipeDraft(title: title, description: "Filled")
     }
 
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
         RecipeDraft(title: "Imported", sourceUrl: urlString)
+    }
+
+    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
+        RecipeDraft(title: "Imported from text", sourceUrl: sourceURL)
     }
 }

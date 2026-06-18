@@ -21,15 +21,15 @@ struct RecipesTabView: View {
     var body: some View {
         Group {
             if appModel.recipeStore.isLoading {
-                LoadingPanel(title: "Loading recipes")
+                LoadingPanel(title: L10n.string("recipes.loading"))
                     .padding()
             } else if let errorMessage = appModel.recipeStore.errorMessage, appModel.recipeStore.recipes.isEmpty {
                 ContentUnavailableView {
-                    Label("Could not load recipes", systemImage: "exclamationmark.triangle")
+                    Label("recipes.loadFailed", systemImage: "exclamationmark.triangle")
                 } description: {
                     Text(errorMessage)
                 } actions: {
-                    Button("Try again") {
+                    Button("common.tryAgain") {
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         Task { await appModel.recipeStore.loadRecipes(householdID: household.id) }
                     }
@@ -38,12 +38,12 @@ struct RecipesTabView: View {
                 }
             } else if filtered.isEmpty {
                 ContentUnavailableView {
-                    Label(searchQuery.isEmpty ? "No recipes yet" : "No results", systemImage: "fork.knife")
+                    Label(searchQuery.isEmpty ? L10n.string("recipes.empty.title") : L10n.string("recipes.noResults"), systemImage: "fork.knife")
                 } description: {
-                    Text(searchQuery.isEmpty ? "Add your first household recipe." : "Try a different search.")
+                    Text(searchQuery.isEmpty ? L10n.string("recipes.empty.message") : L10n.string("recipes.tryDifferentSearch"))
                 } actions: {
                     if searchQuery.isEmpty {
-                        Button("Add recipe") { showAddSheet = true }
+                        Button("recipe.add") { showAddSheet = true }
                             .buttonStyle(.borderedProminent)
                             .tint(VecklyDesign.Colors.hearthOrange)
                     }
@@ -60,16 +60,16 @@ struct RecipesTabView: View {
                         RecipeListRow(recipe: recipe)
                     }
                         .swipeActions(edge: .trailing) {
-                            Button("Edit") { editingRecipe = recipe }
+                            Button("common.edit") { editingRecipe = recipe }
                                 .tint(VecklyDesign.Colors.hearthOrange)
-                            Button("Archive", role: .destructive) { archiveCandidate = recipe }
+                            Button("recipes.archive", role: .destructive) { archiveCandidate = recipe }
                         }
                 }
                 .listStyle(.plain)
             }
         }
-        .navigationTitle("Recipes")
-        .searchable(text: $searchText, prompt: "Search recipes")
+        .navigationTitle(L10n.string("tabs.recipes"))
+        .searchable(text: $searchText, prompt: L10n.string("recipes.search"))
         .toolbar {
             Button { showAddSheet = true } label: { Image(systemName: "plus") }
         }
@@ -86,14 +86,14 @@ struct RecipesTabView: View {
             }
         }
         .confirmationDialog(
-            "Archive this recipe?",
+            L10n.string("recipes.archiveConfirmation"),
             isPresented: Binding(
                 get: { archiveCandidate != nil },
                 set: { if !$0 { archiveCandidate = nil } }
             ),
             titleVisibility: .visible
         ) {
-            Button("Archive", role: .destructive) {
+            Button("recipes.archive", role: .destructive) {
                 guard let recipe = archiveCandidate,
                       let household = appModel.householdStore.activeHousehold else { return }
                 archiveCandidate = nil
@@ -101,17 +101,17 @@ struct RecipesTabView: View {
                     do {
                         try await appModel.recipeStore.archiveRecipe(householdID: household.id, recipeID: recipe.id)
                     } catch {
-                        transientErrorMessage = appModel.recipeStore.errorMessage ?? "Could not archive recipe."
+                        transientErrorMessage = appModel.recipeStore.errorMessage ?? L10n.string("error.recipes.archive")
                     }
                 }
             }
-            Button("Cancel", role: .cancel) { archiveCandidate = nil }
+            Button("common.cancel", role: .cancel) { archiveCandidate = nil }
         }
-        .alert("Error", isPresented: Binding(
+        .alert(L10n.string("common.error"), isPresented: Binding(
             get: { transientErrorMessage != nil },
             set: { if !$0 { transientErrorMessage = nil } }
         )) {
-            Button("OK") { transientErrorMessage = nil }
+            Button("common.ok") { transientErrorMessage = nil }
         } message: {
             Text(transientErrorMessage ?? "")
         }
@@ -135,7 +135,7 @@ private struct RecipeListRow: View {
                 .font(.body.weight(.medium))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
             HStack(spacing: 6) {
-                Text("\(recipe.servings) servings")
+                Text(L10n.format("format.servings", recipe.servings))
                 if let total = cookTime {
                     Text("·")
                     Text("\(total) min")

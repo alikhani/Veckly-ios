@@ -41,7 +41,7 @@ struct AppleSignInButton: View {
         .disabled(isLoading)
         .opacity(isLoading ? 0.7 : 1)
         .accessibilityIdentifier("continueWithAppleButton")
-        .accessibilityLabel("Continue with Apple")
+        .accessibilityLabel(L10n.string("auth.continueWithApple"))
     }
 
     private static func randomNonceString(length: Int = 32) -> String {

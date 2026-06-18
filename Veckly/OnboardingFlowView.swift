@@ -44,11 +44,11 @@ private struct OnboardingHouseholdSizeView: View {
                 brandHeader
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Who's eating this week?")
+                    Text("onboarding.size.title")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    Text("We'll size recipes to match your household.")
+                    Text("onboarding.size.subtitle")
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
@@ -56,11 +56,11 @@ private struct OnboardingHouseholdSizeView: View {
 
                 VecklyCard {
                     VStack(spacing: 0) {
-                        Stepper("Adults: \(adults)", value: $adults, in: 1...20)
+                        Stepper(L10n.format("household.adultsCount", adults), value: $adults, in: 1...20)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                             .padding(.vertical, 4)
                         Divider()
-                        Stepper("Children: \(children)", value: $children, in: 0...20)
+                        Stepper(L10n.format("household.childrenCount", children), value: $children, in: 0...20)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                             .padding(.vertical, 4)
                     }
@@ -72,7 +72,7 @@ private struct OnboardingHouseholdSizeView: View {
         .background(VecklyDesign.Colors.canvas)
         .navigationBarHidden(true)
         .safeAreaInset(edge: .bottom) {
-            Button("Continue", action: onContinue)
+            Button("onboarding.continue", action: onContinue)
                 .buttonStyle(VecklyPrimaryButtonStyle())
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
@@ -101,11 +101,11 @@ private struct OnboardingPlanningDaysView: View {
                 brandHeader
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Which days do you cook dinner?")
+                    Text("onboarding.days.title")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    Text("We'll only plan meals on these days.")
+                    Text("onboarding.days.subtitle")
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
@@ -148,7 +148,7 @@ private struct OnboardingPlanningDaysView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
                     } else {
-                        Text("Set up my week")
+                        Text("onboarding.setupWeek")
                     }
                 }
                 .buttonStyle(VecklyPrimaryButtonStyle())
@@ -170,7 +170,7 @@ private struct OnboardingPlanningDaysView: View {
                 selectedDays.insert(day)
             }
         } label: {
-            Text(String(day.displayName.prefix(3)))
+            Text(day.shortDisplayName)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(isSelected ? Color.white : VecklyDesign.Colors.inkMid)
                 .padding(.horizontal, 14)
@@ -202,7 +202,7 @@ private struct OnboardingPlanningDaysView: View {
             // Profile is now non-nil → needsOnboarding becomes false → cover dismisses automatically
             // No week generation here — user will choose to generate or add meals manually
         } catch {
-            errorMessage = "Could not save preferences. Check your connection and try again."
+            errorMessage = L10n.string("onboarding.saveError")
         }
     }
 }

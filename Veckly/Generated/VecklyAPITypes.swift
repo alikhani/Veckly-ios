@@ -181,11 +181,11 @@ enum HouseholdPriority: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .quick: return "Quick meals"
-        case .budget: return "Budget-friendly"
-        case .childFriendly: return "Child-friendly"
-        case .mealPrep: return "Meal prep"
-        case .varied: return "Varied cuisine"
+        case .quick: return L10n.string("priority.quick")
+        case .budget: return L10n.string("priority.budget")
+        case .childFriendly: return L10n.string("priority.childFriendly")
+        case .mealPrep: return L10n.string("priority.mealPrep")
+        case .varied: return L10n.string("priority.varied")
         }
     }
 }

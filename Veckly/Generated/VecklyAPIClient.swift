@@ -14,7 +14,7 @@ struct VecklyAPIClient {
         _client = Client(
             serverURL: baseURL,
             transport: URLSessionTransport(),
-            middlewares: [AuthorizationMiddleware(getToken: accessToken)]
+            middlewares: [RequestHeaderMiddleware(getToken: accessToken)]
         )
     }
 
@@ -143,6 +143,7 @@ struct VecklyAPIClient {
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalePreference.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         // JSONSerialization cannot express null values in a Swift dictionary.
         // Build the JSON body directly as a string.
         let escapedMealID = mealID.replacingOccurrences(of: "\"", with: "\\\"")
@@ -485,7 +486,7 @@ struct VecklyAPIClient {
     }
 }
 
-private struct AuthorizationMiddleware: ClientMiddleware {
+private struct RequestHeaderMiddleware: ClientMiddleware {
     let getToken: @Sendable () async -> String?
 
     @concurrent func intercept(
@@ -498,6 +499,7 @@ private struct AuthorizationMiddleware: ClientMiddleware {
         guard let token = await getToken() else { throw APIError.unauthorized }
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
+        request.headerFields[.acceptLanguage] = AppLocalePreference.acceptLanguageHeader
         return try await next(request, body, baseURL)
     }
 }

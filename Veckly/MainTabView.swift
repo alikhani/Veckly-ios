@@ -7,28 +7,28 @@ struct MainTabView: View {
                 WeekTabView()
             }
             .tabItem {
-                Label("Week", systemImage: "calendar")
+                Label("tabs.week", systemImage: "calendar")
             }
 
             NavigationStack {
                 ShoppingListTabView()
             }
             .tabItem {
-                Label("Shopping", systemImage: "checklist")
+                Label("tabs.shopping", systemImage: "checklist")
             }
 
             NavigationStack {
                 RecipesTabView()
             }
             .tabItem {
-                Label("Recipes", systemImage: "fork.knife")
+                Label("tabs.recipes", systemImage: "fork.knife")
             }
 
             NavigationStack {
                 SettingsTabView()
             }
             .tabItem {
-                Label("Settings", systemImage: "gearshape")
+                Label("tabs.settings", systemImage: "gearshape")
             }
         }
         .tint(VecklyDesign.Colors.hearthOrange)

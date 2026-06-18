@@ -26,24 +26,24 @@ struct DayDetailSheet: View {
                     content(recipe: recipe)
                 } else {
                     // Shouldn't happen — this sheet only opens when a recipe is assigned
-                    ContentUnavailableView("No meal assigned", systemImage: "fork.knife")
+                    ContentUnavailableView(L10n.string("meal.noAssigned"), systemImage: "fork.knife")
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onDismiss)
+                    Button("common.cancel", action: onDismiss)
                 }
                 ToolbarItem(placement: .destructiveAction) {
-                    Button("Clear meal", role: .destructive) {
+                    Button("meal.clear", role: .destructive) {
                         showClearConfirmation = true
                     }
                     .foregroundStyle(.red)
                 }
             }
-            .confirmationDialog("Remove this meal?", isPresented: $showClearConfirmation, titleVisibility: .visible) {
-                Button("Clear meal", role: .destructive) { onClear() }
-                Button("Cancel", role: .cancel) {}
+            .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
+                Button("meal.clear", role: .destructive) { onClear() }
+                Button("common.cancel", role: .cancel) {}
             }
         }
     }
@@ -80,7 +80,7 @@ struct DayDetailSheet: View {
                     Button {
                         onViewRecipe()
                     } label: {
-                        Label("View recipe", systemImage: "book")
+                        Label("meal.viewRecipe", systemImage: "book")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -89,7 +89,7 @@ struct DayDetailSheet: View {
                     Button {
                         onSwap()
                     } label: {
-                        Label("Swap meal", systemImage: "arrow.2.squarepath")
+                        Label("meal.swapMeal", systemImage: "arrow.2.squarepath")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -103,13 +103,13 @@ struct DayDetailSheet: View {
                 } label: {
                     HStack {
                         Image(systemName: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
-                        Text(day.isSkipped ? "Plan this day instead" : "Skip this day")
+                        Text(day.isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"))
                         Spacer()
                     }
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
+                .accessibilityLabel(day.isSkipped ? L10n.format("accessibility.planDay", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +126,7 @@ struct DayDetailSheet: View {
                     .font(.footnote)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             }
-            Label("\(recipe.servings) servings", systemImage: "person.2")
+            Label(L10n.format("format.servings", recipe.servings), systemImage: "person.2")
                 .font(.footnote)
                 .foregroundStyle(VecklyDesign.Colors.inkMid)
         }
@@ -138,24 +138,24 @@ struct DayDetailSheet: View {
             Button {
                 Task { await toggleVote(.up, recipeID: recipeID) }
             } label: {
-                Label("Like", systemImage: "hand.thumbsup")
+                Label("recipes.like", systemImage: "hand.thumbsup")
                     .labelStyle(.iconOnly)
                     .font(.title3)
             }
             .buttonStyle(.bordered)
             .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-            .accessibilityLabel(currentVote == .up ? "Remove like" : "Like this recipe")
+            .accessibilityLabel(L10n.string(currentVote == .up ? "recipes.removeLike" : "recipes.likeThis"))
 
             Button {
                 Task { await toggleVote(.down, recipeID: recipeID) }
             } label: {
-                Label("Dislike", systemImage: "hand.thumbsdown")
+                Label("recipes.dislike", systemImage: "hand.thumbsdown")
                     .labelStyle(.iconOnly)
                     .font(.title3)
             }
             .buttonStyle(.bordered)
             .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-            .accessibilityLabel(currentVote == .down ? "Remove dislike" : "Dislike this recipe")
+            .accessibilityLabel(L10n.string(currentVote == .down ? "recipes.removeDislike" : "recipes.dislikeThis"))
         }
     }
 

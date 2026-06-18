@@ -9,7 +9,7 @@ struct PrepBatchSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Meal prep")
+                Text("prep.title")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     .textCase(.uppercase)
@@ -24,7 +24,7 @@ struct PrepBatchSection: View {
             }
 
             if appModel.prepBatchStore.isLoading {
-                LoadingPanel(title: "Loading prep batches")
+                LoadingPanel(title: L10n.string("prep.loading"))
             } else if let error = appModel.prepBatchStore.errorMessage {
                 VecklyCard {
                     Button {
@@ -32,7 +32,7 @@ struct PrepBatchSection: View {
                         let weekStart = appModel.weekStore.weekStartDate
                         Task { await appModel.prepBatchStore.load(householdID: hid, weekStartDate: weekStart) }
                     } label: {
-                        Label(error + " Tap to retry.", systemImage: "arrow.clockwise")
+                        Label(error + " " + L10n.string("prep.tapToRetry"), systemImage: "arrow.clockwise")
                             .font(.subheadline)
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -42,7 +42,7 @@ struct PrepBatchSection: View {
                 }
             } else if appModel.prepBatchStore.batches.isEmpty {
                 VecklyCard {
-                    Text("No prep batches this week.")
+                    Text("prep.empty")
                         .font(.subheadline)
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -86,10 +86,10 @@ private struct PrepBatchRow: View {
                     Image(systemName: "flame.fill")
                         .font(.caption)
                         .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    Text("Cook \(shortDay(batch.cookDate))")
+                    Text(L10n.format("prep.cookDay", shortDay(batch.cookDate)))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
-                    Text("· \(batch.totalPortions) portions")
+                    Text("· \(L10n.format("format.portions", batch.totalPortions))")
                         .font(.subheadline)
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 }
@@ -152,9 +152,9 @@ struct PrepBatchFormSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Recipe (optional)") {
-                    Picker("Recipe", selection: $selectedRecipeID) {
-                        Text("None").tag(Optional<String>.none)
+                Section("prep.recipeOptional") {
+                    Picker("meal.recipe", selection: $selectedRecipeID) {
+                        Text("common.none").tag(Optional<String>.none)
                         ForEach(appModel.recipeStore.recipes) { recipe in
                             Text(recipe.title).tag(Optional<String>.some(recipe.id))
                         }
@@ -163,10 +163,10 @@ struct PrepBatchFormSheet: View {
                 }
 
                 Section {
-                    DatePicker("Cook date", selection: $cookDate, displayedComponents: .date)
-                    Stepper("Portions: \(totalPortions)", value: $totalPortions, in: 1...20)
+                    DatePicker("prep.cookDate", selection: $cookDate, displayedComponents: .date)
+                    Stepper(L10n.format("prep.portionsCount", totalPortions), value: $totalPortions, in: 1...20)
                 } header: {
-                    Text("Details")
+                    Text("prep.details")
                 }
 
                 Section {
@@ -178,29 +178,29 @@ struct PrepBatchFormSheet: View {
                         ))
                     }
                 } header: {
-                    Text("Cover these dinners")
+                    Text("prep.coverDinners")
                 } footer: {
-                    Text("The batch will be used for dinner on the selected days.")
+                    Text("prep.coverDinnersFooter")
                 }
             }
-            .navigationTitle("New Prep Batch")
+            .navigationTitle(L10n.string("prep.newTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Button("Add") { Task { await save() } }
+                        Button("common.add") { Task { await save() } }
                             .disabled(assignedDays.isEmpty)
                     }
                 }
             }
-            .alert("Error",
+            .alert(L10n.string("common.error"),
                 isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
-                actions: { Button("OK") { errorMessage = nil } },
+                actions: { Button("common.ok") { errorMessage = nil } },
                 message: { Text(errorMessage ?? "") }
             )
             .task {
@@ -229,7 +229,7 @@ struct PrepBatchFormSheet: View {
             )
             dismiss()
         } catch {
-            errorMessage = "Could not create prep batch. Try again."
+            errorMessage = L10n.string("error.prep.create")
         }
     }
 

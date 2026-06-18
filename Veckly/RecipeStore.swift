@@ -37,7 +37,7 @@ final class RecipeStore {
             recipesHouseholdID = householdID
             lastFetchedAt = Date()
         } catch {
-            errorMessage = "We could not load recipes."
+            errorMessage = L10n.string("error.recipes.load")
         }
     }
 
@@ -79,7 +79,7 @@ final class RecipeStore {
             if let previous = previousRecipes.first(where: { $0.id == recipeID }) {
                 fullRecipeCache[recipeID] = previous
             }
-            errorMessage = "We could not archive this recipe."
+            errorMessage = L10n.string("error.recipes.archive")
             throw error
         }
     }

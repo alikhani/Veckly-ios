@@ -6,17 +6,31 @@ enum RecipeFormMode {
 }
 
 private enum RecipeFormTab: String, CaseIterable, Identifiable {
-    case write = "Write"
-    case importRecipe = "Import"
+    case write
+    case importRecipe
 
     var id: Self { self }
+
+    var displayLabel: String {
+        switch self {
+        case .write: return L10n.string("recipeForm.tab.write")
+        case .importRecipe: return L10n.string("recipeForm.tab.import")
+        }
+    }
 }
 
 private enum RecipeImportInputMode: String, CaseIterable, Identifiable {
-    case link = "Link"
-    case text = "Text"
+    case link
+    case text
 
     var id: Self { self }
+
+    var displayLabel: String {
+        switch self {
+        case .link: return L10n.string("recipeForm.import.link")
+        case .text: return L10n.string("recipeForm.import.text")
+        }
+    }
 }
 
 struct RecipeFormSheet: View {
@@ -70,11 +84,11 @@ struct RecipeFormSheet: View {
                     recipeFields
                 }
             }
-            .navigationTitle(isNew ? "New Recipe" : "Edit Recipe")
+            .navigationTitle(isNew ? L10n.string("recipeForm.newTitle") : L10n.string("recipeForm.editTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("common.cancel") {
                         if draft == initialDraft {
                             dismiss()
                         } else {
@@ -86,23 +100,23 @@ struct RecipeFormSheet: View {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Button("Save") { Task { await save() } }
+                        Button("common.save") { Task { await save() } }
                             .disabled(normalizedTitle.isEmpty || isSaving || isImporting || isFilling)
                     }
                 }
             }
-            .alert("Error",
+            .alert(L10n.string("common.error"),
                 isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
-                actions: { Button("OK") { errorMessage = nil } },
+                actions: { Button("common.ok") { errorMessage = nil } },
                 message: { Text(errorMessage ?? "") }
             )
             .confirmationDialog(
-                "Discard changes?",
+                L10n.string("recipeForm.discardConfirmation"),
                 isPresented: $showDiscardConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Discard Changes", role: .destructive) { dismiss() }
-                Button("Cancel", role: .cancel) {}
+                Button("recipeForm.discardChanges", role: .destructive) { dismiss() }
+                Button("common.cancel", role: .cancel) {}
             }
         }
     }
@@ -121,9 +135,9 @@ struct RecipeFormSheet: View {
 
     private var modeSection: some View {
         Section {
-            Picker("Mode", selection: $selectedTab) {
+            Picker("recipeForm.mode", selection: $selectedTab) {
                 ForEach(RecipeFormTab.allCases) { tab in
-                    Text(tab.rawValue).tag(tab)
+                    Text(tab.displayLabel).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
@@ -134,9 +148,9 @@ struct RecipeFormSheet: View {
     @ViewBuilder
     private var importSection: some View {
         Section {
-            Picker("Import type", selection: $selectedImportMode) {
+            Picker("recipeForm.importType", selection: $selectedImportMode) {
                 ForEach(RecipeImportInputMode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
+                    Text(mode.displayLabel).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
@@ -151,8 +165,8 @@ struct RecipeFormSheet: View {
     }
 
     private var linkImportSection: some View {
-        Section("Link") {
-            TextField("Recipe page URL", text: $urlText)
+        Section("recipeForm.import.link") {
+            TextField(L10n.string("recipeForm.recipePageURL"), text: $urlText)
                 .keyboardType(.URL)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
@@ -160,9 +174,9 @@ struct RecipeFormSheet: View {
                 Task { await importFromURL() }
             } label: {
                 if isImporting {
-                    HStack { ProgressView(); Text("Importing…") }
+                    HStack { ProgressView(); Text("recipeForm.importing") }
                 } else {
-                    Label("Create draft", systemImage: "square.and.arrow.down")
+                    Label("recipeForm.createDraft", systemImage: "square.and.arrow.down")
                 }
             }
             .disabled(normalizedURL.isEmpty || isImporting || isSaving || isFilling)
@@ -170,18 +184,18 @@ struct RecipeFormSheet: View {
     }
 
     private var textImportSection: some View {
-        Section("Text") {
+        Section("recipeForm.import.text") {
             TextEditor(text: $importText)
                 .frame(minHeight: 140)
                 .overlay(alignment: .topLeading) {
                     if normalizedImportText.isEmpty {
-                        Text("Paste recipe text")
+                        Text("recipeForm.pasteRecipeText")
                             .foregroundStyle(VecklyDesign.Colors.inkFaint)
                             .padding(.top, 8)
                             .padding(.leading, 5)
                     }
                 }
-            TextField("Source URL", text: $importSourceURLText)
+            TextField(L10n.string("recipeForm.sourceURL"), text: $importSourceURLText)
                 .keyboardType(.URL)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
@@ -189,9 +203,9 @@ struct RecipeFormSheet: View {
                 Task { await importFromText() }
             } label: {
                 if isImporting {
-                    HStack { ProgressView(); Text("Importing…") }
+                    HStack { ProgressView(); Text("recipeForm.importing") }
                 } else {
-                    Label("Create draft", systemImage: "text.page")
+                    Label("recipeForm.createDraft", systemImage: "text.page")
                 }
             }
             .disabled(normalizedImportText.isEmpty || isImporting || isSaving || isFilling)
@@ -200,7 +214,7 @@ struct RecipeFormSheet: View {
 
     private func sourceSection(_ sourceURL: String) -> some View {
         Section {
-            LabeledContent("Draft source") {
+            LabeledContent("recipeForm.draftSource") {
                 Text(sourceURL)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -211,40 +225,40 @@ struct RecipeFormSheet: View {
 
     private var basicSection: some View {
         Section {
-            TextField("Title", text: $draft.title)
+            TextField(L10n.string("recipeForm.title"), text: $draft.title)
             if !draft.title.trimmingCharacters(in: .whitespaces).isEmpty {
                 Button {
                     Task { await fillWithAI() }
                 } label: {
                     if isFilling {
-                        HStack { ProgressView(); Text("Filling in with AI…") }
+                        HStack { ProgressView(); Text("recipeForm.fillingAI") }
                     } else {
-                        Label("Fill with AI", systemImage: "sparkles")
+                        Label("recipeForm.fillAI", systemImage: "sparkles")
                             .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     }
                 }
                 .disabled(isFilling || isSaving || isImporting)
             }
-            TextField("Description", text: $draft.description, axis: .vertical)
+            TextField(L10n.string("recipeForm.description"), text: $draft.description, axis: .vertical)
                 .lineLimit(2...5)
         }
     }
 
     private var timingSection: some View {
         Section {
-            Stepper("Servings: \(draft.servings)", value: $draft.servings, in: 1...20)
+            Stepper(L10n.format("recipeForm.servingsCount", draft.servings), value: $draft.servings, in: 1...20)
             HStack {
-                Text("Prep")
+                Text("recipeForm.prep")
                 Spacer()
-                TextField("min", value: $draft.prepTimeMinutes, format: .number)
+                TextField(L10n.string("recipeForm.minutesPlaceholder"), value: $draft.prepTimeMinutes, format: .number)
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.numberPad)
                     .frame(width: 60)
             }
             HStack {
-                Text("Cook")
+                Text("recipeForm.cook")
                 Spacer()
-                TextField("min", value: $draft.cookTimeMinutes, format: .number)
+                TextField(L10n.string("recipeForm.minutesPlaceholder"), value: $draft.cookTimeMinutes, format: .number)
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.numberPad)
                     .frame(width: 60)
@@ -253,44 +267,44 @@ struct RecipeFormSheet: View {
     }
 
     private var ingredientsSection: some View {
-        Section("Ingredients") {
+        Section("recipes.ingredients") {
             ForEach($draft.ingredients) { $ing in
                 HStack(spacing: 8) {
-                    TextField("Amount", text: $ing.amount)
+                    TextField(L10n.string("recipeForm.amount"), text: $ing.amount)
                         .frame(width: 56)
                         .keyboardType(.decimalPad)
-                    TextField("Unit", text: $ing.unit)
+                    TextField(L10n.string("recipeForm.unit"), text: $ing.unit)
                         .frame(width: 52)
-                    TextField("Ingredient", text: $ing.item)
+                    TextField(L10n.string("recipeForm.ingredient"), text: $ing.item)
                 }
                 .font(.body)
             }
             .onDelete { draft.ingredients.remove(atOffsets: $0) }
-            Button("Add ingredient") {
+            Button("recipes.addIngredient") {
                 draft.ingredients.append(DraftIngredient())
             }
         }
     }
 
     private var stepsSection: some View {
-        Section("Steps") {
+        Section("recipeForm.steps") {
             ForEach(draft.steps.indices, id: \.self) { i in
                 HStack(alignment: .top, spacing: 8) {
                     Text("\(i + 1).")
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                         .frame(width: 24, alignment: .leading)
-                    TextField("Step", text: $draft.steps[i], axis: .vertical)
+                    TextField(L10n.string("recipeForm.step"), text: $draft.steps[i], axis: .vertical)
                         .lineLimit(2...6)
                 }
             }
             .onDelete { draft.steps.remove(atOffsets: $0) }
-            Button("Add step") { draft.steps.append("") }
+            Button("recipeForm.addStep") { draft.steps.append("") }
         }
     }
 
     private var tagsSection: some View {
-        Section("Tags") {
-            TextField("e.g. quick, vegetarian, kid-friendly", text: $tagsText)
+        Section("recipeForm.tags") {
+            TextField(L10n.string("recipeForm.tagsPlaceholder"), text: $tagsText)
                 .autocorrectionDisabled()
         }
     }
@@ -308,7 +322,7 @@ struct RecipeFormSheet: View {
         } catch APIError.recipeImport(let failure) {
             errorMessage = failure.message
         } catch {
-            errorMessage = "Could not create a draft from that URL."
+            errorMessage = L10n.string("error.recipeImport.urlDraft")
         }
     }
 
@@ -325,7 +339,7 @@ struct RecipeFormSheet: View {
         } catch APIError.recipeImport(let failure) {
             errorMessage = failure.message
         } catch {
-            errorMessage = "Could not create a draft from that text."
+            errorMessage = L10n.string("error.recipeImport.textDraft")
         }
     }
 
@@ -345,7 +359,7 @@ struct RecipeFormSheet: View {
             draft.ingredients = filled.ingredients
             draft.steps = filled.steps
         } catch {
-            errorMessage = "AI fill-in failed. You can fill in manually."
+            errorMessage = L10n.string("error.recipeForm.aiFill")
         }
     }
 
@@ -374,7 +388,7 @@ struct RecipeFormSheet: View {
             try await onSave(draftToSave)
             dismiss()
         } catch {
-            errorMessage = "Could not save recipe. Please try again."
+            errorMessage = L10n.string("error.recipeForm.save")
         }
     }
 
@@ -400,21 +414,21 @@ private extension RecipeImportFailure {
     var message: String {
         switch self {
         case .invalidURL:
-            return "Enter a valid recipe page URL."
+            return L10n.string("error.recipeImport.invalidURL")
         case .unsupportedURL:
-            return "This kind of link is not supported yet."
+            return L10n.string("error.recipeImport.unsupportedURL")
         case .fetchFailed:
-            return "We could not access that page."
+            return L10n.string("error.recipeImport.fetchFailed")
         case .noRecipeFound:
-            return "We could not find enough recipe detail on that page."
+            return L10n.string("error.recipeImport.noRecipeFound")
         case .rateLimited:
-            return "Wait a moment before importing another recipe."
+            return L10n.string("error.recipeImport.rateLimited")
         case .importFailed:
-            return "Could not create a draft from that URL."
+            return L10n.string("error.recipeImport.urlDraft")
         case .unsupportedSocialSource:
-            return "This social platform is not supported yet."
+            return L10n.string("error.recipeImport.unsupportedSocialSource")
         case .captionRequired:
-            return "Paste the caption or text from the post to import the recipe."
+            return L10n.string("error.recipeImport.captionRequired")
         }
     }
 }

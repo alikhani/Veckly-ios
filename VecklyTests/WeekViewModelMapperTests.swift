@@ -27,7 +27,7 @@ struct WeekViewModelMapperTests {
         let mapped = WeekViewModelMapper.map(summary: summary, today: today)
 
         #expect(mapped.days.first?.mealTitle == "Monday Pasta")
-        #expect(mapped.days.first?.detail == "4 servings · 25 min")
+        #expect(mapped.days.first?.detail == "\(L10n.format("format.servings", 4)) · 25 min")
         #expect(mapped.today?.id == "2026-06-08")
         #expect(mapped.days[1].mealTitle == "")
         #expect(mapped.days[1].isEmpty == true)
@@ -102,7 +102,7 @@ struct WeekViewModelMapperTests {
         #expect(restoredMonday.isEmpty == false)
         #expect(restoredMonday.recipe != nil)
         #expect(store.skippedDays.contains(.monday) == false)
-        #expect(store.errorMessage == "We could not skip this day.")
+        #expect(store.mutationError == L10n.string("error.week.skipDay"))
     }
 
     @MainActor
@@ -123,7 +123,7 @@ struct WeekViewModelMapperTests {
         #expect(restoredMonday == monday)
         #expect(restoredMonday.isLocked == true)
         #expect(store.lockedDays.contains(.monday) == true)
-        #expect(store.errorMessage == "We could not unlock this meal.")
+        #expect(store.mutationError == L10n.string("error.week.unlockMeal"))
     }
 
     @MainActor
@@ -217,7 +217,7 @@ struct WeekViewModelMapperTests {
             weekdayLabel: "Monday",
             dateLabel: "Jun 8",
             mealTitle: "Monday Pasta",
-            detail: "4 servings · 25 min",
+            detail: "\(L10n.format("format.servings", 4)) · 25 min",
             isToday: true,
             isEmpty: false,
             isLocked: false,

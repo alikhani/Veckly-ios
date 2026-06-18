@@ -27,7 +27,7 @@ final class FeedbackStore {
             let result = try await apiClient.mealFeedback(householdID: householdID)
             votes = result
         } catch {
-            errorMessage = "Could not load your recipe ratings."
+            errorMessage = L10n.string("error.feedback.load")
         }
     }
 

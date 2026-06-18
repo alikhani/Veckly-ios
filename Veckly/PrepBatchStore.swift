@@ -25,7 +25,7 @@ final class PrepBatchStore {
             batches = try await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to)
             lastFetchedAt = Date()
         } catch {
-            errorMessage = "Could not load meal prep."
+            errorMessage = L10n.string("error.prep.load")
         }
     }
 

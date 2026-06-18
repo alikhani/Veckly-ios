@@ -30,7 +30,7 @@ struct WeekTabView: View {
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
                         }
-                        .accessibilityLabel("Dismiss error")
+                        .accessibilityLabel(L10n.string("common.dismissError"))
                     }
                     .padding(12)
                     .background(VecklyDesign.Colors.surfaceStrong)
@@ -40,9 +40,9 @@ struct WeekTabView: View {
                 header
 
                 if appModel.householdStore.isLoading || appModel.weekStore.isLoading {
-                    LoadingPanel(title: "Loading this week")
+                    LoadingPanel(title: L10n.string("week.loading"))
                 } else if appModel.weekStore.isGenerating {
-                    LoadingPanel(title: "Generating your week…")
+                    LoadingPanel(title: L10n.string("week.generating"))
                 } else if let errorMessage = appModel.weekStore.errorMessage ?? appModel.householdStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
                         Task { await appModel.loadCoreReader() }
@@ -78,7 +78,7 @@ struct WeekTabView: View {
                             )
                         }
                     } label: {
-                        Text(appModel.weekStore.hasEmptyDays || !appModel.weekStore.hasWeekContent ? "Generate" : "Regenerate")
+                        Text(appModel.weekStore.hasEmptyDays || !appModel.weekStore.hasWeekContent ? "week.generate" : "week.regenerate")
                             .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
@@ -89,7 +89,7 @@ struct WeekTabView: View {
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
-                    .accessibilityLabel("Refresh")
+                    .accessibilityLabel(L10n.string("common.refresh"))
                 }
             }
         }
@@ -202,11 +202,11 @@ struct WeekTabView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(appModel.householdStore.activeHousehold?.name ?? "Your household")
+            Text(appModel.householdStore.activeHousehold?.name ?? L10n.string("week.yourHousehold"))
                 .font(.subheadline)
                 .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                 .textCase(.uppercase)
-            Text("This week")
+            Text("week.thisWeek")
                 .font(VecklyDesign.Typography.displayHeading(size: 34))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
         }
@@ -216,20 +216,20 @@ struct WeekTabView: View {
         VStack(alignment: .leading, spacing: 16) {
             VecklyCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Empty week")
+                    Text("week.empty.eyebrow")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                         .textCase(.uppercase)
 
-                    Text("What's for dinner this week?")
+                    Text("week.empty.title")
                         .font(VecklyDesign.Typography.displayHeading(size: 22))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    Text("We'll suggest 5 dinners that fit your week — adjust from there.")
+                    Text("week.empty.message")
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
 
-                    Button("Plan my week for me") {
+                    Button("week.empty.primary") {
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         guard let userID = appModel.authSessionStore.userID else {
                             Task { await appModel.handleUnauthorized() }
@@ -247,7 +247,7 @@ struct WeekTabView: View {
                     .padding(.top, 4)
                     .disabled(appModel.householdStore.activeHousehold == nil)
 
-                    Button("Or choose each day") {
+                    Button("week.empty.secondary") {
                         mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.isToday })
                             ?? appModel.weekStore.dayRows.first
                     }
@@ -259,7 +259,7 @@ struct WeekTabView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            Text("The week")
+            Text("week.section")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 .padding(.top, 4)
@@ -302,13 +302,13 @@ struct WeekTabView: View {
 
     private var tonightHeroLabel: String {
         guard let hero = tonightHeroDay else { return "" }
-        if hero.isToday { return "Tonight" }
+        if hero.isToday { return L10n.string("meal.tonight") }
         let rows = appModel.weekStore.dayRows
         let todayIndex = rows.firstIndex(where: { $0.isToday }) ?? -1
         let heroIndex = rows.firstIndex(where: { $0.id == hero.id }) ?? -1
         return heroIndex > todayIndex
-            ? "Next up · \(hero.weekdayLabel)"
-            : "This week · \(hero.weekdayLabel)"
+            ? "\(L10n.string("week.nextUp")) · \(hero.weekdayLabel)"
+            : "\(L10n.string("week.thisWeek")) · \(hero.weekdayLabel)"
     }
 
     @ViewBuilder
@@ -323,7 +323,7 @@ struct WeekTabView: View {
                             .textCase(.uppercase)
                         Spacer()
                         if day.isToday {
-                            Text("Today")
+                            Text("meal.today")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                                 .padding(.horizontal, 8)
@@ -348,20 +348,20 @@ struct WeekTabView: View {
                                 selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
                             }
                         } label: {
-                            Label("Recipe", systemImage: "book")
+                            Label("meal.recipe", systemImage: "book")
                         }
                         .buttonStyle(.bordered)
                         .tint(VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel("View recipe for \(day.mealTitle)")
+                        .accessibilityLabel(L10n.format("accessibility.viewRecipeFor", day.mealTitle))
 
                         Button {
                             mealPickerDay = day
                         } label: {
-                            Label("Swap", systemImage: "arrow.2.squarepath")
+                            Label("meal.swap", systemImage: "arrow.2.squarepath")
                         }
                         .buttonStyle(.bordered)
                         .tint(VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel("Swap meal for \(day.weekdayLabel)")
+                        .accessibilityLabel(L10n.format("accessibility.swapMealFor", day.weekdayLabel))
 
                         Button {
                             guard let household = appModel.householdStore.activeHousehold else { return }
@@ -377,7 +377,7 @@ struct WeekTabView: View {
                         }
                         .buttonStyle(.bordered)
                         .tint(day.isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel(day.isLocked ? "Unlock \(day.weekdayLabel)" : "Lock \(day.weekdayLabel)")
+                        .accessibilityLabel(day.isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -395,7 +395,7 @@ struct WeekTabView: View {
 
     private var weekList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(tonightHeroDay == nil ? "The week" : "The rest of the week")
+            Text(tonightHeroDay == nil ? "week.section" : "week.rest")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 .padding(.bottom, 4)
@@ -458,7 +458,7 @@ struct CompactDayRow: View {
 
     private var dateColumn: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(String(day.weekdayLabel.prefix(3)))
+            Text(day.weekday.shortDisplayName)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
             Text(day.dateLabel)
@@ -479,19 +479,19 @@ struct CompactDayRow: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    .accessibilityLabel("Locked")
+                    .accessibilityLabel(L10n.string("accessibility.locked"))
             }
         }
     }
 
     private var emptyContent: some View {
         HStack(alignment: .center, spacing: 8) {
-            Text("Add dinner")
+            Text("meal.addDinner")
                 .font(.body.italic())
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
             Spacer()
             if !day.isPast {
-                Text("Plan")
+                Text("meal.plan")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
             }
@@ -500,12 +500,12 @@ struct CompactDayRow: View {
 
     private var skippedContent: some View {
         HStack(alignment: .center, spacing: 8) {
-            Text("Skipped")
+            Text("meal.skipped")
                 .font(.body)
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
             Spacer()
             if !day.isPast {
-                Text("Plan")
+                Text("meal.plan")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
             }
@@ -530,12 +530,12 @@ private struct SwipeSkipModifier: ViewModifier {
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(action: onToggleSkip) {
                         Label(
-                            day.isSkipped ? "Plan day" : "Skip",
+                            day.isSkipped ? L10n.string("meal.plan") : L10n.string("meal.skip"),
                             systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus"
                         )
                     }
                     .tint(VecklyDesign.Colors.inkMid)
-                    .accessibilityLabel(day.isSkipped ? "Plan \(day.weekdayLabel)" : "Skip \(day.weekdayLabel)")
+                    .accessibilityLabel(day.isSkipped ? L10n.format("accessibility.planDay", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
                 }
         }
     }

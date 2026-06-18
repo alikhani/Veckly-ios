@@ -64,7 +64,7 @@ struct RecipeDetailView: View {
                         loadFailed = false
                         Task { await loadFull() }
                     } label: {
-                        Label("Could not load recipe details. Tap to retry.", systemImage: "arrow.clockwise")
+                        Label(L10n.string("recipes.detailLoadFailed"), systemImage: "arrow.clockwise")
                             .font(.subheadline)
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -81,7 +81,7 @@ struct RecipeDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(VecklyDesign.Colors.canvas)
-        .navigationTitle("Recipe")
+        .navigationTitle(L10n.string("meal.recipe"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadFull() }
     }
@@ -93,7 +93,7 @@ struct RecipeDetailView: View {
                 Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
                     .font(.body)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
-                Text(isSkipped ? "Plan this day instead" : "Skip this day")
+                Text(isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
                 Spacer()
@@ -104,7 +104,7 @@ struct RecipeDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isSkipped ? "Plan this day instead" : "Skip this day")
+        .accessibilityLabel(isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"))
     }
 
     private var headerSection: some View {
@@ -114,7 +114,7 @@ struct RecipeDetailView: View {
 
             let totalMinutes = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
             HStack(spacing: 16) {
-                Label("\(displayServings) servings", systemImage: "person.2")
+                Label(L10n.format("format.servings", displayServings), systemImage: "person.2")
                 if totalMinutes > 0 {
                     Label("\(totalMinutes) min", systemImage: "clock")
                 }
@@ -146,31 +146,31 @@ struct RecipeDetailView: View {
             Button {
                 Task { await toggleVote(.up) }
             } label: {
-                Label("Thumbs up", systemImage: "hand.thumbsup")
+                Label("recipes.thumbsUp", systemImage: "hand.thumbsup")
             }
             .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
             .buttonStyle(.bordered)
             .labelStyle(.iconOnly)
             .font(.title3)
-            .accessibilityLabel(currentVote == .up ? "Remove thumbs up vote" : "Thumbs up")
+            .accessibilityLabel(L10n.string(currentVote == .up ? "recipes.removeThumbsUp" : "recipes.thumbsUp"))
 
             Button {
                 Task { await toggleVote(.down) }
             } label: {
-                Label("Thumbs down", systemImage: "hand.thumbsdown")
+                Label("recipes.thumbsDown", systemImage: "hand.thumbsdown")
             }
             .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
             .buttonStyle(.bordered)
             .labelStyle(.iconOnly)
             .font(.title3)
-            .accessibilityLabel(currentVote == .down ? "Remove thumbs down vote" : "Thumbs down")
+            .accessibilityLabel(L10n.string(currentVote == .down ? "recipes.removeThumbsDown" : "recipes.thumbsDown"))
         }
     }
 
     @ViewBuilder
     private func ingredientsSection(_ ingredients: [RecipeIngredient]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Ingredients")
+            Text("recipes.ingredients")
                 .font(.headline)
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
@@ -199,7 +199,7 @@ struct RecipeDetailView: View {
     @ViewBuilder
     private func stepsSection(_ steps: [RecipeStep]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Instructions")
+            Text("recipes.instructions")
                 .font(.headline)
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
 

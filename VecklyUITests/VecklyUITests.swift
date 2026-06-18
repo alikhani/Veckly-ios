@@ -28,9 +28,7 @@ final class VecklyUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.staticTexts["Veckly"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.textFields["emailField"].exists)
-        XCTAssertTrue(app.secureTextFields["passwordField"].exists)
-        XCTAssertTrue(app.buttons["emailPasswordSubmitButton"].exists)
+        XCTAssertTrue(app.staticTexts["Plan the week once. Know what's for dinner before the day starts."].exists)
         XCTAssertTrue(app.buttons["continueWithAppleButton"].exists)
     }
 
@@ -45,6 +43,20 @@ final class VecklyUITests: XCTestCase {
         app.tabBars.buttons["Shopping"].tap()
 
         XCTAssertTrue(app.staticTexts["spaghetti"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testSwedishLocaleUsesSwedishUI() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchArguments += ["-AppleLanguages", "(sv)", "-AppleLocale", "sv_SE"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Den här veckan"].waitForExistence(timeout: 5))
+
+        app.tabBars.buttons["Handla"].tap()
+
+        XCTAssertTrue(app.staticTexts["Inköpslista"].waitForExistence(timeout: 5))
     }
 
     @MainActor

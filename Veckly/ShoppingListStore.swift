@@ -26,13 +26,13 @@ enum ShoppingCategory: String, CaseIterable {
 
     var displayLabel: String {
         switch self {
-        case .produce: return "Fruit & veg"
-        case .meat:    return "Meat & fish"
-        case .dairy:   return "Dairy & eggs"
-        case .pantry:  return "Pantry"
-        case .frozen:  return "Frozen"
-        case .bakery:  return "Bakery"
-        case .other:   return "Other"
+        case .produce: return L10n.string("shopping.category.produce")
+        case .meat:    return L10n.string("shopping.category.meat")
+        case .dairy:   return L10n.string("shopping.category.dairy")
+        case .pantry:  return L10n.string("shopping.category.pantry")
+        case .frozen:  return L10n.string("shopping.category.frozen")
+        case .bakery:  return L10n.string("shopping.category.bakery")
+        case .other:   return L10n.string("shopping.category.other")
         }
     }
 
@@ -92,7 +92,7 @@ final class ShoppingListStore {
             stapledItems = []
             checkedItems = []
         } catch {
-            errorMessage = "We could not load your shopping list."
+            errorMessage = L10n.string("error.shopping.load")
         }
     }
 

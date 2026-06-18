@@ -57,7 +57,7 @@ final class WeekStore {
             dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
         } catch {
-            errorMessage = "We could not load this week."
+            errorMessage = L10n.string("error.week.load")
         }
     }
 
@@ -90,7 +90,7 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if current.isToday { today = previous }
-            mutationError = isLocked ? "We could not unlock this meal." : "We could not lock this meal."
+            mutationError = isLocked ? L10n.string("error.week.unlockMeal") : L10n.string("error.week.lockMeal")
         }
     }
 
@@ -123,7 +123,7 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if current.isToday { today = previous }
-            mutationError = isSkipped ? "We could not plan this day." : "We could not skip this day."
+            mutationError = isSkipped ? L10n.string("error.week.planDay") : L10n.string("error.week.skipDay")
         }
     }
 
@@ -136,9 +136,9 @@ final class WeekStore {
             lastFetchedAt = nil
             await loadCurrentWeek(household: household)
         } catch APIError.noRecipesForGeneration {
-            mutationError = "Add some recipes first — then we can plan your week."
+            mutationError = L10n.string("error.week.noRecipes")
         } catch {
-            mutationError = "We could not generate your week."
+            mutationError = L10n.string("error.week.generate")
         }
     }
 
@@ -147,7 +147,8 @@ final class WeekStore {
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
         let time = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
-        let detail = time > 0 ? "\(recipe.servings) servings · \(time) min" : "\(recipe.servings) servings"
+        let servings = L10n.format("format.servings", recipe.servings)
+        let detail = time > 0 ? "\(servings) · \(time) min" : servings
         let optimisticRow = WeekDayRowViewModel(
             id: day.id,
             weekday: day.weekday,
@@ -181,7 +182,7 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if day.isToday { today = previous }
-            mutationError = "We could not assign the meal."
+            mutationError = L10n.string("error.week.assignMeal")
         }
     }
 
@@ -222,7 +223,7 @@ final class WeekStore {
                 dayRows[idx] = previous
             }
             if day.isToday { today = previous }
-            mutationError = "We could not clear the meal."
+            mutationError = L10n.string("error.week.clearMeal")
         }
     }
 
@@ -422,30 +423,43 @@ struct WeekViewModelMapper {
         let time = [recipe.prepTimeMinutes, recipe.cookTimeMinutes]
             .compactMap { $0 }
             .reduce(0, +)
+        let servings = L10n.format("format.servings", recipe.servings)
         if time > 0 {
-            return "\(recipe.servings) servings · \(time) min"
+            return "\(servings) · \(time) min"
         }
-        return "\(recipe.servings) servings"
+        return servings
     }
 }
 
 extension Weekday {
     var displayName: String {
+        localizedName(template: "EEEE")
+    }
+
+    var shortDisplayName: String {
+        localizedName(template: "EEE")
+    }
+
+    private func localizedName(template: String) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = .current
+        let monday = DateComponents(calendar: calendar, year: 2024, month: 1, day: 1).date!
+        let date = calendar.date(byAdding: .day, value: ordinal, to: monday)!
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.setLocalizedDateFormatFromTemplate(template)
+        return formatter.string(from: date)
+    }
+
+    private var ordinal: Int {
         switch self {
-        case .monday:
-            return "Monday"
-        case .tuesday:
-            return "Tuesday"
-        case .wednesday:
-            return "Wednesday"
-        case .thursday:
-            return "Thursday"
-        case .friday:
-            return "Friday"
-        case .saturday:
-            return "Saturday"
-        case .sunday:
-            return "Sunday"
+        case .monday: return 0
+        case .tuesday: return 1
+        case .wednesday: return 2
+        case .thursday: return 3
+        case .friday: return 4
+        case .saturday: return 5
+        case .sunday: return 6
         }
     }
 }

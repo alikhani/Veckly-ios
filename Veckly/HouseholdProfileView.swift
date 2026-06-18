@@ -28,50 +28,50 @@ struct HouseholdProfileView: View {
                 avoidSection
             }
         }
-        .navigationTitle("Household Preferences")
+        .navigationTitle(L10n.string("settings.householdPreferences"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 if isSaving {
                     ProgressView()
                 } else {
-                    Button("Save") { Task { await save() } }
+                    Button("common.save") { Task { await save() } }
                         .disabled(selectedDays.isEmpty || isLoading)
                 }
             }
         }
-        .alert("Error",
+        .alert(L10n.string("common.error"),
             isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
-            actions: { Button("OK") { errorMessage = nil } },
+            actions: { Button("common.ok") { errorMessage = nil } },
             message: { Text(errorMessage ?? "") }
         )
         .task(id: household?.id) { await loadExisting() }
     }
 
     private var sizeSection: some View {
-        Section("Household size") {
-            Stepper("Adults: \(adults)", value: $adults, in: 1...20)
-            Stepper("Children: \(children)", value: $children, in: 0...20)
+        Section("household.size") {
+            Stepper(L10n.format("household.adultsCount", adults), value: $adults, in: 1...20)
+            Stepper(L10n.format("household.childrenCount", children), value: $children, in: 0...20)
         }
     }
 
     private var daysSection: some View {
         Section {
             ForEach(Weekday.allCases, id: \.self) { day in
-                Toggle(day.rawValue.capitalized, isOn: Binding(
+                Toggle(day.displayName, isOn: Binding(
                     get: { selectedDays.contains(day) },
                     set: { if $0 { selectedDays.insert(day) } else { selectedDays.remove(day) } }
                 ))
             }
         } header: {
-            Text("Cooking days")
+            Text("household.cookingDays")
         } footer: {
-            Text("The week plan will only include meals on these days.")
+            Text("household.cookingDaysFooter")
         }
     }
 
     private var prioritiesSection: some View {
-        Section("Priorities") {
+        Section("settings.priorities") {
             ForEach(HouseholdPriority.allCases, id: \.self) { priority in
                 Toggle(priority.label, isOn: Binding(
                     get: { priorities.contains(priority) },
@@ -84,7 +84,7 @@ struct HouseholdProfileView: View {
     private var avoidSection: some View {
         Section {
             if didSave {
-                Text("Saved")
+                Text("settings.saved")
                     .font(.caption)
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
             }
@@ -95,15 +95,15 @@ struct HouseholdProfileView: View {
             .onDelete { avoidIngredients.remove(atOffsets: $0) }
 
             HStack {
-                TextField("Add ingredient to avoid", text: $newIngredient)
+                TextField(L10n.string("settings.addIngredientToAvoid"), text: $newIngredient)
                     .onSubmit { addIngredient() }
-                Button("Add") { addIngredient() }
+                Button("common.add") { addIngredient() }
                     .disabled(newIngredient.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         } header: {
-            Text("Avoid ingredients")
+            Text("settings.avoidIngredients")
         } footer: {
-            Text("Recipes containing these won't be suggested.")
+            Text("settings.avoidIngredientsFooter")
         }
     }
 
@@ -159,7 +159,7 @@ struct HouseholdProfileView: View {
             )
             didSave = true
         } catch {
-            errorMessage = "Could not save preferences. Try again."
+            errorMessage = L10n.string("error.settings.savePreferences")
         }
     }
 

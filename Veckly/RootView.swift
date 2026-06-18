@@ -7,7 +7,7 @@ struct RootView: View {
     var body: some View {
         Group {
             if appModel.authSessionStore.isRestoring {
-                LoadingView(title: "Opening Veckly")
+                LoadingView(title: L10n.string("app.opening"))
             } else if appModel.authSessionStore.isSignedIn {
                 MainTabView()
                     .fullScreenCover(isPresented: Binding(

@@ -37,7 +37,7 @@ final class HouseholdStore {
             households = list.isEmpty ? [bootstrapped] : list
             setActiveHousehold(households.first(where: { $0.id == bootstrapped.id }) ?? households.first)
         } catch {
-            errorMessage = "We could not load your household."
+            errorMessage = L10n.string("error.household.load")
         }
     }
 
@@ -63,7 +63,7 @@ final class HouseholdStore {
             detailsHouseholdID = householdID
             detailsLastFetchedAt = Date()
         } catch {
-            detailsErrorMessage = "We could not load household details."
+            detailsErrorMessage = L10n.string("error.household.details")
         }
     }
 
@@ -80,7 +80,7 @@ final class HouseholdStore {
         do {
             invites = try await apiClient.listInvites(householdID: householdID)
         } catch {
-            invitesErrorMessage = "We could not load invites."
+            invitesErrorMessage = L10n.string("error.household.invites")
         }
     }
 

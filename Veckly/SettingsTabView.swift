@@ -8,15 +8,15 @@ struct SettingsTabView: View {
 
     var body: some View {
         Form {
-            Section("Household") {
-                LabeledContent("Name") {
+            Section("household.section") {
+                LabeledContent("household.name") {
                     Text(appModel.householdStore.activeHousehold?.name ?? "—")
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 }
-                NavigationLink("Members & Invites") {
+                NavigationLink("settings.membersInvites") {
                     HouseholdMembersView()
                 }
-                NavigationLink("Preferences") {
+                NavigationLink("household.preferences") {
                     HouseholdProfileView()
                 }
             }
@@ -25,7 +25,7 @@ struct SettingsTabView: View {
                 Button(role: .destructive) {
                     appModel.signOut()
                 } label: {
-                    Text("Sign out")
+                    Text("settings.signOut")
                 }
                 .accessibilityIdentifier("signOutButton")
             }
@@ -37,33 +37,33 @@ struct SettingsTabView: View {
                     if isDeletingAccount {
                         HStack {
                             ProgressView()
-                            Text("Deleting account…")
+                            Text("settings.deletingAccount")
                         }
                     } else {
-                        Text("Delete Account")
+                        Text("settings.deleteAccount")
                     }
                 }
                 .disabled(isDeletingAccount)
             } footer: {
-                Text("Permanently deletes your account and all household data. This cannot be undone.")
+                Text("settings.deleteFooter")
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle(L10n.string("tabs.settings"))
         .confirmationDialog(
-            "Delete your account?",
+            L10n.string("settings.deleteConfirmation"),
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Delete Account", role: .destructive) {
+            Button("settings.deleteAccount", role: .destructive) {
                 Task { await deleteAccount() }
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Your account and all household data will be permanently deleted.")
+            Text("settings.deleteMessage")
         }
-        .alert("Could not delete account",
+        .alert(L10n.string("settings.deleteFailed"),
             isPresented: Binding(get: { deleteErrorMessage != nil }, set: { if !$0 { deleteErrorMessage = nil } }),
-            actions: { Button("OK") { deleteErrorMessage = nil } },
+            actions: { Button("common.ok") { deleteErrorMessage = nil } },
             message: { Text(deleteErrorMessage ?? "") }
         )
     }
@@ -74,7 +74,7 @@ struct SettingsTabView: View {
         do {
             try await appModel.deleteAccount()
         } catch {
-            deleteErrorMessage = "Account deletion failed. Contact support at support@veckly.app if the problem persists."
+            deleteErrorMessage = L10n.string("error.settings.deleteAccount")
         }
     }
 }

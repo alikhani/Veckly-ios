@@ -3,8 +3,8 @@ import SwiftUI
 struct SignedOutView: View {
     @Environment(AppModel.self) private var appModel
 
-    private let weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri"]
-    private let accentDay = "Tue"
+    private let weekDays = Weekday.allCases.prefix(5)
+    private let accentDay = Weekday.tuesday
 
     var body: some View {
         ZStack {
@@ -22,13 +22,13 @@ struct SignedOutView: View {
                         .frame(width: 58, height: 58)
                         .accessibilityHidden(true)
 
-                    Text("Veckly")
+                    Text("auth.title")
                         .font(VecklyDesign.Typography.displayHeading(size: 52))
                         .foregroundStyle(Color("textPrimary"))
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, 20)
 
-                    Text("Plan the week once. Know what's for dinner before the day starts.")
+                    Text("auth.subtitle")
                         .font(.title3)
                         .foregroundStyle(Color("textMuted"))
                         .multilineTextAlignment(.center)
@@ -38,8 +38,8 @@ struct SignedOutView: View {
                     // Week chip strip — presentational only, no data binding.
                     // Auto-width so chips read as an ambient hint, not a picker.
                     HStack(spacing: 8) {
-                        ForEach(weekDays, id: \.self) { day in
-                            Text(day)
+                        ForEach(Array(weekDays), id: \.self) { day in
+                            Text(day.shortDisplayName)
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(day == accentDay ? Color.white : Color("textMuted"))
                                 .padding(.horizontal, 11)
@@ -70,7 +70,7 @@ struct SignedOutView: View {
                             Task { await appModel.completeSignInWithApple(identityToken: token, nonce: nonce) }
                         },
                         onFailure: {
-                            appModel.authSessionStore.setError("Sign in with Apple failed. Please try again.")
+                            appModel.authSessionStore.setError(L10n.string("auth.appleFailed"))
                         }
                     )
 
@@ -146,13 +146,13 @@ struct SignedOutView: View {
                         HStack(spacing: 8) {
                             ProgressView()
                                 .tint(VecklyDesign.Colors.hearthOrange)
-                            Text("Signing in…")
+                            Text("auth.signingIn")
                                 .font(.footnote)
                                 .foregroundStyle(Color("textMuted"))
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Signing in, please wait")
+                        .accessibilityLabel(L10n.string("accessibility.signingInWait"))
                     }
 
                     if let message = appModel.authSessionStore.errorMessage {
@@ -161,11 +161,11 @@ struct SignedOutView: View {
                             .foregroundStyle(Color(red: 0.80, green: 0.15, blue: 0.10))
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityLabel("Error: \(message)")
+                            .accessibilityLabel(L10n.format("accessibility.error.message", message))
                     }
 
                     // Legal footer — plain text; no Terms/Privacy routes yet.
-                    Text("By continuing you agree to our Terms & Privacy Policy.")
+                    Text("auth.legal")
                         .font(.caption2)
                         .foregroundStyle(Color("textMuted"))
                         .multilineTextAlignment(.center)

@@ -23,10 +23,10 @@ struct HouseholdMembersView: View {
             if isOwner { inviteSection }
             joinSection
         }
-        .navigationTitle("Members")
-        .alert("Error",
+        .navigationTitle(L10n.string("members.title"))
+        .alert(L10n.string("common.error"),
             isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
-            actions: { Button("OK") { errorMessage = nil } },
+            actions: { Button("common.ok") { errorMessage = nil } },
             message: { Text(errorMessage ?? "") }
         )
         .sheet(item: $newInvite) { invite in
@@ -44,35 +44,35 @@ struct HouseholdMembersView: View {
     }
 
     private var membersSection: some View {
-        Section("Members") {
+        Section("members.title") {
             if appModel.householdStore.isLoadingDetails {
                 HStack { Spacer(); ProgressView(); Spacer() }
             } else if let message = appModel.householdStore.detailsErrorMessage {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(message)
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                    Button("Try again") {
+                    Button("common.tryAgain") {
                         guard let hid = household?.id else { return }
                         Task { await appModel.householdStore.loadHouseholdDetails(householdID: hid) }
                     }
                 }
             } else if appModel.householdStore.members.isEmpty {
-                Text("No members yet")
+                Text("members.empty")
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
             } else {
                 ForEach(appModel.householdStore.members) { member in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             if member.userId == myUserID {
-                                Text("You")
+                                Text("members.you")
                                     .font(.body.weight(.medium))
                             } else {
-                                Text("Household member")
+                                Text("members.householdMember")
                                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                             }
                         }
                         Spacer()
-                        Text(member.role == .owner ? "Owner" : "Member")
+                        Text(member.role == .owner ? L10n.string("members.owner") : L10n.string("members.member"))
                             .font(.caption)
                             .foregroundStyle(member.role == .owner ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
                     }
@@ -87,9 +87,9 @@ struct HouseholdMembersView: View {
                 Task { await createInvite() }
             } label: {
                 if isCreatingInvite {
-                    HStack { ProgressView(); Text("Creating…") }
+                    HStack { ProgressView(); Text("members.creating") }
                 } else {
-                    Label("Create invite link", systemImage: "link.badge.plus")
+                    Label("members.createInviteLink", systemImage: "link.badge.plus")
                         .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                 }
             }
@@ -101,13 +101,13 @@ struct HouseholdMembersView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(message)
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                    Button("Try again") {
+                    Button("common.tryAgain") {
                         guard let hid = household?.id else { return }
                         Task { await appModel.householdStore.loadInvites(householdID: hid) }
                     }
                 }
             } else if appModel.householdStore.invites.filter({ $0.status == "pending" }).isEmpty {
-                Text("No open invites")
+                Text("members.noOpenInvites")
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
             }
 
@@ -117,7 +117,7 @@ struct HouseholdMembersView: View {
                         Text(invite.token.prefix(8) + "…")
                             .font(.caption.monospaced())
                             .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                        Text("Pending")
+                        Text("members.pending")
                             .font(.caption2)
                             .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     }
@@ -137,13 +137,13 @@ struct HouseholdMembersView: View {
                 }
             }
         } header: {
-            Text("Invite someone")
+            Text("members.inviteSomeone")
         }
     }
 
     private var joinSection: some View {
         Section {
-            TextField("Paste invite token", text: $tokenInput)
+            TextField(L10n.string("members.pasteInviteToken"), text: $tokenInput)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
 
@@ -152,13 +152,13 @@ struct HouseholdMembersView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(landing.householdName)
                             .font(.body.weight(.medium))
-                        Text(landing.status == "pending" ? "Open invite" : landing.status.capitalized)
+                        Text(landing.status == "pending" ? L10n.string("members.openInvite") : landing.status.capitalized)
                             .font(.caption)
                             .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     }
                     Spacer()
                     if landing.status == "pending" {
-                        Button("Join") {
+                        Button("members.join") {
                             Task { await joinHousehold() }
                         }
                         .disabled(isJoining || landingToken == nil)
@@ -173,16 +173,16 @@ struct HouseholdMembersView: View {
                 Task { await lookUpToken() }
             } label: {
                 if isLookingUp {
-                    HStack { ProgressView(); Text("Looking up…") }
+                    HStack { ProgressView(); Text("members.lookingUp") }
                 } else {
-                    Text("Look up token")
+                    Text("members.lookupToken")
                 }
             }
             .disabled(tokenInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLookingUp)
         } header: {
-            Text("Join a household")
+            Text("members.joinHousehold")
         } footer: {
-            Text("Ask a household owner to share their invite token with you.")
+            Text("members.joinFooter")
         }
     }
 
@@ -193,7 +193,7 @@ struct HouseholdMembersView: View {
         do {
             newInvite = try await appModel.householdStore.createInvite(householdID: hid)
         } catch {
-            errorMessage = "Could not create invite. Try again."
+            errorMessage = L10n.string("error.members.createInvite")
         }
     }
 
@@ -204,7 +204,7 @@ struct HouseholdMembersView: View {
         do {
             try await appModel.householdStore.revokeInvite(householdID: hid, inviteID: invite.id)
         } catch {
-            errorMessage = "Could not revoke invite."
+            errorMessage = L10n.string("error.members.revokeInvite")
         }
     }
 
@@ -218,9 +218,9 @@ struct HouseholdMembersView: View {
             landing = try await appModel.householdStore.lookupInvite(token: token)
             landingToken = token
         } catch APIError.notFound {
-            errorMessage = "No invite found for that token."
+            errorMessage = L10n.string("error.members.noInvite")
         } catch {
-            errorMessage = "Could not look up the token."
+            errorMessage = L10n.string("error.members.lookupToken")
         }
     }
 
@@ -235,9 +235,9 @@ struct HouseholdMembersView: View {
             tokenInput = ""
             await appModel.loadActiveHouseholdReaderData()
         } catch APIError.server(409) {
-            errorMessage = "This invite is no longer valid (revoked or expired)."
+            errorMessage = L10n.string("error.members.inviteInvalid")
         } catch {
-            errorMessage = "Could not join the household."
+            errorMessage = L10n.string("error.members.join")
         }
     }
 }
@@ -255,9 +255,9 @@ private struct InviteShareSheet: View {
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
 
                 VStack(spacing: 8) {
-                    Text("Invite created")
+                    Text("members.inviteCreated")
                         .font(.title2.weight(.semibold))
-                    Text("Share this token with the person you want to invite. They paste it in the \"Join a household\" section.")
+                    Text("members.inviteCreatedMessage")
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                         .multilineTextAlignment(.center)
@@ -273,7 +273,7 @@ private struct InviteShareSheet: View {
                     UIPasteboard.general.string = invite.token
                     didCopy = true
                 } label: {
-                    Label(didCopy ? "Copied" : "Copy token", systemImage: didCopy ? "checkmark" : "doc.on.doc")
+                    Label(didCopy ? L10n.string("members.copied") : L10n.string("members.copyToken"), systemImage: didCopy ? "checkmark" : "doc.on.doc")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -281,7 +281,7 @@ private struct InviteShareSheet: View {
                 .controlSize(.large)
 
                 ShareLink(item: invite.token) {
-                    Label("Share token", systemImage: "square.and.arrow.up")
+                    Label("members.shareToken", systemImage: "square.and.arrow.up")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -294,7 +294,7 @@ private struct InviteShareSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
             }
         }

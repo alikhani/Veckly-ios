@@ -25,7 +25,7 @@ struct ErrorPanel: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(message)
                     .foregroundStyle(.red)
-                Button("Try again", action: retry)
+                Button("common.tryAgain", action: retry)
                     .buttonStyle(VecklyPrimaryButtonStyle())
             }
         }

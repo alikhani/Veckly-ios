@@ -52,7 +52,7 @@ final class AuthSessionStore {
                 .signInWithApple(identityToken: identityToken, nonce: nonce)
             applySession(session)
         } catch {
-            errorMessage = "We could not sign you in. Try again in a moment."
+            errorMessage = L10n.string("error.auth.signInMoment")
         }
     }
 
@@ -66,7 +66,7 @@ final class AuthSessionStore {
                 .signInWithEmail(email: email, password: password)
             applySession(session)
         } catch {
-            errorMessage = "We could not sign you in. Check your email and password."
+            errorMessage = L10n.string("error.auth.signInEmailPassword")
         }
     }
 
@@ -80,9 +80,9 @@ final class AuthSessionStore {
                 .signUpWithEmail(email: email, password: password)
             applySession(session)
         } catch SupabaseAuthError.emailConfirmationRequired {
-            errorMessage = "Check your email to confirm your account, then sign in."
+            errorMessage = L10n.string("auth.confirmEmail")
         } catch {
-            errorMessage = "We could not create that account. Try a different email or password."
+            errorMessage = L10n.string("error.auth.createAccount")
         }
     }
 

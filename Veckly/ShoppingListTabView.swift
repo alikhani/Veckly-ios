@@ -54,9 +54,11 @@ struct ShoppingListTabView: View {
                 : "\(abbrev(first))–\(abbrev(last))"
         }
 
-        var parts: [String] = ["WEEK \(weekNumber)"]
+        var parts: [String] = [L10n.format("format.week", weekNumber)]
         if let range = dayRange { parts.append(range) }
-        if mealCount > 0 { parts.append("\(mealCount) \(mealCount == 1 ? "MEAL" : "MEALS")") }
+        if mealCount > 0 {
+            parts.append(L10n.format(mealCount == 1 ? "format.meals.one" : "format.meals.other", mealCount))
+        }
 
         return parts.joined(separator: " · ")
     }
@@ -71,19 +73,19 @@ struct ShoppingListTabView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     }
-                    Text("Shopping list")
+                    Text("shopping.title")
                         .font(VecklyDesign.Typography.displayHeading(size: 34))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 }
 
                 if appModel.shoppingListStore.isLoading {
-                    LoadingPanel(title: "Loading shopping list")
+                    LoadingPanel(title: L10n.string("shopping.loading"))
                 } else if let errorMessage = appModel.shoppingListStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
                         Task { await appModel.loadCoreReader() }
                     }
                 } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
-                    EmptyPanel(title: "Nothing to buy yet", message: "Lock in a week plan and the grouped list will appear here.")
+                    EmptyPanel(title: L10n.string("shopping.empty.title"), message: L10n.string("shopping.empty.message"))
                 } else {
                     // Progress indicator
                     if totalItemCount > 0 {
@@ -96,7 +98,7 @@ struct ShoppingListTabView: View {
                                 .monospacedDigit()
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(checkedItemCount) of \(totalItemCount) items checked")
+                        .accessibilityLabel(L10n.format("accessibility.itemsChecked", checkedItemCount, totalItemCount))
                     }
 
                     // Category groups
@@ -132,7 +134,7 @@ struct ShoppingListTabView: View {
             .accessibilityIdentifier("shoppingList")
         }
         .background(VecklyDesign.Colors.canvas)
-        .navigationTitle("Shopping")
+        .navigationTitle(L10n.string("tabs.shopping"))
         .sheet(isPresented: $showPrepSheet) {
             PrepBatchFormSheet()
         }
@@ -193,7 +195,7 @@ struct ShoppingGroupView: View {
                             .padding(.vertical, 8)
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("\(item.label)\(amountLabel.isEmpty ? "" : ", \(amountLabel)"), \(isChecked ? "checked" : "unchecked")")
+                            .accessibilityLabel("\(item.label)\(amountLabel.isEmpty ? "" : ", \(amountLabel)"), \(isChecked ? L10n.string("shopping.item.checked") : L10n.string("shopping.item.unchecked"))")
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: checkedItems)
@@ -216,7 +218,7 @@ struct StaplesGroupView: View {
                 withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
             } label: {
                 HStack {
-                    Text("Likely at home")
+                    Text("shopping.likelyAtHome")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                         .textCase(.uppercase)
@@ -248,7 +250,7 @@ struct StaplesGroupView: View {
                                 .padding(.vertical, 8)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("\(item.label), \(isChecked ? "checked" : "unchecked")")
+                            .accessibilityLabel("\(item.label), \(isChecked ? L10n.string("shopping.item.checked") : L10n.string("shopping.item.unchecked"))")
                         }
                     }
                 }
@@ -256,6 +258,6 @@ struct StaplesGroupView: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Pantry staples, \(isExpanded ? "expanded" : "collapsed")")
+        .accessibilityLabel(L10n.string(isExpanded ? "shopping.staples.expanded" : "shopping.staples.collapsed"))
     }
 }

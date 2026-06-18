@@ -34,7 +34,7 @@ struct MealPickerSheet: View {
                     VStack {
                         ProgressView()
                             .tint(VecklyDesign.Colors.hearthOrange)
-                        Text("Loading recipes…")
+                        Text("recipes.loadingEllipsis")
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                             .padding(.top, 8)
                     }
@@ -45,7 +45,7 @@ struct MealPickerSheet: View {
                             .font(.subheadline)
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                             .multilineTextAlignment(.center)
-                        Button("Try again") {
+                        Button("common.tryAgain") {
                             Task { await loadRecipes() }
                         }
                         .foregroundStyle(VecklyDesign.Colors.hearthOrange)
@@ -54,9 +54,9 @@ struct MealPickerSheet: View {
                     .padding()
                 } else if filtered.isEmpty && !searchText.isEmpty {
                     ContentUnavailableView(
-                        "No results",
+                        L10n.string("recipes.noResults"),
                         systemImage: "fork.knife",
-                        description: Text("Try a different search term.")
+                        description: Text(L10n.string("recipes.tryDifferentSearchTerm"))
                     )
                 } else {
                     recipeListWithFooter
@@ -64,14 +64,14 @@ struct MealPickerSheet: View {
             }
             .navigationTitle(day.weekdayLabel)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search recipes")
+            .searchable(text: $searchText, prompt: L10n.string("recipes.search"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onDismiss)
+                    Button("common.cancel", action: onDismiss)
                 }
                 if !day.isEmpty && !isSkipped {
                     ToolbarItem(placement: .destructiveAction) {
-                        Button("Clear meal", role: .destructive, action: onClear)
+                        Button("meal.clear", role: .destructive, action: onClear)
                             .foregroundStyle(.red)
                     }
                 }
@@ -85,16 +85,16 @@ struct MealPickerSheet: View {
             if filtered.isEmpty {
                 Section {
                     ContentUnavailableView(
-                        "No recipes yet",
+                        L10n.string("recipes.empty.title"),
                         systemImage: "fork.knife",
-                        description: Text("Add recipes to your household to get started.")
+                        description: Text(L10n.string("recipes.empty.pickerMessage"))
                     )
                 }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
             } else {
                 if !likedRecipes.isEmpty {
-                    Section("Liked") {
+                    Section(L10n.string("recipes.liked")) {
                         ForEach(likedRecipes) { recipe in
                             Button { onSelect(recipe) } label: { RecipePickerRow(recipe: recipe) }
                                 .buttonStyle(.plain)
@@ -102,7 +102,7 @@ struct MealPickerSheet: View {
                     }
                 }
                 if !otherRecipes.isEmpty {
-                    Section(likedRecipes.isEmpty ? "" : "All recipes") {
+                    Section(likedRecipes.isEmpty ? "" : L10n.string("recipes.all")) {
                         ForEach(otherRecipes) { recipe in
                             Button { onSelect(recipe) } label: { RecipePickerRow(recipe: recipe) }
                                 .buttonStyle(.plain)
@@ -119,13 +119,13 @@ struct MealPickerSheet: View {
                     HStack {
                         Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
-                        Text(isSkipped ? "Plan this day instead" : "Skip this day")
+                        Text(isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"))
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                         Spacer()
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(isSkipped ? "Plan \(day.weekdayLabel) instead" : "Skip \(day.weekdayLabel)")
+                .accessibilityLabel(isSkipped ? L10n.format("accessibility.planDayInstead", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
             }
         }
         .listStyle(.insetGrouped)
@@ -145,7 +145,7 @@ private struct RecipePickerRow: View {
                 .font(.body.weight(.medium))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
             HStack(spacing: 6) {
-                Text("\(recipe.servings) servings")
+                Text(L10n.format("format.servings", recipe.servings))
                 if let total = cookTime {
                     Text("·")
                     Text("\(total) min")
