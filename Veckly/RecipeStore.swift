@@ -31,7 +31,7 @@ final class RecipeStore {
         defer { isLoading = false }
 
         do {
-            let fetched = try await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: false)
+            let fetched = try await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: true)
             recipes = fetched
             fullRecipeCache = Dictionary(uniqueKeysWithValues: fetched.map { ($0.id, $0) })
             recipesHouseholdID = householdID
