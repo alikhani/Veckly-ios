@@ -133,16 +133,30 @@ final class AuthSessionStore {
         sessionStorage.save(session)
     }
 
+    // Coalesces concurrent refresh attempts into one network call — without this,
+    // several requests hitting an expired token at once would each independently
+    // refresh, and if Supabase rotates the refresh token, the losing attempt fails
+    // and spuriously signs the user out.
+    private var refreshTask: Task<Bool, Never>?
+
     @discardableResult
     private func attemptRefresh(refreshToken: String) async -> Bool {
-        do {
-            let session = try await SupabaseAuthClient(environment: environment)
-                .refreshSession(refreshToken: refreshToken)
-            applySession(session)
-            return true
-        } catch {
-            return false
+        if let refreshTask { return await refreshTask.value }
+
+        let task = Task<Bool, Never> {
+            do {
+                let session = try await SupabaseAuthClient(environment: environment)
+                    .refreshSession(refreshToken: refreshToken)
+                applySession(session)
+                return true
+            } catch {
+                return false
+            }
         }
+        refreshTask = task
+        let result = await task.value
+        refreshTask = nil
+        return result
     }
 
     // Decodes the JWT payload (middle segment) and checks the `exp` claim.

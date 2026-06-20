@@ -39,6 +39,25 @@ struct HouseholdStoreTests {
         #expect(store.detailsHouseholdID == nil)
     }
 
+    @Test func loadHouseholdDetailsIgnoresReentrantCallWhileInFlight() async {
+        let apiClient = SlowFakeHouseholdStoreAPIClient()
+        let store = HouseholdStore(apiClient: apiClient)
+
+        let firstCall = Task { await store.loadHouseholdDetails(householdID: TestHouseholds.first.id) }
+        await apiClient.waitUntilFetchStarted()
+        #expect(store.isLoadingDetails == true)
+
+        // A second call arriving while the first is still in flight must not
+        // start a second fetch (the race the guard in HouseholdStore prevents).
+        await store.loadHouseholdDetails(householdID: TestHouseholds.first.id)
+        #expect(await apiClient.fetchCount == 1)
+
+        await apiClient.resumeFetch()
+        await firstCall.value
+        #expect(store.isLoadingDetails == false)
+        #expect(store.detailsHouseholdID == TestHouseholds.first.id)
+    }
+
     @Test func changingActiveHouseholdClearsHouseholdScopedState() async {
         let apiClient = FakeHouseholdStoreAPIClient()
         let store = HouseholdStore(apiClient: apiClient)
@@ -55,6 +74,66 @@ struct HouseholdStoreTests {
         #expect(store.detailsHouseholdID == nil)
         #expect(store.invitesHouseholdID == nil)
     }
+}
+
+private actor SlowFakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
+    private(set) var fetchCount = 0
+    private var hasStarted = false
+    private var startedContinuation: CheckedContinuation<Void, Never>?
+    private var resumeContinuation: CheckedContinuation<Void, Never>?
+
+    func waitUntilFetchStarted() async {
+        if hasStarted { return }
+        await withCheckedContinuation { startedContinuation = $0 }
+    }
+
+    func resumeFetch() {
+        resumeContinuation?.resume()
+        resumeContinuation = nil
+    }
+
+    func listMembers(householdID: String) async throws -> [HouseholdMember] {
+        fetchCount += 1
+        hasStarted = true
+        startedContinuation?.resume()
+        startedContinuation = nil
+        await withCheckedContinuation { resumeContinuation = $0 }
+        return [HouseholdMember(userId: TestHouseholds.userA, role: .owner)]
+    }
+
+    func getProfile(householdID: String) async throws -> HouseholdProfile? { nil }
+    func bootstrapHousehold() async throws -> Household { TestHouseholds.first }
+    func listHouseholds() async throws -> [Household] { [TestHouseholds.first] }
+
+    func saveProfile(
+        householdID: String,
+        adults: Int,
+        children: Int,
+        priorities: [HouseholdPriority],
+        avoidIngredients: [String],
+        selectedDays: [Weekday]
+    ) async throws -> HouseholdProfile {
+        HouseholdProfile(
+            householdId: householdID,
+            adults: adults,
+            children: children,
+            priorities: priorities,
+            avoidIngredients: avoidIngredients,
+            selectedDays: selectedDays
+        )
+    }
+
+    func createInvite(householdID: String) async throws -> HouseholdInvite {
+        HouseholdInvite(id: "invite", token: "token", email: nil, status: "pending", expiresAt: "2026-06-30T00:00:00.000Z")
+    }
+
+    func listInvites(householdID: String) async throws -> [HouseholdInvite] { [] }
+    func revokeInvite(householdID: String, inviteID: String) async throws {}
+    func lookupInvite(token: String) async throws -> InviteLanding {
+        InviteLanding(householdName: "First household", status: "pending")
+    }
+    func acceptInvite(token: String) async throws -> String { TestHouseholds.first.id }
+    func renameHousehold(householdID: String, name: String) async throws {}
 }
 
 private enum TestHouseholds {
@@ -132,4 +211,6 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     func acceptInvite(token: String) async throws -> String {
         TestHouseholds.second.id
     }
+
+    func renameHousehold(householdID: String, name: String) async throws {}
 }

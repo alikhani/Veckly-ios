@@ -19,9 +19,11 @@ final class AppModel {
         self.environment = environment
         self.usesSeededCoreReader = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "core-reader"
         let authSessionStore = AuthSessionStore(environment: environment)
-        let apiClient = VecklyAPIClient(baseURL: environment.apiBaseURL) {
-            await authSessionStore.currentValidToken()
-        }
+        let apiClient = VecklyAPIClient(
+            baseURL: environment.apiBaseURL,
+            accessToken: { await authSessionStore.currentValidToken() },
+            refreshToken: { await authSessionStore.refreshSession() }
+        )
 
         self.authSessionStore = authSessionStore
         self.apiClient = apiClient
@@ -65,11 +67,36 @@ final class AppModel {
         await loadCoreReader()
     }
 
+    // `detailsHouseholdID == household.id` matters as much as `!isLoadingDetails`:
+    // right after bootstrap finishes, the active household is set but details haven't
+    // started loading yet, so `cachedProfile` is nil for a household we simply haven't
+    // checked — without this guard that reads as "needs onboarding" and the onboarding
+    // cover flashes in before the real profile arrives.
+    nonisolated static func needsOnboarding(
+        isSignedIn: Bool,
+        isLoadingHouseholds: Bool,
+        isLoadingDetails: Bool,
+        activeHouseholdID: String?,
+        detailsHouseholdID: String?,
+        hasProfile: Bool
+    ) -> Bool {
+        guard isSignedIn,
+              !isLoadingHouseholds,
+              !isLoadingDetails,
+              let activeHouseholdID,
+              detailsHouseholdID == activeHouseholdID else { return false }
+        return !hasProfile
+    }
+
     var needsOnboarding: Bool {
-        guard authSessionStore.isSignedIn,
-              !householdStore.isLoading,
-              let household = householdStore.activeHousehold else { return false }
-        return householdStore.cachedProfile(for: household.id) == nil
+        Self.needsOnboarding(
+            isSignedIn: authSessionStore.isSignedIn,
+            isLoadingHouseholds: householdStore.isLoading,
+            isLoadingDetails: householdStore.isLoadingDetails,
+            activeHouseholdID: householdStore.activeHousehold?.id,
+            detailsHouseholdID: householdStore.detailsHouseholdID,
+            hasProfile: householdStore.activeHousehold.map { householdStore.cachedProfile(for: $0.id) != nil } ?? false
+        )
     }
 
     func loadCoreReader() async {

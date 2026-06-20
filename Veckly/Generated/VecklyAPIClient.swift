@@ -8,13 +8,17 @@ struct VecklyAPIClient {
     private let baseURL: URL
     private let getToken: @Sendable () async -> String?
 
-    init(baseURL: URL, accessToken: @escaping @Sendable () async -> String?) {
+    init(
+        baseURL: URL,
+        accessToken: @escaping @Sendable () async -> String?,
+        refreshToken: @escaping @Sendable () async -> Bool
+    ) {
         self.baseURL = baseURL
         self.getToken = accessToken
         _client = Client(
             serverURL: baseURL,
             transport: URLSessionTransport(),
-            middlewares: [RequestHeaderMiddleware(getToken: accessToken)]
+            middlewares: [RequestHeaderMiddleware(getToken: accessToken, refreshToken: refreshToken)]
         )
     }
 
@@ -302,6 +306,18 @@ struct VecklyAPIClient {
         }
     }
 
+    func renameHousehold(householdID: String, name: String) async throws {
+        let output = try await _client.renameHousehold(path: .init(id: householdID), body: .json(.init(name: name)))
+        switch output {
+        case .ok: return
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .forbidden: throw APIError.server(statusCode: 403)
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
         let output = try await _client.listHouseholdMembers(path: .init(householdId: householdID))
         switch output {
@@ -488,6 +504,7 @@ struct VecklyAPIClient {
 
 private struct RequestHeaderMiddleware: ClientMiddleware {
     let getToken: @Sendable () async -> String?
+    let refreshToken: @Sendable () async -> Bool
 
     @concurrent func intercept(
         _ request: HTTPRequest,
@@ -497,6 +514,23 @@ private struct RequestHeaderMiddleware: ClientMiddleware {
         next: @concurrent @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
     ) async throws -> (HTTPResponse, HTTPBody?) {
         guard let token = await getToken() else { throw APIError.unauthorized }
+        let result = try await send(request, body: body, baseURL: baseURL, token: token, next: next)
+        // The server rejected the token we had — try one transparent refresh-and-retry
+        // before letting the 401 propagate, so a routine token rotation never surfaces
+        // as a user-visible load error.
+        guard result.0.status == .unauthorized,
+              await refreshToken(),
+              let freshToken = await getToken() else { return result }
+        return try await send(request, body: body, baseURL: baseURL, token: freshToken, next: next)
+    }
+
+    private func send(
+        _ request: HTTPRequest,
+        body: HTTPBody?,
+        baseURL: URL,
+        token: String,
+        next: @concurrent @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+    ) async throws -> (HTTPResponse, HTTPBody?) {
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
         request.headerFields[.acceptLanguage] = AppLocalePreference.acceptLanguageHeader

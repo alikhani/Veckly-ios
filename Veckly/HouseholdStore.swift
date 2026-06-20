@@ -27,6 +27,7 @@ final class HouseholdStore {
     }
 
     func bootstrapAndLoadHouseholds() async {
+        guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -46,6 +47,7 @@ final class HouseholdStore {
             && detailsLastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && !members.isEmpty
         guard !cacheIsFresh else { return }
+        guard !isLoadingDetails else { return }
 
         if detailsHouseholdID != householdID {
             resetDetails()
@@ -101,6 +103,17 @@ final class HouseholdStore {
         profile = savedProfile
         detailsHouseholdID = householdID
         detailsLastFetchedAt = Date()
+    }
+
+    func renameHousehold(householdID: String, name: String) async throws {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        try await apiClient.renameHousehold(householdID: householdID, name: trimmed)
+        if let idx = households.firstIndex(where: { $0.id == householdID }) {
+            households[idx] = Household(id: householdID, name: trimmed, role: households[idx].role)
+        }
+        if activeHousehold?.id == householdID {
+            activeHousehold = Household(id: householdID, name: trimmed, role: activeHousehold!.role)
+        }
     }
 
     func createInvite(householdID: String) async throws -> HouseholdInvite {
@@ -167,6 +180,17 @@ final class HouseholdStore {
         let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
         households = [household]
         activeHousehold = household
+        members = [HouseholdMember(userId: "11111111-1111-1111-1111-111111111111", role: .owner)]
+        profile = HouseholdProfile(
+            householdId: household.id,
+            adults: 2,
+            children: 1,
+            priorities: [.quick, .childFriendly],
+            avoidIngredients: [],
+            selectedDays: [.monday, .tuesday, .wednesday, .thursday, .friday]
+        )
+        detailsHouseholdID = household.id
+        detailsLastFetchedAt = Date()
     }
 
     private func resetDetails() {
@@ -202,6 +226,7 @@ protocol HouseholdStoreAPIClient {
     func revokeInvite(householdID: String, inviteID: String) async throws
     func lookupInvite(token: String) async throws -> InviteLanding
     func acceptInvite(token: String) async throws -> String
+    func renameHousehold(householdID: String, name: String) async throws
 }
 
 extension VecklyAPIClient: HouseholdStoreAPIClient {}
