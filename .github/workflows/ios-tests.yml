@@ -38,21 +38,41 @@ jobs:
           restore-keys: |
             spm-${{ runner.os }}-
 
-      # SANITY CHECK — temporary. iOS Simulator never appears as a destination for
-      # this scheme on this runner no matter what we try (named device, generic
-      # placeholder, explicit Xcode version, explicit UDID boot — all give the
-      # identical "only visionOS Simulator is available" result). Targeting
-      # visionOS directly tells us whether xcodebuild/testing works on this runner
-      # at all, isolating whether the problem is iOS-Simulator-specific.
-      - name: Run VecklyTests (visionOS sanity check)
+      # The project's real IPHONEOS_DEPLOYMENT_TARGET (26.5) is newer than any iOS
+      # SDK/simulator runtime installed on this runner image (max iOS 26.2) — that's
+      # why no concrete iOS Simulator ever showed up as a destination, regardless of
+      # Xcode version or boot state. Overriding the deployment target for this test
+      # invocation only (not touching the committed project settings) lets the test
+      # build target an SDK that's actually present. Safe for unit tests, which don't
+      # rely on iOS 26.3–26.5-exclusive APIs. Revisit/remove once the runner image
+      # ships an SDK that satisfies 26.5.
+      - name: Boot an iOS simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          RUNTIME_ID=$(xcrun simctl list runtimes available -j | jq -r '[.runtimes[] | select(.name | startswith("iOS"))] | sort_by(.version) | last.identifier')
+          echo "Using runtime: $RUNTIME_ID"
+          DEVICE_UDID=$(xcrun simctl list devices available -j | jq -r --arg rt "$RUNTIME_ID" '.devices[$rt][] | select(.name | test("^iPhone")) | .udid' | head -1)
+          if [ -z "$DEVICE_UDID" ]; then
+            echo "No iPhone device found for runtime $RUNTIME_ID" >&2
+            xcrun simctl list devices available >&2
+            exit 1
+          fi
+          echo "Booting device: $DEVICE_UDID"
+          xcrun simctl boot "$DEVICE_UDID"
+          xcrun simctl bootstatus "$DEVICE_UDID" -b
+          echo "udid=$DEVICE_UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Run VecklyTests
         run: |
           xcodebuild test \
             -project Veckly.xcodeproj \
             -scheme Veckly \
-            -destination "platform=visionOS Simulator,name=Apple Vision Pro" \
+            -destination "id=${{ steps.simulator.outputs.udid }}" \
             -derivedDataPath DerivedData \
             -only-testing:VecklyTests \
-            -resultBundlePath TestResults.xcresult
+            -resultBundlePath TestResults.xcresult \
+            IPHONEOS_DEPLOYMENT_TARGET=26.2
 
       - name: Upload test results
         if: always()
