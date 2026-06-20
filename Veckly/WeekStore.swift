@@ -40,8 +40,8 @@ final class WeekStore {
     func loadCurrentWeek(household: Household) async {
         weekStartDate = WeekCalendar.currentWeekStartDate()
         guard !isLoading else { return }
-        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
-        isLoading = true
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 || summary == nil else { return }
+        isLoading = summary == nil
         errorMessage = nil
         defer { isLoading = false }
 
@@ -442,11 +442,11 @@ extension Weekday {
 
     private func localizedName(template: String) -> String {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.locale = .current
+        calendar.locale = AppLocalePreference.effectiveLocale
         let monday = DateComponents(calendar: calendar, year: 2024, month: 1, day: 1).date!
         let date = calendar.date(byAdding: .day, value: ordinal, to: monday)!
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = AppLocalePreference.effectiveLocale
         formatter.setLocalizedDateFormatFromTemplate(template)
         return formatter.string(from: date)
     }

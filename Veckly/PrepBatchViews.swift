@@ -126,7 +126,7 @@ private struct PrepBatchRow: View {
         guard let date = weekDateFormatter.date(from: dateString) else { return dateString }
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE d MMM"
-        formatter.locale = Locale.current
+        formatter.locale = AppLocalePreference.effectiveLocale
         return formatter.string(from: date)
     }
 }
@@ -236,7 +236,7 @@ struct PrepBatchFormSheet: View {
     private func dayLabel(_ date: Date) -> String {
         let f = DateFormatter()
         f.dateFormat = "EEEE d MMM"
-        f.locale = Locale.current
+        f.locale = AppLocalePreference.effectiveLocale
         return f.string(from: date)
     }
 }

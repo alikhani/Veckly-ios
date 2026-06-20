@@ -60,6 +60,22 @@ final class VecklyUITests: XCTestCase {
     }
 
     @MainActor
+    func testHouseholdTabChangesLanguageAtRuntime() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-veckly.app-language", "system"]
+        app.launch()
+
+        app.tabBars.buttons["Household"].tap()
+        XCTAssertTrue(app.staticTexts["Test household"].waitForExistence(timeout: 5))
+
+        app.buttons["languageSelectionLink"].tap()
+        app.buttons["languageOption.swedish"].tap()
+
+        XCTAssertTrue(app.tabBars.buttons["Hushåll"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {

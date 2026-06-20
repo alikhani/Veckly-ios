@@ -26,7 +26,7 @@ final class RecipeStore {
         let cacheIsFresh = lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true && !recipes.isEmpty
         guard !cacheIsFresh else { return }
 
-        isLoading = true
+        isLoading = recipes.isEmpty
         errorMessage = nil
         defer { isLoading = false }
 

@@ -71,8 +71,8 @@ final class ShoppingListStore {
 
     func loadCurrentWeek(household: Household, weekStartDate: String) async {
         guard !isLoading else { return }
-        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 60 || summary == nil else { return }
-        isLoading = true
+        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 || summary == nil else { return }
+        isLoading = summary == nil
         errorMessage = nil
         defer { isLoading = false }
 

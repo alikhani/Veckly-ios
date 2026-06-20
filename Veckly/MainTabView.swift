@@ -25,10 +25,10 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                SettingsTabView()
+                HouseholdTabView()
             }
             .tabItem {
-                Label("tabs.settings", systemImage: "gearshape")
+                Label("tabs.household", systemImage: "person.2")
             }
         }
         .tint(VecklyDesign.Colors.hearthOrange)
