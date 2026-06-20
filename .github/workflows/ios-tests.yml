@@ -1,0 +1,66 @@
+name: iOS Tests
+
+on:
+  push:
+    branches: [develop, master, staging-plan]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Cache resolved Swift packages
+        uses: actions/cache@v4
+        with:
+          path: DerivedData/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('Veckly.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      # The runner image's exact simulator lineup drifts over time (e.g. "iPhone 17"
+      # used locally may not exist yet on the CI image), so pick whatever iPhone
+      # simulator is actually available instead of hardcoding a model name.
+      - name: Select an available iPhone simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          DEVICE_NAME=$(xcrun simctl list devices available -j | jq -r '[.devices[][] | select(.name | test("^iPhone"))][0].name // empty')
+          if [ -z "$DEVICE_NAME" ]; then
+            echo "No available iPhone simulator found on this runner:" >&2
+            xcrun simctl list devices available >&2
+            exit 1
+          fi
+          echo "Using simulator: $DEVICE_NAME"
+          echo "name=$DEVICE_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Run VecklyTests
+        run: |
+          xcodebuild test \
+            -project Veckly.xcodeproj \
+            -scheme Veckly \
+            -destination "platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}" \
+            -derivedDataPath DerivedData \
+            -only-testing:VecklyTests \
+            -resultBundlePath TestResults.xcresult
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+          retention-days: 14
