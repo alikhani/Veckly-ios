@@ -30,13 +30,6 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Diagnose available simulator runtimes
-        run: |
-          echo "--- Installed simulator runtimes (simctl) ---"
-          xcrun simctl list runtimes
-          echo "--- Eligible destinations for the Veckly scheme ---"
-          xcodebuild -showdestinations -project Veckly.xcodeproj -scheme Veckly || true
-
       - name: Cache resolved Swift packages
         uses: actions/cache@v4
         with:
@@ -45,12 +38,33 @@ jobs:
           restore-keys: |
             spm-${{ runner.os }}-
 
+      # `xcodebuild -showdestinations` doesn't reliably surface freshly-provisioned
+      # iOS Simulator devices on a clean runner image, even though `simctl` already
+      # sees them — booting one explicitly by UDID first and targeting it directly
+      # sidesteps that name-matching layer entirely.
+      - name: Boot an iOS simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          RUNTIME_ID=$(xcrun simctl list runtimes available -j | jq -r '[.runtimes[] | select(.name | startswith("iOS"))] | sort_by(.version) | last.identifier')
+          echo "Using runtime: $RUNTIME_ID"
+          DEVICE_UDID=$(xcrun simctl list devices available -j | jq -r --arg rt "$RUNTIME_ID" '.devices[$rt][] | select(.name | test("^iPhone")) | .udid' | head -1)
+          if [ -z "$DEVICE_UDID" ]; then
+            echo "No iPhone device found for runtime $RUNTIME_ID" >&2
+            xcrun simctl list devices available >&2
+            exit 1
+          fi
+          echo "Booting device: $DEVICE_UDID"
+          xcrun simctl boot "$DEVICE_UDID"
+          xcrun simctl bootstatus "$DEVICE_UDID" -b
+          echo "udid=$DEVICE_UDID" >> "$GITHUB_OUTPUT"
+
       - name: Run VecklyTests
         run: |
           xcodebuild test \
             -project Veckly.xcodeproj \
             -scheme Veckly \
-            -destination "platform=iOS Simulator,name=Any iOS Simulator Device" \
+            -destination "id=${{ steps.simulator.outputs.udid }}" \
             -derivedDataPath DerivedData \
             -only-testing:VecklyTests \
             -resultBundlePath TestResults.xcresult
