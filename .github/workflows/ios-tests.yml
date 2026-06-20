@@ -20,19 +20,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The runner's default `xcode-select` (16.4) doesn't pair with any installed
+      # iOS Simulator runtime on this image — only visionOS shows up as a valid
+      # destination under it. The 26.x Xcode family (matching our local toolchain)
+      # pairs correctly with the iOS 26.x simulator runtimes that are installed.
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app
+
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Diagnose available Xcodes and simulator runtimes
+      - name: Diagnose available simulator runtimes
         run: |
-          echo "--- Installed Xcode apps ---"
-          ls -1d /Applications/Xcode*.app
-          echo "--- xcode-select path ---"
-          xcode-select -p
           echo "--- Installed simulator runtimes (simctl) ---"
           xcrun simctl list runtimes
-          echo "--- Available iOS Simulator devices (simctl) ---"
-          xcrun simctl list devices available
+          echo "--- Eligible destinations for the Veckly scheme ---"
+          xcodebuild -showdestinations -project Veckly.xcodeproj -scheme Veckly || true
 
       - name: Cache resolved Swift packages
         uses: actions/cache@v4
