@@ -23,6 +23,17 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Diagnose available Xcodes and simulator runtimes
+        run: |
+          echo "--- Installed Xcode apps ---"
+          ls -1d /Applications/Xcode*.app
+          echo "--- xcode-select path ---"
+          xcode-select -p
+          echo "--- Installed simulator runtimes (simctl) ---"
+          xcrun simctl list runtimes
+          echo "--- Available iOS Simulator devices (simctl) ---"
+          xcrun simctl list devices available
+
       - name: Cache resolved Swift packages
         uses: actions/cache@v4
         with:
