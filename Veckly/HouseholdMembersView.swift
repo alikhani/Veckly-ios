@@ -10,6 +10,8 @@ struct HouseholdMembersView: View {
     @State private var isJoining = false
     @State private var isCreatingInvite = false
     @State private var revokingInviteIDs: Set<String> = []
+    @State private var removingMemberIDs: Set<String> = []
+    @State private var isLeavingHousehold = false
     @State private var newInvite: HouseholdInvite?
     @State private var errorMessage: String?
 
@@ -75,6 +77,34 @@ struct HouseholdMembersView: View {
                         Text(member.role == .owner ? L10n.string("members.owner") : L10n.string("members.member"))
                             .font(.caption)
                             .foregroundStyle(member.role == .owner ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+
+                        if member.userId == myUserID {
+                            Button(role: .destructive) {
+                                Task { await leaveCurrentHousehold() }
+                            } label: {
+                                if isLeavingHousehold {
+                                    ProgressView()
+                                } else {
+                                    Text(leaveButtonTitle)
+                                        .font(.caption.weight(.semibold))
+                                }
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(isLeavingHousehold)
+                        } else if isOwner {
+                            Button(role: .destructive) {
+                                Task { await removeMember(member) }
+                            } label: {
+                                if removingMemberIDs.contains(member.userId) {
+                                    ProgressView()
+                                } else {
+                                    Image(systemName: "person.fill.xmark")
+                                        .font(.caption)
+                                }
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(removingMemberIDs.contains(member.userId))
+                        }
                     }
                 }
             }
@@ -182,7 +212,7 @@ struct HouseholdMembersView: View {
         } header: {
             Text("members.joinHousehold")
         } footer: {
-            Text("members.joinFooter")
+            Text(joinFooterText)
         }
     }
 
@@ -205,6 +235,19 @@ struct HouseholdMembersView: View {
             try await appModel.householdStore.revokeInvite(householdID: hid, inviteID: invite.id)
         } catch {
             errorMessage = L10n.string("error.members.revokeInvite")
+        }
+    }
+
+    private func removeMember(_ member: HouseholdMember) async {
+        guard let hid = household?.id else { return }
+        removingMemberIDs.insert(member.userId)
+        defer { removingMemberIDs.remove(member.userId) }
+        do {
+            try await appModel.householdStore.removeMember(householdID: hid, userID: member.userId)
+        } catch APIError.server(409) {
+            errorMessage = lastOwnerErrorText
+        } catch {
+            errorMessage = removeMemberErrorText
         }
     }
 
@@ -239,6 +282,51 @@ struct HouseholdMembersView: View {
         } catch {
             errorMessage = L10n.string("error.members.join")
         }
+    }
+
+    private func leaveCurrentHousehold() async {
+        guard let hid = household?.id else { return }
+        let userID = myUserID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !userID.isEmpty else {
+            errorMessage = L10n.string("error.members.join")
+            return
+        }
+
+        isLeavingHousehold = true
+        defer { isLeavingHousehold = false }
+
+        do {
+            try await appModel.householdStore.leaveHousehold(householdID: hid, userID: userID)
+            await appModel.loadActiveHouseholdReaderData()
+        } catch APIError.server(409) {
+            errorMessage = lastOwnerErrorText
+        } catch {
+            errorMessage = leaveHouseholdErrorText
+        }
+    }
+
+    private var joinFooterText: String {
+        "\(L10n.string("members.joinFooter"))\n\n\(multiHouseholdHint)"
+    }
+
+    private var multiHouseholdHint: String {
+        L10n.string("members.multiHouseholdHint")
+    }
+
+    private var leaveButtonTitle: String {
+        L10n.string("members.leave")
+    }
+
+    private var removeMemberErrorText: String {
+        L10n.string("error.members.removeMember")
+    }
+
+    private var leaveHouseholdErrorText: String {
+        L10n.string("error.members.leaveHousehold")
+    }
+
+    private var lastOwnerErrorText: String {
+        L10n.string("error.members.lastOwner")
     }
 }
 

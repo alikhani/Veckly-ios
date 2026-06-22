@@ -24,7 +24,8 @@ struct HouseholdStoreTests {
 
     @Test func acceptingInviteSelectsJoinedHouseholdAndClearsDetails() async throws {
         let apiClient = FakeHouseholdStoreAPIClient()
-        let store = HouseholdStore(apiClient: apiClient)
+        let selectionStore = FakeHouseholdSelectionStore()
+        let store = HouseholdStore(apiClient: apiClient, selectionStore: selectionStore)
         store.setActiveHousehold(TestHouseholds.first)
 
         await store.loadHouseholdDetails(householdID: TestHouseholds.first.id)
@@ -37,6 +38,45 @@ struct HouseholdStoreTests {
         #expect(store.members.isEmpty)
         #expect(store.profile == nil)
         #expect(store.detailsHouseholdID == nil)
+        #expect(selectionStore.selectedHouseholdIDValue == TestHouseholds.second.id)
+    }
+
+    @Test func bootstrapPrefersPersistedHouseholdSelection() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        let selectionStore = FakeHouseholdSelectionStore(selectedHouseholdIDValue: TestHouseholds.second.id)
+        let store = HouseholdStore(apiClient: apiClient, selectionStore: selectionStore)
+
+        await store.bootstrapAndLoadHouseholds()
+
+        #expect(store.households == [TestHouseholds.first, TestHouseholds.second])
+        #expect(store.activeHousehold == TestHouseholds.second)
+    }
+
+    @Test func leavingActiveHouseholdSelectsAnotherHousehold() async throws {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        let selectionStore = FakeHouseholdSelectionStore()
+        let store = HouseholdStore(apiClient: apiClient, selectionStore: selectionStore)
+        store.setActiveHousehold(TestHouseholds.first)
+        await store.loadHouseholdDetails(householdID: TestHouseholds.first.id)
+
+        try await store.leaveHousehold(householdID: TestHouseholds.first.id, userID: TestHouseholds.userA)
+
+        #expect(store.households == [TestHouseholds.second])
+        #expect(store.activeHousehold == TestHouseholds.second)
+        #expect(selectionStore.selectedHouseholdIDValue == TestHouseholds.second.id)
+    }
+
+    @Test func deletingOnlyHouseholdBootstrapsReplacementHousehold() async throws {
+        let apiClient = FakeHouseholdStoreAPIClient(households: [TestHouseholds.first], bootstrappedHousehold: TestHouseholds.bootstrapped)
+        let selectionStore = FakeHouseholdSelectionStore()
+        let store = HouseholdStore(apiClient: apiClient, selectionStore: selectionStore)
+        store.setActiveHousehold(TestHouseholds.first)
+
+        try await store.deleteHousehold(householdID: TestHouseholds.first.id)
+
+        #expect(store.households == [TestHouseholds.bootstrapped])
+        #expect(store.activeHousehold == TestHouseholds.bootstrapped)
+        #expect(selectionStore.selectedHouseholdIDValue == TestHouseholds.bootstrapped.id)
     }
 
     @Test func loadHouseholdDetailsIgnoresReentrantCallWhileInFlight() async {
@@ -134,6 +174,8 @@ private actor SlowFakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     }
     func acceptInvite(token: String) async throws -> String { TestHouseholds.first.id }
     func renameHousehold(householdID: String, name: String) async throws {}
+    func removeMember(householdID: String, userID: String) async throws {}
+    func deleteHousehold(householdID: String) async throws {}
 }
 
 private enum TestHouseholds {
@@ -141,15 +183,30 @@ private enum TestHouseholds {
     static let userB = "22222222-2222-2222-2222-222222222222"
     static let first = Household(id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", name: "First household", role: .owner)
     static let second = Household(id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", name: "Second household", role: .member)
+    static let bootstrapped = Household(id: "cccccccc-cccc-cccc-cccc-cccccccccccc", name: "My household", role: .owner)
 }
 
 private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
+    private var households: [Household]
+    private let bootstrappedHousehold: Household
+
+    init(
+        households: [Household] = [TestHouseholds.first, TestHouseholds.second],
+        bootstrappedHousehold: Household = TestHouseholds.first
+    ) {
+        self.households = households
+        self.bootstrappedHousehold = bootstrappedHousehold
+    }
+
     func bootstrapHousehold() async throws -> Household {
-        TestHouseholds.first
+        if !households.contains(bootstrappedHousehold) {
+            households = [bootstrappedHousehold]
+        }
+        return bootstrappedHousehold
     }
 
     func listHouseholds() async throws -> [Household] {
-        [TestHouseholds.first, TestHouseholds.second]
+        households
     }
 
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
@@ -209,8 +266,41 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     }
 
     func acceptInvite(token: String) async throws -> String {
-        TestHouseholds.second.id
+        if !households.contains(TestHouseholds.second) {
+            households.append(TestHouseholds.second)
+        }
+        return TestHouseholds.second.id
     }
 
     func renameHousehold(householdID: String, name: String) async throws {}
+
+    func removeMember(householdID: String, userID: String) async throws {
+        if userID == TestHouseholds.userA {
+            households.removeAll { $0.id == householdID }
+        }
+    }
+
+    func deleteHousehold(householdID: String) async throws {
+        households.removeAll { $0.id == householdID }
+    }
+}
+
+private final class FakeHouseholdSelectionStore: HouseholdSelectionPersisting {
+    var selectedHouseholdIDValue: String?
+
+    init(selectedHouseholdIDValue: String? = nil) {
+        self.selectedHouseholdIDValue = selectedHouseholdIDValue
+    }
+
+    func selectedHouseholdID() -> String? {
+        selectedHouseholdIDValue
+    }
+
+    func setSelectedHouseholdID(_ householdID: String) {
+        selectedHouseholdIDValue = householdID
+    }
+
+    func clearSelectedHouseholdID() {
+        selectedHouseholdIDValue = nil
+    }
 }

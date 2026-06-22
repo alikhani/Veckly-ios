@@ -122,8 +122,58 @@ struct ShoppingListItem: Decodable, Equatable, Identifiable {
     let amount: String?
     let unit: String?
     let checked: Bool
+    let isCustom: Bool
 
     var id: String { itemKey }
+
+    init(
+        itemKey: String,
+        label: String,
+        amount: String?,
+        unit: String?,
+        checked: Bool,
+        isCustom: Bool = false
+    ) {
+        self.itemKey = itemKey
+        self.label = label
+        self.amount = amount
+        self.unit = unit
+        self.checked = checked
+        self.isCustom = isCustom
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case itemKey
+        case label
+        case amount
+        case unit
+        case checked
+        case isCustom
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        itemKey = try container.decode(String.self, forKey: .itemKey)
+        label = try container.decode(String.self, forKey: .label)
+        amount = try container.decodeIfPresent(String.self, forKey: .amount)
+        unit = try container.decodeIfPresent(String.self, forKey: .unit)
+        checked = try container.decode(Bool.self, forKey: .checked)
+        isCustom = try container.decodeIfPresent(Bool.self, forKey: .isCustom) ?? false
+    }
+}
+
+struct ShoppingCustomItem: Codable, Equatable, Identifiable {
+    let itemKey: String
+    let label: String
+    let category: String
+
+    var id: String { itemKey }
+}
+
+struct ShoppingListSharedState: Codable, Equatable {
+    let checkedItems: [String]
+    let pantryStock: [String: Double]
+    let customItems: [ShoppingCustomItem]
 }
 
 enum WeekPlanEventInput {

@@ -80,6 +80,28 @@ struct VecklyAPIClient {
         }
     }
 
+    func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?) {
+        guard let token = await getToken() else { throw APIError.unauthorized }
+        let url = baseURL.appendingPathComponent("households/\(householdID)/shopping-lists/\(weekStartDate)/state")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalePreference.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+
+        switch http.statusCode {
+        case 200:
+            let body = try JSONDecoder().decode(ShoppingListStateResponse.self, from: data)
+            return (body.state, body.updatedAt)
+        case 401:
+            throw APIError.unauthorized
+        default:
+            throw APIError.server(statusCode: http.statusCode)
+        }
+    }
+
     func appendWeekPlanEvent(
         householdID: String,
         weekStartDate: String,
@@ -327,6 +349,35 @@ struct VecklyAPIClient {
         }
     }
 
+    func removeMember(householdID: String, userID: String) async throws {
+        let output = try await _client.removeHouseholdMember(path: .init(householdId: householdID, userId: userID))
+        switch output {
+        case .noContent: return
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case .conflict: throw APIError.server(statusCode: 409)
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func deleteHousehold(householdID: String) async throws {
+        guard let token = await getToken() else { throw APIError.unauthorized }
+        let url = baseURL.appendingPathComponent("households/\(householdID)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalePreference.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        switch http.statusCode {
+        case 204: return
+        case 401: throw APIError.unauthorized
+        case 403: throw APIError.server(statusCode: 403)
+        case 404: throw APIError.notFound
+        default: throw APIError.server(statusCode: http.statusCode)
+        }
+    }
+
     func getProfile(householdID: String) async throws -> HouseholdProfile? {
         let output = try await _client.getHouseholdProfile(path: .init(householdId: householdID))
         switch output {
@@ -468,38 +519,66 @@ struct VecklyAPIClient {
         householdID: String,
         weekStartDate: String,
         checkedItems: [String],
-        expectedUpdatedAt: String?
+        pantryStock: [String: Double],
+        expectedUpdatedAt: String?,
+        customItems: [ShoppingCustomItem]
     ) async throws -> String? {
-        let shopState = Components.Schemas.ShoppingStatePayload(
-            checkedItems: checkedItems,
-            pantryStock: .init(additionalProperties: [:])
+        guard let token = await getToken() else { throw APIError.unauthorized }
+        let url = baseURL.appendingPathComponent("households/\(householdID)/shopping-lists/\(weekStartDate)/state")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalePreference.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
+        request.httpBody = try JSONEncoder().encode(
+            ShoppingListStateUpdateRequest(
+                expectedUpdatedAt: expectedUpdatedAt,
+                state: .init(
+                    checkedItems: checkedItems.sorted(),
+                    pantryStock: pantryStock,
+                    customItems: customItems
+                )
+            )
         )
-        let stateData = try JSONEncoder().encode(shopState)
-        let requestState = try JSONDecoder().decode(
-            Components.Schemas.UpdateShoppingListStateRequest.statePayload.self,
-            from: stateData
-        )
-        let requestBody = Components.Schemas.UpdateShoppingListStateRequest(
-            expectedUpdatedAt: expectedUpdatedAt,
-            state: requestState
-        )
-        let output = try await _client.updateShoppingListState(
-            path: .init(householdId: householdID, weekStartDate: weekStartDate),
-            body: .json(requestBody)
-        )
-        switch output {
-        case let .ok(response):
-            return try response.body.json.updatedAt
-        case .unauthorized:
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+
+        switch http.statusCode {
+        case 200:
+            return try JSONDecoder().decode(ShoppingListStateUpdateResponse.self, from: data).updatedAt
+        case 401:
             throw APIError.unauthorized
-        case .badRequest:
-            throw APIError.server(statusCode: 400)
-        case let .conflict(response):
-            throw APIError.stale(latestUpdatedAt: try response.body.json.updatedAt)
-        case let .undocumented(statusCode, _):
-            throw APIError.server(statusCode: statusCode)
+        case 409:
+            throw APIError.stale(latestUpdatedAt: try JSONDecoder().decode(StaleShoppingListStateResponse.self, from: data).updatedAt)
+        default:
+            throw APIError.server(statusCode: http.statusCode)
         }
     }
+}
+
+private struct ShoppingListStateUpdateRequest: Encodable {
+    let expectedUpdatedAt: String?
+    let state: ShoppingListStatePayload?
+}
+
+private struct ShoppingListStatePayload: Encodable {
+    let checkedItems: [String]
+    let pantryStock: [String: Double]
+    let customItems: [ShoppingCustomItem]
+}
+
+private struct ShoppingListStateUpdateResponse: Decodable {
+    let updatedAt: String?
+}
+
+private struct StaleShoppingListStateResponse: Decodable {
+    let updatedAt: String?
+}
+
+private struct ShoppingListStateResponse: Decodable {
+    let state: ShoppingListSharedState?
+    let updatedAt: String?
 }
 
 private struct RequestHeaderMiddleware: ClientMiddleware {
@@ -752,6 +831,7 @@ private extension Components.Schemas.ShoppingListSummaryItem {
         )
     }
 }
+
 
 private extension WeekPlanEventInput {
     typealias V2 = Components.Schemas.AppendWeekPlanEventRequest.Value2Payload

@@ -4,18 +4,29 @@ import Observation
 @MainActor
 @Observable
 final class PrepBatchStore {
-    private let apiClient: VecklyAPIClient
+    private let apiClient: any PrepBatchStoreAPIClient
 
     private(set) var batches: [PrepBatch] = []
     private(set) var lastFetchedAt: Date?
     private(set) var isLoading = false
+    private(set) var householdID: String?
+    private(set) var weekStartDate: String?
     var errorMessage: String?
 
-    init(apiClient: VecklyAPIClient) {
+    init(apiClient: any PrepBatchStoreAPIClient) {
         self.apiClient = apiClient
     }
 
     func load(householdID: String, weekStartDate: String) async {
+        let scopeChanged = self.householdID != householdID || self.weekStartDate != weekStartDate
+        if scopeChanged {
+            batches = []
+            lastFetchedAt = nil
+            errorMessage = nil
+            self.householdID = householdID
+            self.weekStartDate = weekStartDate
+        }
+
         guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 else { return }
         isLoading = batches.isEmpty
         errorMessage = nil
@@ -24,6 +35,8 @@ final class PrepBatchStore {
         do {
             batches = try await apiClient.listPrepBatches(householdID: householdID, from: weekStartDate, to: to)
             lastFetchedAt = Date()
+            self.householdID = householdID
+            self.weekStartDate = weekStartDate
         } catch {
             errorMessage = L10n.string("error.prep.load")
         }
@@ -58,6 +71,8 @@ final class PrepBatchStore {
         errorMessage = nil
         isLoading = false
         lastFetchedAt = nil
+        householdID = nil
+        weekStartDate = nil
     }
 
     private func endDate(from start: String) -> String {
@@ -68,6 +83,20 @@ final class PrepBatchStore {
         return weekDateFormatter.string(from: end)
     }
 }
+
+protocol PrepBatchStoreAPIClient {
+    func listPrepBatches(householdID: String, from: String, to: String) async throws -> [PrepBatch]
+    func createPrepBatch(
+        householdID: String,
+        recipeId: String?,
+        cookDate: String,
+        totalPortions: Int,
+        assignments: [(date: String, mealType: MealType)]
+    ) async throws -> PrepBatch
+    func deletePrepBatch(householdID: String, batchID: String) async throws
+}
+
+extension VecklyAPIClient: PrepBatchStoreAPIClient {}
 
 private let weekDateFormatter: DateFormatter = {
     let f = DateFormatter()

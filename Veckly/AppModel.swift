@@ -101,9 +101,6 @@ final class AppModel {
 
     func loadCoreReader() async {
         await householdStore.bootstrapAndLoadHouseholds()
-        if let household = householdStore.activeHousehold {
-            await householdStore.loadHouseholdDetails(householdID: household.id)
-        }
         await loadActiveHouseholdReaderData(resetFeatureStores: false)
     }
 
@@ -116,11 +113,15 @@ final class AppModel {
             prepBatchStore.reset()
             feedbackStore.reset()
         }
+        // Keep household-scoped profile/member context in sync with week/shopping
+        // data when the active household changes after a switch/join/leave/delete.
+        await householdStore.loadHouseholdDetails(householdID: household.id)
         let weekStartDate = WeekCalendar.currentWeekStartDate()
         async let week: Void = weekStore.loadCurrentWeek(household: household)
         async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        async let prep: Void = prepBatchStore.load(householdID: household.id, weekStartDate: weekStartDate)
         async let feedback: Void = feedbackStore.loadFeedback(householdID: household.id)
-        _ = await (week, shopping, feedback)
+        _ = await (week, shopping, prep, feedback)
     }
 
     func signOut() {

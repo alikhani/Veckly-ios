@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class HouseholdStore {
     private let apiClient: any HouseholdStoreAPIClient
+    private let selectionStore: any HouseholdSelectionPersisting
 
     private(set) var households: [Household] = []
     private(set) var activeHousehold: Household?
@@ -22,8 +23,12 @@ final class HouseholdStore {
     private(set) var detailsErrorMessage: String?
     private(set) var invitesErrorMessage: String?
 
-    init(apiClient: any HouseholdStoreAPIClient) {
+    init(
+        apiClient: any HouseholdStoreAPIClient,
+        selectionStore: any HouseholdSelectionPersisting = UserDefaultsHouseholdSelectionStore()
+    ) {
         self.apiClient = apiClient
+        self.selectionStore = selectionStore
     }
 
     func bootstrapAndLoadHouseholds() async {
@@ -36,7 +41,10 @@ final class HouseholdStore {
             let bootstrapped = try await apiClient.bootstrapHousehold()
             let list = try await apiClient.listHouseholds()
             households = list.isEmpty ? [bootstrapped] : list
-            setActiveHousehold(households.first(where: { $0.id == bootstrapped.id }) ?? households.first)
+            let preferredHouseholdID = selectionStore.selectedHouseholdID()
+            let preferredHousehold = households.first(where: { $0.id == preferredHouseholdID })
+            let bootstrappedHousehold = households.first(where: { $0.id == bootstrapped.id })
+            setActiveHousehold(preferredHousehold ?? bootstrappedHousehold ?? households.first)
         } catch {
             errorMessage = L10n.string("error.household.load")
         }
@@ -116,6 +124,23 @@ final class HouseholdStore {
         }
     }
 
+    func removeMember(householdID: String, userID: String) async throws {
+        try await apiClient.removeMember(householdID: householdID, userID: userID)
+        if detailsHouseholdID == householdID {
+            members.removeAll { $0.userId == userID }
+        }
+    }
+
+    func leaveHousehold(householdID: String, userID: String) async throws {
+        try await apiClient.removeMember(householdID: householdID, userID: userID)
+        try await reloadHouseholds(preferredActiveHouseholdID: nil)
+    }
+
+    func deleteHousehold(householdID: String) async throws {
+        try await apiClient.deleteHousehold(householdID: householdID)
+        try await reloadHouseholds(preferredActiveHouseholdID: nil)
+    }
+
     func createInvite(householdID: String) async throws -> HouseholdInvite {
         let invite = try await apiClient.createInvite(householdID: householdID)
         invitesHouseholdID = householdID
@@ -136,11 +161,7 @@ final class HouseholdStore {
 
     func acceptInvite(token: String) async throws -> String {
         let joinedHouseholdID = try await apiClient.acceptInvite(token: token)
-        let list = try await apiClient.listHouseholds()
-        if !list.isEmpty {
-            households = list
-            setActiveHousehold(list.first(where: { $0.id == joinedHouseholdID }) ?? activeHousehold)
-        }
+        try await reloadHouseholds(preferredActiveHouseholdID: joinedHouseholdID)
         return joinedHouseholdID
     }
 
@@ -152,9 +173,11 @@ final class HouseholdStore {
     func setActiveHousehold(_ household: Household?) {
         guard activeHousehold?.id != household?.id else {
             activeHousehold = household
+            persistActiveHouseholdID(household?.id)
             return
         }
         activeHousehold = household
+        persistActiveHouseholdID(household?.id)
         resetDetails()
         resetInvites()
     }
@@ -174,6 +197,7 @@ final class HouseholdStore {
         isLoadingInvites = false
         detailsErrorMessage = nil
         invitesErrorMessage = nil
+        selectionStore.clearSelectedHouseholdID()
     }
 
     func seedForUITests() {
@@ -206,6 +230,64 @@ final class HouseholdStore {
         invitesHouseholdID = nil
         invitesErrorMessage = nil
     }
+
+    private func persistActiveHouseholdID(_ householdID: String?) {
+        guard let householdID else {
+            selectionStore.clearSelectedHouseholdID()
+            return
+        }
+        selectionStore.setSelectedHouseholdID(householdID)
+    }
+
+    private func reloadHouseholds(preferredActiveHouseholdID: String?) async throws {
+        var list = try await apiClient.listHouseholds()
+
+        if list.isEmpty {
+            let bootstrapped = try await apiClient.bootstrapHousehold()
+            list = try await apiClient.listHouseholds()
+            if list.isEmpty {
+                list = [bootstrapped]
+            }
+        }
+
+        households = list
+
+        let nextActiveHousehold = preferredActiveHouseholdID.flatMap { preferredID in
+            list.first(where: { $0.id == preferredID })
+        } ?? activeHousehold.flatMap { current in
+            list.first(where: { $0.id == current.id })
+        } ?? list.first
+
+        setActiveHousehold(nextActiveHousehold)
+    }
+}
+
+protocol HouseholdSelectionPersisting {
+    func selectedHouseholdID() -> String?
+    func setSelectedHouseholdID(_ householdID: String)
+    func clearSelectedHouseholdID()
+}
+
+struct UserDefaultsHouseholdSelectionStore: HouseholdSelectionPersisting {
+    private static let storageKey = "veckly.active-household-id"
+
+    private let userDefaults: UserDefaults
+
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+    }
+
+    func selectedHouseholdID() -> String? {
+        userDefaults.string(forKey: Self.storageKey)
+    }
+
+    func setSelectedHouseholdID(_ householdID: String) {
+        userDefaults.set(householdID, forKey: Self.storageKey)
+    }
+
+    func clearSelectedHouseholdID() {
+        userDefaults.removeObject(forKey: Self.storageKey)
+    }
 }
 
 protocol HouseholdStoreAPIClient {
@@ -227,6 +309,8 @@ protocol HouseholdStoreAPIClient {
     func lookupInvite(token: String) async throws -> InviteLanding
     func acceptInvite(token: String) async throws -> String
     func renameHousehold(householdID: String, name: String) async throws
+    func removeMember(householdID: String, userID: String) async throws
+    func deleteHousehold(householdID: String) async throws
 }
 
 extension VecklyAPIClient: HouseholdStoreAPIClient {}

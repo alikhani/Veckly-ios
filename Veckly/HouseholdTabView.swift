@@ -4,7 +4,9 @@ struct HouseholdTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(AppLanguageStore.self) private var languageStore
     @State private var showDeleteConfirmation = false
+    @State private var showDeleteHouseholdConfirmation = false
     @State private var isDeletingAccount = false
+    @State private var isDeletingHousehold = false
     @State private var deleteErrorMessage: String?
 
     private var household: Household? {
@@ -20,6 +22,10 @@ struct HouseholdTabView: View {
         household?.role == .owner
     }
 
+    private var canSwitchHouseholds: Bool {
+        appModel.householdStore.households.count > 1
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: VecklyDesign.Spacing.large) {
@@ -32,6 +38,18 @@ struct HouseholdTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
+        .confirmationDialog(
+            deleteHouseholdConfirmationTitle,
+            isPresented: $showDeleteHouseholdConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(deleteHouseholdActionTitle, role: .destructive) {
+                Task { await deleteHousehold() }
+            }
+            Button("common.cancel", role: .cancel) {}
+        } message: {
+            Text(deleteHouseholdMessage)
+        }
         .confirmationDialog(
             L10n.string("settings.deleteConfirmation"),
             isPresented: $showDeleteConfirmation,
@@ -66,9 +84,13 @@ struct HouseholdTabView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(household?.name ?? L10n.string("household.loading"))
-                        .font(VecklyDesign.Typography.displayHeading(size: 24))
-                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    if canSwitchHouseholds {
+                        householdSwitcher
+                    } else {
+                        Text(household?.name ?? L10n.string("household.loading"))
+                            .font(VecklyDesign.Typography.displayHeading(size: 24))
+                            .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    }
 
                     if let profile {
                         Text(householdSummaryText(profile))
@@ -89,6 +111,31 @@ struct HouseholdTabView: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private var householdSwitcher: some View {
+        Menu {
+            ForEach(appModel.householdStore.households) { option in
+                Button {
+                    Task { await switchHousehold(option) }
+                } label: {
+                    if option.id == household?.id {
+                        Label(option.name, systemImage: "checkmark")
+                    } else {
+                        Text(option.name)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(household?.name ?? L10n.string("household.loading"))
+                    .font(VecklyDesign.Typography.displayHeading(size: 24))
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+            }
+        }
     }
 
     private var householdSection: some View {
@@ -122,6 +169,24 @@ struct HouseholdTabView: View {
                     navigationRow(title: L10n.string("household.rename"), systemImage: "pencil")
                 }
                 .accessibilityIdentifier("renameHouseholdLink")
+
+                Divider()
+
+                Button(role: .destructive) {
+                    showDeleteHouseholdConfirmation = true
+                } label: {
+                    if isDeletingHousehold {
+                        HStack {
+                            ProgressView()
+                            Text(deleteHouseholdInProgressTitle)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        actionRow(title: deleteHouseholdActionTitle, systemImage: "trash")
+                    }
+                }
+                .disabled(isDeletingHousehold)
+                .accessibilityIdentifier("deleteHouseholdButton")
             }
         }
     }
@@ -236,5 +301,42 @@ struct HouseholdTabView: View {
         } catch {
             deleteErrorMessage = L10n.string("error.settings.deleteAccount")
         }
+    }
+
+    private func switchHousehold(_ household: Household) async {
+        appModel.householdStore.setActiveHousehold(household)
+        await appModel.loadActiveHouseholdReaderData()
+    }
+
+    private func deleteHousehold() async {
+        guard let household else { return }
+        isDeletingHousehold = true
+        defer { isDeletingHousehold = false }
+        do {
+            try await appModel.householdStore.deleteHousehold(householdID: household.id)
+            await appModel.loadActiveHouseholdReaderData()
+        } catch {
+            deleteErrorMessage = deleteHouseholdErrorText
+        }
+    }
+
+    private var deleteHouseholdActionTitle: String {
+        L10n.string("household.delete.action")
+    }
+
+    private var deleteHouseholdInProgressTitle: String {
+        L10n.string("household.delete.inProgress")
+    }
+
+    private var deleteHouseholdConfirmationTitle: String {
+        L10n.string("household.delete.confirmTitle")
+    }
+
+    private var deleteHouseholdMessage: String {
+        L10n.string("household.delete.message")
+    }
+
+    private var deleteHouseholdErrorText: String {
+        L10n.string("error.household.delete")
     }
 }

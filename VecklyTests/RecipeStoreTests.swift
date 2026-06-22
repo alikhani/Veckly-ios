@@ -19,6 +19,25 @@ struct RecipeStoreTests {
         #expect(store.recipesHouseholdID == TestRecipeHouseholds.second)
     }
 
+    @Test func persistedRecipesAreUsedWithoutANetworkReloadWhileFresh() async {
+        let apiClient = FakeRecipeStoreAPIClient()
+        let cacheStore = FakeRecipeStoreCache(
+            caches: [
+                TestRecipeHouseholds.first: PersistedRecipeCache(
+                    householdID: TestRecipeHouseholds.first,
+                    fetchedAt: Date(),
+                    recipes: [PersistedRecipe(fullRecipe: TestRecipes.firstRecipe)]
+                )
+            ]
+        )
+        let store = RecipeStore(apiClient: apiClient, cacheTTL: 60 * 60, cacheStore: cacheStore)
+
+        await store.loadRecipes(householdID: TestRecipeHouseholds.first)
+
+        #expect(store.recipes == [TestRecipes.firstRecipe])
+        #expect(apiClient.listFetchCount == 0)
+    }
+
     @Test func failedLoadDoesNotCacheAnEmptyResult() async {
         let apiClient = FakeRecipeStoreAPIClient()
         apiClient.shouldFailList = true
@@ -57,6 +76,18 @@ struct RecipeStoreTests {
         #expect(cachedUpdated.title == "Updated pasta")
         #expect(store.recipes.first?.title == "Updated pasta")
         #expect(apiClient.recipeFetchCount == 0)
+    }
+
+    @Test func fetchedRecipesArePersistedForLaterLoads() async {
+        let apiClient = FakeRecipeStoreAPIClient()
+        let cacheStore = FakeRecipeStoreCache()
+        let store = RecipeStore(apiClient: apiClient, cacheStore: cacheStore)
+
+        await store.loadRecipes(householdID: TestRecipeHouseholds.first)
+
+        let persisted = cacheStore.caches[TestRecipeHouseholds.first]
+        #expect(persisted?.recipes.map(\.fullRecipe) == [TestRecipes.firstRecipe])
+        #expect(persisted?.householdID == TestRecipeHouseholds.first)
     }
 
     @Test func archiveRemovesRecipeAndRollbackRestoresOnFailure() async throws {
@@ -144,6 +175,7 @@ private enum TestRecipeError: Error {
 private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
     var shouldFailList = false
     var shouldFailArchive = false
+    var listFetchCount = 0
     var recipeFetchCount = 0
     private var recipesByHousehold = [
         TestRecipeHouseholds.first: [TestRecipes.firstRecipe],
@@ -151,6 +183,7 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
     ]
 
     func listHouseholdRecipes(householdID: String, includePublic: Bool) async throws -> [FullRecipe] {
+        listFetchCount += 1
         if shouldFailList { throw TestRecipeError.failed }
         return recipesByHousehold[householdID] ?? []
     }
@@ -199,5 +232,25 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
 
     func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
         RecipeDraft(title: "Imported from text", sourceUrl: sourceURL)
+    }
+}
+
+private final class FakeRecipeStoreCache: RecipeStoreCachePersisting {
+    var caches: [String: PersistedRecipeCache]
+
+    init(caches: [String: PersistedRecipeCache] = [:]) {
+        self.caches = caches
+    }
+
+    func loadRecipes(householdID: String) -> PersistedRecipeCache? {
+        caches[householdID]
+    }
+
+    func saveRecipes(_ cache: PersistedRecipeCache) {
+        caches[cache.householdID] = cache
+    }
+
+    func deleteRecipes(householdID: String) {
+        caches[householdID] = nil
     }
 }
