@@ -6,6 +6,11 @@ struct RecipeDetailView: View {
     /// When provided, shows a "Skip / Plan this day" row at the top of the sheet.
     var isSkipped: Bool? = nil
     var onSkip: (() -> Void)? = nil
+    /// When both are provided, shows a sticky bottom commit button — used by
+    /// `MealPickerSheet` for the "previewing before choosing" step. Left nil
+    /// when this view is just being read (already chosen, or viewed read-only).
+    var confirmButtonTitle: String? = nil
+    var onConfirm: (() -> Void)? = nil
 
     @Environment(AppModel.self) private var appModel
     @State private var fullRecipe: FullRecipe?
@@ -81,6 +86,18 @@ struct RecipeDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(VecklyDesign.Colors.canvas)
+        .safeAreaInset(edge: .bottom) {
+            if let confirmButtonTitle, let onConfirm {
+                Button(action: onConfirm) {
+                    Text(confirmButtonTitle)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(VecklyPrimaryButtonStyle())
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(.bar)
+            }
+        }
         .navigationTitle(L10n.string("meal.recipe"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadFull() }

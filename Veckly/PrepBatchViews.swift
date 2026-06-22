@@ -137,45 +137,74 @@ struct PrepBatchFormSheet: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedRecipeID: String? = nil
-    @State private var cookDate = Date()
+    /// True when launched from a day that already has this exact recipe
+    /// planned ("eat this again") — the recipe and cook date are then fixed,
+    /// not user-editable, since this flow always repeats a specific known
+    /// dish from a specific known day.
+    private let isRecipeAndDateFixed: Bool
+
+    @State private var selectedRecipeID: String?
+    @State private var cookDate: Date
     @State private var totalPortions = 4
     @State private var assignedDays: Set<String> = []
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    private var weekDates: [Date] {
-        guard let start = weekDateFormatter.date(from: appModel.weekStore.weekStartDate) else { return [] }
-        return (0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: start) }
+    init(initialRecipeID: String? = nil, initialCookDate: Date? = nil) {
+        isRecipeAndDateFixed = initialRecipeID != nil
+        _selectedRecipeID = State(initialValue: initialRecipeID)
+        _cookDate = State(initialValue: initialCookDate ?? Date())
+    }
+
+    private var cookDateString: String { weekDateFormatter.string(from: cookDate) }
+
+    /// 14 days from the cook date — long enough to cover the common
+    /// "cook on the weekend, eat into next week" case.
+    private var coverageDates: [String] {
+        (0..<14).map { WeekCalendar.addDays(to: cookDateString, offset: $0) }
+    }
+
+    /// Only the currently-loaded week's lock state is known (`WeekStore`
+    /// holds one week at a time), so dates beyond it are always selectable —
+    /// still strictly better than today's zero conflict detection.
+    private var lockedDayByDate: [String: WeekDayRowViewModel] {
+        Dictionary(uniqueKeysWithValues: appModel.weekStore.dayRows.filter(\.isLocked).map { ($0.date, $0) })
+    }
+
+    private var fixedRecipeTitle: String {
+        appModel.recipeStore.recipes.first(where: { $0.id == selectedRecipeID })?.title ?? L10n.string("prep.fallbackTitle")
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("prep.recipeOptional") {
-                    Picker("meal.recipe", selection: $selectedRecipeID) {
-                        Text("common.none").tag(Optional<String>.none)
-                        ForEach(appModel.recipeStore.recipes) { recipe in
-                            Text(recipe.title).tag(Optional<String>.some(recipe.id))
+                if !isRecipeAndDateFixed {
+                    Section("prep.recipeOptional") {
+                        Picker("meal.recipe", selection: $selectedRecipeID) {
+                            Text("common.none").tag(Optional<String>.none)
+                            ForEach(appModel.recipeStore.recipes) { recipe in
+                                Text(recipe.title).tag(Optional<String>.some(recipe.id))
+                            }
                         }
+                        .labelsHidden()
                     }
-                    .labelsHidden()
                 }
 
                 Section {
-                    DatePicker("prep.cookDate", selection: $cookDate, displayedComponents: .date)
+                    if isRecipeAndDateFixed {
+                        LabeledContent("meal.recipe", value: fixedRecipeTitle)
+                        LabeledContent("prep.cookDate", value: dayLabel(cookDateString))
+                    } else {
+                        DatePicker("prep.cookDate", selection: $cookDate, displayedComponents: .date)
+                    }
                     Stepper(L10n.format("prep.portionsCount", totalPortions), value: $totalPortions, in: 1...20)
                 } header: {
                     Text("prep.details")
                 }
 
                 Section {
-                    ForEach(weekDates, id: \.self) { date in
-                        let key = weekDateFormatter.string(from: date)
-                        Toggle(dayLabel(date), isOn: Binding(
-                            get: { assignedDays.contains(key) },
-                            set: { if $0 { assignedDays.insert(key) } else { assignedDays.remove(key) } }
-                        ))
+                    ForEach(coverageDates, id: \.self) { date in
+                        dayRow(for: date)
                     }
                 } header: {
                     Text("prep.coverDinners")
@@ -212,18 +241,53 @@ struct PrepBatchFormSheet: View {
         }
     }
 
+    @ViewBuilder
+    private func dayRow(for date: String) -> some View {
+        if let locked = lockedDayByDate[date] {
+            HStack {
+                Text(dayLabel(date))
+                Spacer()
+                Text(locked.mealTitle)
+                    .font(.footnote)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                Button("prep.unlock") {
+                    Task { await unlock(locked) }
+                }
+                .font(.footnote.weight(.semibold))
+                .buttonStyle(.borderless)
+            }
+            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+        } else {
+            Toggle(dayLabel(date), isOn: Binding(
+                get: { assignedDays.contains(date) },
+                set: { if $0 { assignedDays.insert(date) } else { assignedDays.remove(date) } }
+            ))
+        }
+    }
+
+    private func unlock(_ day: WeekDayRowViewModel) async {
+        guard let household = appModel.householdStore.activeHousehold else { return }
+        guard let userID = appModel.authSessionStore.userID else {
+            await appModel.handleUnauthorized()
+            return
+        }
+        await appModel.weekStore.toggleLock(day: day, household: household, userID: userID)
+    }
+
     private func save() async {
         guard let hid = appModel.householdStore.activeHousehold?.id else { return }
         isSaving = true
         defer { isSaving = false }
-        let dateStr = weekDateFormatter.string(from: cookDate)
         let assignments = assignedDays.sorted().map { (date: $0, mealType: MealType.dinner) }
         do {
             try await appModel.prepBatchStore.create(
                 householdID: hid,
                 weekStartDate: appModel.weekStore.weekStartDate,
                 recipeId: selectedRecipeID,
-                cookDate: dateStr,
+                cookDate: cookDateString,
                 totalPortions: totalPortions,
                 assignments: assignments
             )
@@ -233,7 +297,8 @@ struct PrepBatchFormSheet: View {
         }
     }
 
-    private func dayLabel(_ date: Date) -> String {
+    private func dayLabel(_ dateString: String) -> String {
+        guard let date = WeekCalendar.date(from: dateString) else { return dateString }
         let f = DateFormatter()
         f.dateFormat = "EEEE d MMM"
         f.locale = AppLocalePreference.effectiveLocale

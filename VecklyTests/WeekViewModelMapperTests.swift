@@ -28,11 +28,45 @@ struct WeekViewModelMapperTests {
 
         #expect(mapped.days.first?.mealTitle == "Monday Pasta")
         #expect(mapped.days.first?.detail == "\(L10n.format("format.servings", 4)) · 25 min")
+        #expect(mapped.days.first?.date == "2026-06-08")
         #expect(mapped.today?.id == "2026-06-08")
         #expect(mapped.days[1].mealTitle == "")
+        #expect(mapped.days[1].date == "2026-06-09")
         #expect(mapped.days[1].isEmpty == true)
         #expect(mapped.days[1].isLocked == false)
         #expect(mapped.days[1].isSkipped == false)
+    }
+
+    @Test func withPlannedRecipeAppliesRecipeWhilePreservingDayIdentity() {
+        let empty = WeekViewModelMapper.emptyRows(weekStartDate: "2026-06-08")[0].withLocked(true)
+        let recipe = WeekSummaryRecipe(
+            id: "33333333-3333-3333-3333-333333333333",
+            title: "Tuesday Tacos",
+            description: "Quick weeknight tacos",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 15,
+            tags: []
+        )
+
+        let planned = empty.withPlannedRecipe(recipe)
+
+        #expect(planned.mealTitle == "Tuesday Tacos")
+        #expect(planned.detail == "\(L10n.format("format.servings", 4)) · 25 min")
+        #expect(planned.isEmpty == false)
+        #expect(planned.isSkipped == false)
+        #expect(planned.recipe == recipe)
+        #expect(planned.isLocked == true)
+        #expect(planned.date == empty.date)
+        #expect(planned.id == empty.id)
+    }
+
+    @Test func emptyRowsCarryTheCorrectIsoDatePerWeekday() {
+        let rows = WeekViewModelMapper.emptyRows(weekStartDate: "2026-06-08")
+
+        #expect(rows[0].date == "2026-06-08")
+        #expect(rows[1].date == "2026-06-09")
+        #expect(rows.allSatisfy { $0.isEmpty })
     }
 
     /// A week with no day matching "today" (e.g. Last/Next week in the new
@@ -204,6 +238,7 @@ struct WeekViewModelMapperTests {
             id: "2026-06-10",
             weekday: .wednesday,
             weekdayLabel: "Wednesday",
+            date: "2026-06-10",
             dateLabel: "Jun 10",
             mealTitle: "",
             detail: "",
@@ -275,6 +310,7 @@ struct WeekViewModelMapperTests {
             id: "2026-06-08",
             weekday: .monday,
             weekdayLabel: "Monday",
+            date: "2026-06-08",
             dateLabel: "Jun 8",
             mealTitle: "Monday Pasta",
             detail: "\(L10n.format("format.servings", 4)) · 25 min",

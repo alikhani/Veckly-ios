@@ -201,6 +201,7 @@ final class WeekStore {
             id: day.id,
             weekday: day.weekday,
             weekdayLabel: day.weekdayLabel,
+            date: day.date,
             dateLabel: day.dateLabel,
             mealTitle: recipe.title,
             detail: detail,
@@ -243,6 +244,7 @@ final class WeekStore {
             id: day.id,
             weekday: day.weekday,
             weekdayLabel: day.weekdayLabel,
+            date: day.date,
             dateLabel: day.dateLabel,
             mealTitle: "",
             detail: "",
@@ -340,6 +342,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
     let id: String
     let weekday: Weekday
     let weekdayLabel: String
+    let date: String
     let dateLabel: String
     let mealTitle: String
     let detail: String
@@ -354,6 +357,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         id: String,
         weekday: Weekday,
         weekdayLabel: String,
+        date: String,
         dateLabel: String,
         mealTitle: String,
         detail: String,
@@ -367,6 +371,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.id = id
         self.weekday = weekday
         self.weekdayLabel = weekdayLabel
+        self.date = date
         self.dateLabel = dateLabel
         self.mealTitle = mealTitle
         self.detail = detail
@@ -383,6 +388,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             id: id,
             weekday: weekday,
             weekdayLabel: weekdayLabel,
+            date: date,
             dateLabel: dateLabel,
             mealTitle: isSkipped ? "" : mealTitle,
             detail: isSkipped ? "" : detail,
@@ -400,6 +406,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             id: id,
             weekday: weekday,
             weekdayLabel: weekdayLabel,
+            date: date,
             dateLabel: dateLabel,
             mealTitle: mealTitle,
             detail: detail,
@@ -408,6 +415,26 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             isEmpty: isEmpty,
             isLocked: isLocked,
             isSkipped: isSkipped,
+            recipe: recipe
+        )
+    }
+
+    /// Used by `MealPickerSheet` to render a just-confirmed-but-not-yet-synced
+    /// selection the same way `DayDetailContent` renders an already-planned day.
+    func withPlannedRecipe(_ recipe: WeekSummaryRecipe) -> WeekDayRowViewModel {
+        WeekDayRowViewModel(
+            id: id,
+            weekday: weekday,
+            weekdayLabel: weekdayLabel,
+            date: date,
+            dateLabel: dateLabel,
+            mealTitle: recipe.title,
+            detail: WeekViewModelMapper.recipeDetail(recipe),
+            isToday: isToday,
+            isPast: isPast,
+            isEmpty: false,
+            isLocked: isLocked,
+            isSkipped: false,
             recipe: recipe
         )
     }
@@ -429,6 +456,7 @@ struct WeekViewModelMapper {
                 id: date,
                 weekday: weekday,
                 weekdayLabel: weekday.displayName,
+                date: date,
                 dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: date),
                 mealTitle: "",
                 detail: "",
@@ -456,6 +484,7 @@ struct WeekViewModelMapper {
             id: day.id,
             weekday: day.dayOfWeek,
             weekdayLabel: day.dayOfWeek.displayName,
+            date: day.date,
             dateLabel: WeekCalendar.shortDateLabel(yyyyMmDd: day.date),
             mealTitle: recipe?.title ?? "",
             detail: recipe.map { recipeDetail($0) } ?? "",
@@ -468,7 +497,7 @@ struct WeekViewModelMapper {
         )
     }
 
-    private static func recipeDetail(_ recipe: WeekSummaryRecipe) -> String {
+    static func recipeDetail(_ recipe: WeekSummaryRecipe) -> String {
         let time = [recipe.prepTimeMinutes, recipe.cookTimeMinutes]
             .compactMap { $0 }
             .reduce(0, +)

@@ -1,5 +1,22 @@
 import SwiftUI
 
+/// The conversion `WeekTabView` already needed to call `assignMeal` — shared
+/// here since the preview step (below) needs the same shape to hand off to
+/// `RecipeDetailView`.
+extension FullRecipe {
+    var asWeekSummaryRecipe: WeekSummaryRecipe {
+        WeekSummaryRecipe(
+            id: id,
+            title: title,
+            description: description,
+            servings: servings,
+            prepTimeMinutes: prepTimeMinutes,
+            cookTimeMinutes: cookTimeMinutes,
+            tags: tags
+        )
+    }
+}
+
 struct MealPickerSheet: View {
     let day: WeekDayRowViewModel
     let isSkipped: Bool
@@ -7,10 +24,21 @@ struct MealPickerSheet: View {
     let onSelect: (FullRecipe) -> Void
     let onClear: () -> Void
     let onSkip: () -> Void
+    let onMarkAsLeftover: (String) -> Void
     let onDismiss: () -> Void
 
     @Environment(AppModel.self) private var appModel
     @State private var searchText = ""
+    /// Pushed when a recipe row is tapped — reading about a dish doesn't
+    /// commit it; only the confirm action inside the preview does. Keyed by
+    /// id (not the recipe itself) since the generated `FullRecipe` type isn't
+    /// `Hashable`, which `navigationDestination(item:)` requires.
+    @State private var previewRecipeID: String?
+    /// Set once a recipe has been confirmed for this day in this sheet
+    /// session — switches the root content from the picker list to the same
+    /// view `DayDetailSheet` uses, instead of dismissing.
+    @State private var confirmedRecipe: WeekSummaryRecipe?
+    @State private var showClearConfirmation = false
 
     private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
 
@@ -30,7 +58,17 @@ struct MealPickerSheet: View {
     var body: some View {
         NavigationStack {
             Group {
-                if appModel.recipeStore.isLoading {
+                if let confirmedRecipe {
+                    DayDetailContent(
+                        day: day.withPlannedRecipe(confirmedRecipe),
+                        householdID: householdID,
+                        onViewRecipe: { previewRecipeID = confirmedRecipe.id },
+                        onSwap: { self.confirmedRecipe = nil },
+                        onSkip: { onSkip(); onDismiss() },
+                        onClear: onClear,
+                        onMarkAsLeftover: { onMarkAsLeftover(confirmedRecipe.id) }
+                    )
+                } else if appModel.recipeStore.isLoading {
                     VStack {
                         ProgressView()
                             .tint(VecklyDesign.Colors.hearthOrange)
@@ -59,28 +97,56 @@ struct MealPickerSheet: View {
                         description: Text(L10n.string("recipes.tryDifferentSearchTerm"))
                     )
                 } else {
-                    recipeListWithFooter
+                    recipeList
                 }
             }
             .navigationTitle(day.weekdayLabel)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: L10n.string("recipes.search"))
+            .modifier(SearchableWhenPickingModifier(isPicking: confirmedRecipe == nil, searchText: $searchText))
+            .navigationDestination(item: $previewRecipeID) { recipeID in
+                if let recipe = recipes.first(where: { $0.id == recipeID }) {
+                    RecipeDetailView(
+                        recipe: recipe.asWeekSummaryRecipe,
+                        householdID: householdID,
+                        confirmButtonTitle: confirmedRecipe == nil ? L10n.format("meal.chooseForDay", day.weekdayLabel) : nil,
+                        onConfirm: confirmedRecipe == nil ? {
+                            onSelect(recipe)
+                            confirmedRecipe = recipe.asWeekSummaryRecipe
+                            previewRecipeID = nil
+                        } : nil
+                    )
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("common.cancel", action: onDismiss)
                 }
-                if !day.isEmpty && !isSkipped {
+                if confirmedRecipe != nil || (!day.isEmpty && !isSkipped) {
                     ToolbarItem(placement: .destructiveAction) {
-                        Button("meal.clear", role: .destructive, action: onClear)
-                            .foregroundStyle(.red)
+                        Button("meal.clear", role: .destructive) {
+                            showClearConfirmation = true
+                        }
+                        .foregroundStyle(.red)
                     }
                 }
+                if confirmedRecipe == nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: { onSkip(); onDismiss() }) {
+                            Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
+                        }
+                        .accessibilityLabel(isSkipped ? L10n.format("accessibility.planDayInstead", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
+                    }
+                }
+            }
+            .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
+                Button("meal.clear", role: .destructive) { onClear() }
+                Button("common.cancel", role: .cancel) {}
             }
         }
         .task { await loadRecipes() }
     }
 
-    private var recipeListWithFooter: some View {
+    private var recipeList: some View {
         List {
             if filtered.isEmpty {
                 Section {
@@ -96,7 +162,7 @@ struct MealPickerSheet: View {
                 if !likedRecipes.isEmpty {
                     Section(L10n.string("recipes.liked")) {
                         ForEach(likedRecipes) { recipe in
-                            Button { onSelect(recipe) } label: { RecipePickerRow(recipe: recipe) }
+                            Button { previewRecipeID = recipe.id } label: { RecipePickerRow(recipe: recipe) }
                                 .buttonStyle(.plain)
                         }
                     }
@@ -104,28 +170,11 @@ struct MealPickerSheet: View {
                 if !otherRecipes.isEmpty {
                     Section(likedRecipes.isEmpty ? "" : L10n.string("recipes.all")) {
                         ForEach(otherRecipes) { recipe in
-                            Button { onSelect(recipe) } label: { RecipePickerRow(recipe: recipe) }
+                            Button { previewRecipeID = recipe.id } label: { RecipePickerRow(recipe: recipe) }
                                 .buttonStyle(.plain)
                         }
                     }
                 }
-            }
-
-            Section {
-                Button(action: {
-                    onSkip()
-                    onDismiss()
-                }) {
-                    HStack {
-                        Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
-                            .foregroundStyle(VecklyDesign.Colors.inkMid)
-                        Text(isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"))
-                            .foregroundStyle(VecklyDesign.Colors.inkMid)
-                        Spacer()
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(isSkipped ? L10n.format("accessibility.planDayInstead", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
             }
         }
         .listStyle(.insetGrouped)
@@ -133,6 +182,22 @@ struct MealPickerSheet: View {
 
     private func loadRecipes() async {
         await appModel.loadRecipesAndSeedFeedback(householdID: householdID)
+    }
+}
+
+/// `.searchable` only while actively picking — once a recipe is confirmed the
+/// root content switches to `DayDetailContent`, where a search field makes no
+/// sense.
+private struct SearchableWhenPickingModifier: ViewModifier {
+    let isPicking: Bool
+    @Binding var searchText: String
+
+    func body(content: Content) -> some View {
+        if isPicking {
+            content.searchable(text: $searchText, prompt: L10n.string("recipes.search"))
+        } else {
+            content
+        }
     }
 }
 

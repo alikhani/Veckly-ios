@@ -8,6 +8,15 @@ private struct SelectedDayRecipe: Identifiable {
     var id: String { recipe.id + day.id }
 }
 
+/// Seeds a new prep batch from a day that's already planned — "we made
+/// extra of this, mark it as eaten again on other days" — without making
+/// the user re-pick the recipe or cook date in `PrepBatchFormSheet`.
+private struct PrepBatchSeed: Identifiable {
+    let recipeID: String
+    let cookDate: String
+    var id: String { recipeID + cookDate }
+}
+
 /// The 3-week browsing window. Last week is view-only (no planning actions);
 /// This/Next week behave like the active week but addressed explicitly.
 private enum ViewedWeekOffset: Int, CaseIterable, Identifiable {
@@ -36,6 +45,7 @@ struct WeekTabView: View {
     @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
     @State private var selectedDayForDetail: WeekDayRowViewModel?
+    @State private var prepBatchSeed: PrepBatchSeed?
     @State private var viewedWeekOffset: ViewedWeekOffset = .current
     @State private var isWeekPickerPresented = false
     @State private var weekendNudgeDismissedToday = false
@@ -164,17 +174,7 @@ struct WeekTabView: View {
                 onSelect: { recipe in
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
-                        mealPickerDay = nil
-                        let summaryRecipe = WeekSummaryRecipe(
-                            id: recipe.id,
-                            title: recipe.title,
-                            description: recipe.description,
-                            servings: recipe.servings,
-                            prepTimeMinutes: recipe.prepTimeMinutes,
-                            cookTimeMinutes: recipe.cookTimeMinutes,
-                            tags: recipe.tags
-                        )
-                        Task { await appModel.weekStore.assignMeal(day: day, recipe: summaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
+                        Task { await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
                     } else {
                         Task { await appModel.handleUnauthorized() }
                     }
@@ -194,6 +194,13 @@ struct WeekTabView: View {
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
                     } else {
                         Task { await appModel.handleUnauthorized() }
+                    }
+                },
+                onMarkAsLeftover: { recipeID in
+                    mealPickerDay = nil
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(50))
+                        prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date)
                     }
                 },
                 onDismiss: { mealPickerDay = nil }
@@ -236,8 +243,20 @@ struct WeekTabView: View {
                         Task { await appModel.handleUnauthorized() }
                     }
                 },
+                onMarkAsLeftover: {
+                    selectedDayForDetail = nil
+                    if let recipe = day.recipe {
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(50))
+                            prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
+                        }
+                    }
+                },
                 onDismiss: { selectedDayForDetail = nil }
             )
+        }
+        .sheet(item: $prepBatchSeed) { seed in
+            PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate))
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }
@@ -530,19 +549,29 @@ struct WeekTabView: View {
         }
     }
 
+    /// Whether leftovers from a prep batch cover this day's dinner — checked
+    /// in the view layer so `WeekStore`/`PrepBatchStore` stay decoupled.
+    private func coverage(for day: WeekDayRowViewModel) -> PrepBatchCoverage? {
+        prepBatchCoverage(for: day.date, batches: appModel.prepBatchStore.batches, recipes: appModel.recipeStore.recipes)
+    }
+
+    private func isDayConsideredPlanned(_ day: WeekDayRowViewModel) -> Bool {
+        day.recipe != nil || coverage(for: day) != nil
+    }
+
     /// Only meaningful for the current week — Last/Next week have zero
     /// `isToday` rows by definition, so callers must check `isViewingCurrentWeek`
     /// before relying on this.
     private var tonightHeroDay: WeekDayRowViewModel? {
         let rows = appModel.weekStore.dayRows
-        if let today = rows.first(where: { $0.isToday && $0.recipe != nil }) {
+        if let today = rows.first(where: { $0.isToday && isDayConsideredPlanned($0) }) {
             return today
         }
         let todayIndex = rows.firstIndex(where: { $0.isToday }) ?? -1
-        if todayIndex >= 0, let next = rows[(todayIndex + 1)...].first(where: { $0.recipe != nil }) {
+        if todayIndex >= 0, let next = rows[(todayIndex + 1)...].first(where: { isDayConsideredPlanned($0) }) {
             return next
         }
-        return rows.first(where: { $0.recipe != nil })
+        return rows.first(where: { isDayConsideredPlanned($0) })
     }
 
     private var tonightHeroLabel: String {
@@ -587,6 +616,11 @@ struct WeekTabView: View {
     @ViewBuilder
     private var currentWeekHeroCard: some View {
         if let day = tonightHeroDay {
+            // A day with no recipe of its own can still be tonight's hero if
+            // leftovers cover it — show the covering dish instead of the
+            // (empty) day fields, and hide the recipe/swap actions that
+            // assume a bound `WeekSummaryRecipe`.
+            let dayCoverage = day.recipe == nil ? coverage(for: day) : nil
             VecklyCard {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
@@ -605,36 +639,54 @@ struct WeekTabView: View {
                         }
                     }
 
-                    Text(day.mealTitle)
+                    Text(dayCoverage?.recipeTitle ?? day.mealTitle)
                         .font(VecklyDesign.Typography.displayHeading(size: 24))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    if !day.detail.isEmpty {
+                    if let dayCoverage {
+                        Text(L10n.format("prep.leftoversFrom", WeekCalendar.shortDateLabel(yyyyMmDd: dayCoverage.cookDate)))
+                            .font(.body)
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    } else if !day.detail.isEmpty {
                         Text(day.detail)
                             .font(.body)
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                     }
 
                     HStack(spacing: 10) {
-                        Button {
-                            if let recipe = day.recipe {
-                                selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                        if dayCoverage == nil {
+                            Button {
+                                if let recipe = day.recipe {
+                                    selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                                }
+                            } label: {
+                                Label("meal.recipe", systemImage: "book")
                             }
-                        } label: {
-                            Label("meal.recipe", systemImage: "book")
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel(L10n.format("accessibility.viewRecipeFor", day.mealTitle))
+                            .buttonStyle(.bordered)
+                            .tint(VecklyDesign.Colors.inkMid)
+                            .accessibilityLabel(L10n.format("accessibility.viewRecipeFor", day.mealTitle))
 
-                        Button {
-                            mealPickerDay = day
-                        } label: {
-                            Label("meal.swap", systemImage: "arrow.2.squarepath")
+                            Button {
+                                mealPickerDay = day
+                            } label: {
+                                Label("meal.swap", systemImage: "arrow.2.squarepath")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(VecklyDesign.Colors.inkMid)
+                            .accessibilityLabel(L10n.format("accessibility.swapMealFor", day.weekdayLabel))
+
+                            if let recipe = day.recipe {
+                                Button {
+                                    prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
+                                } label: {
+                                    Image(systemName: "arrow.3.trianglepath")
+                                        .frame(width: 20, height: 20)
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(VecklyDesign.Colors.inkMid)
+                                .accessibilityLabel(L10n.string("prep.eatAgain"))
+                            }
                         }
-                        .buttonStyle(.bordered)
-                        .tint(VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel(L10n.format("accessibility.swapMealFor", day.weekdayLabel))
 
                         Button {
                             guard let household = appModel.householdStore.activeHousehold else { return }
@@ -774,6 +826,7 @@ struct WeekTabView: View {
             ForEach(listDays) { day in
                 CompactDayRow(
                     day: day,
+                    coverage: coverage(for: day),
                     isViewOnly: isViewingLastWeek,
                     onTap: {
                         if isViewingLastWeek {
@@ -811,6 +864,7 @@ struct WeekTabView: View {
 
 struct CompactDayRow: View {
     let day: WeekDayRowViewModel
+    var coverage: PrepBatchCoverage? = nil
     var isViewOnly: Bool = false
     let onTap: () -> Void
     let onToggleSkip: () -> Void
@@ -859,6 +913,12 @@ struct CompactDayRow: View {
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 .lineLimit(1)
             Spacer()
+            if coverage != nil {
+                Image(systemName: "arrow.3.trianglepath")
+                    .font(.system(size: 12))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    .accessibilityLabel(L10n.string("accessibility.coveredByLeftovers"))
+            }
             if day.isLocked {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
@@ -870,9 +930,20 @@ struct CompactDayRow: View {
 
     private var emptyContent: some View {
         HStack(alignment: .center, spacing: 8) {
-            Text("meal.addDinner")
-                .font(.body.italic())
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            if let coverage {
+                Image(systemName: "arrow.3.trianglepath")
+                    .font(.system(size: 12))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    .accessibilityLabel(L10n.string("accessibility.coveredByLeftovers"))
+                Text(coverage.recipeTitle)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    .lineLimit(1)
+            } else {
+                Text("meal.addDinner")
+                    .font(.body.italic())
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            }
             Spacer()
             if !day.isPast && !isViewOnly {
                 Text("meal.plan")

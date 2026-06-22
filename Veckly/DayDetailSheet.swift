@@ -7,28 +7,22 @@ struct DayDetailSheet: View {
     let onSwap: () -> Void
     let onSkip: () -> Void
     let onClear: () -> Void
+    let onMarkAsLeftover: () -> Void
     let onDismiss: () -> Void
 
-    @Environment(AppModel.self) private var appModel
     @State private var showClearConfirmation = false
-
-    private var recipe: WeekSummaryRecipe? { day.recipe }
-
-    private var currentVote: MealVote? {
-        guard let recipe else { return nil }
-        return appModel.feedbackStore.vote(for: recipe.id)
-    }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if let recipe {
-                    content(recipe: recipe)
-                } else {
-                    // Shouldn't happen — this sheet only opens when a recipe is assigned
-                    ContentUnavailableView(L10n.string("meal.noAssigned"), systemImage: "fork.knife")
-                }
-            }
+            DayDetailContent(
+                day: day,
+                householdID: householdID,
+                onViewRecipe: onViewRecipe,
+                onSwap: onSwap,
+                onSkip: { onSkip(); onDismiss() },
+                onClear: onClear,
+                onMarkAsLeftover: onMarkAsLeftover
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -44,6 +38,40 @@ struct DayDetailSheet: View {
             .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
                 Button("meal.clear", role: .destructive) { onClear() }
                 Button("common.cancel", role: .cancel) {}
+            }
+        }
+    }
+}
+
+/// The body of `DayDetailSheet` — title/meta/vote/actions for an already-planned
+/// day — extracted so `MealPickerSheet` can render the identical view once a
+/// recipe is confirmed in the same sheet, without duplicating it or nesting a
+/// second `NavigationStack`/toolbar inside the picker's own.
+struct DayDetailContent: View {
+    let day: WeekDayRowViewModel
+    let householdID: String
+    let onViewRecipe: () -> Void
+    let onSwap: () -> Void
+    let onSkip: () -> Void
+    let onClear: () -> Void
+    let onMarkAsLeftover: () -> Void
+
+    @Environment(AppModel.self) private var appModel
+
+    private var recipe: WeekSummaryRecipe? { day.recipe }
+
+    private var currentVote: MealVote? {
+        guard let recipe else { return nil }
+        return appModel.feedbackStore.vote(for: recipe.id)
+    }
+
+    var body: some View {
+        Group {
+            if let recipe {
+                content(recipe: recipe)
+            } else {
+                // Shouldn't happen — this view only renders when a recipe is assigned
+                ContentUnavailableView(L10n.string("meal.noAssigned"), systemImage: "fork.knife")
             }
         }
     }
@@ -96,10 +124,22 @@ struct DayDetailSheet: View {
                     .tint(VecklyDesign.Colors.inkMid)
                 }
 
+                // Eat this again (mark as leftovers for another day)
+                Button {
+                    onMarkAsLeftover()
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.3.trianglepath")
+                        Text("prep.eatAgain")
+                        Spacer()
+                    }
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                }
+                .buttonStyle(.plain)
+
                 // Skip
                 Button {
                     onSkip()
-                    onDismiss()
                 } label: {
                     HStack {
                         Image(systemName: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
