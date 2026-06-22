@@ -87,6 +87,23 @@ struct SignedOutView: View {
                         .accessibilityLabel(L10n.string("accessibility.signingInWait"))
                     }
 
+                    #if DEBUG
+                    Button {
+                        Task {
+                            await appModel.authSessionStore.signInWithEmail(
+                                email: DebugTestAccount.current.email,
+                                password: DebugTestAccount.current.password
+                            )
+                        }
+                    } label: {
+                        Text("Sign in as test user")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Color("textMuted"))
+                    }
+                    .disabled(appModel.authSessionStore.isSigningIn)
+                    .padding(.top, 4)
+                    #endif
+
                     if let message = appModel.authSessionStore.errorMessage {
                         Text(message)
                             .font(.footnote)

@@ -1,0 +1,10 @@
+import Foundation
+
+// Copy this file to DebugTestAccount.Local.swift (gitignored) and fill in
+// a real test account's credentials to enable the debug "Sign in as test
+// user" button on the signed-out screen.
+#if DEBUG
+extension DebugTestAccount {
+    static let current = DebugTestAccount(email: "your-test-account@example.com", password: "your-test-password")
+}
+#endif

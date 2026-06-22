@@ -27,6 +27,16 @@
         }
       }
     },
+    "%@, %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        }
+      }
+    },
     "%@%@, %@" : {
       "localizations" : {
         "en" : {
@@ -244,6 +254,7 @@
       }
     },
     "account.section" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -260,6 +271,7 @@
       }
     },
     "app.language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -293,6 +305,7 @@
       }
     },
     "app.section" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -687,6 +700,22 @@
         }
       }
     },
+    "error.household.delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not delete the household."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det gick inte att ta bort hushållet."
+          }
+        }
+      }
+    },
     "error.household.invites" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -722,6 +751,7 @@
       }
     },
     "error.household.rename" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -788,6 +818,38 @@
         }
       }
     },
+    "error.members.lastOwner" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can't remove or leave as the last owner. Make someone else an owner first, or delete the household."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kan inte ta bort eller lämna som sista ägare. Utse en annan ägare först eller ta bort hela hushållet."
+          }
+        }
+      }
+    },
+    "error.members.leaveHousehold" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not leave the household."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det gick inte att lämna hushållet."
+          }
+        }
+      }
+    },
     "error.members.lookupToken" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -801,6 +863,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kunde inte slå upp token."
+          }
+        }
+      }
+    },
+    "error.members.removeMember" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not remove the member."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det gick inte att ta bort medlemmen."
           }
         }
       }
@@ -1145,6 +1223,23 @@
         }
       }
     },
+    "error.shopping.toggle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We could not update the shopping list."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte uppdatera inköpslistan."
+          }
+        }
+      }
+    },
     "error.week.assignMeal" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1367,18 +1462,17 @@
       }
     },
     "format.week" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WEEK %d"
+            "value" : "wk. %d"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VECKA %d"
+            "value" : "v.%d"
           }
         }
       }
@@ -1449,7 +1543,72 @@
         }
       }
     },
+    "household.delete.action" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete household"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort hushåll"
+          }
+        }
+      }
+    },
+    "household.delete.confirmTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this household?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort det här hushållet?"
+          }
+        }
+      }
+    },
+    "household.delete.inProgress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleting household"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tar bort hushåll"
+          }
+        }
+      }
+    },
+    "household.delete.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This deletes the household for every member. If it's your last household, a new personal household will be created automatically."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detta tar bort hushållet för alla medlemmar. Om det är ditt sista hushåll skapas ett nytt personligt hushåll automatiskt."
+          }
+        }
+      }
+    },
     "household.loading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1466,6 +1625,7 @@
       }
     },
     "household.name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1482,6 +1642,7 @@
       }
     },
     "household.planningFood" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1497,23 +1658,8 @@
         }
       }
     },
-    "household.rename" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename Household"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byt namn på hushållet"
-          }
-        }
-      }
-    },
     "household.preferences" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1525,6 +1671,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preferenser"
+          }
+        }
+      }
+    },
+    "household.rename" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Household"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt namn på hushållet"
           }
         }
       }
@@ -1562,6 +1725,7 @@
       }
     },
     "household.section" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1573,86 +1737,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hushåll"
-          }
-        }
-      }
-    },
-    "household.summary.adult.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d adult"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d vuxen"
-          }
-        }
-      }
-    },
-    "household.summary.adult.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d adults"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d vuxna"
-          }
-        }
-      }
-    },
-    "household.summary.child.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d child"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d barn"
-          }
-        }
-      }
-    },
-    "household.summary.child.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d children"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d barn"
-          }
-        }
-      }
-    },
-    "household.summary.combined" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · %@"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · %@"
           }
         }
       }
@@ -1669,6 +1753,139 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hushållets storlek"
+          }
+        }
+      }
+    },
+    "household.summary.adult.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d adult"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d vuxen"
+          }
+        }
+      }
+    },
+    "household.summary.adult.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d adults"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d vuxna"
+          }
+        }
+      }
+    },
+    "household.summary.child.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d child"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d barn"
+          }
+        }
+      }
+    },
+    "household.summary.child.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d children"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d barn"
+          }
+        }
+      }
+    },
+    "household.summary.combined" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "language.english" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        }
+      }
+    },
+    "language.swedish" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svenska"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svenska"
+          }
+        }
+      }
+    },
+    "language.system" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
           }
         }
       }
@@ -2261,50 +2478,34 @@
         }
       }
     },
-    "language.english" : {
+    "members.leave" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "English"
+            "value" : "Leave"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "English"
+            "value" : "Lämna"
           }
         }
       }
     },
-    "language.swedish" : {
+    "members.multiHouseholdHint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Svenska"
+            "value" : "You can belong to more than one household at the same time. Joining another household keeps your other households, and you can switch between them from Household."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Svenska"
-          }
-        }
-      }
-    },
-    "language.system" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
+            "value" : "Du kan tillhöra flera hushåll samtidigt. När du går med i ett nytt hushåll har du kvar dina andra hushåll och kan byta mellan dem under Hushåll."
           }
         }
       }
@@ -3911,6 +4112,7 @@
       }
     },
     "settings.membersInvites" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3959,6 +4161,7 @@
       }
     },
     "settings.signOut" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4244,6 +4447,102 @@
         }
       }
     },
+    "shopping.customItem.add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg till"
+          }
+        }
+      }
+    },
+    "shopping.customItem.addError" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not add the item to the shopping list."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det gick inte att lägga till varan i inköpslistan."
+          }
+        }
+      }
+    },
+    "shopping.customItem.errorTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det gick inte"
+          }
+        }
+      }
+    },
+    "shopping.customItem.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example milk, fruit, or toilet paper"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Till exempel mjölk, frukt eller toalettpapper"
+          }
+        }
+      }
+    },
+    "shopping.customItem.removeError" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not remove the item."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det gick inte att ta bort varan."
+          }
+        }
+      }
+    },
+    "shopping.customItem.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add your own"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eget tillägg"
+          }
+        }
+      }
+    },
     "tabs.household" : {
       "localizations" : {
         "en" : {
@@ -4277,6 +4576,7 @@
       }
     },
     "tabs.settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4440,6 +4740,23 @@
         }
       }
     },
+    "week.lastWeek" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förra veckan"
+          }
+        }
+      }
+    },
     "week.loading" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4470,6 +4787,104 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nästa"
+          }
+        }
+      }
+    },
+    "week.nextWeek" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nästa vecka"
+          }
+        }
+      }
+    },
+    "week.nextWeek.empty.cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan next week for me"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planera nästa vecka för mig"
+          }
+        }
+      }
+    },
+    "week.nextWeek.empty.eyebrow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan ahead"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planera i förväg"
+          }
+        }
+      }
+    },
+    "week.nextWeek.empty.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get it done while it's fresh in mind — perfect if you meal-prep. We'll suggest 5 dinners that fit the week."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planera klart redan i helgen – perfekt om ni meal-preppar. Vi föreslår 5 middagar som passar veckan."
+          }
+        }
+      }
+    },
+    "week.nextWeek.empty.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get ahead on next week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligg steget före nästa vecka"
+          }
+        }
+      }
+    },
+    "week.picker.hint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse last, this, or next week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bläddra mellan förra, denna och nästa vecka"
           }
         }
       }
@@ -4522,7 +4937,76 @@
         }
       }
     },
+    "week.summary.openDays.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d open day"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d ledig dag"
+          }
+        }
+      }
+    },
+    "week.summary.openDays.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d open days"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d lediga dagar"
+          }
+        }
+      }
+    },
+    "week.summary.plannedDinners.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinner planned"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middag planerad"
+          }
+        }
+      }
+    },
+    "week.summary.plannedDinners.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners planned"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar planerade"
+          }
+        }
+      }
+    },
     "week.thisWeek" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4534,6 +5018,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Den här veckan"
+          }
+        }
+      }
+    },
+    "week.viewOnly" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View only"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endast visning"
+          }
+        }
+      }
+    },
+    "week.weekendNudge.cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan next week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planera nästa vecka"
+          }
+        }
+      }
+    },
+    "week.weekendNudge.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It's the weekend — plan next week?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det är helg — planera nästa vecka?"
           }
         }
       }

@@ -40,7 +40,9 @@ final class WeekStore {
     func loadCurrentWeek(household: Household) async {
         weekStartDate = WeekCalendar.currentWeekStartDate()
         guard !isLoading else { return }
-        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 || summary == nil else { return }
+        let hasFreshCurrentWeek = lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
+            && summary?.weekStartDate == weekStartDate
+        guard !hasFreshCurrentWeek else { return }
         isLoading = summary == nil
         errorMessage = nil
         defer { isLoading = false }
@@ -61,7 +63,46 @@ final class WeekStore {
         }
     }
 
-    func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String) async {
+    /// Loads a specific week's summary for browsing (Last/Next week), populating
+    /// `summary`/`dayRows`/`today` exactly like `loadCurrentWeek` does — but
+    /// without touching `weekStartDate`, which other tabs (Shopping List, Prep)
+    /// read as "the active week." Callers (e.g. WeekTabView's browsing UI) own
+    /// their own viewed-week state and pass it back in for mutations.
+    func loadWeek(household: Household, weekStartDate: String) async {
+        guard !isLoading else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
+            self.summary = summary
+            let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
+            dayRows = mapped.days
+            today = mapped.today
+        } catch APIError.notFound {
+            summary = nil
+            dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
+            today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
+        } catch {
+            errorMessage = L10n.string("error.week.load")
+        }
+    }
+
+    /// Side-effect-free check used by the weekend nudge to ask "does next week
+    /// have anything planned yet?" without disturbing the currently displayed
+    /// week's `summary`/`dayRows`/`isLoading` state.
+    func peekHasContent(household: Household, weekStartDate: String) async -> Bool {
+        do {
+            let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
+            return summary.days.contains { $0.recipe != nil || $0.state == .skipped }
+        } catch {
+            return false
+        }
+    }
+
+    func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
+        let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
         let isLocked = current.isLocked
@@ -80,11 +121,11 @@ final class WeekStore {
         do {
             try await apiClient.appendWeekPlanEvent(
                 householdID: household.id,
-                weekStartDate: weekStartDate,
+                weekStartDate: targetWeekStartDate,
                 userID: userID,
                 event: event
             )
-            lastFetchedAt = Date()
+            if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
                 dayRows[idx] = previous
@@ -94,7 +135,8 @@ final class WeekStore {
         }
     }
 
-    func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String) async {
+    func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
+        let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
         let isSkipped = current.isSkipped
@@ -113,11 +155,11 @@ final class WeekStore {
         do {
             try await apiClient.appendWeekPlanEvent(
                 householdID: household.id,
-                weekStartDate: weekStartDate,
+                weekStartDate: targetWeekStartDate,
                 userID: userID,
                 event: event
             )
-            lastFetchedAt = Date()
+            if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
                 dayRows[idx] = previous
@@ -127,14 +169,19 @@ final class WeekStore {
         }
     }
 
-    func generateWeek(household: Household, userID: String, regenerate: Bool = false) async {
+    func generateWeek(household: Household, userID: String, regenerate: Bool = false, viewedWeekStartDate: String? = nil) async {
+        let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         isGenerating = true
         defer { isGenerating = false }
 
         do {
-            try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: weekStartDate, regenerate: regenerate)
-            lastFetchedAt = nil
-            await loadCurrentWeek(household: household)
+            try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: targetWeekStartDate, regenerate: regenerate)
+            if targetWeekStartDate == weekStartDate {
+                lastFetchedAt = nil
+                await loadCurrentWeek(household: household)
+            } else {
+                await loadWeek(household: household, weekStartDate: targetWeekStartDate)
+            }
         } catch APIError.noRecipesForGeneration {
             mutationError = L10n.string("error.week.noRecipes")
         } catch {
@@ -142,7 +189,8 @@ final class WeekStore {
         }
     }
 
-    func assignMeal(day: WeekDayRowViewModel, recipe: WeekSummaryRecipe, household: Household, userID: String) async {
+    func assignMeal(day: WeekDayRowViewModel, recipe: WeekSummaryRecipe, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
+        let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
@@ -172,11 +220,11 @@ final class WeekStore {
         do {
             try await apiClient.appendWeekPlanEvent(
                 householdID: household.id,
-                weekStartDate: weekStartDate,
+                weekStartDate: targetWeekStartDate,
                 userID: userID,
                 event: .mealAssigned(day: day.weekday, recipeID: recipe.id)
             )
-            lastFetchedAt = Date()
+            if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
                 dayRows[idx] = previous
@@ -186,7 +234,8 @@ final class WeekStore {
         }
     }
 
-    func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String) async {
+    func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
+        let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
         let previous = dayRows.first(where: { $0.weekday == day.weekday })
 
@@ -213,11 +262,11 @@ final class WeekStore {
         do {
             try await apiClient.appendWeekPlanEvent(
                 householdID: household.id,
-                weekStartDate: weekStartDate,
+                weekStartDate: targetWeekStartDate,
                 userID: userID,
                 event: .mealUnassigned(day: day.weekday)
             )
-            lastFetchedAt = Date()
+            if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
                 dayRows[idx] = previous

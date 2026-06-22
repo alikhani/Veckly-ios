@@ -3,6 +3,9 @@ import SwiftUI
 struct ShoppingListTabView: View {
     @Environment(AppModel.self) private var appModel
     @State private var showPrepSheet = false
+    @State private var customItemDraft = ""
+    @State private var isAddingCustomItem = false
+    @State private var customItemErrorMessage: String?
 
     /// Base recipe servings are baked into the shopping list items by the backend.
     /// The backend stores raw ingredient amounts (no household scaling), so we scale
@@ -34,11 +37,9 @@ struct ShoppingListTabView: View {
     /// "WEEK 25 · MON–FRI · 5 MEALS" — nil if data is unavailable.
     private var weekContextLine: String? {
         let weekStartString = appModel.weekStore.weekStartDate
-        guard let weekStartDate = WeekCalendar.date(from: weekStartString) else { return nil }
+        guard WeekCalendar.date(from: weekStartString) != nil else { return nil }
 
-        var utcCal = Calendar(identifier: .gregorian)
-        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
-        let weekNumber = utcCal.component(.weekOfYear, from: weekStartDate)
+        let weekNumber = WeekCalendar.weekNumber(for: weekStartString)
 
         let dayRows = appModel.weekStore.dayRows
         let plannedRows = dayRows.filter { $0.recipe != nil }
@@ -66,6 +67,26 @@ struct ShoppingListTabView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let err = appModel.shoppingListStore.mutationError {
+                    HStack(spacing: 10) {
+                        Text(err)
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                        Spacer()
+                        Button {
+                            appModel.shoppingListStore.clearMutationError()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        }
+                        .accessibilityLabel(L10n.string("common.dismissError"))
+                    }
+                    .padding(12)
+                    .background(VecklyDesign.Colors.surfaceStrong)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+
                 // Header block
                 VStack(alignment: .leading, spacing: 4) {
                     if let contextLine = weekContextLine {
@@ -85,6 +106,7 @@ struct ShoppingListTabView: View {
                         Task { await appModel.loadCoreReader() }
                     }
                 } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
+                    customItemComposer
                     EmptyPanel(title: L10n.string("shopping.empty.title"), message: L10n.string("shopping.empty.message"))
                 } else {
                     // Progress indicator
@@ -101,6 +123,8 @@ struct ShoppingListTabView: View {
                         .accessibilityLabel(L10n.format("accessibility.itemsChecked", checkedItemCount, totalItemCount))
                     }
 
+                    customItemComposer
+
                     // Category groups
                     ForEach(appModel.shoppingListStore.groups) { group in
                         ShoppingGroupView(
@@ -109,6 +133,9 @@ struct ShoppingListTabView: View {
                             scaleFactor: shoppingScaleFactor,
                             onToggle: { key in
                                 Task { await appModel.shoppingListStore.toggleItem(key: key) }
+                            },
+                            onRemoveCustom: { key in
+                                Task { await removeCustomItem(key: key) }
                             }
                         )
                     }
@@ -135,6 +162,17 @@ struct ShoppingListTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.shopping"))
+        .alert(
+            customItemErrorTitle,
+            isPresented: Binding(
+                get: { customItemErrorMessage != nil },
+                set: { if !$0 { customItemErrorMessage = nil } }
+            )
+        ) {
+            Button("OK") { customItemErrorMessage = nil }
+        } message: {
+            Text(customItemErrorMessage ?? "")
+        }
         .sheet(isPresented: $showPrepSheet) {
             PrepBatchFormSheet()
         }
@@ -147,6 +185,82 @@ struct ShoppingListTabView: View {
             _ = await (profile, prep)
         }
     }
+
+    private var customItemComposer: some View {
+        VecklyCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(customItemTitle)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    .textCase(.uppercase)
+
+                HStack(spacing: 10) {
+                    TextField(customItemPlaceholder, text: $customItemDraft)
+                        .textInputAutocapitalization(.sentences)
+
+                    Button {
+                        Task { await addCustomItem() }
+                    } label: {
+                        if isAddingCustomItem {
+                            ProgressView()
+                        } else {
+                            Text(customItemAddButton)
+                                .font(.callout.weight(.semibold))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(VecklyDesign.Colors.hearthOrange)
+                    .disabled(isAddingCustomItem || customItemDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func addCustomItem() async {
+        let draft = customItemDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !draft.isEmpty else { return }
+        isAddingCustomItem = true
+        defer { isAddingCustomItem = false }
+
+        do {
+            try await appModel.shoppingListStore.addCustomItem(label: draft)
+            customItemDraft = ""
+        } catch {
+            customItemErrorMessage = customItemAddError
+        }
+    }
+
+    private func removeCustomItem(key: String) async {
+        do {
+            try await appModel.shoppingListStore.removeCustomItem(itemKey: key)
+        } catch {
+            customItemErrorMessage = customItemRemoveError
+        }
+    }
+
+    private var customItemTitle: String {
+        L10n.string("shopping.customItem.title")
+    }
+
+    private var customItemPlaceholder: String {
+        L10n.string("shopping.customItem.placeholder")
+    }
+
+    private var customItemAddButton: String {
+        L10n.string("shopping.customItem.add")
+    }
+
+    private var customItemErrorTitle: String {
+        L10n.string("shopping.customItem.errorTitle")
+    }
+
+    private var customItemAddError: String {
+        L10n.string("shopping.customItem.addError")
+    }
+
+    private var customItemRemoveError: String {
+        L10n.string("shopping.customItem.removeError")
+    }
 }
 
 // MARK: - Shopping group
@@ -156,6 +270,7 @@ struct ShoppingGroupView: View {
     let checkedItems: Set<String>
     var scaleFactor: Double = 1.0
     let onToggle: (String) -> Void
+    let onRemoveCustom: (String) -> Void
 
     private var sortedItems: [ShoppingListItem] {
         group.items.sorted { a, b in
@@ -179,23 +294,36 @@ struct ShoppingGroupView: View {
                         let isChecked = checkedItems.contains(item.itemKey)
                         let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
                         let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
-                        Button {
-                            onToggle(item.itemKey)
-                        } label: {
-                            HStack {
+                        HStack {
+                            Button {
+                                onToggle(item.itemKey)
+                            } label: {
+                                HStack {
                                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
                                 Text(item.label)
                                     .strikethrough(isChecked)
                                     .foregroundStyle(isChecked ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
                                 Spacer()
-                                Text(amountLabel)
-                                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                                if !amountLabel.isEmpty {
+                                    Text(amountLabel)
+                                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                                }
+                                }
+                                .padding(.vertical, 8)
                             }
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.plain)
+                            .buttonStyle(.plain)
                             .accessibilityLabel("\(item.label)\(amountLabel.isEmpty ? "" : ", \(amountLabel)"), \(isChecked ? L10n.string("shopping.item.checked") : L10n.string("shopping.item.unchecked"))")
+                            if item.isCustom {
+                                Button(role: .destructive) {
+                                    onRemoveCustom(item.itemKey)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: checkedItems)

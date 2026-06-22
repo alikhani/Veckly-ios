@@ -35,6 +35,29 @@ struct WeekViewModelMapperTests {
         #expect(mapped.days[1].isSkipped == false)
     }
 
+    /// A week with no day matching "today" (e.g. Last/Next week in the new
+    /// week-browsing UI) must map to zero `isToday` rows and a nil `today` —
+    /// this is the upstream invariant `WeekTabView`'s hero card relies on to
+    /// know it needs its no-today-row guard instead of "Tonight" framing.
+    @Test func mapsWeekWithNoMatchingTodayRowToNilToday() {
+        let summary = WeekSummary(
+            household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+            weekStartDate: "2026-06-15",
+            updatedAt: nil,
+            days: [
+                WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-15", state: .empty, recipe: nil),
+                WeekSummaryDay(dayOfWeek: .tuesday, date: "2026-06-16", state: .empty, recipe: nil),
+            ]
+        )
+        // "Today" (2026-06-08) falls outside the week being mapped (2026-06-15 week).
+        let today = WeekCalendar.date(from: "2026-06-08")!
+
+        let mapped = WeekViewModelMapper.map(summary: summary, today: today)
+
+        #expect(mapped.days.allSatisfy { $0.isToday == false })
+        #expect(mapped.today == nil)
+    }
+
     @Test func mapsLockedDayState() {
         let recipe = WeekSummaryRecipe(
             id: "22222222-2222-2222-2222-222222222222",
@@ -206,6 +229,43 @@ struct WeekViewModelMapperTests {
     }
 
     @MainActor
+    @Test func loadWeekPopulatesDayRowsWithoutMutatingActiveWeekStartDate() async {
+        let store = WeekStore(apiClient: StubbedWeekSummaryAPIClient(weekStartDate: "2026-06-15"))
+        let activeWeekStartDateBefore = store.weekStartDate
+
+        await store.loadWeek(
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+            weekStartDate: "2026-06-15"
+        )
+
+        // Other tabs (Shopping List, Prep) read `weekStartDate` as "the active
+        // week" — browsing a different week must never repurpose it.
+        #expect(store.weekStartDate == activeWeekStartDateBefore)
+        #expect(store.dayRows.first?.id == "2026-06-15")
+        #expect(store.summary?.weekStartDate == "2026-06-15")
+    }
+
+    @MainActor
+    @Test func loadCurrentWeekRefetchesWhenFreshSummaryBelongsToAnotherWeek() async {
+        let currentWeek = WeekCalendar.currentWeekStartDate()
+        let previousWeek = WeekCalendar.addWeeks(to: currentWeek, offset: -1)
+        let apiClient = SequencedWeekSummaryAPIClient(
+            summaries: [
+                makeWeekSummary(weekStartDate: previousWeek),
+                makeWeekSummary(weekStartDate: currentWeek),
+            ]
+        )
+        let store = WeekStore(apiClient: apiClient)
+        let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
+
+        await store.loadCurrentWeek(household: household)
+        await store.loadCurrentWeek(household: household)
+
+        #expect(apiClient.fetchCount == 2)
+        #expect(store.summary?.weekStartDate == currentWeek)
+    }
+
+    @MainActor
     @Test func toggleLockUsesCurrentRowStateWhenCapturedDayIsStale() async {
         let apiClient = CapturingWeekStoreAPIClient()
         let store = WeekStore(apiClient: apiClient)
@@ -259,6 +319,104 @@ private final class FailingWeekStoreAPIClient: WeekStoreAPIClient {
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         throw APIError.notFound
     }
+}
+
+/// Returns a fixed, recognizable week summary for whatever date is requested
+/// (it ignores the field value and stamps the requested date through), used to
+/// verify that `WeekStore.loadWeek` correctly threads through an explicit
+/// browsing date.
+private final class StubbedWeekSummaryAPIClient: WeekStoreAPIClient {
+    let weekStartDate: String
+
+    init(weekStartDate: String) {
+        self.weekStartDate = weekStartDate
+    }
+
+    func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
+        WeekSummary(
+            household: SummaryHousehold(id: householdID, name: "Test household"),
+            weekStartDate: weekStartDate,
+            updatedAt: nil,
+            days: Weekday.allCases.enumerated().map { index, weekday in
+                WeekSummaryDay(
+                    dayOfWeek: weekday,
+                    date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                    state: .empty,
+                    recipe: nil
+                )
+            }
+        )
+    }
+
+    func appendWeekPlanEvent(
+        householdID: String,
+        weekStartDate: String,
+        userID: String,
+        event: WeekPlanEventInput
+    ) async throws {}
+
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {}
+
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        throw APIError.notFound
+    }
+}
+
+private final class SequencedWeekSummaryAPIClient: WeekStoreAPIClient {
+    private var summaries: [WeekSummary]
+    private(set) var fetchCount = 0
+
+    init(summaries: [WeekSummary]) {
+        self.summaries = summaries
+    }
+
+    func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
+        fetchCount += 1
+        if !summaries.isEmpty {
+            return summaries.removeFirst()
+        }
+        return makeWeekSummary(weekStartDate: weekStartDate)
+    }
+
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        FullRecipe(
+            id: recipeID,
+            title: "Recipe",
+            description: "Description",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 15,
+            tags: [],
+            ingredients: [],
+            steps: [],
+            userVote: nil
+        )
+    }
+
+    func appendWeekPlanEvent(
+        householdID: String,
+        weekStartDate: String,
+        userID: String,
+        event: WeekPlanEventInput
+    ) async throws {}
+
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {}
+}
+
+private func makeWeekSummary(weekStartDate: String) -> WeekSummary {
+    WeekSummary(
+        household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+        weekStartDate: weekStartDate,
+        updatedAt: nil,
+        days: Weekday.allCases.enumerated().map { index, weekday in
+            WeekSummaryDay(
+                dayOfWeek: weekday,
+                date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                state: .empty,
+                recipe: nil
+            )
+        }
+    )
 }
 
 private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
