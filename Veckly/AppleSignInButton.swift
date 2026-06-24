@@ -5,7 +5,7 @@ import SwiftUI
 
 struct AppleSignInButton: View {
     let isLoading: Bool
-    let onComplete: (String, String?) -> Void
+    let onComplete: (String, String?, String?, String?) -> Void
     let onFailure: () -> Void
 
     @State private var currentNonce: String?
@@ -28,7 +28,17 @@ struct AppleSignInButton: View {
                     onFailure()
                     return
                 }
-                onComplete(token, currentNonce)
+                // Apple only includes `fullName` on the very first authorization
+                // for this Apple ID + app — every sign-in after that returns nil,
+                // by design, so this is the one chance to capture it.
+                let givenName = credential.fullName?.givenName?.trimmingCharacters(in: .whitespaces)
+                let familyName = credential.fullName?.familyName?.trimmingCharacters(in: .whitespaces)
+                onComplete(
+                    token,
+                    currentNonce,
+                    (givenName?.isEmpty ?? true) ? nil : givenName,
+                    (familyName?.isEmpty ?? true) ? nil : familyName
+                )
             case .failure(let error):
                 let code = (error as? ASAuthorizationError)?.code
                 guard code != .canceled && code != .unknown else { return }

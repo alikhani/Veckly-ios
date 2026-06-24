@@ -4,15 +4,24 @@ import Foundation
 /// leftovers. Kept separate from `WeekStore`/`PrepBatchStore` so the two
 /// stores stay decoupled — the view layer is what cross-references them.
 struct PrepBatchCoverage: Equatable {
+    let batchID: String
     let recipeTitle: String
     let cookDate: String
     let totalPortions: Int
+    let mealType: MealType
 }
 
 func prepBatchCoverage(for date: String, batches: [PrepBatch], recipes: [FullRecipe]) -> PrepBatchCoverage? {
-    for batch in batches where batch.assignments.contains(where: { $0.date == date }) {
+    for batch in batches {
+        guard let assignment = batch.assignments.first(where: { $0.date == date }) else { continue }
         let title = recipes.first(where: { $0.id == batch.recipeId })?.title ?? L10n.string("prep.fallbackTitle")
-        return PrepBatchCoverage(recipeTitle: title, cookDate: batch.cookDate, totalPortions: batch.totalPortions)
+        return PrepBatchCoverage(
+            batchID: batch.id,
+            recipeTitle: title,
+            cookDate: batch.cookDate,
+            totalPortions: batch.totalPortions,
+            mealType: assignment.mealType
+        )
     }
     return nil
 }

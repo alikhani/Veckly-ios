@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ShoppingListTabView: View {
     @Environment(AppModel.self) private var appModel
-    @State private var showPrepSheet = false
     @State private var customItemDraft = ""
     @State private var isAddingCustomItem = false
     @State private var customItemErrorMessage: String?
@@ -150,18 +149,13 @@ struct ShoppingListTabView: View {
                             }
                         )
                     }
-
-                    // Meal prep — shown once we've had a successful load (even if empty)
-                    if appModel.prepBatchStore.isLoading || appModel.prepBatchStore.lastFetchedAt != nil {
-                        PrepBatchSection(showPrepSheet: $showPrepSheet)
-                    }
                 }
             }
             .padding(18)
             .accessibilityIdentifier("shoppingList")
         }
         .background(VecklyDesign.Colors.canvas)
-        .navigationTitle(L10n.string("tabs.shopping"))
+        .navigationBarTitleDisplayMode(.inline)
         .alert(
             customItemErrorTitle,
             isPresented: Binding(
@@ -173,16 +167,10 @@ struct ShoppingListTabView: View {
         } message: {
             Text(customItemErrorMessage ?? "")
         }
-        .sheet(isPresented: $showPrepSheet) {
-            PrepBatchFormSheet()
-        }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }
-            let weekStart = appModel.weekStore.weekStartDate
             // Load profile so shoppingScaleFactor is accurate.
-            async let profile: Void = appModel.householdStore.loadHouseholdDetails(householdID: household.id)
-            async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: weekStart)
-            _ = await (profile, prep)
+            await appModel.householdStore.loadHouseholdDetails(householdID: household.id)
         }
     }
 

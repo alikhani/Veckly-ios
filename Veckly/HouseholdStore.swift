@@ -50,8 +50,9 @@ final class HouseholdStore {
         }
     }
 
-    func loadHouseholdDetails(householdID: String) async {
-        let cacheIsFresh = detailsHouseholdID == householdID
+    func loadHouseholdDetails(householdID: String, force: Bool = false) async {
+        let cacheIsFresh = !force
+            && detailsHouseholdID == householdID
             && detailsLastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && !members.isEmpty
         guard !cacheIsFresh else { return }
@@ -204,7 +205,7 @@ final class HouseholdStore {
         let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
         households = [household]
         activeHousehold = household
-        members = [HouseholdMember(userId: "11111111-1111-1111-1111-111111111111", role: .owner)]
+        members = [HouseholdMember(userId: "11111111-1111-1111-1111-111111111111", role: .owner, givenName: nil, familyName: nil)]
         profile = HouseholdProfile(
             householdId: household.id,
             adults: 2,

@@ -39,6 +39,11 @@ struct HouseholdMembersView: View {
             await appModel.householdStore.loadHouseholdDetails(householdID: hid)
             if isOwner { await appModel.householdStore.loadInvites(householdID: hid) }
         }
+        .refreshable {
+            guard let hid = household?.id else { return }
+            await appModel.householdStore.loadHouseholdDetails(householdID: hid, force: true)
+            if isOwner { await appModel.householdStore.loadInvites(householdID: hid) }
+        }
         .onChange(of: tokenInput) { _, _ in
             landing = nil
             landingToken = nil
@@ -66,10 +71,10 @@ struct HouseholdMembersView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             if member.userId == myUserID {
-                                Text("members.you")
+                                Text(appModel.userProfileStore.givenName ?? L10n.string("members.you"))
                                     .font(.body.weight(.medium))
                             } else {
-                                Text("members.householdMember")
+                                Text(member.givenName ?? L10n.string("members.householdMember"))
                                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                             }
                         }

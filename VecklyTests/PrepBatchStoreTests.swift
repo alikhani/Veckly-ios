@@ -113,4 +113,6 @@ private final class FakePrepBatchStoreAPIClient: PrepBatchStoreAPIClient {
     }
 
     func deletePrepBatch(householdID: String, batchID: String) async throws {}
+
+    func removeAssignment(householdID: String, batchID: String, date: String, mealType: MealType) async throws {}
 }

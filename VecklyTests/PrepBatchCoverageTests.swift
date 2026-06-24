@@ -36,7 +36,7 @@ struct PrepBatchCoverageTests {
             recipes: [pasta]
         )
 
-        #expect(result == PrepBatchCoverage(recipeTitle: "Pasta", cookDate: "2026-06-08", totalPortions: 8))
+        #expect(result == PrepBatchCoverage(batchID: "batch-1", recipeTitle: "Pasta", cookDate: "2026-06-08", totalPortions: 8, mealType: .dinner))
     }
 
     @Test func returnsNilWhenNoAssignmentMatchesTheDate() {
@@ -57,6 +57,8 @@ struct PrepBatchCoverageTests {
 
         #expect(result?.recipeTitle == "Pasta")
         #expect(result?.cookDate == "2026-06-08")
+        #expect(result?.batchID == "batch-1")
+        #expect(result?.mealType == .dinner)
     }
 
     @Test func fallsBackToGenericTitleWhenRecipeIsNotFound() {

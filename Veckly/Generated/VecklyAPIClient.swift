@@ -340,6 +340,24 @@ struct VecklyAPIClient {
         }
     }
 
+    func getMyProfile() async throws -> UserProfile? {
+        let output = try await _client.getMyProfile()
+        switch output {
+        case let .ok(r): return try r.body.json.profile?.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func setMyName(givenName: String, familyName: String?) async throws -> UserProfile {
+        let output = try await _client.upsertMyProfile(body: .json(.init(givenName: givenName, familyName: familyName)))
+        switch output {
+        case let .ok(r): return try r.body.json.appModel
+        case .unauthorized: throw APIError.unauthorized
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
         let output = try await _client.listHouseholdMembers(path: .init(householdId: householdID))
         switch output {
@@ -506,6 +524,19 @@ struct VecklyAPIClient {
     func deletePrepBatch(householdID: String, batchID: String) async throws {
         let output = try await _client.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(
             path: .init(householdId: householdID, batchId: batchID)
+        )
+        switch output {
+        case .ok: return
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func removeAssignment(householdID: String, batchID: String, date: String, mealType: MealType) async throws {
+        let output = try await _client.removePrepBatchAssignment(
+            path: .init(householdId: householdID, batchId: batchID, date: date),
+            query: .init(mealType: .init(rawValue: mealType.rawValue)!)
         )
         switch output {
         case .ok: return
@@ -909,7 +940,13 @@ private extension Components.Schemas.PrepBatchAssignment {
 
 private extension Components.Schemas.HouseholdMember {
     var appModel: HouseholdMember {
-        HouseholdMember(userId: userId, role: role == .owner ? .owner : .member)
+        HouseholdMember(userId: userId, role: role == .owner ? .owner : .member, givenName: givenName, familyName: familyName)
+    }
+}
+
+private extension Components.Schemas.UserProfile {
+    var appModel: UserProfile {
+        UserProfile(userId: userId, givenName: givenName, familyName: familyName)
     }
 }
 

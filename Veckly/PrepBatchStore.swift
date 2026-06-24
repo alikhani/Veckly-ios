@@ -12,6 +12,13 @@ final class PrepBatchStore {
     private(set) var householdID: String?
     private(set) var weekStartDate: String?
     var errorMessage: String?
+    /// Set by `create`/`removeAssignment` on failure — surfaced via the week
+    /// view's banner so actions triggered from a dismissed sheet (no alert of
+    /// their own) don't fail silently. Distinct from `errorMessage`, which is
+    /// `load`'s own (older) error surface.
+    private(set) var mutationError: String?
+
+    func clearMutationError() { mutationError = nil }
 
     init(apiClient: any PrepBatchStoreAPIClient) {
         self.apiClient = apiClient
@@ -50,15 +57,21 @@ final class PrepBatchStore {
         totalPortions: Int,
         assignments: [(date: String, mealType: MealType)]
     ) async throws {
-        let batch = try await apiClient.createPrepBatch(
-            householdID: householdID,
-            recipeId: recipeId,
-            cookDate: cookDate,
-            totalPortions: totalPortions,
-            assignments: assignments
-        )
-        batches.append(batch)
-        batches.sort { $0.cookDate < $1.cookDate }
+        mutationError = nil
+        do {
+            let batch = try await apiClient.createPrepBatch(
+                householdID: householdID,
+                recipeId: recipeId,
+                cookDate: cookDate,
+                totalPortions: totalPortions,
+                assignments: assignments
+            )
+            batches.append(batch)
+            batches.sort { $0.cookDate < $1.cookDate }
+        } catch {
+            mutationError = L10n.string("error.prep.create")
+            throw error
+        }
     }
 
     func delete(householdID: String, batchID: String) async throws {
@@ -66,9 +79,38 @@ final class PrepBatchStore {
         batches.removeAll { $0.id == batchID }
     }
 
+    /// Un-assigns a single covered day from a batch — the batch and its other
+    /// assignments are untouched. Mirrors the backend's own cleanup: if that
+    /// was the last assignment, the whole batch is gone (no covered days left
+    /// means no UI surface left to find it from).
+    func removeAssignment(householdID: String, batchID: String, date: String, mealType: MealType) async throws {
+        mutationError = nil
+        do {
+            try await apiClient.removeAssignment(householdID: householdID, batchID: batchID, date: date, mealType: mealType)
+        } catch {
+            mutationError = L10n.string("error.prep.removeAssignment")
+            throw error
+        }
+        guard let index = batches.firstIndex(where: { $0.id == batchID }) else { return }
+        let remainingAssignments = batches[index].assignments.filter { !($0.date == date && $0.mealType == mealType) }
+        if remainingAssignments.isEmpty {
+            batches.remove(at: index)
+        } else {
+            batches[index] = PrepBatch(
+                id: batches[index].id,
+                householdId: batches[index].householdId,
+                recipeId: batches[index].recipeId,
+                cookDate: batches[index].cookDate,
+                totalPortions: batches[index].totalPortions,
+                assignments: remainingAssignments
+            )
+        }
+    }
+
     func reset() {
         batches = []
         errorMessage = nil
+        mutationError = nil
         isLoading = false
         lastFetchedAt = nil
         householdID = nil
@@ -94,6 +136,7 @@ protocol PrepBatchStoreAPIClient {
         assignments: [(date: String, mealType: MealType)]
     ) async throws -> PrepBatch
     func deletePrepBatch(householdID: String, batchID: String) async throws
+    func removeAssignment(householdID: String, batchID: String, date: String, mealType: MealType) async throws
 }
 
 extension VecklyAPIClient: PrepBatchStoreAPIClient {}

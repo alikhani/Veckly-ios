@@ -13,6 +13,7 @@ final class AppModel {
     let recipeStore: RecipeStore
     let prepBatchStore: PrepBatchStore
     let feedbackStore: FeedbackStore
+    let userProfileStore: UserProfileStore
     private let usesSeededCoreReader: Bool
 
     init(environment: AppEnvironment) {
@@ -33,6 +34,7 @@ final class AppModel {
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
         self.feedbackStore = FeedbackStore(apiClient: apiClient)
+        self.userProfileStore = UserProfileStore(apiClient: apiClient)
 
         if usesSeededCoreReader {
             authSessionStore.seedForUITests()
@@ -49,9 +51,16 @@ final class AppModel {
         await loadCoreReader()
     }
 
-    func completeSignInWithApple(identityToken: String, nonce: String?) async {
+    func completeSignInWithApple(identityToken: String, nonce: String?, givenName: String?, familyName: String?) async {
         await authSessionStore.signInWithApple(identityToken: identityToken, nonce: nonce)
         guard authSessionStore.isSignedIn else { return }
+        // Best-effort — Apple only ever supplies a name on the account's very
+        // first authorization, so this is the one chance to capture it. A
+        // failure here shouldn't block sign-in; the user can still set their
+        // name later from Settings.
+        if let givenName {
+            try? await userProfileStore.save(givenName: givenName, familyName: familyName)
+        }
         await loadCoreReader()
     }
 
@@ -141,6 +150,7 @@ final class AppModel {
         recipeStore.reset()
         prepBatchStore.reset()
         feedbackStore.reset()
+        userProfileStore.reset()
     }
 
     /// Loads recipes for the household then seeds FeedbackStore from the

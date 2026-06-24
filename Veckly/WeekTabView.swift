@@ -81,6 +81,26 @@ struct WeekTabView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
 
+                if let err = appModel.prepBatchStore.mutationError {
+                    HStack(spacing: 10) {
+                        Text(err)
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                        Spacer()
+                        Button {
+                            appModel.prepBatchStore.clearMutationError()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        }
+                        .accessibilityLabel(L10n.string("common.dismissError"))
+                    }
+                    .padding(12)
+                    .background(VecklyDesign.Colors.surfaceStrong)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+
                 header
 
                 if isViewingCurrentWeek {
@@ -170,6 +190,7 @@ struct WeekTabView: View {
             MealPickerSheet(
                 day: day,
                 isSkipped: day.isSkipped,
+                coverage: coverage(for: day),
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 onSelect: { recipe in
                     guard let household = appModel.householdStore.activeHousehold else { return }
@@ -201,6 +222,33 @@ struct WeekTabView: View {
                     Task {
                         try? await Task.sleep(for: .milliseconds(50))
                         prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date)
+                    }
+                },
+                onMarkAsLeftoverNoRecipe: {
+                    guard let hid = appModel.householdStore.activeHousehold?.id else { return }
+                    mealPickerDay = nil
+                    Task {
+                        try? await appModel.prepBatchStore.create(
+                            householdID: hid,
+                            weekStartDate: appModel.weekStore.weekStartDate,
+                            recipeId: nil,
+                            cookDate: day.date,
+                            totalPortions: 4,
+                            assignments: [(date: day.date, mealType: .dinner)]
+                        )
+                    }
+                },
+                onRemoveCoverage: {
+                    guard let hid = appModel.householdStore.activeHousehold?.id,
+                          let dayCoverage = coverage(for: day) else { return }
+                    mealPickerDay = nil
+                    Task {
+                        try? await appModel.prepBatchStore.removeAssignment(
+                            householdID: hid,
+                            batchID: dayCoverage.batchID,
+                            date: day.date,
+                            mealType: dayCoverage.mealType
+                        )
                     }
                 },
                 onDismiss: { mealPickerDay = nil }
@@ -256,11 +304,13 @@ struct WeekTabView: View {
             )
         }
         .sheet(item: $prepBatchSeed) { seed in
-            PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate))
+            PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date())
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }
-            await appModel.weekStore.loadCurrentWeek(household: household)
+            async let week: Void = appModel.weekStore.loadCurrentWeek(household: household)
+            async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: WeekCalendar.currentWeekStartDate())
+            _ = await (week, prep)
             await refreshNextWeekEmptyState()
         }
         .onAppear {
@@ -686,6 +736,26 @@ struct WeekTabView: View {
                                 .tint(VecklyDesign.Colors.inkMid)
                                 .accessibilityLabel(L10n.string("prep.eatAgain"))
                             }
+                        }
+
+                        if let dayCoverage {
+                            Button(role: .destructive) {
+                                guard let household = appModel.householdStore.activeHousehold else { return }
+                                Task {
+                                    try? await appModel.prepBatchStore.removeAssignment(
+                                        householdID: household.id,
+                                        batchID: dayCoverage.batchID,
+                                        date: day.date,
+                                        mealType: dayCoverage.mealType
+                                    )
+                                }
+                            } label: {
+                                Image(systemName: "trash")
+                                    .frame(width: 20, height: 20)
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(VecklyDesign.Colors.inkMid)
+                            .accessibilityLabel(L10n.string("prep.removeCoverage"))
                         }
 
                         Button {

@@ -220,6 +220,14 @@ struct HouseholdMember: Identifiable, Equatable {
     var id: String { userId }
     let userId: String
     let role: HouseholdRole
+    let givenName: String?
+    let familyName: String?
+}
+
+struct UserProfile: Equatable {
+    let userId: String
+    let givenName: String
+    let familyName: String?
 }
 
 enum HouseholdPriority: String, CaseIterable {

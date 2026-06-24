@@ -66,8 +66,15 @@ struct SignedOutView: View {
                 VStack(spacing: 12) {
                     AppleSignInButton(
                         isLoading: appModel.authSessionStore.isSigningIn,
-                        onComplete: { token, nonce in
-                            Task { await appModel.completeSignInWithApple(identityToken: token, nonce: nonce) }
+                        onComplete: { token, nonce, givenName, familyName in
+                            Task {
+                                await appModel.completeSignInWithApple(
+                                    identityToken: token,
+                                    nonce: nonce,
+                                    givenName: givenName,
+                                    familyName: familyName
+                                )
+                            }
                         },
                         onFailure: {
                             appModel.authSessionStore.setError(L10n.string("auth.appleFailed"))

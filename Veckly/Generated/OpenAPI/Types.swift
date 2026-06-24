@@ -41,6 +41,11 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /households/{id}`.
     /// - Remark: Generated from `#/paths//households/{id}/patch(renameHousehold)`.
     func renameHousehold(_ input: Operations.renameHousehold.Input) async throws -> Operations.renameHousehold.Output
+    /// Delete a household (owner only)
+    ///
+    /// - Remark: HTTP `DELETE /households/{id}`.
+    /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)`.
+    func deleteHousehold(_ input: Operations.deleteHousehold.Input) async throws -> Operations.deleteHousehold.Output
     /// List a household's active members
     ///
     /// - Remark: HTTP `GET /households/{householdId}/members`.
@@ -255,6 +260,21 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}`.
     /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/delete`.
     func delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_(_ input: Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Input) async throws -> Operations.delete_sol_households_sol__lcub_householdId_rcub__sol_prep_batches_sol__lcub_batchId_rcub_.Output
+    /// Remove a single day from a prep batch (deletes the batch if no days remain)
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}/assignments/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/assignments/{date}/delete(removePrepBatchAssignment)`.
+    func removePrepBatchAssignment(_ input: Operations.removePrepBatchAssignment.Input) async throws -> Operations.removePrepBatchAssignment.Output
+    /// Read the caller's own name profile
+    ///
+    /// - Remark: HTTP `GET /users/me/profile`.
+    /// - Remark: Generated from `#/paths//users/me/profile/get(getMyProfile)`.
+    func getMyProfile(_ input: Operations.getMyProfile.Input) async throws -> Operations.getMyProfile.Output
+    /// Create or update the caller's own name
+    ///
+    /// - Remark: HTTP `PUT /users/me/profile`.
+    /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)`.
+    func upsertMyProfile(_ input: Operations.upsertMyProfile.Input) async throws -> Operations.upsertMyProfile.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -322,6 +342,13 @@ extension APIProtocol {
             headers: headers,
             body: body
         ))
+    }
+    /// Delete a household (owner only)
+    ///
+    /// - Remark: HTTP `DELETE /households/{id}`.
+    /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)`.
+    internal func deleteHousehold(path: Operations.deleteHousehold.Input.Path) async throws -> Operations.deleteHousehold.Output {
+        try await deleteHousehold(Operations.deleteHousehold.Input(path: path))
     }
     /// List a household's active members
     ///
@@ -897,6 +924,41 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// Remove a single day from a prep batch (deletes the batch if no days remain)
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}/assignments/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/assignments/{date}/delete(removePrepBatchAssignment)`.
+    internal func removePrepBatchAssignment(
+        path: Operations.removePrepBatchAssignment.Input.Path,
+        query: Operations.removePrepBatchAssignment.Input.Query,
+        headers: Operations.removePrepBatchAssignment.Input.Headers = .init()
+    ) async throws -> Operations.removePrepBatchAssignment.Output {
+        try await removePrepBatchAssignment(Operations.removePrepBatchAssignment.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Read the caller's own name profile
+    ///
+    /// - Remark: HTTP `GET /users/me/profile`.
+    /// - Remark: Generated from `#/paths//users/me/profile/get(getMyProfile)`.
+    internal func getMyProfile(headers: Operations.getMyProfile.Input.Headers = .init()) async throws -> Operations.getMyProfile.Output {
+        try await getMyProfile(Operations.getMyProfile.Input(headers: headers))
+    }
+    /// Create or update the caller's own name
+    ///
+    /// - Remark: HTTP `PUT /users/me/profile`.
+    /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)`.
+    internal func upsertMyProfile(
+        headers: Operations.upsertMyProfile.Input.Headers = .init(),
+        body: Operations.upsertMyProfile.Input.Body? = nil
+    ) async throws -> Operations.upsertMyProfile.Output {
+        try await upsertMyProfile(Operations.upsertMyProfile.Input(
+            headers: headers,
+            body: body
+        ))
+    }
 }
 
 /// Server URLs defined in the OpenAPI document.
@@ -1059,21 +1121,33 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/HouseholdMember/role`.
             internal var role: Components.Schemas.HouseholdMember.rolePayload
+            /// - Remark: Generated from `#/components/schemas/HouseholdMember/givenName`.
+            internal var givenName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/HouseholdMember/familyName`.
+            internal var familyName: Swift.String?
             /// Creates a new `HouseholdMember`.
             ///
             /// - Parameters:
             ///   - userId:
             ///   - role:
+            ///   - givenName:
+            ///   - familyName:
             internal init(
                 userId: Swift.String,
-                role: Components.Schemas.HouseholdMember.rolePayload
+                role: Components.Schemas.HouseholdMember.rolePayload,
+                givenName: Swift.String? = nil,
+                familyName: Swift.String? = nil
             ) {
                 self.userId = userId
                 self.role = role
+                self.givenName = givenName
+                self.familyName = familyName
             }
             internal enum CodingKeys: String, CodingKey {
                 case userId
                 case role
+                case givenName
+                case familyName
             }
         }
         /// - Remark: Generated from `#/components/schemas/ListHouseholdMembersResponse`.
@@ -3736,21 +3810,58 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/pantryStock`.
             internal var pantryStock: Components.Schemas.ShoppingStatePayload.pantryStockPayload
+            /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/customItemsPayload`.
+            internal struct customItemsPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/customItemsPayload/itemKey`.
+                internal var itemKey: Swift.String
+                /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/customItemsPayload/label`.
+                internal var label: Swift.String
+                /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/customItemsPayload/category`.
+                internal var category: Swift.String
+                /// Creates a new `customItemsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - itemKey:
+                ///   - label:
+                ///   - category:
+                internal init(
+                    itemKey: Swift.String,
+                    label: Swift.String,
+                    category: Swift.String
+                ) {
+                    self.itemKey = itemKey
+                    self.label = label
+                    self.category = category
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case itemKey
+                    case label
+                    case category
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/customItems`.
+            internal typealias customItemsPayload = [Components.Schemas.ShoppingStatePayload.customItemsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/ShoppingStatePayload/customItems`.
+            internal var customItems: Components.Schemas.ShoppingStatePayload.customItemsPayload?
             /// Creates a new `ShoppingStatePayload`.
             ///
             /// - Parameters:
             ///   - checkedItems:
             ///   - pantryStock:
+            ///   - customItems:
             internal init(
                 checkedItems: [Swift.String],
-                pantryStock: Components.Schemas.ShoppingStatePayload.pantryStockPayload
+                pantryStock: Components.Schemas.ShoppingStatePayload.pantryStockPayload,
+                customItems: Components.Schemas.ShoppingStatePayload.customItemsPayload? = nil
             ) {
                 self.checkedItems = checkedItems
                 self.pantryStock = pantryStock
+                self.customItems = customItems
             }
             internal enum CodingKeys: String, CodingKey {
                 case checkedItems
                 case pantryStock
+                case customItems
             }
         }
         /// - Remark: Generated from `#/components/schemas/AppendShoppingListEventRequest`.
@@ -4013,6 +4124,8 @@ internal enum Components {
             internal var unit: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ShoppingListSummaryItem/checked`.
             internal var checked: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/ShoppingListSummaryItem/isCustom`.
+            internal var isCustom: Swift.Bool
             /// Creates a new `ShoppingListSummaryItem`.
             ///
             /// - Parameters:
@@ -4021,18 +4134,21 @@ internal enum Components {
             ///   - amount:
             ///   - unit:
             ///   - checked:
+            ///   - isCustom:
             internal init(
                 itemKey: Swift.String,
                 label: Swift.String,
                 amount: Swift.String? = nil,
                 unit: Swift.String? = nil,
-                checked: Swift.Bool
+                checked: Swift.Bool,
+                isCustom: Swift.Bool
             ) {
                 self.itemKey = itemKey
                 self.label = label
                 self.amount = amount
                 self.unit = unit
                 self.checked = checked
+                self.isCustom = isCustom
             }
             internal enum CodingKeys: String, CodingKey {
                 case itemKey
@@ -4040,6 +4156,7 @@ internal enum Components {
                 case amount
                 case unit
                 case checked
+                case isCustom
             }
         }
         /// - Remark: Generated from `#/components/schemas/ShoppingListSummaryGroup`.
@@ -5866,6 +5983,58 @@ internal enum Components {
                 case ok
             }
         }
+        /// - Remark: Generated from `#/components/schemas/UserProfile`.
+        internal struct UserProfile: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UserProfile/userId`.
+            internal var userId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UserProfile/givenName`.
+            internal var givenName: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UserProfile/familyName`.
+            internal var familyName: Swift.String?
+            /// Creates a new `UserProfile`.
+            ///
+            /// - Parameters:
+            ///   - userId:
+            ///   - givenName:
+            ///   - familyName:
+            internal init(
+                userId: Swift.String,
+                givenName: Swift.String,
+                familyName: Swift.String? = nil
+            ) {
+                self.userId = userId
+                self.givenName = givenName
+                self.familyName = familyName
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case userId
+                case givenName
+                case familyName
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpsertUserProfile`.
+        internal struct UpsertUserProfile: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpsertUserProfile/givenName`.
+            internal var givenName: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertUserProfile/familyName`.
+            internal var familyName: Swift.String?
+            /// Creates a new `UpsertUserProfile`.
+            ///
+            /// - Parameters:
+            ///   - givenName:
+            ///   - familyName:
+            internal init(
+                givenName: Swift.String,
+                familyName: Swift.String? = nil
+            ) {
+                self.givenName = givenName
+                self.familyName = familyName
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case givenName
+                case familyName
+            }
+        }
     }
     /// Types generated from the `#/components/parameters` section of the OpenAPI document.
     internal enum Parameters {}
@@ -6965,6 +7134,181 @@ internal enum Operations {
                     .json
                 ]
             }
+        }
+    }
+    /// Delete a household (owner only)
+    ///
+    /// - Remark: HTTP `DELETE /households/{id}`.
+    /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)`.
+    internal enum deleteHousehold {
+        internal static let id: Swift.String = "deleteHousehold"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{id}/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{id}/DELETE/path/id`.
+                internal var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                internal init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            internal var path: Operations.deleteHousehold.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            internal init(path: Operations.deleteHousehold.Input.Path) {
+                self.path = path
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                internal init() {}
+            }
+            /// Household deleted
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.deleteHousehold.Output.NoContent)
+            /// Household deleted
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            internal static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            internal var noContent: Operations.deleteHousehold.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.deleteHousehold.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.deleteHousehold.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// Creates a new `Forbidden`.
+                internal init() {}
+            }
+            /// Caller is not the household owner
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.deleteHousehold.Output.Forbidden)
+            /// Caller is not the household owner
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            internal static var forbidden: Self {
+                .forbidden(.init())
+            }
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.deleteHousehold.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.deleteHousehold.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{id}/delete(deleteHousehold)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.deleteHousehold.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
     /// List a household's active members
@@ -16362,6 +16706,615 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Remove a single day from a prep batch (deletes the batch if no days remain)
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/prep_batches/{batchId}/assignments/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/assignments/{date}/delete(removePrepBatchAssignment)`.
+    internal enum removePrepBatchAssignment {
+        internal static let id: Swift.String = "removePrepBatchAssignment"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/path/batchId`.
+                internal var batchId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/path/date`.
+                internal var date: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - batchId:
+                ///   - date:
+                internal init(
+                    householdId: Swift.String,
+                    batchId: Swift.String,
+                    date: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.batchId = batchId
+                    self.date = date
+                }
+            }
+            internal var path: Operations.removePrepBatchAssignment.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/query`.
+            internal struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/query/mealType`.
+                internal enum mealTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case lunch = "lunch"
+                    case dinner = "dinner"
+                }
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/query/mealType`.
+                internal var mealType: Operations.removePrepBatchAssignment.Input.Query.mealTypePayload
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - mealType:
+                internal init(mealType: Operations.removePrepBatchAssignment.Input.Query.mealTypePayload) {
+                    self.mealType = mealType
+                }
+            }
+            internal var query: Operations.removePrepBatchAssignment.Input.Query
+            /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.removePrepBatchAssignment.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.removePrepBatchAssignment.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.removePrepBatchAssignment.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            internal init(
+                path: Operations.removePrepBatchAssignment.Input.Path,
+                query: Operations.removePrepBatchAssignment.Input.Query,
+                headers: Operations.removePrepBatchAssignment.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.PrepBatchOkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PrepBatchOkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.removePrepBatchAssignment.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.removePrepBatchAssignment.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Assignment removed
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/assignments/{date}/delete(removePrepBatchAssignment)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.removePrepBatchAssignment.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.removePrepBatchAssignment.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/401/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/401/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/401/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/401/content/application\/json`.
+                    case json(Operations.removePrepBatchAssignment.Output.Unauthorized.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.removePrepBatchAssignment.Output.Unauthorized.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.removePrepBatchAssignment.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.removePrepBatchAssignment.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Unauthenticated
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/assignments/{date}/delete(removePrepBatchAssignment)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.removePrepBatchAssignment.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.removePrepBatchAssignment.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/404/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/404/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/prep_batches/{batchId}/assignments/{date}/DELETE/responses/404/content/application\/json`.
+                    case json(Operations.removePrepBatchAssignment.Output.NotFound.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.removePrepBatchAssignment.Output.NotFound.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.removePrepBatchAssignment.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.removePrepBatchAssignment.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Assignment not found or not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/prep_batches/{batchId}/assignments/{date}/delete(removePrepBatchAssignment)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.removePrepBatchAssignment.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.removePrepBatchAssignment.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Read the caller's own name profile
+    ///
+    /// - Remark: HTTP `GET /users/me/profile`.
+    /// - Remark: Generated from `#/paths//users/me/profile/get(getMyProfile)`.
+    internal enum getMyProfile {
+        internal static let id: Swift.String = "getMyProfile"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/users/me/profile/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getMyProfile.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getMyProfile.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getMyProfile.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            internal init(headers: Operations.getMyProfile.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/users/me/profile/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/users/me/profile/GET/responses/200/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/users/me/profile/GET/responses/200/content/json/profile`.
+                        internal var profile: Components.Schemas.UserProfile?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - profile:
+                        internal init(profile: Components.Schemas.UserProfile? = nil) {
+                            self.profile = profile
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case profile
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/users/me/profile/GET/responses/200/content/application\/json`.
+                    case json(Operations.getMyProfile.Output.Ok.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.getMyProfile.Output.Ok.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getMyProfile.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getMyProfile.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The profile, or null when no name has been saved yet
+            ///
+            /// - Remark: Generated from `#/paths//users/me/profile/get(getMyProfile)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getMyProfile.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getMyProfile.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//users/me/profile/get(getMyProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getMyProfile.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//users/me/profile/get(getMyProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getMyProfile.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create or update the caller's own name
+    ///
+    /// - Remark: HTTP `PUT /users/me/profile`.
+    /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)`.
+    internal enum upsertMyProfile {
+        internal static let id: Swift.String = "upsertMyProfile"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/users/me/profile/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertMyProfile.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertMyProfile.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertMyProfile.Input.Headers
+            /// - Remark: Generated from `#/paths/users/me/profile/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/users/me/profile/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpsertUserProfile)
+            }
+            internal var body: Operations.upsertMyProfile.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                headers: Operations.upsertMyProfile.Input.Headers = .init(),
+                body: Operations.upsertMyProfile.Input.Body? = nil
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/users/me/profile/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/users/me/profile/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.UserProfile)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.UserProfile {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertMyProfile.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertMyProfile.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The saved profile
+            ///
+            /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertMyProfile.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertMyProfile.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertMyProfile.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertMyProfile.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
                             response: self
                         )
                     }

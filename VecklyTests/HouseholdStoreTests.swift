@@ -11,13 +11,13 @@ struct HouseholdStoreTests {
         await store.loadHouseholdDetails(householdID: TestHouseholds.first.id)
 
         #expect(store.detailsHouseholdID == TestHouseholds.first.id)
-        #expect(store.members == [HouseholdMember(userId: TestHouseholds.userA, role: .owner)])
+        #expect(store.members == [HouseholdMember(userId: TestHouseholds.userA, role: .owner, givenName: nil, familyName: nil)])
         #expect(store.cachedProfile(for: TestHouseholds.first.id)?.householdId == TestHouseholds.first.id)
 
         await store.loadHouseholdDetails(householdID: TestHouseholds.second.id)
 
         #expect(store.detailsHouseholdID == TestHouseholds.second.id)
-        #expect(store.members == [HouseholdMember(userId: TestHouseholds.userB, role: .member)])
+        #expect(store.members == [HouseholdMember(userId: TestHouseholds.userB, role: .member, givenName: nil, familyName: nil)])
         #expect(store.cachedProfile(for: TestHouseholds.first.id) == nil)
         #expect(store.cachedProfile(for: TestHouseholds.second.id)?.householdId == TestHouseholds.second.id)
     }
@@ -138,7 +138,7 @@ private actor SlowFakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
         startedContinuation?.resume()
         startedContinuation = nil
         await withCheckedContinuation { resumeContinuation = $0 }
-        return [HouseholdMember(userId: TestHouseholds.userA, role: .owner)]
+        return [HouseholdMember(userId: TestHouseholds.userA, role: .owner, givenName: nil, familyName: nil)]
     }
 
     func getProfile(householdID: String) async throws -> HouseholdProfile? { nil }
@@ -211,9 +211,9 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
 
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
         if householdID == TestHouseholds.first.id {
-            return [HouseholdMember(userId: TestHouseholds.userA, role: .owner)]
+            return [HouseholdMember(userId: TestHouseholds.userA, role: .owner, givenName: nil, familyName: nil)]
         }
-        return [HouseholdMember(userId: TestHouseholds.userB, role: .member)]
+        return [HouseholdMember(userId: TestHouseholds.userB, role: .member, givenName: nil, familyName: nil)]
     }
 
     func getProfile(householdID: String) async throws -> HouseholdProfile? {

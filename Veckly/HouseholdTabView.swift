@@ -38,6 +38,7 @@ struct HouseholdTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
+        .task { await appModel.userProfileStore.load() }
         .confirmationDialog(
             deleteHouseholdConfirmationTitle,
             isPresented: $showDeleteHouseholdConfirmation,
@@ -208,6 +209,19 @@ struct HouseholdTabView: View {
 
     private var accountSection: some View {
         settingsSection(title: L10n.string("account.section")) {
+            NavigationLink {
+                EditDisplayNameView()
+            } label: {
+                navigationRow(
+                    title: L10n.string("settings.displayName"),
+                    systemImage: "person.crop.circle",
+                    value: appModel.userProfileStore.givenName
+                )
+            }
+            .accessibilityIdentifier("editDisplayNameLink")
+
+            Divider()
+
             Button(role: .destructive) {
                 appModel.signOut()
             } label: {

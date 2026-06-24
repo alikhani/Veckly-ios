@@ -20,11 +20,17 @@ extension FullRecipe {
 struct MealPickerSheet: View {
     let day: WeekDayRowViewModel
     let isSkipped: Bool
+    /// Set when this (recipe-less) day is already covered by another day's
+    /// leftovers — shown as a banner above the recipe list instead of the
+    /// usual blank-picker look.
+    var coverage: PrepBatchCoverage? = nil
     let householdID: String
     let onSelect: (FullRecipe) -> Void
     let onClear: () -> Void
     let onSkip: () -> Void
     let onMarkAsLeftover: (String) -> Void
+    let onMarkAsLeftoverNoRecipe: () -> Void
+    let onRemoveCoverage: () -> Void
     let onDismiss: () -> Void
 
     @Environment(AppModel.self) private var appModel
@@ -148,6 +154,23 @@ struct MealPickerSheet: View {
 
     private var recipeList: some View {
         List {
+            if let coverage {
+                coverageBanner(coverage)
+            } else {
+                Section {
+                    Button(action: onMarkAsLeftoverNoRecipe) {
+                        HStack {
+                            Image(systemName: "arrow.3.trianglepath")
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            Text("prep.markAsLeftovers")
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
             if filtered.isEmpty {
                 Section {
                     ContentUnavailableView(
@@ -178,6 +201,24 @@ struct MealPickerSheet: View {
             }
         }
         .listStyle(.insetGrouped)
+    }
+
+    private func coverageBanner(_ coverage: PrepBatchCoverage) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: "arrow.3.trianglepath")
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    Text(L10n.format("prep.coveredByLeftovers", coverage.recipeTitle, WeekCalendar.shortDateLabel(yyyyMmDd: coverage.cookDate)))
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                }
+                Button(role: .destructive, action: onRemoveCoverage) {
+                    Text("prep.removeCoverage")
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding(.vertical, 4)
+        }
     }
 
     private func loadRecipes() async {
