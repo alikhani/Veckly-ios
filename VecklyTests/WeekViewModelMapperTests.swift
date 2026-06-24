@@ -141,8 +141,12 @@ struct WeekViewModelMapperTests {
     }
 
     @MainActor
-    @Test func toggleSkipRollsBackDayRowWhenAPIRequestFails() async {
-        let store = WeekStore(apiClient: FailingWeekStoreAPIClient())
+    @Test func toggleSkipKeepsLocalDayRowWhenAPIRequestFails() async {
+        let store = WeekStore(
+            apiClient: FailingWeekStoreAPIClient(),
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
         store.seedForUITests()
 
         let monday = store.dayRows.first { $0.weekday == .monday }!
@@ -152,19 +156,25 @@ struct WeekViewModelMapperTests {
             household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
             userID: "33333333-3333-3333-3333-333333333333"
         )
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
-        let restoredMonday = store.dayRows.first { $0.weekday == .monday }!
-        #expect(restoredMonday == monday)
-        #expect(restoredMonday.isSkipped == false)
-        #expect(restoredMonday.isEmpty == false)
-        #expect(restoredMonday.recipe != nil)
-        #expect(store.skippedDays.contains(.monday) == false)
-        #expect(store.mutationError == L10n.string("error.week.skipDay"))
+        let updatedMonday = store.dayRows.first { $0.weekday == .monday }!
+        #expect(updatedMonday != monday)
+        #expect(updatedMonday.isSkipped == true)
+        #expect(updatedMonday.isEmpty == false)
+        #expect(updatedMonday.recipe == nil)
+        #expect(store.skippedDays.contains(.monday) == true)
+        #expect(store.hasPendingSync == true)
+        #expect(store.mutationError == L10n.string("error.week.pendingSync"))
     }
 
     @MainActor
-    @Test func toggleLockRollsBackDayRowWhenAPIRequestFails() async {
-        let store = WeekStore(apiClient: FailingWeekStoreAPIClient())
+    @Test func toggleLockKeepsLocalDayRowWhenAPIRequestFails() async {
+        let store = WeekStore(
+            apiClient: FailingWeekStoreAPIClient(),
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
         store.seedForUITests()
 
         let monday = store.dayRows.first { $0.weekday == .monday }!
@@ -175,18 +185,24 @@ struct WeekViewModelMapperTests {
             household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
             userID: "33333333-3333-3333-3333-333333333333"
         )
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
-        let restoredMonday = store.dayRows.first { $0.weekday == .monday }!
-        #expect(restoredMonday == monday)
-        #expect(restoredMonday.isLocked == true)
-        #expect(store.lockedDays.contains(.monday) == true)
-        #expect(store.mutationError == L10n.string("error.week.unlockMeal"))
+        let updatedMonday = store.dayRows.first { $0.weekday == .monday }!
+        #expect(updatedMonday != monday)
+        #expect(updatedMonday.isLocked == false)
+        #expect(store.lockedDays.contains(.monday) == false)
+        #expect(store.hasPendingSync == true)
+        #expect(store.mutationError == L10n.string("error.week.pendingSync"))
     }
 
     @MainActor
     @Test func toggleSkipUsesSeededSkippedStateAndPlansDayInstead() async {
         let apiClient = CapturingWeekStoreAPIClient()
-        let store = WeekStore(apiClient: apiClient)
+        let store = WeekStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
         store.seedForUITests()
 
         let wednesday = store.dayRows.first { $0.weekday == .wednesday }!
@@ -198,6 +214,7 @@ struct WeekViewModelMapperTests {
             household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
             userID: "33333333-3333-3333-3333-333333333333"
         )
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
         let plannedWednesday = store.dayRows.first { $0.weekday == .wednesday }!
         #expect(plannedWednesday.isSkipped == false)
@@ -231,7 +248,11 @@ struct WeekViewModelMapperTests {
     @MainActor
     @Test func toggleSkipUsesCurrentRowStateWhenCapturedDayIsStale() async {
         let apiClient = CapturingWeekStoreAPIClient()
-        let store = WeekStore(apiClient: apiClient)
+        let store = WeekStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
         store.seedForUITests()
 
         let staleWednesday = WeekDayRowViewModel(
@@ -253,6 +274,7 @@ struct WeekViewModelMapperTests {
             household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
             userID: "33333333-3333-3333-3333-333333333333"
         )
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
         #expect(apiClient.events.count == 1)
         switch apiClient.events.first {
@@ -303,7 +325,11 @@ struct WeekViewModelMapperTests {
     @MainActor
     @Test func toggleLockUsesCurrentRowStateWhenCapturedDayIsStale() async {
         let apiClient = CapturingWeekStoreAPIClient()
-        let store = WeekStore(apiClient: apiClient)
+        let store = WeekStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
         store.seedForUITests()
 
         let staleMonday = WeekDayRowViewModel(
@@ -325,6 +351,7 @@ struct WeekViewModelMapperTests {
             household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
             userID: "33333333-3333-3333-3333-333333333333"
         )
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
         #expect(apiClient.events.count == 1)
         switch apiClient.events.first {
@@ -333,6 +360,44 @@ struct WeekViewModelMapperTests {
         default:
             Issue.record("Expected stale Monday row to unlock current locked state")
         }
+    }
+
+    @MainActor
+    @Test func rapidLockAndSkipChangesCollapseToFinalDesiredState() async throws {
+        let apiClient = SequencedEventWeekStoreAPIClient()
+        let store = WeekStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 50_000_000,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+        store.seedForUITests()
+
+        let monday = store.dayRows.first { $0.weekday == .monday }!
+
+        await store.toggleLock(
+            day: monday,
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+            userID: "33333333-3333-3333-3333-333333333333"
+        )
+        await store.toggleSkip(
+            day: store.dayRows.first { $0.weekday == .monday }!,
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+            userID: "33333333-3333-3333-3333-333333333333"
+        )
+
+        #expect(store.dayRows.first { $0.weekday == .monday }?.isSkipped == true)
+        #expect(store.hasPendingSync == true)
+
+        try await Task.sleep(nanoseconds: 120_000_000)
+
+        #expect(apiClient.events.count == 1)
+        switch apiClient.events.first {
+        case .daySkipped(day: .monday):
+            break
+        default:
+            Issue.record("Expected final desired state to collapse to a single skip event for Monday")
+        }
+        #expect(store.hasPendingSync == false)
     }
 }
 
@@ -456,6 +521,29 @@ private func makeWeekSummary(weekStartDate: String) -> WeekSummary {
 }
 
 private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
+    private(set) var events: [WeekPlanEventInput] = []
+
+    func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
+        throw APIError.notFound
+    }
+
+    func appendWeekPlanEvent(
+        householdID: String,
+        weekStartDate: String,
+        userID: String,
+        event: WeekPlanEventInput
+    ) async throws {
+        events.append(event)
+    }
+
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {}
+
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        throw APIError.notFound
+    }
+}
+
+private final class SequencedEventWeekStoreAPIClient: WeekStoreAPIClient {
     private(set) var events: [WeekPlanEventInput] = []
 
     func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {

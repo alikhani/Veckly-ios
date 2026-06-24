@@ -57,6 +57,7 @@ struct WeekTabView: View {
 
     private var isViewingCurrentWeek: Bool { viewedWeekOffset == .current }
     private var isViewingLastWeek: Bool { viewedWeekOffset == .last }
+    private var weekPendingSyncMessage: String { L10n.string("week.sync.pending") }
 
     var body: some View {
         ScrollView {
@@ -102,6 +103,16 @@ struct WeekTabView: View {
                 }
 
                 header
+
+                if appModel.weekStore.hasPendingSync {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(weekPendingSyncMessage)
+                            .font(.caption)
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    }
+                }
 
                 if isViewingCurrentWeek {
                     weekendNudgeBanner

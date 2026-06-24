@@ -1246,6 +1246,22 @@
         }
       }
     },
+    "error.shopping.pendingSync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your changes are saved here and will sync again when the connection is back."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dina ändringar är sparade här och synkas igen när anslutningen är tillbaka."
+          }
+        }
+      }
+    },
     "error.week.assignMeal": {
       "extractionState": "stale",
       "localizations": {
@@ -1395,6 +1411,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kunde inte låsa upp middagen."
+          }
+        }
+      }
+    },
+    "error.week.pendingSync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your week changes are saved here and will sync again when the connection is back."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dina veckoändringar är sparade här och synkas igen när anslutningen är tillbaka."
           }
         }
       }
@@ -4629,6 +4661,70 @@
         }
       }
     },
+    "shopping.customItem.addButton": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add item"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lägg till vara"
+          }
+        }
+      }
+    },
+    "shopping.customItem.category": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategori"
+          }
+        }
+      }
+    },
+    "shopping.customItem.name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vara"
+          }
+        }
+      }
+    },
+    "shopping.sync.pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving your changes"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparar dina ändringar"
+          }
+        }
+      }
+    },
     "tabs.household": {
       "localizations": {
         "en": {
@@ -4854,6 +4950,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Laddar veckan"
+          }
+        }
+      }
+    },
+    "week.sync.pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving your week changes"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparar dina veckoändringar"
           }
         }
       }

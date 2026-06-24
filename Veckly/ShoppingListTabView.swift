@@ -2,8 +2,7 @@ import SwiftUI
 
 struct ShoppingListTabView: View {
     @Environment(AppModel.self) private var appModel
-    @State private var customItemDraft = ""
-    @State private var isAddingCustomItem = false
+    @State private var showCustomItemSheet = false
     @State private var customItemErrorMessage: String?
 
     /// Base recipe servings are baked into the shopping list items by the backend.
@@ -87,15 +86,38 @@ struct ShoppingListTabView: View {
                 }
 
                 // Header block
-                VStack(alignment: .leading, spacing: 4) {
-                    if let contextLine = weekContextLine {
-                        Text(contextLine)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let contextLine = weekContextLine {
+                                Text(contextLine)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            }
+                            Text("shopping.title")
+                                .font(VecklyDesign.Typography.displayHeading(size: 34))
+                                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                        }
+                        Spacer()
+                        Button {
+                            showCustomItemSheet = true
+                        } label: {
+                            Label(addOwnItemButtonLabel, systemImage: "plus")
+                                .font(.callout.weight(.semibold))
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(VecklyDesign.Colors.hearthOrange)
                     }
-                    Text("shopping.title")
-                        .font(VecklyDesign.Typography.displayHeading(size: 34))
-                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+                    if appModel.shoppingListStore.hasPendingSync {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text(pendingSyncMessage)
+                                .font(.caption)
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        }
+                    }
                 }
 
                 if appModel.shoppingListStore.isLoading {
@@ -105,7 +127,6 @@ struct ShoppingListTabView: View {
                         Task { await appModel.loadCoreReader() }
                     }
                 } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
-                    customItemComposer
                     EmptyPanel(title: L10n.string("shopping.empty.title"), message: L10n.string("shopping.empty.message"))
                 } else {
                     // Progress indicator
@@ -121,8 +142,6 @@ struct ShoppingListTabView: View {
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(L10n.format("accessibility.itemsChecked", checkedItemCount, totalItemCount))
                     }
-
-                    customItemComposer
 
                     // Category groups
                     ForEach(appModel.shoppingListStore.groups) { group in
@@ -156,6 +175,11 @@ struct ShoppingListTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showCustomItemSheet) {
+            ShoppingCustomItemSheet { label, category in
+                try await appModel.shoppingListStore.addCustomItem(label: label, category: category)
+            }
+        }
         .alert(
             customItemErrorTitle,
             isPresented: Binding(
@@ -174,50 +198,6 @@ struct ShoppingListTabView: View {
         }
     }
 
-    private var customItemComposer: some View {
-        VecklyCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(customItemTitle)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    .textCase(.uppercase)
-
-                HStack(spacing: 10) {
-                    TextField(customItemPlaceholder, text: $customItemDraft)
-                        .textInputAutocapitalization(.sentences)
-
-                    Button {
-                        Task { await addCustomItem() }
-                    } label: {
-                        if isAddingCustomItem {
-                            ProgressView()
-                        } else {
-                            Text(customItemAddButton)
-                                .font(.callout.weight(.semibold))
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(VecklyDesign.Colors.hearthOrange)
-                    .disabled(isAddingCustomItem || customItemDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-        }
-    }
-
-    private func addCustomItem() async {
-        let draft = customItemDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !draft.isEmpty else { return }
-        isAddingCustomItem = true
-        defer { isAddingCustomItem = false }
-
-        do {
-            try await appModel.shoppingListStore.addCustomItem(label: draft)
-            customItemDraft = ""
-        } catch {
-            customItemErrorMessage = customItemAddError
-        }
-    }
-
     private func removeCustomItem(key: String) async {
         do {
             try await appModel.shoppingListStore.removeCustomItem(itemKey: key)
@@ -230,12 +210,8 @@ struct ShoppingListTabView: View {
         L10n.string("shopping.customItem.title")
     }
 
-    private var customItemPlaceholder: String {
-        L10n.string("shopping.customItem.placeholder")
-    }
-
-    private var customItemAddButton: String {
-        L10n.string("shopping.customItem.add")
+    private var addOwnItemButtonLabel: String {
+        L10n.string("shopping.customItem.addButton")
     }
 
     private var customItemErrorTitle: String {
@@ -248,6 +224,82 @@ struct ShoppingListTabView: View {
 
     private var customItemRemoveError: String {
         L10n.string("shopping.customItem.removeError")
+    }
+
+    private var pendingSyncMessage: String {
+        L10n.string("shopping.sync.pending")
+    }
+}
+
+private struct ShoppingCustomItemSheet: View {
+    let onSave: (String, ShoppingCategory) async throws -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var label = ""
+    @State private var category: ShoppingCategory = .other
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField(L10n.string("shopping.customItem.placeholder"), text: $label)
+                        .textInputAutocapitalization(.sentences)
+                } header: {
+                    Text(L10n.string("shopping.customItem.name"))
+                }
+
+                Section {
+                    Picker(L10n.string("shopping.customItem.category"), selection: $category) {
+                        ForEach(ShoppingCategory.allCases, id: \.self) { option in
+                            Text(option.displayLabel).tag(option)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(L10n.string("shopping.customItem.title"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if isSaving {
+                        ProgressView()
+                    } else {
+                        Button("shopping.customItem.add") { Task { await save() } }
+                            .disabled(trimmedLabel.isEmpty)
+                    }
+                }
+            }
+            .alert(L10n.string("common.error"),
+                isPresented: Binding(
+                    get: { errorMessage != nil },
+                    set: { if !$0 { errorMessage = nil } }
+                ),
+                actions: { Button("common.ok") { errorMessage = nil } },
+                message: { Text(errorMessage ?? "") }
+            )
+        }
+    }
+
+    private var trimmedLabel: String {
+        label.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func save() async {
+        guard !trimmedLabel.isEmpty else { return }
+        isSaving = true
+        defer { isSaving = false }
+
+        do {
+            try await onSave(trimmedLabel, category)
+            dismiss()
+        } catch {
+            errorMessage = L10n.string("shopping.customItem.addError")
+        }
     }
 }
 

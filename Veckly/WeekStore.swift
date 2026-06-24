@@ -5,6 +5,8 @@ import Observation
 @Observable
 final class WeekStore {
     private let apiClient: any WeekStoreAPIClient
+    private let syncDebounceNanoseconds: UInt64
+    private let retryDelayNanoseconds: UInt64
 
     private(set) var weekStartDate: String = WeekCalendar.currentWeekStartDate()
     private(set) var summary: WeekSummary?
@@ -30,9 +32,21 @@ final class WeekStore {
     private(set) var errorMessage: String?
     private(set) var mutationError: String?
     private(set) var lastFetchedAt: Date?
+    private(set) var hasPendingSync = false
+    private var pendingSyncContext: WeekPendingSyncContext?
+    private var pendingDesiredDayStates: [Weekday: WeekPendingDayState] = [:]
+    private var syncedDayStates: [Weekday: WeekPendingDayState] = [:]
+    private var flushTask: Task<Void, Never>?
+    private var isFlushingPendingChanges = false
 
-    init(apiClient: any WeekStoreAPIClient) {
+    init(
+        apiClient: any WeekStoreAPIClient,
+        syncDebounceNanoseconds: UInt64 = 400_000_000,
+        retryDelayNanoseconds: UInt64 = 2_000_000_000
+    ) {
         self.apiClient = apiClient
+        self.syncDebounceNanoseconds = syncDebounceNanoseconds
+        self.retryDelayNanoseconds = retryDelayNanoseconds
     }
 
     func clearMutationError() { mutationError = nil }
@@ -54,10 +68,13 @@ final class WeekStore {
             let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
             dayRows = mapped.days
             today = mapped.today
+            syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+            reapplyPendingStateIfNeeded(for: weekStartDate)
         } catch APIError.notFound {
             summary = nil
             dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
+            syncedDayStates = Dictionary(uniqueKeysWithValues: dayRows.map { ($0.weekday, WeekPendingDayState(row: $0)) })
         } catch {
             errorMessage = L10n.string("error.week.load")
         }
@@ -80,10 +97,13 @@ final class WeekStore {
             let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
             dayRows = mapped.days
             today = mapped.today
+            syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+            reapplyPendingStateIfNeeded(for: weekStartDate)
         } catch APIError.notFound {
             summary = nil
             dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
+            syncedDayStates = Dictionary(uniqueKeysWithValues: dayRows.map { ($0.weekday, WeekPendingDayState(row: $0)) })
         } catch {
             errorMessage = L10n.string("error.week.load")
         }
@@ -105,68 +125,34 @@ final class WeekStore {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
-        let isLocked = current.isLocked
-        let previous = dayRows.first(where: { $0.weekday == day.weekday })
-        let optimisticRow = current.withLocked(!isLocked)
+        let optimisticRow = current.withLocked(!current.isLocked)
 
-        if let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
-            dayRows[idx] = optimisticRow
-        }
-        if current.isToday { today = optimisticRow }
-
-        let event: WeekPlanEventInput = isLocked
-            ? .mealUnlocked(day: day.weekday)
-            : .mealLocked(day: day.weekday)
-
-        do {
-            try await apiClient.appendWeekPlanEvent(
-                householdID: household.id,
-                weekStartDate: targetWeekStartDate,
-                userID: userID,
-                event: event
-            )
-            if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
-        } catch {
-            if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
-                dayRows[idx] = previous
-            }
-            if current.isToday { today = previous }
-            mutationError = isLocked ? L10n.string("error.week.unlockMeal") : L10n.string("error.week.lockMeal")
-        }
+        await preparePendingSyncContext(
+            householdID: household.id,
+            userID: userID,
+            weekStartDate: targetWeekStartDate
+        )
+        applyVisibleRow(optimisticRow)
+        pendingDesiredDayStates[day.weekday] = WeekPendingDayState(row: optimisticRow)
+        hasPendingSync = !pendingDesiredDayStates.isEmpty
+        schedulePendingFlush()
     }
 
     func toggleSkip(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
         let current = dayRows.first(where: { $0.weekday == day.weekday }) ?? day
-        let isSkipped = current.isSkipped
-        let previous = dayRows.first(where: { $0.weekday == day.weekday })
-        let optimisticRow = current.withSkipped(!isSkipped)
+        let optimisticRow = current.withSkipped(!current.isSkipped)
 
-        if let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
-            dayRows[idx] = optimisticRow
-        }
-        if current.isToday { today = optimisticRow }
-
-        let event: WeekPlanEventInput = isSkipped
-            ? .dayUnskipped(day: day.weekday)
-            : .daySkipped(day: day.weekday)
-
-        do {
-            try await apiClient.appendWeekPlanEvent(
-                householdID: household.id,
-                weekStartDate: targetWeekStartDate,
-                userID: userID,
-                event: event
-            )
-            if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
-        } catch {
-            if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
-                dayRows[idx] = previous
-            }
-            if current.isToday { today = previous }
-            mutationError = isSkipped ? L10n.string("error.week.planDay") : L10n.string("error.week.skipDay")
-        }
+        await preparePendingSyncContext(
+            householdID: household.id,
+            userID: userID,
+            weekStartDate: targetWeekStartDate
+        )
+        applyVisibleRow(optimisticRow)
+        pendingDesiredDayStates[day.weekday] = WeekPendingDayState(row: optimisticRow)
+        hasPendingSync = !pendingDesiredDayStates.isEmpty
+        schedulePendingFlush()
     }
 
     func generateWeek(household: Household, userID: String, regenerate: Bool = false, viewedWeekStartDate: String? = nil) async {
@@ -283,6 +269,8 @@ final class WeekStore {
     }
 
     func reset() {
+        flushTask?.cancel()
+        flushTask = nil
         summary = nil
         dayRows = []
         today = nil
@@ -290,6 +278,11 @@ final class WeekStore {
         mutationError = nil
         isLoading = false
         lastFetchedAt = nil
+        hasPendingSync = false
+        pendingSyncContext = nil
+        pendingDesiredDayStates = [:]
+        syncedDayStates = [:]
+        isFlushingPendingChanges = false
     }
 
     func seedForUITests() {
@@ -321,6 +314,176 @@ final class WeekStore {
         let mapped = WeekViewModelMapper.map(summary: summary, today: WeekCalendar.date(from: weekStartDate) ?? Date())
         dayRows = mapped.days
         today = mapped.today ?? mapped.days.first
+        syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+    }
+
+    private func preparePendingSyncContext(
+        householdID: String,
+        userID: String,
+        weekStartDate: String
+    ) async {
+        if let context = pendingSyncContext,
+           (context.householdID != householdID || context.userID != userID || context.weekStartDate != weekStartDate),
+           !pendingDesiredDayStates.isEmpty {
+            await flushPendingDayChanges()
+        }
+
+        if pendingSyncContext?.householdID != householdID
+            || pendingSyncContext?.userID != userID
+            || pendingSyncContext?.weekStartDate != weekStartDate {
+            pendingSyncContext = WeekPendingSyncContext(
+                householdID: householdID,
+                userID: userID,
+                weekStartDate: weekStartDate
+            )
+        }
+    }
+
+    private func schedulePendingFlush(immediate: Bool = false) {
+        guard pendingSyncContext != nil, !isFlushingPendingChanges else { return }
+        flushTask?.cancel()
+        let delay = immediate ? UInt64.zero : syncDebounceNanoseconds
+        flushTask = Task { [weak self] in
+            guard let self else { return }
+            if delay > 0 {
+                try? await Task.sleep(nanoseconds: delay)
+            }
+            guard !Task.isCancelled else { return }
+            await self.flushPendingDayChanges()
+        }
+    }
+
+    private func flushPendingDayChanges() async {
+        guard let context = pendingSyncContext, !pendingDesiredDayStates.isEmpty, !isFlushingPendingChanges else { return }
+        isFlushingPendingChanges = true
+
+        for weekday in Weekday.allCases {
+            guard let desired = pendingDesiredDayStates[weekday] else { continue }
+            let baseline = syncedDayStates[weekday] ?? desired
+
+            do {
+                try await syncDesiredState(desired, baseline: baseline, weekday: weekday, context: context)
+                syncedDayStates[weekday] = desired
+                pendingDesiredDayStates.removeValue(forKey: weekday)
+                if context.weekStartDate == weekStartDate { lastFetchedAt = Date() }
+            } catch {
+                let latest = try? await apiClient.weekSummary(
+                    householdID: context.householdID,
+                    weekStartDate: context.weekStartDate
+                )
+                if let latest {
+                    let mapped = WeekViewModelMapper.map(summary: latest, today: Date())
+                    syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+                    if summary?.weekStartDate == latest.weekStartDate {
+                        summary = latest
+                        dayRows = mapped.days
+                        today = mapped.today
+                        reapplyPendingStateIfNeeded(for: latest.weekStartDate)
+                    }
+
+                    if let refreshedBaseline = syncedDayStates[weekday],
+                       refreshedBaseline == desired {
+                        pendingDesiredDayStates.removeValue(forKey: weekday)
+                        continue
+                    }
+                }
+
+                mutationError = L10n.string("error.week.pendingSync")
+                hasPendingSync = !pendingDesiredDayStates.isEmpty
+                isFlushingPendingChanges = false
+                scheduleRetryFlush()
+                return
+            }
+        }
+
+        hasPendingSync = !pendingDesiredDayStates.isEmpty
+        if pendingDesiredDayStates.isEmpty {
+            pendingSyncContext = nil
+            mutationError = nil
+        }
+        isFlushingPendingChanges = false
+    }
+
+    private func scheduleRetryFlush() {
+        flushTask?.cancel()
+        flushTask = Task { [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: retryDelayNanoseconds)
+            guard !Task.isCancelled else { return }
+            await self.flushPendingDayChanges()
+        }
+    }
+
+    private func syncDesiredState(
+        _ desired: WeekPendingDayState,
+        baseline: WeekPendingDayState,
+        weekday: Weekday,
+        context: WeekPendingSyncContext
+    ) async throws {
+        var working = baseline
+
+        if working.isSkipped != desired.isSkipped {
+            try await apiClient.appendWeekPlanEvent(
+                householdID: context.householdID,
+                weekStartDate: context.weekStartDate,
+                userID: context.userID,
+                event: desired.isSkipped ? .daySkipped(day: weekday) : .dayUnskipped(day: weekday)
+            )
+            working.isSkipped = desired.isSkipped
+            if desired.isSkipped {
+                working.isLocked = false
+            }
+        }
+
+        if working.isLocked != desired.isLocked {
+            try await apiClient.appendWeekPlanEvent(
+                householdID: context.householdID,
+                weekStartDate: context.weekStartDate,
+                userID: context.userID,
+                event: desired.isLocked ? .mealLocked(day: weekday) : .mealUnlocked(day: weekday)
+            )
+        }
+    }
+
+    private func reapplyPendingStateIfNeeded(for weekStartDate: String) {
+        guard pendingSyncContext?.weekStartDate == weekStartDate else { return }
+        for (weekday, desired) in pendingDesiredDayStates {
+            guard let row = dayRows.first(where: { $0.weekday == weekday }) else { continue }
+            applyVisibleRow(desired.apply(to: row))
+        }
+        hasPendingSync = !pendingDesiredDayStates.isEmpty
+    }
+
+    private func applyVisibleRow(_ row: WeekDayRowViewModel) {
+        if let idx = dayRows.firstIndex(where: { $0.weekday == row.weekday }) {
+            dayRows[idx] = row
+        }
+        if row.isToday {
+            today = row
+        } else if today?.weekday == row.weekday {
+            today = row
+        }
+    }
+}
+
+private struct WeekPendingSyncContext {
+    let householdID: String
+    let userID: String
+    let weekStartDate: String
+}
+
+private struct WeekPendingDayState: Equatable {
+    var isLocked: Bool
+    var isSkipped: Bool
+
+    init(row: WeekDayRowViewModel) {
+        self.isLocked = row.isLocked
+        self.isSkipped = row.isSkipped
+    }
+
+    func apply(to row: WeekDayRowViewModel) -> WeekDayRowViewModel {
+        let skippedAdjusted = row.withSkipped(isSkipped)
+        return skippedAdjusted.withLocked(isSkipped ? false : isLocked)
     }
 }
 

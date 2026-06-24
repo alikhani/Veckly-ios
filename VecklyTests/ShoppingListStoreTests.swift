@@ -11,10 +11,15 @@ struct ShoppingListStoreTests {
             pantryStock: ["pantry:rice:g": 100],
             customItems: []
         )
-        let store = ShoppingListStore(apiClient: apiClient)
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
 
         await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
         await store.toggleItem(key: "produce:apples:")
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
         #expect(apiClient.updateRequests.count == 1)
         #expect(apiClient.updateRequests[0].pantryStock == ["pantry:rice:g": 100])
@@ -34,10 +39,15 @@ struct ShoppingListStoreTests {
             customItems: [TestShoppingListFixtures.serverCustomItem]
         )
 
-        let store = ShoppingListStore(apiClient: apiClient)
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
         await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
 
         try await store.addCustomItem(label: "Milk")
+        try await Task.sleep(nanoseconds: 20_000_000)
 
         #expect(apiClient.updateRequests.count == 2)
         #expect(apiClient.updateRequests[1].pantryStock == ["pantry:pasta:g": 250])
@@ -47,17 +57,48 @@ struct ShoppingListStoreTests {
         #expect(store.customItems.contains(where: { $0.label == "Milk" }))
     }
 
-    @Test func toggleFailureRevertsStateAndShowsMutationError() async {
+    @Test func toggleFailureKeepsLocalStateAndMarksPendingSync() async {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
         apiClient.updateResponses = [.failure(.server(statusCode: 500))]
-        let store = ShoppingListStore(apiClient: apiClient)
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
 
         await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
         await store.toggleItem(key: "produce:apples:")
+        try? await Task.sleep(nanoseconds: 20_000_000)
 
-        #expect(store.checkedItems.isEmpty)
-        #expect(store.mutationError == L10n.string("error.shopping.toggle"))
+        #expect(store.checkedItems == ["produce:apples:"])
+        #expect(store.hasPendingSync)
+        #expect(store.mutationError == L10n.string("error.shopping.pendingSync"))
+    }
+
+    @Test func rapidTogglesAreBatchedIntoSingleRequest() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.summary = TestShoppingListFixtures.summaryWithTwoItems
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 50_000_000,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        await store.toggleItem(key: "produce:apples:")
+        await store.toggleItem(key: "produce:bananas:")
+
+        #expect(store.checkedItems == ["produce:apples:", "produce:bananas:"])
+        #expect(apiClient.updateRequests.isEmpty)
+
+        try await Task.sleep(nanoseconds: 120_000_000)
+
+        #expect(apiClient.updateRequests.count == 1)
+        #expect(apiClient.updateRequests[0].checkedItems == ["produce:apples:", "produce:bananas:"])
+        #expect(!store.hasPendingSync)
     }
 
     @Test func freshCacheIsIgnoredWhenItBelongsToAnotherWeek() async {
@@ -66,7 +107,11 @@ struct ShoppingListStoreTests {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.summary = TestShoppingListFixtures.summaryForWeek(staleWeek, itemKey: "produce:old:")
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
-        let store = ShoppingListStore(apiClient: apiClient)
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
 
         await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: requestedWeek)
 
@@ -101,6 +146,32 @@ private enum TestShoppingListFixtures {
                         unit: nil,
                         checked: false
                     )
+                ]
+            )
+        ]
+    )
+    static let summaryWithTwoItems = ShoppingListSummary(
+        household: SummaryHousehold(id: household.id, name: household.name),
+        weekStartDate: weekStartDate,
+        updatedAt: "2026-06-22T09:00:00.000Z",
+        groups: [
+            ShoppingListGroup(
+                category: "Produce",
+                items: [
+                    ShoppingListItem(
+                        itemKey: "produce:apples:",
+                        label: "Apples",
+                        amount: "4",
+                        unit: nil,
+                        checked: false
+                    ),
+                    ShoppingListItem(
+                        itemKey: "produce:bananas:",
+                        label: "Bananas",
+                        amount: "6",
+                        unit: nil,
+                        checked: false
+                    ),
                 ]
             )
         ]
