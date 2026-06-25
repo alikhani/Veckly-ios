@@ -11,6 +11,7 @@ final class WeekStore {
     private(set) var weekStartDate: String = WeekCalendar.currentWeekStartDate()
     private(set) var summary: WeekSummary?
     private(set) var dayRows: [WeekDayRowViewModel] = []
+    private(set) var currentWeekDayRows: [WeekDayRowViewModel] = []
     private(set) var today: WeekDayRowViewModel?
     var lockedDays: Set<Weekday> {
         Set(dayRows.filter(\.isLocked).map(\.weekday))
@@ -67,12 +68,14 @@ final class WeekStore {
             lastFetchedAt = Date()
             let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
             dayRows = mapped.days
+            currentWeekDayRows = dayRows
             today = mapped.today
             syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
             reapplyPendingStateIfNeeded(for: weekStartDate)
         } catch APIError.notFound {
             summary = nil
             dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
+            currentWeekDayRows = dayRows
             today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
             syncedDayStates = Dictionary(uniqueKeysWithValues: dayRows.map { ($0.weekday, WeekPendingDayState(row: $0)) })
         } catch {
@@ -273,6 +276,7 @@ final class WeekStore {
         flushTask = nil
         summary = nil
         dayRows = []
+        currentWeekDayRows = []
         today = nil
         errorMessage = nil
         mutationError = nil

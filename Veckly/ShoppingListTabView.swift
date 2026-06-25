@@ -39,7 +39,7 @@ struct ShoppingListTabView: View {
 
         let weekNumber = WeekCalendar.weekNumber(for: weekStartString)
 
-        let dayRows = appModel.weekStore.dayRows
+        let dayRows = appModel.weekStore.currentWeekDayRows
         let plannedRows = dayRows.filter { $0.recipe != nil }
         let mealCount = plannedRows.count
 

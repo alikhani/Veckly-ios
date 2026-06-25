@@ -69,8 +69,10 @@ final class HouseholdStore {
         do {
             async let membersResult = apiClient.listMembers(householdID: householdID)
             async let profileResult = apiClient.getProfile(householdID: householdID)
-            members = try await membersResult
-            profile = try await profileResult
+            let newMembers = try await membersResult
+            let newProfile = try await profileResult
+            members = newMembers
+            profile = newProfile
             detailsHouseholdID = householdID
             detailsLastFetchedAt = Date()
         } catch {

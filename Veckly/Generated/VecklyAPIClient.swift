@@ -419,7 +419,10 @@ struct VecklyAPIClient {
             children: children,
             priorities: priorities.compactMap { PrioPayload(rawValue: $0.rawValue) },
             avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
-            selectedDays: selectedDays.compactMap { DayPayload(day: .init(rawValue: $0.rawValue)!) }
+            selectedDays: selectedDays.compactMap { item in
+                guard let day = DayPayload.dayPayload(rawValue: item.rawValue) else { return nil }
+                return DayPayload(day: day)
+            }
         )
         let output = try await _client.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
         switch output {
@@ -506,7 +509,10 @@ struct VecklyAPIClient {
             recipeId: recipeId,
             cookDate: cookDate,
             totalPortions: totalPortions,
-            assignments: assignments.map { AssignPayload(date: $0.date, mealType: .init(rawValue: $0.mealType.rawValue)!) }
+            assignments: assignments.compactMap { item in
+                guard let mealType = AssignPayload.mealTypePayload(rawValue: item.mealType.rawValue) else { return nil }
+                return AssignPayload(date: item.date, mealType: mealType)
+            }
         )
         let output = try await _client.post_sol_households_sol__lcub_householdId_rcub__sol_prep_batches(
             path: .init(householdId: householdID),
@@ -534,9 +540,12 @@ struct VecklyAPIClient {
     }
 
     func removeAssignment(householdID: String, batchID: String, date: String, mealType: MealType) async throws {
+        guard let mealTypeParam = Operations.removePrepBatchAssignment.Input.Query.mealTypePayload(rawValue: mealType.rawValue) else {
+            throw APIError.server(statusCode: 400)
+        }
         let output = try await _client.removePrepBatchAssignment(
             path: .init(householdId: householdID, batchId: batchID, date: date),
-            query: .init(mealType: .init(rawValue: mealType.rawValue)!)
+            query: .init(mealType: mealTypeParam)
         )
         switch output {
         case .ok: return
