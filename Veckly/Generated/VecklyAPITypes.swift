@@ -287,6 +287,11 @@ struct PrepBatch: Identifiable, Equatable {
     let id: String
     let householdId: String
     let recipeId: String?
+    /// Set when this batch was built from a household's own custom (non-catalog)
+    /// recipe rather than a shared catalog recipe. iOS has no custom-recipe
+    /// browsing/detail UI yet, so this is rendered with a distinct, honest
+    /// label rather than the real title — see `prepBatchCoverage`.
+    let customRecipeId: String?
     let cookDate: String
     let totalPortions: Int
     let assignments: [PrepBatchAssignment]

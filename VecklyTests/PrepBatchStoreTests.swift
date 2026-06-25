@@ -74,6 +74,7 @@ private enum TestPrepBatchFixtures {
         id: "11111111-1111-1111-1111-111111111111",
         householdId: householdID,
         recipeId: nil,
+        customRecipeId: nil,
         cookDate: "2026-06-23",
         totalPortions: 4,
         assignments: []
@@ -83,6 +84,7 @@ private enum TestPrepBatchFixtures {
         id: "22222222-2222-2222-2222-222222222222",
         householdId: householdID,
         recipeId: nil,
+        customRecipeId: nil,
         cookDate: "2026-06-30",
         totalPortions: 6,
         assignments: []
@@ -92,6 +94,7 @@ private enum TestPrepBatchFixtures {
         id: "33333333-3333-3333-3333-333333333333",
         householdId: otherHouseholdID,
         recipeId: nil,
+        customRecipeId: nil,
         cookDate: "2026-06-24",
         totalPortions: 2,
         assignments: []
@@ -132,6 +135,7 @@ private final class FakePrepBatchStoreAPIClient: PrepBatchStoreAPIClient {
             id: "44444444-4444-4444-4444-444444444444",
             householdId: householdID,
             recipeId: recipeId,
+            customRecipeId: nil,
             cookDate: cookDate,
             totalPortions: totalPortions,
             assignments: assignments.enumerated().map { index, assignment in

@@ -920,6 +920,7 @@ private extension Components.Schemas.PrepBatch {
             id: id,
             householdId: householdId,
             recipeId: recipeId,
+            customRecipeId: customRecipeId,
             cookDate: cookDate,
             totalPortions: totalPortions,
             assignments: assignments.map(\.appModel)

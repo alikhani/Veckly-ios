@@ -2906,6 +2906,22 @@
         }
       }
     },
+    "prep.customRecipeTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom recipe"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eget recept"
+          }
+        }
+      }
+    },
     "prep.fallbackTitle": {
       "localizations": {
         "en": {

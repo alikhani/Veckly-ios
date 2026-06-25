@@ -16,11 +16,18 @@ struct PrepBatchCoverageTests {
         userVote: nil
     )
 
-    private func batch(id: String = "batch-1", recipeId: String?, cookDate: String, assignedDates: [String]) -> PrepBatch {
+    private func batch(
+        id: String = "batch-1",
+        recipeId: String?,
+        customRecipeId: String? = nil,
+        cookDate: String,
+        assignedDates: [String]
+    ) -> PrepBatch {
         PrepBatch(
             id: id,
             householdId: "11111111-1111-1111-1111-111111111111",
             recipeId: recipeId,
+            customRecipeId: customRecipeId,
             cookDate: cookDate,
             totalPortions: 8,
             assignments: assignedDates.map {
@@ -81,6 +88,49 @@ struct PrepBatchCoverageTests {
             batches: [batch(recipeId: "unknown-recipe-id", cookDate: "2026-06-08", assignedDates: ["2026-06-09"])],
             recipes: [pasta]
         )
+
+        #expect(result?.recipeTitle == L10n.string("prep.fallbackTitle"))
+    }
+
+    @Test func decodingPrepBatchRoundTripsCustomRecipeId() throws {
+        let json = """
+        {
+            "id": "batch-1",
+            "householdId": "11111111-1111-1111-1111-111111111111",
+            "recipeId": null,
+            "customRecipeId": "22222222-2222-2222-2222-222222222222",
+            "cookDate": "2026-06-08",
+            "totalPortions": 8,
+            "createdBy": "33333333-3333-3333-3333-333333333333",
+            "createdAt": "2026-06-08T00:00:00.000Z",
+            "assignments": []
+        }
+        """.data(using: .utf8)!
+
+        let wire = try JSONDecoder().decode(Components.Schemas.PrepBatch.self, from: json)
+
+        #expect(wire.recipeId == nil)
+        #expect(wire.customRecipeId == "22222222-2222-2222-2222-222222222222")
+    }
+
+    @Test func batchWithCustomRecipeIdIsLabeledDistinctlyFromTrueLeftovers() {
+        let customRecipeBatch = batch(
+            recipeId: nil,
+            customRecipeId: "22222222-2222-2222-2222-222222222222",
+            cookDate: "2026-06-08",
+            assignedDates: ["2026-06-09"]
+        )
+
+        let result = prepBatchCoverage(for: "2026-06-09", mealType: .dinner, batches: [customRecipeBatch], recipes: [pasta])
+
+        #expect(result?.recipeTitle == L10n.string("prep.customRecipeTitle"))
+        #expect(result?.recipeTitle != L10n.string("prep.fallbackTitle"))
+    }
+
+    @Test func batchWithNeitherRecipeIdNorCustomRecipeIdIsTrueLeftovers() {
+        let leftoversOnlyBatch = batch(recipeId: nil, customRecipeId: nil, cookDate: "2026-06-08", assignedDates: ["2026-06-09"])
+
+        let result = prepBatchCoverage(for: "2026-06-09", mealType: .dinner, batches: [leftoversOnlyBatch], recipes: [pasta])
 
         #expect(result?.recipeTitle == L10n.string("prep.fallbackTitle"))
     }

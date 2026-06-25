@@ -106,6 +106,7 @@ final class PrepBatchStore {
                 id: batches[index].id,
                 householdId: batches[index].householdId,
                 recipeId: batches[index].recipeId,
+                customRecipeId: batches[index].customRecipeId,
                 cookDate: batches[index].cookDate,
                 totalPortions: batches[index].totalPortions,
                 assignments: remainingAssignments
@@ -184,6 +185,7 @@ struct PersistedPrepBatch: Codable {
     let id: String
     let householdId: String
     let recipeId: String?
+    let customRecipeId: String?
     let cookDate: String
     let totalPortions: Int
     let assignments: [PersistedPrepBatchAssignment]
@@ -202,6 +204,7 @@ extension PersistedPrepBatch {
             id: batch.id,
             householdId: batch.householdId,
             recipeId: batch.recipeId,
+            customRecipeId: batch.customRecipeId,
             cookDate: batch.cookDate,
             totalPortions: batch.totalPortions,
             assignments: batch.assignments.map(PersistedPrepBatchAssignment.init)
@@ -213,6 +216,7 @@ extension PersistedPrepBatch {
             id: id,
             householdId: householdId,
             recipeId: recipeId,
+            customRecipeId: customRecipeId,
             cookDate: cookDate,
             totalPortions: totalPortions,
             assignments: assignments.map(\.prepBatchAssignment)
