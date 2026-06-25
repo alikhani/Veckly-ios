@@ -230,10 +230,7 @@ struct WeekTabView: View {
                 },
                 onMarkAsLeftover: { recipeID in
                     mealPickerDay = nil
-                    Task {
-                        try? await Task.sleep(for: .milliseconds(50))
-                        prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date)
-                    }
+                    presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date) }
                 },
                 onMarkAsLeftoverNoRecipe: {
                     guard let hid = appModel.householdStore.activeHousehold?.id else { return }
@@ -271,8 +268,7 @@ struct WeekTabView: View {
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 onViewRecipe: {
                     selectedDayForDetail = nil
-                    Task {
-                        try? await Task.sleep(for: .milliseconds(50))
+                    presentAfterDismiss {
                         if let recipe = day.recipe {
                             selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
                         }
@@ -280,10 +276,7 @@ struct WeekTabView: View {
                 },
                 onSwap: {
                     selectedDayForDetail = nil
-                    Task {
-                        try? await Task.sleep(for: .milliseconds(50))
-                        mealPickerDay = day
-                    }
+                    presentAfterDismiss { mealPickerDay = day }
                 },
                 onSkip: {
                     guard let household = appModel.householdStore.activeHousehold else { return }
@@ -305,10 +298,7 @@ struct WeekTabView: View {
                 onMarkAsLeftover: {
                     selectedDayForDetail = nil
                     if let recipe = day.recipe {
-                        Task {
-                            try? await Task.sleep(for: .milliseconds(50))
-                            prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
-                        }
+                        presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date) }
                     }
                 },
                 onDismiss: { selectedDayForDetail = nil }
@@ -620,6 +610,17 @@ struct WeekTabView: View {
 
     private func isDayConsideredPlanned(_ day: WeekDayRowViewModel) -> Bool {
         day.recipe != nil || coverage(for: day) != nil
+    }
+
+    /// Sheets in SwiftUI can't be swapped directly — presenting a new one
+    /// while another is still dismissing is silently dropped. A short delay
+    /// lets the dismiss animation finish first; centralized here so all
+    /// "close this sheet, then open that one" flows share the same timing.
+    private func presentAfterDismiss(_ present: @escaping () -> Void) {
+        Task {
+            try? await Task.sleep(for: .milliseconds(50))
+            present()
+        }
     }
 
     /// Only meaningful for the current week — Last/Next week have zero
