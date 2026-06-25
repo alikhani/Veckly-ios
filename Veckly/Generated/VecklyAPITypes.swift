@@ -270,7 +270,7 @@ struct InviteLanding: Equatable {
     let status: String
 }
 
-enum MealType: String, CaseIterable {
+enum MealType: String, CaseIterable, Codable {
     case lunch, dinner
 
     var label: String { rawValue.capitalized }

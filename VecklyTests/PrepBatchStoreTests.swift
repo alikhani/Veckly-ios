@@ -6,7 +6,7 @@ import Testing
 struct PrepBatchStoreTests {
     @Test func changingWeekReloadsPrepBatchesEvenInsideCacheTTL() async {
         let apiClient = FakePrepBatchStoreAPIClient()
-        let store = PrepBatchStore(apiClient: apiClient)
+        let store = PrepBatchStore(apiClient: apiClient, cacheStore: FakePrepBatchStoreCache())
 
         await store.load(householdID: TestPrepBatchFixtures.householdID, weekStartDate: TestPrepBatchFixtures.firstWeek)
         await store.load(householdID: TestPrepBatchFixtures.householdID, weekStartDate: TestPrepBatchFixtures.secondWeek)
@@ -19,7 +19,7 @@ struct PrepBatchStoreTests {
 
     @Test func changingHouseholdReloadsPrepBatchesEvenInsideCacheTTL() async {
         let apiClient = FakePrepBatchStoreAPIClient()
-        let store = PrepBatchStore(apiClient: apiClient)
+        let store = PrepBatchStore(apiClient: apiClient, cacheStore: FakePrepBatchStoreCache())
 
         await store.load(householdID: TestPrepBatchFixtures.householdID, weekStartDate: TestPrepBatchFixtures.firstWeek)
         await store.load(householdID: TestPrepBatchFixtures.otherHouseholdID, weekStartDate: TestPrepBatchFixtures.firstWeek)
@@ -28,6 +28,39 @@ struct PrepBatchStoreTests {
         #expect(apiClient.requests.map(\.householdID) == [TestPrepBatchFixtures.householdID, TestPrepBatchFixtures.otherHouseholdID])
         #expect(store.batches == [TestPrepBatchFixtures.otherHouseholdBatch])
         #expect(store.householdID == TestPrepBatchFixtures.otherHouseholdID)
+    }
+
+    @Test func persistedBatchesAreUsedWithoutANetworkReloadWhileFresh() async {
+        let apiClient = FakePrepBatchStoreAPIClient()
+        let cacheStore = FakePrepBatchStoreCache(
+            caches: [
+                "\(TestPrepBatchFixtures.householdID)|\(TestPrepBatchFixtures.firstWeek)": PersistedPrepBatchCache(
+                    householdID: TestPrepBatchFixtures.householdID,
+                    weekStartDate: TestPrepBatchFixtures.firstWeek,
+                    fetchedAt: Date(),
+                    batches: [PersistedPrepBatch(TestPrepBatchFixtures.firstWeekBatch)]
+                )
+            ]
+        )
+        let store = PrepBatchStore(apiClient: apiClient, cacheStore: cacheStore)
+
+        await store.load(householdID: TestPrepBatchFixtures.householdID, weekStartDate: TestPrepBatchFixtures.firstWeek)
+
+        #expect(store.batches == [TestPrepBatchFixtures.firstWeekBatch])
+        #expect(apiClient.requests.isEmpty)
+    }
+
+    @Test func fetchedBatchesArePersistedForLaterLoads() async {
+        let apiClient = FakePrepBatchStoreAPIClient()
+        let cacheStore = FakePrepBatchStoreCache()
+        let store = PrepBatchStore(apiClient: apiClient, cacheStore: cacheStore)
+
+        await store.load(householdID: TestPrepBatchFixtures.householdID, weekStartDate: TestPrepBatchFixtures.firstWeek)
+
+        let persisted = cacheStore.caches["\(TestPrepBatchFixtures.householdID)|\(TestPrepBatchFixtures.firstWeek)"]
+        #expect(persisted?.batches.map(\.prepBatch) == [TestPrepBatchFixtures.firstWeekBatch])
+        #expect(persisted?.householdID == TestPrepBatchFixtures.householdID)
+        #expect(persisted?.weekStartDate == TestPrepBatchFixtures.firstWeek)
     }
 }
 
@@ -115,4 +148,24 @@ private final class FakePrepBatchStoreAPIClient: PrepBatchStoreAPIClient {
     func deletePrepBatch(householdID: String, batchID: String) async throws {}
 
     func removeAssignment(householdID: String, batchID: String, date: String, mealType: MealType) async throws {}
+}
+
+private final class FakePrepBatchStoreCache: PrepBatchStoreCachePersisting {
+    var caches: [String: PersistedPrepBatchCache]
+
+    init(caches: [String: PersistedPrepBatchCache] = [:]) {
+        self.caches = caches
+    }
+
+    func loadBatches(householdID: String, weekStartDate: String) -> PersistedPrepBatchCache? {
+        caches["\(householdID)|\(weekStartDate)"]
+    }
+
+    func saveBatches(_ cache: PersistedPrepBatchCache) {
+        caches["\(cache.householdID)|\(cache.weekStartDate)"] = cache
+    }
+
+    func deleteBatches(householdID: String, weekStartDate: String) {
+        caches["\(householdID)|\(weekStartDate)"] = nil
+    }
 }

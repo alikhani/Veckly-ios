@@ -13,6 +13,14 @@ struct WeekCalendarTests {
         #expect(WeekCalendar.addDays(to: "2026-06-08", offset: 6) == "2026-06-14")
     }
 
+    // `string(from:)` must round-trip through the same UTC calendar as
+    // `date(from:)` — a local-timezone formatter would roll midnight UTC
+    // dates back a day for any timezone west of UTC.
+    @Test func stringFromRoundTripsWithDateFrom() {
+        let date = WeekCalendar.date(from: "2026-06-08")!
+        #expect(WeekCalendar.string(from: date) == "2026-06-08")
+    }
+
     @Test func addWeeksMovesByWholeWeeks() {
         #expect(WeekCalendar.addWeeks(to: "2026-06-08", offset: 1) == "2026-06-15")
         #expect(WeekCalendar.addWeeks(to: "2026-06-08", offset: -1) == "2026-06-01")

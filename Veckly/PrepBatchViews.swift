@@ -23,7 +23,7 @@ struct PrepBatchFormSheet: View {
         _totalPortions = State(initialValue: 4)
     }
 
-    private var cookDateString: String { weekDateFormatter.string(from: initialCookDate) }
+    private var cookDateString: String { WeekCalendar.string(from: initialCookDate) }
 
     /// 14 days from the cook date — long enough to cover the common
     /// "cook on the weekend, eat into next week" case.
@@ -156,10 +156,3 @@ struct PrepBatchFormSheet: View {
         return f.string(from: date)
     }
 }
-
-private let weekDateFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateFormat = "yyyy-MM-dd"
-    f.locale = Locale(identifier: "en_US_POSIX")
-    return f
-}()

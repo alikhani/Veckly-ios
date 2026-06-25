@@ -6,7 +6,7 @@ import Testing
 struct RecipeStoreTests {
     @Test func recipesAreCachedPerHousehold() async {
         let apiClient = FakeRecipeStoreAPIClient()
-        let store = RecipeStore(apiClient: apiClient)
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
 
         await store.loadRecipes(householdID: TestRecipeHouseholds.first)
 
@@ -41,7 +41,7 @@ struct RecipeStoreTests {
     @Test func failedLoadDoesNotCacheAnEmptyResult() async {
         let apiClient = FakeRecipeStoreAPIClient()
         apiClient.shouldFailList = true
-        let store = RecipeStore(apiClient: apiClient)
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
 
         await store.loadRecipes(householdID: TestRecipeHouseholds.first)
 
@@ -59,7 +59,7 @@ struct RecipeStoreTests {
 
     @Test func createAndUpdateKeepFullRecipeCacheCurrent() async throws {
         let apiClient = FakeRecipeStoreAPIClient()
-        let store = RecipeStore(apiClient: apiClient)
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
 
         let created = try await store.createRecipe(householdID: TestRecipeHouseholds.first, draft: TestRecipes.newDraft)
         let cachedCreated = try await store.getOrFetchFull(householdID: TestRecipeHouseholds.first, recipeID: created.id)
@@ -92,7 +92,7 @@ struct RecipeStoreTests {
 
     @Test func archiveRemovesRecipeAndRollbackRestoresOnFailure() async throws {
         let apiClient = FakeRecipeStoreAPIClient()
-        let store = RecipeStore(apiClient: apiClient)
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
 
         await store.loadRecipes(householdID: TestRecipeHouseholds.first)
         apiClient.shouldFailArchive = true

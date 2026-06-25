@@ -81,6 +81,13 @@ enum WeekCalendar {
         yyyyMmDdFormatter.date(from: yyyyMmDd)
     }
 
+    /// Formats a `Date` back to `yyyy-MM-dd` using the same UTC calendar/timezone
+    /// as `date(from:)`, so round-tripping never shifts by a day for users west
+    /// of UTC (a local-timezone formatter would parse/format inconsistently).
+    static func string(from date: Date) -> String {
+        yyyyMmDdFormatter.string(from: date)
+    }
+
     private static let yyyyMmDdFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = calendar
