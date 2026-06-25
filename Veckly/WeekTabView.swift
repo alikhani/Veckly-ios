@@ -611,9 +611,11 @@ struct WeekTabView: View {
     }
 
     /// Whether leftovers from a prep batch cover this day's dinner — checked
-    /// in the view layer so `WeekStore`/`PrepBatchStore` stay decoupled.
+    /// in the view layer so `WeekStore`/`PrepBatchStore` stay decoupled. The
+    /// week view is dinner-only today (one meal slot per day), so `.dinner`
+    /// is the correct meal type explicitly, not just a date-based guess.
     private func coverage(for day: WeekDayRowViewModel) -> PrepBatchCoverage? {
-        prepBatchCoverage(for: day.date, batches: appModel.prepBatchStore.batches, recipes: appModel.recipeStore.recipes)
+        prepBatchCoverage(for: day.date, mealType: .dinner, batches: appModel.prepBatchStore.batches, recipes: appModel.recipeStore.recipes)
     }
 
     private func isDayConsideredPlanned(_ day: WeekDayRowViewModel) -> Bool {

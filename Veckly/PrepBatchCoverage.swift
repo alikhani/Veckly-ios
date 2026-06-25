@@ -11,9 +11,9 @@ struct PrepBatchCoverage: Equatable {
     let mealType: MealType
 }
 
-func prepBatchCoverage(for date: String, batches: [PrepBatch], recipes: [FullRecipe]) -> PrepBatchCoverage? {
+func prepBatchCoverage(for date: String, mealType: MealType, batches: [PrepBatch], recipes: [FullRecipe]) -> PrepBatchCoverage? {
     for batch in batches {
-        guard let assignment = batch.assignments.first(where: { $0.date == date }) else { continue }
+        guard let assignment = batch.assignments.first(where: { $0.date == date && $0.mealType == mealType }) else { continue }
         let title = recipes.first(where: { $0.id == batch.recipeId })?.title ?? L10n.string("prep.fallbackTitle")
         return PrepBatchCoverage(
             batchID: batch.id,

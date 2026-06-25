@@ -32,6 +32,7 @@ struct PrepBatchCoverageTests {
     @Test func returnsCoverageWhenADateMatchesAnAssignment() {
         let result = prepBatchCoverage(
             for: "2026-06-09",
+            mealType: .dinner,
             batches: [batch(recipeId: pasta.id, cookDate: "2026-06-08", assignedDates: ["2026-06-08", "2026-06-09"])],
             recipes: [pasta]
         )
@@ -42,7 +43,19 @@ struct PrepBatchCoverageTests {
     @Test func returnsNilWhenNoAssignmentMatchesTheDate() {
         let result = prepBatchCoverage(
             for: "2026-06-10",
+            mealType: .dinner,
             batches: [batch(recipeId: pasta.id, cookDate: "2026-06-08", assignedDates: ["2026-06-08", "2026-06-09"])],
+            recipes: [pasta]
+        )
+
+        #expect(result == nil)
+    }
+
+    @Test func returnsNilWhenMealTypeDoesNotMatch() {
+        let result = prepBatchCoverage(
+            for: "2026-06-09",
+            mealType: .lunch,
+            batches: [batch(recipeId: pasta.id, cookDate: "2026-06-08", assignedDates: ["2026-06-09"])],
             recipes: [pasta]
         )
 
@@ -53,7 +66,7 @@ struct PrepBatchCoverageTests {
         let other = batch(id: "batch-2", recipeId: nil, cookDate: "2026-06-01", assignedDates: ["2026-06-02"])
         let target = batch(id: "batch-1", recipeId: pasta.id, cookDate: "2026-06-08", assignedDates: ["2026-06-09"])
 
-        let result = prepBatchCoverage(for: "2026-06-09", batches: [other, target], recipes: [pasta])
+        let result = prepBatchCoverage(for: "2026-06-09", mealType: .dinner, batches: [other, target], recipes: [pasta])
 
         #expect(result?.recipeTitle == "Pasta")
         #expect(result?.cookDate == "2026-06-08")
@@ -64,6 +77,7 @@ struct PrepBatchCoverageTests {
     @Test func fallsBackToGenericTitleWhenRecipeIsNotFound() {
         let result = prepBatchCoverage(
             for: "2026-06-09",
+            mealType: .dinner,
             batches: [batch(recipeId: "unknown-recipe-id", cookDate: "2026-06-08", assignedDates: ["2026-06-09"])],
             recipes: [pasta]
         )
