@@ -51,6 +51,10 @@ struct RecipeDetailView: View {
 
                 headerSection
 
+                if !recipe.tags.isEmpty {
+                    FlowTags(tags: recipe.tags)
+                }
+
                 voteRow
 
                 if isLoadingFull {
@@ -76,10 +80,6 @@ struct RecipeDetailView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.vertical, 4)
-                }
-
-                if !recipe.tags.isEmpty {
-                    FlowTags(tags: recipe.tags)
                 }
             }
             .padding(18)
