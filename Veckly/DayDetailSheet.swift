@@ -11,6 +11,7 @@ struct DayDetailSheet: View {
     let onDismiss: () -> Void
 
     @State private var showClearConfirmation = false
+    @State private var showSkipConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -19,7 +20,7 @@ struct DayDetailSheet: View {
                 householdID: householdID,
                 onViewRecipe: onViewRecipe,
                 onSwap: onSwap,
-                onSkip: { onSkip(); onDismiss() },
+                onSkip: { showSkipConfirmation = true },
                 onClear: onClear,
                 onMarkAsLeftover: onMarkAsLeftover
             )
@@ -37,6 +38,10 @@ struct DayDetailSheet: View {
             }
             .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
                 Button("meal.clear", role: .destructive) { onClear() }
+                Button("common.cancel", role: .cancel) {}
+            }
+            .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
+                Button("meal.skip", role: .destructive) { onSkip(); onDismiss() }
                 Button("common.cancel", role: .cancel) {}
             }
         }

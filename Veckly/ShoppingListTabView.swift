@@ -89,16 +89,11 @@ struct ShoppingListTabView: View {
 
                 // Header block
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .top, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let contextLine = weekContextLine {
-                                Text(contextLine)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                            }
-                            Text("shopping.title")
-                                .font(VecklyDesign.Typography.displayHeading(size: 34))
-                                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    HStack(alignment: .center, spacing: 12) {
+                        if let contextLine = weekContextLine {
+                            Text(contextLine)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                         }
                         Spacer()
                         Button {
@@ -110,6 +105,10 @@ struct ShoppingListTabView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(VecklyDesign.Colors.hearthOrange)
                     }
+
+                    Text("shopping.title")
+                        .font(VecklyDesign.Typography.displayHeading(size: 34))
+                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     if appModel.shoppingListStore.hasPendingSync {
                         HStack(spacing: 8) {
@@ -205,6 +204,17 @@ struct ShoppingListTabView: View {
             Button("OK") { customItemErrorMessage = nil }
         } message: {
             Text(customItemErrorMessage ?? "")
+        }
+        .onAppear {
+            // Re-fetch the shopping list whenever the tab becomes visible so
+            // that mutations made on the Week tab (add/remove/generate) are
+            // reflected here. `ShoppingListStore.loadCurrentWeek` short-circuits
+            // if data is fresh (< 5 min), so this is cheap during normal
+            // browsing and only hits the network after `invalidateCache()` is
+            // called following a week plan change.
+            guard let household = appModel.householdStore.activeHousehold else { return }
+            let weekStartDate = appModel.weekStore.weekStartDate
+            Task { await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate) }
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }

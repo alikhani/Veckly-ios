@@ -99,6 +99,11 @@ final class ShoppingListStore {
 
     func clearMutationError() { mutationError = nil }
 
+    /// Clears the freshness timestamp so the next call to `loadCurrentWeek`
+    /// always fetches from the server. Call this after any week plan mutation
+    /// (assign/unassign meal, generate week) so the shopping list stays in sync.
+    func invalidateCache() { lastFetchedAt = nil }
+
     func loadCurrentWeek(household: Household, weekStartDate: String) async {
         guard !isLoading else { return }
         let hasFreshRequestedWeek = lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true

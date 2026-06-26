@@ -2060,6 +2060,22 @@
         }
       }
     },
+    "meal.skipConfirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip this day?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoppa över den här dagen?"
+          }
+        }
+      }
+    },
     "meal.skipDay": {
       "extractionState": "stale",
       "localizations": {
@@ -2895,13 +2911,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eat this again"
+            "value": "Again"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ät det här igen"
+            "value": "Igen"
           }
         }
       }
