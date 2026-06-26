@@ -5442,6 +5442,38 @@
           }
         }
       }
+    },
+    "week.lock.explainTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lås"
+          }
+        }
+      }
+    },
+    "week.lock.explainMessage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked meals won't be replaced when you regenerate your week."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Låsta middagar ersätts inte när du genererar om veckan."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

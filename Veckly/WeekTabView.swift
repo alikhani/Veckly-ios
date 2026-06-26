@@ -50,6 +50,8 @@ struct WeekTabView: View {
     @State private var isWeekPickerPresented = false
     @State private var weekendNudgeDismissedToday = false
     @State private var nextWeekIsEmpty: Bool?
+    @AppStorage("hasSeenLockExplanation") private var hasSeenLockExplanation = false
+    @State private var showLockExplanation = false
 
     private var viewedWeekStartDate: String {
         WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: viewedWeekOffset.rawValue)
@@ -333,6 +335,11 @@ struct WeekTabView: View {
                     await refreshNextWeekEmptyState()
                 }
             }
+        }
+        .alert(L10n.string("week.lock.explainTitle"), isPresented: $showLockExplanation) {
+            Button(L10n.string("common.ok")) { hasSeenLockExplanation = true }
+        } message: {
+            Text(L10n.string("week.lock.explainMessage"))
         }
     }
 
@@ -783,6 +790,9 @@ struct WeekTabView: View {
                                 return
                             }
                             appModel.weekStore.clearMutationError()
+                            if !hasSeenLockExplanation {
+                                showLockExplanation = true
+                            }
                             Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                         } label: {
                             Image(systemName: day.isLocked ? "lock.fill" : "lock.open")
