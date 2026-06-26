@@ -148,11 +148,16 @@ struct PrepBatchFormSheet: View {
         }
     }
 
-    private func dayLabel(_ dateString: String) -> String {
-        guard let date = WeekCalendar.date(from: dateString) else { return dateString }
+    private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "EEEE d MMM"
         f.locale = AppLocalePreference.effectiveLocale
-        return f.string(from: date)
+        return f
+    }()
+
+    private func dayLabel(_ dateString: String) -> String {
+        guard let date = WeekCalendar.date(from: dateString) else { return dateString }
+        Self.dayFormatter.locale = AppLocalePreference.effectiveLocale
+        return Self.dayFormatter.string(from: date)
     }
 }

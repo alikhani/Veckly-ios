@@ -688,8 +688,12 @@ extension Weekday {
     private func localizedName(template: String) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = AppLocalePreference.effectiveLocale
-        let monday = DateComponents(calendar: calendar, year: 2024, month: 1, day: 1).date!
-        let date = calendar.date(byAdding: .day, value: ordinal, to: monday)!
+        guard let monday = DateComponents(calendar: calendar, year: 2024, month: 1, day: 1).date else {
+            return rawValue.capitalized
+        }
+        guard let date = calendar.date(byAdding: .day, value: ordinal, to: monday) else {
+            return rawValue.capitalized
+        }
         let formatter = DateFormatter()
         formatter.locale = AppLocalePreference.effectiveLocale
         formatter.setLocalizedDateFormatFromTemplate(template)

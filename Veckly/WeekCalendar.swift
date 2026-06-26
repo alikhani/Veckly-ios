@@ -1,12 +1,12 @@
 import Foundation
 
 enum WeekCalendar {
-    static var calendar: Calendar {
+    static let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.firstWeekday = 2
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         return calendar
-    }
+    }()
 
     static func currentWeekStartDate(now: Date = Date(), calendar: Calendar = Self.calendar) -> String {
         let start = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now

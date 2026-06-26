@@ -288,17 +288,17 @@ struct RecipeFormSheet: View {
 
     private var stepsSection: some View {
         Section("recipeForm.steps") {
-            ForEach(draft.steps.indices, id: \.self) { i in
+            ForEach(Array(draft.steps.enumerated()), id: \.element.id) { i, _ in
                 HStack(alignment: .top, spacing: 8) {
                     Text("\(i + 1).")
                         .foregroundStyle(VecklyDesign.Colors.inkFaint)
                         .frame(width: 24, alignment: .leading)
-                    TextField(L10n.string("recipeForm.step"), text: $draft.steps[i], axis: .vertical)
+                    TextField(L10n.string("recipeForm.step"), text: $draft.steps[i].text, axis: .vertical)
                         .lineLimit(2...6)
                 }
             }
             .onDelete { draft.steps.remove(atOffsets: $0) }
-            Button("recipeForm.addStep") { draft.steps.append("") }
+            Button("recipeForm.addStep") { draft.steps.append(StepItem()) }
         }
     }
 
@@ -379,7 +379,7 @@ struct RecipeFormSheet: View {
                 unit: $0.unit.trimmingCharacters(in: .whitespacesAndNewlines)
             )
         }
-        draftToSave.steps = draft.steps.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        draftToSave.steps = draft.steps.map { StepItem($0.text.trimmingCharacters(in: .whitespacesAndNewlines)) }
         draftToSave.tags = tagsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
 
         isSaving = true

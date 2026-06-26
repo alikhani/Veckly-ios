@@ -12,7 +12,7 @@ final class PrepBatchStore {
     private(set) var isLoading = false
     private(set) var householdID: String?
     private(set) var weekStartDate: String?
-    var errorMessage: String?
+    private(set) var errorMessage: String?
     /// Set by `create`/`removeAssignment` on failure — surfaced via the week
     /// view's banner so actions triggered from a dismissed sheet (no alert of
     /// their own) don't fail silently. Distinct from `errorMessage`, which is

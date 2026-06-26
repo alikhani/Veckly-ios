@@ -237,6 +237,7 @@ struct RecipeDetailView: View {
     }
 
     private func loadFull() async {
+        guard !isLoadingFull else { return }
         // Ensure household profile is loaded so scaling is available.
         await appModel.householdStore.loadHouseholdDetails(householdID: householdID)
 

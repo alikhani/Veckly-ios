@@ -1,15 +1,21 @@
 import Foundation
 import Observation
 
+protocol FeedbackStoreAPIClient {
+    func mealFeedback(householdID: String) async throws -> [String: MealVote]
+    func removeMealFeedback(householdID: String, mealID: String) async throws
+    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws
+}
+
 @MainActor
 @Observable
 final class FeedbackStore {
-    private let apiClient: VecklyAPIClient
+    private let apiClient: any FeedbackStoreAPIClient
     // recipeID → vote
     private var votes: [String: MealVote] = [:]
     private(set) var errorMessage: String?
 
-    init(apiClient: VecklyAPIClient) {
+    init(apiClient: any FeedbackStoreAPIClient) {
         self.apiClient = apiClient
     }
 
@@ -65,3 +71,5 @@ final class FeedbackStore {
         errorMessage = nil
     }
 }
+
+extension VecklyAPIClient: FeedbackStoreAPIClient {}

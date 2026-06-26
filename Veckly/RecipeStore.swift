@@ -12,7 +12,7 @@ final class RecipeStore {
 
     private(set) var recipes: [FullRecipe] = []
     private(set) var isLoading = false
-    var errorMessage: String?
+    private(set) var errorMessage: String?
     private(set) var lastFetchedAt: Date?
     private(set) var recipesHouseholdID: String?
     private var fullRecipeCache: [String: FullRecipe] = [:]
@@ -109,7 +109,7 @@ final class RecipeStore {
         try await apiClient.fillInRecipe(
             title: draft.title,
             existingIngredients: draft.ingredients.filter { !$0.item.isEmpty },
-            existingSteps: draft.steps.filter { !$0.isEmpty }
+            existingSteps: draft.steps.map(\.text).filter { !$0.isEmpty }
         )
     }
 

@@ -114,7 +114,7 @@ struct SignedOutView: View {
                     if let message = appModel.authSessionStore.errorMessage {
                         Text(message)
                             .font(.footnote)
-                            .foregroundStyle(Color(red: 0.80, green: 0.15, blue: 0.10))
+                            .foregroundStyle(.red)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityLabel(L10n.format("accessibility.error.message", message))

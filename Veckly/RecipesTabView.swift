@@ -7,6 +7,7 @@ struct RecipesTabView: View {
     @State private var editingRecipe: FullRecipe?
     @State private var archiveCandidate: FullRecipe?
     @State private var transientErrorMessage: String?
+    @State private var isArchiving = false
 
     private var filtered: [FullRecipe] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -98,6 +99,9 @@ struct RecipesTabView: View {
                       let household = appModel.householdStore.activeHousehold else { return }
                 archiveCandidate = nil
                 Task {
+                    guard !isArchiving else { return }
+                    isArchiving = true
+                    defer { isArchiving = false }
                     do {
                         try await appModel.recipeStore.archiveRecipe(householdID: household.id, recipeID: recipe.id)
                     } catch {

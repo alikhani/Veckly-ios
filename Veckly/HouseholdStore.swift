@@ -122,8 +122,8 @@ final class HouseholdStore {
         if let idx = households.firstIndex(where: { $0.id == householdID }) {
             households[idx] = Household(id: householdID, name: trimmed, role: households[idx].role)
         }
-        if activeHousehold?.id == householdID {
-            activeHousehold = Household(id: householdID, name: trimmed, role: activeHousehold!.role)
+        if let current = activeHousehold, current.id == householdID {
+            activeHousehold = Household(id: householdID, name: trimmed, role: current.role)
         }
     }
 

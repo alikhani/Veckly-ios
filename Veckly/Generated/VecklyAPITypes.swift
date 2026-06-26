@@ -304,6 +304,12 @@ struct DraftIngredient: Identifiable, Equatable {
     var unit: String = ""
 }
 
+struct StepItem: Identifiable, Equatable {
+    let id: UUID
+    var text: String
+    init(_ text: String = "") { id = UUID(); self.text = text }
+}
+
 enum RecipeDraftSource: Equatable {
     case userCreated
     case urlImport
@@ -317,7 +323,7 @@ struct RecipeDraft: Equatable {
     var prepTimeMinutes: Int? = nil
     var cookTimeMinutes: Int? = nil
     var ingredients: [DraftIngredient] = []
-    var steps: [String] = []
+    var steps: [StepItem] = []
     var tags: [String] = []
     var sourceUrl: String? = nil
     var source: RecipeDraftSource = .userCreated
@@ -331,7 +337,7 @@ struct RecipeDraft: Equatable {
         prepTimeMinutes = recipe.prepTimeMinutes
         cookTimeMinutes = recipe.cookTimeMinutes
         ingredients = recipe.ingredients.map { DraftIngredient(item: $0.item, amount: $0.amount ?? "", unit: $0.unit ?? "") }
-        steps = recipe.steps.map(\.text)
+        steps = recipe.steps.map { StepItem($0.text) }
         tags = recipe.tags
         sourceUrl = nil
         source = .userCreated
@@ -339,7 +345,7 @@ struct RecipeDraft: Equatable {
 
     init(title: String = "", description: String = "", servings: Int = 4,
          prepTimeMinutes: Int? = nil, cookTimeMinutes: Int? = nil,
-         ingredients: [DraftIngredient] = [], steps: [String] = [], tags: [String] = [],
+         ingredients: [DraftIngredient] = [], steps: [StepItem] = [], tags: [String] = [],
          sourceUrl: String? = nil, source: RecipeDraftSource = .userCreated) {
         self.title = title; self.description = description; self.servings = servings
         self.prepTimeMinutes = prepTimeMinutes; self.cookTimeMinutes = cookTimeMinutes

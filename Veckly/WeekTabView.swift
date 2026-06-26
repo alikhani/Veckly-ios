@@ -767,12 +767,10 @@ struct WeekTabView: View {
                                 Button {
                                     prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
                                 } label: {
-                                    Image(systemName: "arrow.3.trianglepath")
-                                        .frame(width: 20, height: 20)
+                                    Label(L10n.string("prep.eatAgain"), systemImage: "arrow.3.trianglepath")
                                 }
                                 .buttonStyle(.bordered)
                                 .tint(VecklyDesign.Colors.inkMid)
-                                .accessibilityLabel(L10n.string("prep.eatAgain"))
                             }
                         }
 
@@ -1052,8 +1050,8 @@ struct CompactDayRow: View {
                 .lineLimit(1)
             Spacer()
             if coverage != nil {
-                Image(systemName: "arrow.3.trianglepath")
-                    .font(.system(size: 12))
+                Label(L10n.string("prep.fallbackTitle"), systemImage: "arrow.3.trianglepath")
+                    .font(.caption)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
                     .accessibilityLabel(L10n.string("accessibility.coveredByLeftovers"))
             }

@@ -135,7 +135,7 @@ private struct OnboardingPlanningDaysView: View {
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.footnote)
-                        .foregroundStyle(Color(red: 0.80, green: 0.15, blue: 0.10))
+                        .foregroundStyle(.red)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 24)
                 }

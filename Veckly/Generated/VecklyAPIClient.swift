@@ -684,7 +684,7 @@ private extension RecipeDraft {
             .init(item: $0.item, amount: $0.amount.isEmpty ? nil : $0.amount, unit: $0.unit.isEmpty ? nil : $0.unit)
         }
     }
-    var apiSteps: [Components.Schemas.RecipeStep] { steps.filter { !$0.isEmpty }.map { .init(text: $0) } }
+    var apiSteps: [Components.Schemas.RecipeStep] { steps.filter { !$0.text.isEmpty }.map { .init(text: $0.text) } }
 
     var createPayload: Components.Schemas.CreateRecipe {
         .init(title: title, description: description.isEmpty ? nil : description,
@@ -710,7 +710,7 @@ private extension RecipeDraft {
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
             ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: formatAmount($0.amount), unit: $0.unit) },
-            steps: r.steps
+            steps: r.steps.map { StepItem($0) }
         )
     }
     init(imported r: Components.Schemas.ImportedRecipe, source: RecipeDraftSource) throws {
@@ -719,7 +719,7 @@ private extension RecipeDraft {
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
             ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: $0.amount.map { formatAmount($0) } ?? "", unit: $0.unit ?? "") },
-            steps: r.steps ?? [],
+            steps: (r.steps ?? []).map { StepItem($0) },
             sourceUrl: r.sourceUrl,
             source: source
         )
