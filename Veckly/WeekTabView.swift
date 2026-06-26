@@ -1010,7 +1010,7 @@ struct CompactDayRow: View {
             rowContent
         }
         .buttonStyle(.plain)
-        .opacity(day.isPast ? 0.45 : 1)
+        .opacity(day.isPast ? 0.7 : 1)
         .modifier(SwipeSkipModifier(day: day, isViewOnly: isViewOnly, onToggleSkip: onToggleSkip))
     }
 
