@@ -12,6 +12,7 @@ struct HouseholdMembersView: View {
     @State private var revokingInviteIDs: Set<String> = []
     @State private var removingMemberIDs: Set<String> = []
     @State private var isLeavingHousehold = false
+    @State private var showLeaveConfirmation = false
     @State private var newInvite: HouseholdInvite?
     @State private var errorMessage: String?
 
@@ -31,6 +32,12 @@ struct HouseholdMembersView: View {
             actions: { Button("common.ok") { errorMessage = nil } },
             message: { Text(errorMessage ?? "") }
         )
+        .confirmationDialog("Leave household?", isPresented: $showLeaveConfirmation, titleVisibility: .visible) {
+            Button("members.leave", role: .destructive) {
+                Task { await leaveCurrentHousehold() }
+            }
+            Button("common.cancel", role: .cancel) {}
+        }
         .sheet(item: $newInvite) { invite in
             InviteShareSheet(invite: invite)
         }
@@ -85,7 +92,7 @@ struct HouseholdMembersView: View {
 
                         if member.userId == myUserID {
                             Button(role: .destructive) {
-                                Task { await leaveCurrentHousehold() }
+                                showLeaveConfirmation = true
                             } label: {
                                 if isLeavingHousehold {
                                     ProgressView()
@@ -293,7 +300,7 @@ struct HouseholdMembersView: View {
         guard let hid = household?.id else { return }
         let userID = myUserID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !userID.isEmpty else {
-            errorMessage = L10n.string("error.members.join")
+            errorMessage = L10n.string("error.members.leaveHousehold")
             return
         }
 
