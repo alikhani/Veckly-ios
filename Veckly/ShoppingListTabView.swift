@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ShoppingListTabView: View {
+    var onGoToWeekTab: (() -> Void)? = nil
+
     @Environment(AppModel.self) private var appModel
     @State private var showCustomItemSheet = false
     @State private var customItemErrorMessage: String?
@@ -127,7 +129,20 @@ struct ShoppingListTabView: View {
                         Task { await appModel.loadCoreReader() }
                     }
                 } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
-                    EmptyPanel(title: L10n.string("shopping.empty.title"), message: L10n.string("shopping.empty.message"))
+                    VecklyCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(L10n.string("shopping.empty.title"))
+                                .font(.headline)
+                            Text(L10n.string("shopping.empty.message"))
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            if let onGoToWeekTab {
+                                Button("week.empty.primary", action: onGoToWeekTab)
+                                    .buttonStyle(VecklyPrimaryButtonStyle())
+                                    .padding(.top, 4)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 } else {
                     // Progress indicator
                     if totalItemCount > 0 {

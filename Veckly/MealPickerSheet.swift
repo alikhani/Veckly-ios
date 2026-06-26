@@ -45,6 +45,7 @@ struct MealPickerSheet: View {
     /// view `DayDetailSheet` uses, instead of dismissing.
     @State private var confirmedRecipe: WeekSummaryRecipe?
     @State private var showClearConfirmation = false
+    @State private var showAddRecipeSheet = false
 
     private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
 
@@ -150,6 +151,12 @@ struct MealPickerSheet: View {
             }
         }
         .task { await loadRecipes() }
+        .sheet(isPresented: $showAddRecipeSheet) {
+            RecipeFormSheet(mode: .create) { draft in
+                guard let household = appModel.householdStore.activeHousehold else { return }
+                _ = try await appModel.recipeStore.createRecipe(householdID: household.id, draft: draft)
+            }
+        }
     }
 
     private var recipeList: some View {
@@ -173,11 +180,15 @@ struct MealPickerSheet: View {
 
             if filtered.isEmpty {
                 Section {
-                    ContentUnavailableView(
-                        L10n.string("recipes.empty.title"),
-                        systemImage: "fork.knife",
-                        description: Text(L10n.string("recipes.empty.pickerMessage"))
-                    )
+                    ContentUnavailableView {
+                        Label(L10n.string("recipes.empty.title"), systemImage: "fork.knife")
+                    } description: {
+                        Text(L10n.string("recipes.empty.pickerMessage"))
+                    } actions: {
+                        Button("recipe.add") { showAddRecipeSheet = true }
+                            .buttonStyle(.borderedProminent)
+                            .tint(VecklyDesign.Colors.hearthOrange)
+                    }
                 }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
