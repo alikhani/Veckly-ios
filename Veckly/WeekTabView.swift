@@ -502,7 +502,7 @@ struct WeekTabView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
-                .accessibilityLabel(L10n.string("common.dismissError"))
+                .accessibilityLabel("Dismiss")
             }
             .padding(12)
             .background(VecklyDesign.Colors.surfaceStrong)
@@ -671,7 +671,11 @@ struct WeekTabView: View {
         case .current:
             currentWeekHeroCard
         case .next:
-            nextWeekHeroCard
+            if appModel.weekStore.hasWeekContent {
+                nextWeekSummaryCard
+            } else {
+                nextWeekHeroCard
+            }
         case .last:
             lastWeekSummaryCard
         }
@@ -872,6 +876,24 @@ struct WeekTabView: View {
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+
+    /// Next week already has a plan: a compact summary card showing the date
+    /// range and a dinner count. No "Tonight" framing and no Generate CTA —
+    /// the toolbar Generate/Regenerate button remains available if needed.
+    private var nextWeekSummaryCard: some View {
+        VecklyCard {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(weekSubtitleLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                    .textCase(.uppercase)
+                Text(weekSummaryLine)
+                    .font(VecklyDesign.Typography.displayHeading(size: 20))
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
