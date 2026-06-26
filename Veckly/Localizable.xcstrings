@@ -5474,6 +5474,22 @@
           }
         }
       }
+    },
+    "week.swipeHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left to skip a day"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Svep vänster för att hoppa över en dag"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

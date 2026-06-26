@@ -52,6 +52,8 @@ struct WeekTabView: View {
     @State private var nextWeekIsEmpty: Bool?
     @AppStorage("hasSeenLockExplanation") private var hasSeenLockExplanation = false
     @State private var showLockExplanation = false
+    @AppStorage("hasSeenSwipeHint") private var hasSeenSwipeHint = false
+    @State private var showSwipeHintText = false
 
     private var viewedWeekStartDate: String {
         WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: viewedWeekOffset.rawValue)
@@ -322,6 +324,17 @@ struct WeekTabView: View {
             viewedWeekOffset = .current
             refreshWeekendNudgeDismissalState()
             Task { await refreshNextWeekEmptyState() }
+            if !hasSeenSwipeHint {
+                let eligible = appModel.weekStore.dayRows.first(where: { !$0.isPast && !$0.isSkipped })
+                if eligible != nil {
+                    hasSeenSwipeHint = true
+                    withAnimation { showSwipeHintText = true }
+                    Task {
+                        try? await Task.sleep(for: .seconds(2))
+                        withAnimation { showSwipeHintText = false }
+                    }
+                }
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
@@ -939,6 +952,7 @@ struct WeekTabView: View {
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 .padding(.bottom, 4)
 
+            let firstEligibleID = listDays.first(where: { !$0.isPast && !$0.isSkipped })?.id
             ForEach(listDays) { day in
                 CompactDayRow(
                     day: day,
@@ -962,6 +976,14 @@ struct WeekTabView: View {
                         }
                     }
                 )
+                if showSwipeHintText && day.id == firstEligibleID {
+                    Text(L10n.string("week.swipeHint"))
+                        .font(.caption)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        .padding(.leading, 56)
+                        .padding(.bottom, 2)
+                        .transition(.opacity)
+                }
                 if day.id != listDays.last?.id {
                     Divider().padding(.leading, 56)
                 }
