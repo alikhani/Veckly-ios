@@ -130,7 +130,8 @@ final class AppModel {
         async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
         async let prep: Void = prepBatchStore.load(householdID: household.id, weekStartDate: weekStartDate)
         async let feedback: Void = feedbackStore.loadFeedback(householdID: household.id)
-        _ = await (week, shopping, prep, feedback)
+        async let recipes: Void = recipeStore.loadRecipes(householdID: household.id)
+        _ = await (week, shopping, prep, feedback, recipes)
     }
 
     func signOut() {
