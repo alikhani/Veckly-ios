@@ -125,7 +125,7 @@ struct MealPickerSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("common.cancel", action: onDismiss)
+                    Button(confirmedRecipe != nil ? "common.done" : "common.cancel", action: onDismiss)
                 }
                 if confirmedRecipe != nil || (!day.isEmpty && !isSkipped) {
                     ToolbarItem(placement: .destructiveAction) {
