@@ -262,16 +262,13 @@ private struct ShoppingCustomItemSheet: View {
                 Section {
                     TextField(L10n.string("shopping.customItem.placeholder"), text: $label)
                         .textInputAutocapitalization(.sentences)
-                } header: {
-                    Text(L10n.string("shopping.customItem.name"))
-                }
-
-                Section {
                     Picker(L10n.string("shopping.customItem.category"), selection: $category) {
                         ForEach(ShoppingCategory.allCases, id: \.self) { option in
                             Text(option.displayLabel).tag(option)
                         }
                     }
+                } header: {
+                    Text(L10n.string("shopping.customItem.name"))
                 }
             }
             .navigationTitle(L10n.string("shopping.customItem.title"))
