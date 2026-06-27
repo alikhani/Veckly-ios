@@ -666,7 +666,7 @@ struct WeekTabView: View {
         if todayIndex >= 0, let next = rows[(todayIndex + 1)...].first(where: { isDayConsideredPlanned($0) }) {
             return next
         }
-        return rows.first(where: { isDayConsideredPlanned($0) })
+        return rows.first(where: { isDayConsideredPlanned($0) && !$0.isPast })
     }
 
     private var tonightHeroLabel: String {
