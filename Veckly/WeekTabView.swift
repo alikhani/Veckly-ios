@@ -333,6 +333,7 @@ struct WeekTabView: View {
             // land back on the current week when the tab reappears.
             viewedWeekOffset = .current
             refreshWeekendNudgeDismissalState()
+            Task { await reloadViewedWeek() }
             Task { await refreshNextWeekEmptyState() }
             if !hasSeenSwipeHint {
                 let eligible = appModel.weekStore.dayRows.first(where: { !$0.isPast && !$0.isSkipped })
