@@ -995,7 +995,7 @@ struct WeekTabView: View {
                             return
                         }
                         if day.recipe != nil { selectedDayForDetail = day }
-                        else { mealPickerDay = day }
+                        else if !day.isPast { mealPickerDay = day }
                     },
                     onToggleSkip: {
                         guard let household = appModel.householdStore.activeHousehold else { return }
