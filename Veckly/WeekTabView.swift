@@ -592,7 +592,7 @@ struct WeekTabView: View {
 
                     Button("week.empty.secondary") {
                         mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.isToday })
-                            ?? appModel.weekStore.dayRows.first
+                            ?? appModel.weekStore.dayRows.first(where: { !$0.isPast })
                     }
                     .disabled(appModel.weekStore.dayRows.isEmpty)
                     .font(.subheadline.weight(.medium))
@@ -608,25 +608,27 @@ struct WeekTabView: View {
                 .padding(.top, 4)
 
             ForEach(appModel.weekStore.dayRows) { day in
-                Button { mealPickerDay = day } label: {
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(day.weekdayLabel)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-                            Text(day.dateLabel)
-                                .font(.caption)
-                                .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                        }
-                        .frame(width: 72, alignment: .leading)
+                if !day.isPast {
+                    Button { mealPickerDay = day } label: {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(day.weekdayLabel)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                                Text(day.dateLabel)
+                                    .font(.caption)
+                                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                            }
+                            .frame(width: 72, alignment: .leading)
 
-                        Rectangle()
-                            .fill(VecklyDesign.Colors.edgeLight)
-                            .frame(height: 1)
+                            Rectangle()
+                                .fill(VecklyDesign.Colors.edgeLight)
+                                .frame(height: 1)
+                        }
+                        .frame(height: 36)
                     }
-                    .frame(height: 36)
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
     }
