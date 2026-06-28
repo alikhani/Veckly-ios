@@ -1062,7 +1062,7 @@ struct CompactDayRow: View {
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 .lineLimit(1)
             Spacer()
-            if coverage != nil {
+            if day.recipe == nil, let _ = coverage {
                 Label(L10n.string("prep.fallbackTitle"), systemImage: "arrow.3.trianglepath")
                     .font(.caption)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
