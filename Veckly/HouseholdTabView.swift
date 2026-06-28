@@ -166,10 +166,11 @@ struct HouseholdTabView: View {
                 Button {
                     Task { await switchHousehold(option) }
                 } label: {
+                    let displayName = householdDisplayName(for: option)
                     if option.id == household?.id {
-                        Label(option.name, systemImage: "checkmark")
+                        Label(displayName, systemImage: "checkmark")
                     } else {
-                        Text(option.name)
+                        Text(displayName)
                     }
                 }
             }
@@ -183,6 +184,13 @@ struct HouseholdTabView: View {
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             }
         }
+    }
+
+    private func householdDisplayName(for option: Household) -> String {
+        let nameCount = appModel.householdStore.households.filter { $0.name == option.name }.count
+        guard nameCount > 1 else { return option.name }
+        let role = option.role == .owner ? L10n.string("members.owner") : L10n.string("members.member")
+        return "\(option.name) (\(role))"
     }
 
     private var householdSection: some View {

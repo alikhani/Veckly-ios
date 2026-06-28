@@ -40,7 +40,7 @@ final class HouseholdStore {
         do {
             let bootstrapped = try await apiClient.bootstrapHousehold()
             let list = try await apiClient.listHouseholds()
-            households = list.isEmpty ? [bootstrapped] : list
+            households = uniqueHouseholds(list.isEmpty ? [bootstrapped] : list)
             let preferredHouseholdID = selectionStore.selectedHouseholdID()
             let preferredHousehold = households.first(where: { $0.id == preferredHouseholdID })
             let bootstrappedHousehold = households.first(where: { $0.id == bootstrapped.id })
@@ -220,6 +220,11 @@ final class HouseholdStore {
         detailsLastFetchedAt = Date()
     }
 
+    private func uniqueHouseholds(_ list: [Household]) -> [Household] {
+        var seen = Set<String>()
+        return list.filter { seen.insert($0.id).inserted }
+    }
+
     private func resetDetails() {
         members = []
         profile = nil
@@ -253,7 +258,7 @@ final class HouseholdStore {
             }
         }
 
-        households = list
+        households = uniqueHouseholds(list)
 
         let nextActiveHousehold = preferredActiveHouseholdID.flatMap { preferredID in
             list.first(where: { $0.id == preferredID })
