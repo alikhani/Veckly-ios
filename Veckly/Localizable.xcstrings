@@ -54,7 +54,22 @@
         }
       }
     },
-    "%lld min": {},
+    "%lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
+          }
+        }
+      }
+    },
     "%lld.": {},
     "accessibility.coveredByLeftovers": {
       "localizations": {
