@@ -82,7 +82,7 @@ struct HouseholdMembersView: View {
                                     .font(.body.weight(.medium))
                             } else {
                                 Text(member.givenName ?? L10n.string("members.householdMember"))
-                                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                                    .foregroundStyle(member.givenName == nil ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
                             }
                         }
                         Spacer()
