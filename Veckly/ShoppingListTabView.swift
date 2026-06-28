@@ -206,6 +206,12 @@ struct ShoppingListTabView: View {
             .padding(18)
             .accessibilityIdentifier("shoppingList")
         }
+        .refreshable {
+            guard let household = appModel.householdStore.activeHousehold else { return }
+            let weekStartDate = appModel.weekStore.weekStartDate
+            appModel.shoppingListStore.invalidateCache()
+            await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        }
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
