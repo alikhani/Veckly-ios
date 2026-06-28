@@ -684,11 +684,11 @@ struct WeekTabView: View {
     }
 
     private var plannedDinnerCount: Int {
-        appModel.weekStore.dayRows.filter { $0.recipe != nil }.count
+        appModel.weekStore.dayRows.filter { !$0.isSkipped && ($0.recipe != nil || coverage(for: $0) != nil) }.count
     }
 
     private var openDayCount: Int {
-        appModel.weekStore.dayRows.filter { $0.recipe == nil && !$0.isSkipped }.count
+        appModel.weekStore.dayRows.filter { $0.recipe == nil && !$0.isSkipped && coverage(for: $0) == nil }.count
     }
 
     private var weekSummaryLine: String {
