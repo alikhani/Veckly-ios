@@ -1724,6 +1724,22 @@
         }
       }
     },
+    "household.detailLoadError": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load · Tap to retry"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunde inte ladda · Tryck för att försöka igen"
+          }
+        }
+      }
+    },
     "household.loadError": {
       "localizations": {
         "en": {

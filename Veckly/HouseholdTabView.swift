@@ -138,6 +138,14 @@ struct HouseholdTabView: View {
                     } else if appModel.householdStore.isLoadingDetails || household == nil {
                         ProgressView()
                             .controlSize(.small)
+                    } else {
+                        Text(L10n.string("household.detailLoadError"))
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                            .onTapGesture {
+                                guard let hid = household?.id else { return }
+                                Task { await appModel.householdStore.loadHouseholdDetails(householdID: hid) }
+                            }
                     }
 
                     if let household {
