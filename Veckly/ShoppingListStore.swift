@@ -86,6 +86,7 @@ final class ShoppingListStore {
     private var pendingMutations: [ShoppingListMutation] = []
     private var flushTask: Task<Void, Never>?
     private var isFlushingChanges = false
+    private var needsFlushWhenSummaryLoads = false
 
     init(
         apiClient: any ShoppingListStoreAPIClient,
@@ -131,6 +132,10 @@ final class ShoppingListStore {
                 customItems: state.state?.customItems ?? mapped.customItems
             )
             stateUpdatedAt = state.updatedAt ?? summary.updatedAt
+            if needsFlushWhenSummaryLoads {
+                needsFlushWhenSummaryLoads = false
+                scheduleFlush(immediate: true)
+            }
         } catch APIError.notFound {
             summary = nil
             groups = []
@@ -203,6 +208,7 @@ final class ShoppingListStore {
         mutationError = nil
         isLoading = false
         lastFetchedAt = nil
+        needsFlushWhenSummaryLoads = false
     }
 
     func seedForUITests() {
@@ -253,7 +259,10 @@ final class ShoppingListStore {
     }
 
     private func scheduleFlush(immediate: Bool = false) {
-        guard summary != nil else { return }
+        guard summary != nil else {
+            needsFlushWhenSummaryLoads = true
+            return
+        }
         guard !isFlushingChanges else { return }
         flushTask?.cancel()
         let delay = immediate ? UInt64.zero : syncDebounceNanoseconds
