@@ -381,14 +381,18 @@ struct RecipeFormSheet: View {
         if draftToSave.sourceUrl == nil && draftToSave.source == .urlImport {
             draftToSave.source = .userCreated
         }
-        draftToSave.ingredients = draft.ingredients.map {
-            DraftIngredient(
-                item: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
-                amount: $0.amount.trimmingCharacters(in: .whitespacesAndNewlines),
-                unit: $0.unit.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-        }
-        draftToSave.steps = draft.steps.map { StepItem($0.text.trimmingCharacters(in: .whitespacesAndNewlines)) }
+        draftToSave.ingredients = draft.ingredients
+            .filter { !$0.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map {
+                DraftIngredient(
+                    item: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
+                    amount: $0.amount.trimmingCharacters(in: .whitespacesAndNewlines),
+                    unit: $0.unit.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+            }
+        draftToSave.steps = draft.steps
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map { StepItem($0.text.trimmingCharacters(in: .whitespacesAndNewlines)) }
         draftToSave.tags = tagsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
 
         isSaving = true
