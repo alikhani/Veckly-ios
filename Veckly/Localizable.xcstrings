@@ -3151,6 +3151,22 @@
         }
       }
     },
+    "recipeForm.aiBanner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI suggestion — please review and adjust as needed"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI-förslag — granska och justera efter behov"
+          }
+        }
+      }
+    },
     "recipeForm.amount": {
       "extractionState": "stale",
       "localizations": {

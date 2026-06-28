@@ -54,6 +54,7 @@ struct RecipeFormSheet: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showDiscardConfirmation = false
+    @State private var showAIFillBanner = false
 
     init(mode: RecipeFormMode, onSave: @escaping (RecipeDraft) async throws -> Void) {
         self.mode = mode
@@ -127,6 +128,26 @@ struct RecipeFormSheet: View {
 
     @ViewBuilder
     private var recipeFields: some View {
+        if showAIFillBanner {
+            Section {
+                HStack(spacing: 10) {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    Text(L10n.string("recipeForm.aiBanner"))
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    Spacer()
+                    Button {
+                        showAIFillBanner = false
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    }
+                    .accessibilityLabel(L10n.string("common.dismiss"))
+                }
+            }
+        }
         if isNew, let sourceURL = draft.sourceUrl, !sourceURL.isEmpty {
             sourceSection(sourceURL)
         }
@@ -367,6 +388,7 @@ struct RecipeFormSheet: View {
             if tagsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 tagsText = filled.tags.joined(separator: ", ")
             }
+            showAIFillBanner = true
         } catch {
             errorMessage = L10n.string("error.recipeForm.aiFill")
         }
