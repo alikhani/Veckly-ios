@@ -209,7 +209,7 @@ final class ShoppingListStore {
         groups = [
             ShoppingListGroup(
                 category: "Pantry",
-                items: [ShoppingListItem(itemKey: "pantry:spaghetti:400:g", label: "spaghetti", amount: "400", unit: "g", checked: false)]
+                items: [ShoppingListItem(itemKey: "pantry:spaghetti:g", label: "spaghetti", amount: "400", unit: "g", checked: false)]
             ),
         ]
         stapledItems = []
