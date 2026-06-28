@@ -5,6 +5,7 @@ struct HouseholdTabView: View {
     @Environment(AppLanguageStore.self) private var languageStore
     @State private var showDeleteConfirmation = false
     @State private var showDeleteHouseholdConfirmation = false
+    @State private var showSignOutConfirmation = false
     @State private var isDeletingAccount = false
     @State private var isDeletingHousehold = false
     @State private var deleteErrorMessage: String?
@@ -62,6 +63,16 @@ struct HouseholdTabView: View {
             Button("common.cancel", role: .cancel) {}
         } message: {
             Text("settings.deleteMessage")
+        }
+        .confirmationDialog(
+            L10n.string("account.signOut.confirmTitle"),
+            isPresented: $showSignOutConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.string("account.signOut.confirm"), role: .destructive) {
+                appModel.signOut()
+            }
+            Button("common.cancel", role: .cancel) {}
         }
         .alert(
             L10n.string("settings.deleteFailed"),
@@ -223,7 +234,7 @@ struct HouseholdTabView: View {
             Divider()
 
             Button(role: .destructive) {
-                appModel.signOut()
+                showSignOutConfirmation = true
             } label: {
                 actionRow(title: L10n.string("settings.signOut"), systemImage: "rectangle.portrait.and.arrow.right")
             }

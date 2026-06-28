@@ -13,6 +13,7 @@ struct HouseholdMembersView: View {
     @State private var removingMemberIDs: Set<String> = []
     @State private var isLeavingHousehold = false
     @State private var showLeaveConfirmation = false
+    @State private var memberToRemove: HouseholdMember?
     @State private var newInvite: HouseholdInvite?
     @State private var errorMessage: String?
 
@@ -37,6 +38,18 @@ struct HouseholdMembersView: View {
                 Task { await leaveCurrentHousehold() }
             }
             Button("common.cancel", role: .cancel) {}
+        }
+        .confirmationDialog(
+            removeConfirmationTitle,
+            isPresented: Binding(get: { memberToRemove != nil }, set: { if !$0 { memberToRemove = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.string("members.remove.confirm"), role: .destructive) {
+                guard let member = memberToRemove else { return }
+                memberToRemove = nil
+                Task { await removeMember(member) }
+            }
+            Button("common.cancel", role: .cancel) { memberToRemove = nil }
         }
         .sheet(item: $newInvite) { invite in
             InviteShareSheet(invite: invite)
@@ -105,7 +118,7 @@ struct HouseholdMembersView: View {
                             .disabled(isLeavingHousehold)
                         } else if isOwner {
                             Button(role: .destructive) {
-                                Task { await removeMember(member) }
+                                memberToRemove = member
                             } label: {
                                 if removingMemberIDs.contains(member.userId) {
                                     ProgressView()
@@ -343,6 +356,10 @@ struct HouseholdMembersView: View {
 
     private var leaveConfirmationTitle: String {
         L10n.string("members.leave.confirmTitle")
+    }
+
+    private var removeConfirmationTitle: String {
+        L10n.string("members.remove.confirmTitle")
     }
 }
 
