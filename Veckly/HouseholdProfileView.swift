@@ -13,7 +13,6 @@ struct HouseholdProfileView: View {
     @State private var isSaving = false
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var didSave = false
 
     private var household: Household? { appModel.householdStore.activeHousehold }
 
@@ -83,12 +82,6 @@ struct HouseholdProfileView: View {
 
     private var avoidSection: some View {
         Section {
-            if didSave {
-                Text("settings.saved")
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-            }
-
             ForEach(avoidIngredients, id: \.self) { ingredient in
                 Text(ingredient)
             }
@@ -113,13 +106,11 @@ struct HouseholdProfileView: View {
         guard !avoidIngredients.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else { return }
         avoidIngredients.append(trimmed)
         newIngredient = ""
-        didSave = false
     }
 
     private func loadExisting() async {
         isLoading = true
         errorMessage = nil
-        didSave = false
         defer { isLoading = false }
         guard let hid = household?.id else { return }
 
@@ -147,7 +138,6 @@ struct HouseholdProfileView: View {
     private func save() async {
         guard let hid = household?.id else { return }
         isSaving = true
-        didSave = false
         defer { isSaving = false }
         do {
             try await appModel.householdStore.saveProfile(
@@ -157,7 +147,7 @@ struct HouseholdProfileView: View {
                 avoidIngredients: avoidIngredients.map(normalizedIngredient).filter { !$0.isEmpty },
                 selectedDays: Weekday.allCases.filter { selectedDays.contains($0) }
             )
-            didSave = true
+            dismiss()
         } catch {
             errorMessage = L10n.string("error.settings.savePreferences")
         }
