@@ -63,7 +63,10 @@ struct RecipesTabView: View {
                         .swipeActions(edge: .trailing) {
                             Button("common.edit") { editingRecipe = recipe }
                                 .tint(VecklyDesign.Colors.hearthOrange)
-                            Button("recipes.archive", role: .destructive) { archiveCandidate = recipe }
+                            Button("recipes.archive", role: .destructive) {
+                                guard !isArchiving else { return }
+                                archiveCandidate = recipe
+                            }
                         }
                 }
                 .listStyle(.plain)
