@@ -60,6 +60,7 @@ struct RecipesTabView: View {
                     } label: {
                         RecipeListRow(recipe: recipe)
                     }
+                    .disabled(appModel.householdStore.activeHousehold == nil)
                         .swipeActions(edge: .trailing) {
                             Button("common.edit") { editingRecipe = recipe }
                                 .tint(VecklyDesign.Colors.hearthOrange)
