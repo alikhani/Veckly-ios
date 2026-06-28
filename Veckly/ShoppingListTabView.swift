@@ -334,15 +334,6 @@ struct ShoppingGroupView: View {
     let onToggle: (String) -> Void
     let onRemoveCustom: (String) -> Void
 
-    private var sortedItems: [ShoppingListItem] {
-        group.items.sorted { a, b in
-            let aChecked = checkedItems.contains(a.itemKey)
-            let bChecked = checkedItems.contains(b.itemKey)
-            if aChecked == bChecked { return false }
-            return !aChecked
-        }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(ShoppingCategory.from(group.category).displayLabel)
@@ -352,7 +343,7 @@ struct ShoppingGroupView: View {
 
             VecklyCard {
                 VStack(spacing: 0) {
-                    ForEach(sortedItems) { item in
+                    ForEach(group.items) { item in
                         let isChecked = checkedItems.contains(item.itemKey)
                         let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
                         let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
