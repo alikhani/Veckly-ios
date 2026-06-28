@@ -71,6 +71,11 @@ struct RecipesTabView: View {
                         }
                 }
                 .listStyle(.plain)
+                .refreshable {
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    appModel.recipeStore.invalidateCache()
+                    await appModel.recipeStore.loadRecipes(householdID: household.id)
+                }
             }
         }
         .navigationTitle(L10n.string("tabs.recipes"))

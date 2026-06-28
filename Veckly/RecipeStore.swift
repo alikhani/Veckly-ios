@@ -121,6 +121,10 @@ final class RecipeStore {
         try await apiClient.importRecipeFromText(text, sourceURL: sourceURL)
     }
 
+    func invalidateCache() {
+        lastFetchedAt = nil
+    }
+
     func reset() {
         clearRecipeState()
     }
