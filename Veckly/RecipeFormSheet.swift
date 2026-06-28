@@ -42,6 +42,7 @@ struct RecipeFormSheet: View {
 
     @State private var draft: RecipeDraft
     @State private var initialDraft: RecipeDraft
+    @State private var initialTagsText: String
     @State private var selectedTab: RecipeFormTab
     @State private var selectedImportMode: RecipeImportInputMode = .link
     @State private var urlText = ""
@@ -63,12 +64,15 @@ struct RecipeFormSheet: View {
             _initialDraft = State(initialValue: .empty)
             _selectedTab = State(initialValue: .write)
             _tagsText = State(initialValue: "")
+            _initialTagsText = State(initialValue: "")
         case let .edit(recipe):
             let draft = RecipeDraft(from: recipe)
+            let tagsJoined = recipe.tags.joined(separator: ", ")
             _draft = State(initialValue: draft)
             _initialDraft = State(initialValue: draft)
             _selectedTab = State(initialValue: .write)
-            _tagsText = State(initialValue: recipe.tags.joined(separator: ", "))
+            _tagsText = State(initialValue: tagsJoined)
+            _initialTagsText = State(initialValue: tagsJoined)
         }
     }
 
@@ -89,7 +93,7 @@ struct RecipeFormSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("common.cancel") {
-                        if draft == initialDraft {
+                        if draft == initialDraft && tagsText == initialTagsText {
                             dismiss()
                         } else {
                             showDiscardConfirmation = true
