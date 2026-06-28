@@ -194,7 +194,7 @@ struct HouseholdMembersView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(landing.householdName)
                             .font(.body.weight(.medium))
-                        Text(landing.status == "pending" ? L10n.string("members.openInvite") : landing.status.capitalized)
+                        Text(landing.status == "pending" ? L10n.string("members.openInvite") : L10n.string("members.invite.invalid"))
                             .font(.caption)
                             .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     }

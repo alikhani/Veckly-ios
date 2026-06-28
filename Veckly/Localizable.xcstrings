@@ -2335,6 +2335,22 @@
         }
       }
     },
+    "members.invite.invalid": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This invite is no longer valid."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den här inbjudan är inte längre giltig."
+          }
+        }
+      }
+    },
     "members.inviteCreated": {
       "localizations": {
         "en": {
