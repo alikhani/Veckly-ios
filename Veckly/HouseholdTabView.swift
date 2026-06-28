@@ -27,11 +27,21 @@ struct HouseholdTabView: View {
         appModel.householdStore.households.count > 1
     }
 
+    private var householdLoadFailed: Bool {
+        appModel.householdStore.activeHousehold == nil
+            && !appModel.householdStore.isLoading
+            && appModel.householdStore.errorMessage != nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: VecklyDesign.Spacing.large) {
-                householdSummary
-                householdSection
+                if householdLoadFailed {
+                    householdErrorView
+                } else {
+                    householdSummary
+                    householdSection
+                }
                 appSection
                 accountSection
             }
@@ -83,6 +93,23 @@ struct HouseholdTabView: View {
             actions: { Button("common.ok") { deleteErrorMessage = nil } },
             message: { Text(deleteErrorMessage ?? "") }
         )
+    }
+
+    private var householdErrorView: some View {
+        VecklyCard {
+            VStack(spacing: VecklyDesign.Spacing.medium) {
+                Text(L10n.string("household.loadError"))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    .multilineTextAlignment(.center)
+                Button(L10n.string("common.tryAgain")) {
+                    Task { await appModel.householdStore.bootstrapAndLoadHouseholds() }
+                }
+                .buttonStyle(.bordered)
+                .tint(VecklyDesign.Colors.hearthOrange)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(VecklyDesign.Spacing.medium)
+        }
     }
 
     private var householdSummary: some View {

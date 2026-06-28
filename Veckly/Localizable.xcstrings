@@ -1724,6 +1724,22 @@
         }
       }
     },
+    "household.loadError": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load your household"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunde inte ladda ditt hushåll"
+          }
+        }
+      }
+    },
     "household.loading": {
       "extractionState": "stale",
       "localizations": {
