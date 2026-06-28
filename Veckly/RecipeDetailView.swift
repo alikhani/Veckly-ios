@@ -156,6 +156,12 @@ struct RecipeDetailView: View {
             .font(.footnote)
             .foregroundStyle(VecklyDesign.Colors.inkMid)
 
+            if scaleFactor != 1.0 {
+                Text(L10n.format("recipes.scaledFrom", baseServings))
+                    .font(.footnote)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            }
+
             if !recipe.description.isEmpty {
                 Text(recipe.description)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)

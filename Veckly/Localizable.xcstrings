@@ -4046,6 +4046,22 @@
         }
       }
     },
+    "recipes.scaledFrom": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scaled from %d servings"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skalat från %d portioner"
+          }
+        }
+      }
+    },
     "recipes.search": {
       "extractionState": "stale",
       "localizations": {
