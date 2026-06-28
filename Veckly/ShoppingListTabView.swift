@@ -128,19 +128,36 @@ struct ShoppingListTabView: View {
                         Task { await appModel.loadCoreReader() }
                     }
                 } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
-                    VecklyCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(L10n.string("shopping.empty.title"))
-                                .font(.headline)
-                            Text(L10n.string("shopping.empty.message"))
-                                .foregroundStyle(VecklyDesign.Colors.inkMid)
-                            if let onGoToWeekTab {
-                                Button("week.empty.primary", action: onGoToWeekTab)
-                                    .buttonStyle(VecklyPrimaryButtonStyle())
-                                    .padding(.top, 4)
+                    if appModel.shoppingListStore.summary != nil {
+                        // Week plan exists but all meals are skipped/unassigned.
+                        VecklyCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(L10n.string("shopping.noMeals.title"))
+                                    .font(.headline)
+                                if let onGoToWeekTab {
+                                    Button(L10n.string("shopping.noMeals.action"), action: onGoToWeekTab)
+                                        .buttonStyle(VecklyPrimaryButtonStyle())
+                                        .padding(.top, 4)
+                                }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        // No week plan at all.
+                        VecklyCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(L10n.string("shopping.empty.title"))
+                                    .font(.headline)
+                                Text(L10n.string("shopping.empty.message"))
+                                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                                if let onGoToWeekTab {
+                                    Button("week.empty.primary", action: onGoToWeekTab)
+                                        .buttonStyle(VecklyPrimaryButtonStyle())
+                                        .padding(.top, 4)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                 } else {
                     // Progress indicator

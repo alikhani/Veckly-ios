@@ -4757,6 +4757,38 @@
         }
       }
     },
+    "shopping.noMeals.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No meals planned this week"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inga måltider planerade den här veckan"
+          }
+        }
+      }
+    },
+    "shopping.noMeals.action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to week"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gå till veckan"
+          }
+        }
+      }
+    },
     "shopping.sync.pending": {
       "localizations": {
         "en": {
