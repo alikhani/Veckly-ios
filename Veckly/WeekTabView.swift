@@ -124,7 +124,7 @@ struct WeekTabView: View {
 
                 if appModel.householdStore.isLoading || appModel.weekStore.isLoading {
                     LoadingPanel(title: L10n.string("week.loading"))
-                } else if appModel.weekStore.isGenerating {
+                } else if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
                     LoadingPanel(title: L10n.string("week.generating"))
                 } else if let errorMessage = appModel.weekStore.errorMessage ?? appModel.householdStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
@@ -149,7 +149,7 @@ struct WeekTabView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                if appModel.weekStore.isGenerating {
+                if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
                     ProgressView()
                 } else if !isViewingLastWeek {
                     Button {

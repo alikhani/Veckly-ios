@@ -29,7 +29,7 @@ final class WeekStore {
         dayRows.contains { $0.recipe == nil && !$0.isSkipped }
     }
     private(set) var isLoading = false
-    private(set) var isGenerating = false
+    private(set) var generatingWeekStartDate: String?
     private(set) var errorMessage: String?
     private(set) var mutationError: String?
     private(set) var lastFetchedAt: Date?
@@ -160,8 +160,8 @@ final class WeekStore {
 
     func generateWeek(household: Household, userID: String, regenerate: Bool = false, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
-        isGenerating = true
-        defer { isGenerating = false }
+        generatingWeekStartDate = targetWeekStartDate
+        defer { generatingWeekStartDate = nil }
 
         do {
             try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: targetWeekStartDate, regenerate: regenerate)
@@ -281,6 +281,7 @@ final class WeekStore {
         errorMessage = nil
         mutationError = nil
         isLoading = false
+        generatingWeekStartDate = nil
         lastFetchedAt = nil
         hasPendingSync = false
         pendingSyncContext = nil
