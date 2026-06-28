@@ -49,7 +49,7 @@ struct HouseholdTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
-        .task { await appModel.userProfileStore.load() }
+        .task(id: appModel.householdStore.activeHousehold?.id) { await appModel.userProfileStore.load() }
         .confirmationDialog(
             deleteHouseholdConfirmationTitle,
             isPresented: $showDeleteHouseholdConfirmation,
