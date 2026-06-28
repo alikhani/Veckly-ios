@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct HouseholdMembersView: View {
     @Environment(AppModel.self) private var appModel
