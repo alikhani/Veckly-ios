@@ -50,17 +50,42 @@ struct RecipesTabView: View {
                     }
                 }
             } else {
-                List(filtered) { recipe in
-                    NavigationLink {
-                        if let household = appModel.householdStore.activeHousehold {
-                            RecipeDetailView(recipe: WeekSummaryRecipe(fullRecipe: recipe), householdID: household.id)
-                        } else {
-                            EmptyView()
+                List {
+                    if let errorMessage = appModel.recipeStore.errorMessage, !appModel.recipeStore.recipes.isEmpty {
+                        Section {
+                            HStack(spacing: 10) {
+                                Text(errorMessage)
+                                    .font(.subheadline)
+                                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                                Spacer()
+                                Button {
+                                    appModel.recipeStore.clearErrorMessage()
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                                }
+                                .accessibilityLabel(L10n.string("common.dismissError"))
+                            }
+                            .padding(12)
+                            .background(VecklyDesign.Colors.surfaceStrong)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
-                    } label: {
-                        RecipeListRow(recipe: recipe)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
-                    .disabled(appModel.householdStore.activeHousehold == nil)
+                    ForEach(filtered) { recipe in
+                        NavigationLink {
+                            if let household = appModel.householdStore.activeHousehold {
+                                RecipeDetailView(recipe: WeekSummaryRecipe(fullRecipe: recipe), householdID: household.id)
+                            } else {
+                                EmptyView()
+                            }
+                        } label: {
+                            RecipeListRow(recipe: recipe)
+                        }
+                        .disabled(appModel.householdStore.activeHousehold == nil)
                         .swipeActions(edge: .trailing) {
                             Button("common.edit") { editingRecipe = recipe }
                                 .tint(VecklyDesign.Colors.hearthOrange)
@@ -69,6 +94,7 @@ struct RecipesTabView: View {
                                 archiveCandidate = recipe
                             }
                         }
+                    }
                 }
                 .listStyle(.plain)
                 .refreshable {

@@ -125,6 +125,10 @@ final class RecipeStore {
         lastFetchedAt = nil
     }
 
+    func clearErrorMessage() {
+        errorMessage = nil
+    }
+
     func reset() {
         clearRecipeState()
     }
