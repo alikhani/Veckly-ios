@@ -108,7 +108,7 @@ struct WeekTabView: View {
 
                 header
 
-                if appModel.weekStore.hasPendingSync {
+                if appModel.weekStore.hasPendingSync && isViewingCurrentWeek {
                     HStack(spacing: 8) {
                         ProgressView()
                             .controlSize(.small)
