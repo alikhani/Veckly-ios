@@ -2595,6 +2595,22 @@
         }
       }
     },
+    "members.leave.confirmTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave household?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lämna hushållet?"
+          }
+        }
+      }
+    },
     "members.multiHouseholdHint": {
       "localizations": {
         "en": {

@@ -32,7 +32,7 @@ struct HouseholdMembersView: View {
             actions: { Button("common.ok") { errorMessage = nil } },
             message: { Text(errorMessage ?? "") }
         )
-        .confirmationDialog("Leave household?", isPresented: $showLeaveConfirmation, titleVisibility: .visible) {
+        .confirmationDialog(leaveConfirmationTitle, isPresented: $showLeaveConfirmation, titleVisibility: .visible) {
             Button("members.leave", role: .destructive) {
                 Task { await leaveCurrentHousehold() }
             }
@@ -339,6 +339,10 @@ struct HouseholdMembersView: View {
 
     private var lastOwnerErrorText: String {
         L10n.string("error.members.lastOwner")
+    }
+
+    private var leaveConfirmationTitle: String {
+        L10n.string("members.leave.confirmTitle")
     }
 }
 
