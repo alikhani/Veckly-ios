@@ -27,11 +27,11 @@ struct ShoppingListTabView: View {
 
     private var totalItemCount: Int {
         appModel.shoppingListStore.groups.flatMap { $0.items }.count
-            + appModel.shoppingListStore.stapledItems.count
     }
 
     private var checkedItemCount: Int {
-        appModel.shoppingListStore.checkedItems.count
+        let stapleKeys = Set(appModel.shoppingListStore.stapledItems.map(\.itemKey))
+        return appModel.shoppingListStore.checkedItems.filter { !stapleKeys.contains($0) }.count
     }
 
     /// "WEEK 25 · MON–FRI · 5 MEALS" — nil if data is unavailable.
