@@ -155,7 +155,7 @@ final class ShoppingListStore {
         scheduleFlush()
     }
 
-    func addCustomItem(label: String, category: ShoppingCategory = .other) async throws {
+    func addCustomItem(label: String, category: ShoppingCategory = .other) {
         let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
@@ -183,7 +183,7 @@ final class ShoppingListStore {
         return cleared
     }
 
-    func removeCustomItem(itemKey: String) async throws {
+    func removeCustomItem(itemKey: String) {
         guard customItems.contains(where: { $0.itemKey == itemKey }) else { return }
         mutationError = nil
         applyLocalMutation(.removeCustomItem(itemKey))

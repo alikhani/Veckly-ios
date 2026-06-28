@@ -5,7 +5,6 @@ struct ShoppingListTabView: View {
 
     @Environment(AppModel.self) private var appModel
     @State private var showCustomItemSheet = false
-    @State private var customItemErrorMessage: String?
     @State private var clearedKeys: [String] = []
     @State private var undoTask: Task<Void, Never>?
 
@@ -174,7 +173,7 @@ struct ShoppingListTabView: View {
                                 Task { await appModel.shoppingListStore.toggleItem(key: key) }
                             },
                             onRemoveCustom: { key in
-                                Task { await removeCustomItem(key: key) }
+                                removeCustomItem(key: key)
                             }
                         )
                     }
@@ -251,19 +250,8 @@ struct ShoppingListTabView: View {
         }
         .sheet(isPresented: $showCustomItemSheet) {
             ShoppingCustomItemSheet { label, category in
-                try await appModel.shoppingListStore.addCustomItem(label: label, category: category)
+                appModel.shoppingListStore.addCustomItem(label: label, category: category)
             }
-        }
-        .alert(
-            customItemErrorTitle,
-            isPresented: Binding(
-                get: { customItemErrorMessage != nil },
-                set: { if !$0 { customItemErrorMessage = nil } }
-            )
-        ) {
-            Button("OK") { customItemErrorMessage = nil }
-        } message: {
-            Text(customItemErrorMessage ?? "")
         }
         .onAppear {
             // Re-fetch the shopping list whenever the tab becomes visible so
@@ -289,32 +277,12 @@ struct ShoppingListTabView: View {
         }
     }
 
-    private func removeCustomItem(key: String) async {
-        do {
-            try await appModel.shoppingListStore.removeCustomItem(itemKey: key)
-        } catch {
-            customItemErrorMessage = customItemRemoveError
-        }
-    }
-
-    private var customItemTitle: String {
-        L10n.string("shopping.customItem.title")
+    private func removeCustomItem(key: String) {
+        appModel.shoppingListStore.removeCustomItem(itemKey: key)
     }
 
     private var addOwnItemButtonLabel: String {
         L10n.string("shopping.customItem.addButton")
-    }
-
-    private var customItemErrorTitle: String {
-        L10n.string("shopping.customItem.errorTitle")
-    }
-
-    private var customItemAddError: String {
-        L10n.string("shopping.customItem.addError")
-    }
-
-    private var customItemRemoveError: String {
-        L10n.string("shopping.customItem.removeError")
     }
 
     private var pendingSyncMessage: String {
@@ -323,14 +291,12 @@ struct ShoppingListTabView: View {
 }
 
 private struct ShoppingCustomItemSheet: View {
-    let onSave: (String, ShoppingCategory) async throws -> Void
+    let onSave: (String, ShoppingCategory) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var label = ""
     @State private var category: ShoppingCategory = .other
-    @State private var isSaving = false
-    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -354,22 +320,10 @@ private struct ShoppingCustomItemSheet: View {
                     Button("common.cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    if isSaving {
-                        ProgressView()
-                    } else {
-                        Button("shopping.customItem.add") { Task { await save() } }
-                            .disabled(trimmedLabel.isEmpty)
-                    }
+                    Button("shopping.customItem.add") { save() }
+                        .disabled(trimmedLabel.isEmpty)
                 }
             }
-            .alert(L10n.string("common.error"),
-                isPresented: Binding(
-                    get: { errorMessage != nil },
-                    set: { if !$0 { errorMessage = nil } }
-                ),
-                actions: { Button("common.ok") { errorMessage = nil } },
-                message: { Text(errorMessage ?? "") }
-            )
         }
     }
 
@@ -377,17 +331,10 @@ private struct ShoppingCustomItemSheet: View {
         label.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func save() async {
+    private func save() {
         guard !trimmedLabel.isEmpty else { return }
-        isSaving = true
-        defer { isSaving = false }
-
-        do {
-            try await onSave(trimmedLabel, category)
-            dismiss()
-        } catch {
-            errorMessage = L10n.string("shopping.customItem.addError")
-        }
+        onSave(trimmedLabel, category)
+        dismiss()
     }
 }
 
