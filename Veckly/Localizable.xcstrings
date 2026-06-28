@@ -4469,6 +4469,22 @@
         }
       }
     },
+    "settings.loadError": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load your settings"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunde inte ladda dina inställningar"
+          }
+        }
+      }
+    },
     "settings.saved": {
       "localizations": {
         "en": {

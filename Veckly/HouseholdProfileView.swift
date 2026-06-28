@@ -13,6 +13,7 @@ struct HouseholdProfileView: View {
     @State private var isSaving = false
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var loadFailed = false
 
     private var household: Household? { appModel.householdStore.activeHousehold }
 
@@ -21,6 +22,12 @@ struct HouseholdProfileView: View {
             if isLoading {
                 Section { HStack { Spacer(); ProgressView(); Spacer() } }
             } else {
+                if loadFailed {
+                    Section {
+                        Label(L10n.string("settings.loadError"), systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    }
+                }
                 sizeSection
                 daysSection
                 prioritiesSection
@@ -29,13 +36,14 @@ struct HouseholdProfileView: View {
         }
         .navigationTitle(L10n.string("settings.householdPreferences"))
         .navigationBarTitleDisplayMode(.inline)
+        .refreshable { await loadExisting() }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 if isSaving {
                     ProgressView()
                 } else {
                     Button("common.save") { Task { await save() } }
-                        .disabled(selectedDays.isEmpty || isLoading)
+                        .disabled(selectedDays.isEmpty || isLoading || loadFailed)
                 }
             }
         }
@@ -111,6 +119,7 @@ struct HouseholdProfileView: View {
     private func loadExisting() async {
         isLoading = true
         errorMessage = nil
+        loadFailed = false
         defer { isLoading = false }
         guard let hid = household?.id else { return }
 
@@ -124,6 +133,7 @@ struct HouseholdProfileView: View {
             apply(fetched)
         } else if let message = appModel.householdStore.detailsErrorMessage {
             errorMessage = message
+            loadFailed = true
         }
     }
 
