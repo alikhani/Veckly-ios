@@ -287,6 +287,12 @@ struct ShoppingListTabView: View {
             // Load profile so shoppingScaleFactor is accurate.
             await appModel.householdStore.loadHouseholdDetails(householdID: household.id)
         }
+        .task(id: appModel.weekStore.weekStartDate) {
+            guard let household = appModel.householdStore.activeHousehold else { return }
+            let weekStartDate = appModel.weekStore.weekStartDate
+            appModel.shoppingListStore.invalidateCache()
+            await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        }
     }
 
     private func removeCustomItem(key: String) async {
