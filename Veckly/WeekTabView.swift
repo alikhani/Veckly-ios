@@ -807,44 +807,23 @@ struct WeekTabView: View {
                             .accessibilityLabel(day.isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
                         }
                     } else if let dayCoverage {
-                        HStack(spacing: 10) {
-                            Button(role: .destructive) {
-                                guard let household = appModel.householdStore.activeHousehold else { return }
-                                Task {
-                                    try? await appModel.prepBatchStore.removeAssignment(
-                                        householdID: household.id,
-                                        batchID: dayCoverage.batchID,
-                                        date: day.date,
-                                        mealType: dayCoverage.mealType
-                                    )
-                                }
-                            } label: {
-                                Image(systemName: "trash")
-                                    .frame(width: 20, height: 20)
+                        Button(role: .destructive) {
+                            guard let household = appModel.householdStore.activeHousehold else { return }
+                            Task {
+                                try? await appModel.prepBatchStore.removeAssignment(
+                                    householdID: household.id,
+                                    batchID: dayCoverage.batchID,
+                                    date: day.date,
+                                    mealType: dayCoverage.mealType
+                                )
                             }
-                            .buttonStyle(.bordered)
-                            .tint(VecklyDesign.Colors.inkMid)
-                            .accessibilityLabel(L10n.string("prep.removeCoverage"))
-
-                            Button {
-                                guard let household = appModel.householdStore.activeHousehold else { return }
-                                guard let userID = appModel.authSessionStore.userID else {
-                                    Task { await appModel.handleUnauthorized() }
-                                    return
-                                }
-                                appModel.weekStore.clearMutationError()
-                                if !hasSeenLockExplanation {
-                                    showLockExplanation = true
-                                }
-                                Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
-                            } label: {
-                                Image(systemName: day.isLocked ? "lock.fill" : "lock.open")
-                                    .frame(width: 20, height: 20)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(day.isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-                            .accessibilityLabel(day.isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
+                        } label: {
+                            Image(systemName: "trash")
+                                .frame(width: 20, height: 20)
                         }
+                        .buttonStyle(.bordered)
+                        .tint(VecklyDesign.Colors.inkMid)
+                        .accessibilityLabel(L10n.string("prep.removeCoverage"))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
