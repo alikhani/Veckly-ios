@@ -45,6 +45,7 @@ struct MealPickerSheet: View {
     /// view `DayDetailSheet` uses, instead of dismissing.
     @State private var confirmedRecipe: WeekSummaryRecipe?
     @State private var showClearConfirmation = false
+    @State private var showSkipConfirmation = false
     @State private var showAddRecipeSheet = false
 
     private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
@@ -138,7 +139,13 @@ struct MealPickerSheet: View {
                 }
                 if confirmedRecipe == nil {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: { onSkip(); onDismiss() }) {
+                        Button(action: {
+                            if day.recipe != nil && !isSkipped {
+                                showSkipConfirmation = true
+                            } else {
+                                onSkip(); onDismiss()
+                            }
+                        }) {
                             Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
                         }
                         .accessibilityLabel(isSkipped ? L10n.format("accessibility.planDayInstead", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
@@ -147,6 +154,10 @@ struct MealPickerSheet: View {
             }
             .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
                 Button("meal.clear", role: .destructive) { onClear() }
+                Button("common.cancel", role: .cancel) {}
+            }
+            .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
+                Button("meal.skip", role: .destructive) { onSkip(); onDismiss() }
                 Button("common.cancel", role: .cancel) {}
             }
         }
