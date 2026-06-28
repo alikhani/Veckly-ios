@@ -637,6 +637,22 @@
         }
       }
     },
+    "common.undo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ångra"
+          }
+        }
+      }
+    },
     "error.auth.createAccount": {
       "extractionState": "stale",
       "localizations": {
@@ -4753,6 +4769,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vara"
+          }
+        }
+      }
+    },
+    "shopping.clearChecked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear checked"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rensa bockade"
+          }
+        }
+      }
+    },
+    "shopping.itemsCleared": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items cleared"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varor rensade"
           }
         }
       }

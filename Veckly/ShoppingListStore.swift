@@ -164,6 +164,20 @@ final class ShoppingListStore {
         scheduleFlush()
     }
 
+    /// Unchecks all currently-checked items and returns their keys so the caller
+    /// can offer an undo action that re-checks them.
+    @discardableResult
+    func bulkClearChecked() -> [String] {
+        let cleared = Array(checkedItems)
+        guard !cleared.isEmpty else { return [] }
+        mutationError = nil
+        for key in cleared {
+            applyLocalMutation(.toggleChecked(key))
+        }
+        scheduleFlush()
+        return cleared
+    }
+
     func removeCustomItem(itemKey: String) async throws {
         guard customItems.contains(where: { $0.itemKey == itemKey }) else { return }
         mutationError = nil

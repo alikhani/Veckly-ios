@@ -6,6 +6,8 @@ struct ShoppingListTabView: View {
     @Environment(AppModel.self) private var appModel
     @State private var showCustomItemSheet = false
     @State private var customItemErrorMessage: String?
+    @State private var clearedKeys: [String] = []
+    @State private var undoTask: Task<Void, Never>?
 
     /// Base recipe servings are baked into the shopping list items by the backend.
     /// The backend stores raw ingredient amounts (no household scaling), so we scale
@@ -206,6 +208,53 @@ struct ShoppingListTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !appModel.shoppingListStore.checkedItems.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(L10n.string("shopping.clearChecked")) {
+                        let keys = appModel.shoppingListStore.bulkClearChecked()
+                        guard !keys.isEmpty else { return }
+                        clearedKeys = keys
+                        undoTask?.cancel()
+                        undoTask = Task {
+                            try? await Task.sleep(nanoseconds: 4_000_000_000)
+                            guard !Task.isCancelled else { return }
+                            clearedKeys = []
+                        }
+                    }
+                }
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if !clearedKeys.isEmpty {
+                HStack(spacing: 16) {
+                    Text(L10n.string("shopping.itemsCleared"))
+                        .font(.subheadline)
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Button(L10n.string("common.undo")) {
+                        undoTask?.cancel()
+                        let keys = clearedKeys
+                        clearedKeys = []
+                        Task {
+                            for key in keys {
+                                await appModel.shoppingListStore.toggleItem(key: key)
+                            }
+                        }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+                .background(VecklyDesign.Colors.inkDeep)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.horizontal, 18)
+                .padding(.bottom, 12)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.easeInOut(duration: 0.25), value: clearedKeys.isEmpty)
+            }
+        }
         .sheet(isPresented: $showCustomItemSheet) {
             ShoppingCustomItemSheet { label, category in
                 try await appModel.shoppingListStore.addCustomItem(label: label, category: category)
