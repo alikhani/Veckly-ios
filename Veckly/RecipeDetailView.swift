@@ -98,7 +98,7 @@ struct RecipeDetailView: View {
                 .background(.bar)
             }
         }
-        .navigationTitle(L10n.string("meal.recipe"))
+        .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadFull() }
     }
