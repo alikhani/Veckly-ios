@@ -16,6 +16,7 @@ struct RecipeDetailView: View {
     @State private var fullRecipe: FullRecipe?
     @State private var isLoadingFull = false
     @State private var loadFailed = false
+    @State private var editingRecipe: FullRecipe?
 
     // MARK: - Scaling
 
@@ -100,6 +101,22 @@ struct RecipeDetailView: View {
         }
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let full = fullRecipe {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        editingRecipe = full
+                    } label: {
+                        Image(systemName: "pencil")
+                    }
+                }
+            }
+        }
+        .sheet(item: $editingRecipe) { recipe in
+            RecipeFormSheet(mode: .edit(recipe)) { draft in
+                try await appModel.recipeStore.updateRecipe(householdID: householdID, recipeID: recipe.id, draft: draft)
+            }
+        }
         .task { await loadFull() }
     }
 
