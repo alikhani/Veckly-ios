@@ -279,6 +279,8 @@ struct RecipeFormSheet: View {
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.numberPad)
                     .frame(width: 60)
+                Text("min")
+                    .foregroundStyle(.secondary)
             }
             HStack {
                 Text("recipeForm.cook")
@@ -287,6 +289,8 @@ struct RecipeFormSheet: View {
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.numberPad)
                     .frame(width: 60)
+                Text("min")
+                    .foregroundStyle(.secondary)
             }
         }
     }
