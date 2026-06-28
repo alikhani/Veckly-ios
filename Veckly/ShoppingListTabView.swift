@@ -95,7 +95,7 @@ struct ShoppingListTabView: View {
                         .tint(VecklyDesign.Colors.hearthOrange)
                     }
 
-                    Text("shopping.title")
+                    Text(L10n.string("shopping.title"))
                         .font(VecklyDesign.Typography.displayHeading(size: 34))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
