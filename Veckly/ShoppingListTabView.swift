@@ -36,7 +36,7 @@ struct ShoppingListTabView: View {
         return appModel.shoppingListStore.checkedItems.filter { !stapleKeys.contains($0) }.count
     }
 
-    /// "WEEK 25 · MON–FRI · 5 MEALS" — nil if data is unavailable.
+    /// "V.26 · 2 MIDDAGAR" — nil if data is unavailable.
     private var weekContextLine: String? {
         let weekStartString = appModel.weekStore.weekStartDate
         guard WeekCalendar.date(from: weekStartString) != nil else { return nil }
@@ -44,21 +44,9 @@ struct ShoppingListTabView: View {
         let weekNumber = WeekCalendar.weekNumber(for: weekStartString)
 
         let dayRows = appModel.weekStore.currentWeekDayRows
-        let plannedRows = dayRows.filter { $0.recipe != nil }
-        let mealCount = plannedRows.count
-
-        var dayRange: String? = nil
-        if let first = plannedRows.first, let last = plannedRows.last {
-            let abbrev: (WeekDayRowViewModel) -> String = { row in
-                String(row.weekdayLabel.prefix(3)).uppercased()
-            }
-            dayRange = first.weekday == last.weekday
-                ? abbrev(first)
-                : "\(abbrev(first))–\(abbrev(last))"
-        }
+        let mealCount = dayRows.filter { $0.recipe != nil }.count
 
         var parts: [String] = [L10n.format("format.week", weekNumber)]
-        if let range = dayRange { parts.append(range) }
         if mealCount > 0 {
             parts.append(L10n.format(mealCount == 1 ? "format.meals.one" : "format.meals.other", mealCount))
         }
