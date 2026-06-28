@@ -3,6 +3,7 @@ import UIKit
 
 struct HouseholdMembersView: View {
     @Environment(AppModel.self) private var appModel
+    @Environment(\.dismiss) private var dismiss
     @State private var tokenInput = ""
     @State private var landing: InviteLanding?
     @State private var landingToken: String?
@@ -312,6 +313,7 @@ struct HouseholdMembersView: View {
             landingToken = nil
             tokenInput = ""
             await appModel.loadActiveHouseholdReaderData()
+            dismiss()
         } catch APIError.server(409) {
             errorMessage = L10n.string("error.members.inviteInvalid")
         } catch {
@@ -333,6 +335,7 @@ struct HouseholdMembersView: View {
         do {
             try await appModel.householdStore.leaveHousehold(householdID: hid, userID: userID)
             await appModel.loadActiveHouseholdReaderData()
+            dismiss()
         } catch APIError.server(409) {
             errorMessage = lastOwnerErrorText
         } catch {
