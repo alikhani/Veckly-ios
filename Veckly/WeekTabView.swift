@@ -533,7 +533,7 @@ struct WeekTabView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
-                .accessibilityLabel("Dismiss")
+                .accessibilityLabel(L10n.string("common.dismiss"))
             }
             .padding(12)
             .background(VecklyDesign.Colors.surfaceStrong)

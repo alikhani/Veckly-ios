@@ -474,6 +474,22 @@
         }
       }
     },
+    "common.dismiss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stäng"
+          }
+        }
+      }
+    },
     "common.dismissError": {
       "extractionState": "stale",
       "localizations": {
