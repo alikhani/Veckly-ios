@@ -317,6 +317,7 @@ struct RecipeFormSheet: View {
         defer { isImporting = false }
         do {
             draft = try await appModel.recipeStore.importFromURL(url)
+            tagsText = draft.tags.joined(separator: ", ")
             urlText = url
             selectedTab = .write
         } catch APIError.recipeImport(let failure) {
@@ -334,6 +335,7 @@ struct RecipeFormSheet: View {
         defer { isImporting = false }
         do {
             draft = try await appModel.recipeStore.importFromText(text, sourceURL: normalizedImportSourceURL)
+            tagsText = draft.tags.joined(separator: ", ")
             importText = text
             selectedTab = .write
         } catch APIError.recipeImport(let failure) {
@@ -358,6 +360,9 @@ struct RecipeFormSheet: View {
             if draft.cookTimeMinutes == nil { draft.cookTimeMinutes = filled.cookTimeMinutes }
             draft.ingredients = filled.ingredients
             draft.steps = filled.steps
+            if tagsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                tagsText = filled.tags.joined(separator: ", ")
+            }
         } catch {
             errorMessage = L10n.string("error.recipeForm.aiFill")
         }
