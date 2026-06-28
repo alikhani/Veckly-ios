@@ -21,10 +21,16 @@ struct HouseholdMembersView: View {
     private var isOwner: Bool { household?.role == .owner }
     private var myUserID: String { appModel.authSessionStore.userID ?? "" }
 
+    private var hasPendingInvites: Bool {
+        !appModel.householdStore.invites.filter({ $0.status == "pending" }).isEmpty
+    }
+
     var body: some View {
         Form {
             membersSection
-            if isOwner { inviteSection }
+            if isOwner || hasPendingInvites || appModel.householdStore.isLoadingInvites {
+                inviteSection
+            }
             joinSection
         }
         .navigationTitle(L10n.string("members.title"))
@@ -57,12 +63,12 @@ struct HouseholdMembersView: View {
         .task(id: household?.id) {
             guard let hid = household?.id else { return }
             await appModel.householdStore.loadHouseholdDetails(householdID: hid)
-            if isOwner { await appModel.householdStore.loadInvites(householdID: hid) }
+            await appModel.householdStore.loadInvites(householdID: hid)
         }
         .refreshable {
             guard let hid = household?.id else { return }
             await appModel.householdStore.loadHouseholdDetails(householdID: hid, force: true)
-            if isOwner { await appModel.householdStore.loadInvites(householdID: hid) }
+            await appModel.householdStore.loadInvites(householdID: hid)
         }
         .onChange(of: tokenInput) { _, _ in
             landing = nil
@@ -138,17 +144,19 @@ struct HouseholdMembersView: View {
 
     private var inviteSection: some View {
         Section {
-            Button {
-                Task { await createInvite() }
-            } label: {
-                if isCreatingInvite {
-                    HStack { ProgressView(); Text("members.creating") }
-                } else {
-                    Label("members.createInviteLink", systemImage: "link.badge.plus")
-                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            if isOwner {
+                Button {
+                    Task { await createInvite() }
+                } label: {
+                    if isCreatingInvite {
+                        HStack { ProgressView(); Text("members.creating") }
+                    } else {
+                        Label("members.createInviteLink", systemImage: "link.badge.plus")
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    }
                 }
+                .disabled(isCreatingInvite)
             }
-            .disabled(isCreatingInvite)
 
             if appModel.householdStore.isLoadingInvites {
                 HStack { Spacer(); ProgressView(); Spacer() }
@@ -161,7 +169,7 @@ struct HouseholdMembersView: View {
                         Task { await appModel.householdStore.loadInvites(householdID: hid) }
                     }
                 }
-            } else if appModel.householdStore.invites.filter({ $0.status == "pending" }).isEmpty {
+            } else if isOwner && appModel.householdStore.invites.filter({ $0.status == "pending" }).isEmpty {
                 Text("members.noOpenInvites")
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
             }
@@ -177,18 +185,20 @@ struct HouseholdMembersView: View {
                             .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     }
                     Spacer()
-                    Button(role: .destructive) {
-                        Task { await revokeInvite(invite) }
-                    } label: {
-                        if revokingInviteIDs.contains(invite.id) {
-                            ProgressView()
-                        } else {
-                            Image(systemName: "trash")
-                                .font(.caption)
+                    if isOwner {
+                        Button(role: .destructive) {
+                            Task { await revokeInvite(invite) }
+                        } label: {
+                            if revokingInviteIDs.contains(invite.id) {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "trash")
+                                    .font(.caption)
+                            }
                         }
+                        .buttonStyle(.borderless)
+                        .disabled(revokingInviteIDs.contains(invite.id))
                     }
-                    .buttonStyle(.borderless)
-                    .disabled(revokingInviteIDs.contains(invite.id))
                 }
             }
         } header: {
