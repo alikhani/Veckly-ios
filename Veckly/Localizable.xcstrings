@@ -5420,6 +5420,70 @@
         }
       }
     },
+    "week.regenerateConfirm.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace all unlocked days?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byt ut alla olåsta dagar?"
+          }
+        }
+      }
+    },
+    "week.regenerateConfirm.message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This swaps every unlocked meal for a new one. Locked and skipped days are left alone."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alla olåsta middagar byts ut mot nya. Låsta och överhoppade dagar rörs inte."
+          }
+        }
+      }
+    },
+    "week.regenerateConfirm.confirm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace them"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byt ut dem"
+          }
+        }
+      }
+    },
+    "week.regenerate.undoBanner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week regenerated"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veckan omgenererad"
+          }
+        }
+      }
+    },
     "week.rest": {
       "localizations": {
         "en": {
