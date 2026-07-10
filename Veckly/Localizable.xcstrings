@@ -2771,6 +2771,38 @@
         }
       }
     },
+    "notification.sundayReminder.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next week is still empty — take a few minutes in Veckly."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nästa vecka är fortfarande tom — ta några minuter i Veckly."
+          }
+        }
+      }
+    },
+    "notification.sundayReminder.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time to plan the week?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dags att planera veckan?"
+          }
+        }
+      }
+    },
     "onboarding.continue": {
       "localizations": {
         "en": {

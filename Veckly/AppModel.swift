@@ -15,6 +15,7 @@ final class AppModel {
     let feedbackStore: FeedbackStore
     let recipeRecommendationStore: RecipeRecommendationStore
     let userProfileStore: UserProfileStore
+    let sundayReminderScheduler = SundayReminderScheduler()
     private let usesSeededCoreReader: Bool
 
     init(environment: AppEnvironment) {
@@ -51,6 +52,20 @@ final class AppModel {
         if usesSeededCoreReader { return }
         guard authSessionStore.isSignedIn else { return }
         await loadCoreReader()
+    }
+
+    /// App-wide (not tied to the Week tab being visible) so the reminder can
+    /// actually reach someone who isn't looking at the week plan — see
+    /// `SundayReminderScheduler` for the weekend-only/once-per-day/lazy-
+    /// permission design. Skipped under UI-test seeding to avoid a real
+    /// notification-permission prompt during automated runs.
+    func refreshSundayReminderIfNeeded() async {
+        guard !usesSeededCoreReader, let household = householdStore.activeHousehold else { return }
+        let nextWeekStart = WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: 1)
+        await sundayReminderScheduler.refreshIfNeeded {
+            let hasContent = await weekStore.peekHasContent(household: household, weekStartDate: nextWeekStart)
+            return !hasContent
+        }
     }
 
     func completeSignInWithApple(identityToken: String, nonce: String?, givenName: String?, familyName: String?) async {

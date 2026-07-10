@@ -23,10 +23,14 @@ struct RootView: View {
         }
         .task {
             await appModel.restoreSession()
+            await appModel.refreshSundayReminderIfNeeded()
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, appModel.authSessionStore.isSignedIn else { return }
-            Task { await appModel.loadCoreReader() }
+            Task {
+                await appModel.loadCoreReader()
+                await appModel.refreshSundayReminderIfNeeded()
+            }
         }
     }
 }
