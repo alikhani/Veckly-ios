@@ -33,15 +33,27 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
     let state: WeekDayState
     let isLocked: Bool
     let recipe: WeekSummaryRecipe?
+    let reason: AssignmentReason?
+    let confidence: AssignmentConfidence?
 
     var id: String { date }
 
-    init(dayOfWeek: Weekday, date: String, state: WeekDayState, isLocked: Bool = false, recipe: WeekSummaryRecipe?) {
+    init(
+        dayOfWeek: Weekday,
+        date: String,
+        state: WeekDayState,
+        isLocked: Bool = false,
+        recipe: WeekSummaryRecipe?,
+        reason: AssignmentReason? = nil,
+        confidence: AssignmentConfidence? = nil
+    ) {
         self.dayOfWeek = dayOfWeek
         self.date = date
         self.state = state
         self.isLocked = isLocked
         self.recipe = recipe
+        self.reason = reason
+        self.confidence = confidence
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -50,6 +62,8 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         case state
         case isLocked
         case recipe
+        case reason
+        case confidence
     }
 
     init(from decoder: Decoder) throws {
@@ -59,7 +73,38 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         state = try container.decode(WeekDayState.self, forKey: .state)
         isLocked = try container.decodeIfPresent(Bool.self, forKey: .isLocked) ?? false
         recipe = try container.decodeIfPresent(WeekSummaryRecipe.self, forKey: .recipe)
+        reason = try container.decodeIfPresent(AssignmentReason.self, forKey: .reason)
+        confidence = try container.decodeIfPresent(AssignmentConfidence.self, forKey: .confidence)
     }
+}
+
+/// Why the generator picked this meal — only ever set for algorithm
+/// assignments (see `Veckly-backend`'s `deriveAssignmentReason`); a manual
+/// pick via the meal picker has none. Drives the discreet reason line in
+/// the week view.
+enum AssignmentReason: String, Decodable {
+    case familyRecipe = "family-recipe"
+    case likedBefore = "liked-before"
+    case backAfterBreak = "back-after-break"
+    case basedOnFeedback = "based-on-feedback"
+    case newForVariety = "new-for-variety"
+
+    var label: String {
+        switch self {
+        case .familyRecipe: return L10n.string("week.reason.familyRecipe")
+        case .likedBefore: return L10n.string("week.reason.likedBefore")
+        case .backAfterBreak: return L10n.string("week.reason.backAfterBreak")
+        case .basedOnFeedback: return L10n.string("week.reason.basedOnFeedback")
+        case .newForVariety: return L10n.string("week.reason.newForVariety")
+        }
+    }
+}
+
+/// `.low` means the pick was a compromise (e.g. a repeated cuisine/protein,
+/// or two hearty meals back to back) — see `evaluateAssignmentConfidence`.
+enum AssignmentConfidence: String, Decodable {
+    case ok
+    case low
 }
 
 enum Weekday: String, Decodable, CaseIterable {

@@ -909,6 +909,18 @@ struct WeekTabView: View {
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                     }
 
+                    if dayCoverage == nil, let reason = day.reason {
+                        Text(reason.label)
+                            .font(.caption)
+                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                    }
+
+                    if dayCoverage == nil, day.confidence == .low {
+                        Label("week.confidence.low", systemImage: "arrow.triangle.2.circlepath")
+                            .font(.caption)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    }
+
                     if dayCoverage == nil {
                         FlowLayout(spacing: 8) {
                             Button {
@@ -1178,10 +1190,18 @@ struct CompactDayRow: View {
 
     private var plannedContent: some View {
         HStack(alignment: .center, spacing: 8) {
-            Text(day.mealTitle)
-                .font(.body.weight(.medium))
-                .foregroundStyle(VecklyDesign.Colors.inkDeep)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(day.mealTitle)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    .lineLimit(1)
+                if let reason = day.reason {
+                    Text(reason.label)
+                        .font(.caption2)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        .lineLimit(1)
+                }
+            }
             Spacer()
             if day.recipe == nil, let _ = coverage {
                 Label(L10n.string("prep.fallbackTitle"), systemImage: "arrow.3.trianglepath")

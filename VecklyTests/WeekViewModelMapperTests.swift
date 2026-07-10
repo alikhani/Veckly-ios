@@ -37,6 +37,80 @@ struct WeekViewModelMapperTests {
         #expect(mapped.days[1].isSkipped == false)
     }
 
+    @Test func mapsReasonAndConfidenceFromAnAlgorithmAssignedMeal() {
+        let recipe = WeekSummaryRecipe(
+            id: "22222222-2222-2222-2222-222222222222",
+            title: "Monday Pasta",
+            description: "Fast family pasta",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 15,
+            tags: ["weekday"]
+        )
+        let summary = WeekSummary(
+            household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+            weekStartDate: "2026-06-08",
+            updatedAt: nil,
+            days: [
+                WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: recipe, reason: .likedBefore, confidence: .low),
+            ]
+        )
+        let today = WeekCalendar.date(from: "2026-06-08")!
+
+        let mapped = WeekViewModelMapper.map(summary: summary, today: today)
+
+        #expect(mapped.days.first?.reason == .likedBefore)
+        #expect(mapped.days.first?.confidence == .low)
+    }
+
+    @Test func manualReassignmentClearsAnyPreviousReasonAndConfidence() {
+        let recipe = WeekSummaryRecipe(
+            id: "33333333-3333-3333-3333-333333333333",
+            title: "Tuesday Tacos",
+            description: "Quick weeknight tacos",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 15,
+            tags: []
+        )
+        let generated = WeekViewModelMapper.emptyRows(weekStartDate: "2026-06-08")[0]
+
+        let manuallyAssigned = generated.withPlannedRecipe(recipe)
+
+        #expect(manuallyAssigned.reason == nil)
+        #expect(manuallyAssigned.confidence == nil)
+    }
+
+    @Test func skippingAndLockingPreserveReasonAndConfidence() {
+        let recipe = WeekSummaryRecipe(
+            id: "44444444-4444-4444-4444-444444444444",
+            title: "Wednesday Stew",
+            description: "Hearty stew",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 60,
+            tags: []
+        )
+        let summary = WeekSummary(
+            household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+            weekStartDate: "2026-06-08",
+            updatedAt: nil,
+            days: [
+                WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: recipe, reason: .backAfterBreak, confidence: .ok),
+            ]
+        )
+        let today = WeekCalendar.date(from: "2026-06-08")!
+        let day = WeekViewModelMapper.map(summary: summary, today: today).days[0]
+
+        let skipped = day.withSkipped(true)
+        let locked = day.withLocked(true)
+
+        #expect(skipped.reason == .backAfterBreak)
+        #expect(skipped.confidence == .ok)
+        #expect(locked.reason == .backAfterBreak)
+        #expect(locked.confidence == .ok)
+    }
+
     @Test func withPlannedRecipeAppliesRecipeWhilePreservingDayIdentity() {
         let empty = WeekViewModelMapper.emptyRows(weekStartDate: "2026-06-08")[0].withLocked(true)
         let recipe = WeekSummaryRecipe(

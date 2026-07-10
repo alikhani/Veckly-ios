@@ -790,8 +790,38 @@ private extension Components.Schemas.WeekPlanSummaryDay {
             date: date,
             state: state.appModel,
             isLocked: isLocked,
-            recipe: recipe?.appModel
+            recipe: recipe?.appModel,
+            reason: reason?.appModel,
+            confidence: confidence?.appModel
         )
+    }
+}
+
+private extension Components.Schemas.WeekPlanSummaryDay.reasonPayload {
+    var appModel: AssignmentReason {
+        switch self {
+        case .family_hyphen_recipe:
+            return .familyRecipe
+        case .liked_hyphen_before:
+            return .likedBefore
+        case .back_hyphen_after_hyphen_break:
+            return .backAfterBreak
+        case .based_hyphen_on_hyphen_feedback:
+            return .basedOnFeedback
+        case .new_hyphen_for_hyphen_variety:
+            return .newForVariety
+        }
+    }
+}
+
+private extension Components.Schemas.WeekPlanSummaryDay.confidencePayload {
+    var appModel: AssignmentConfidence {
+        switch self {
+        case .ok:
+            return .ok
+        case .low:
+            return .low
+        }
     }
 }
 

@@ -5222,6 +5222,22 @@
       }
     },
     "Veckly": {},
+    "week.confidence.low": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Might not be a perfect fit — swap if you like"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanske inte perfekt den här veckan — byt om ni vill"
+          }
+        }
+      }
+    },
     "week.empty.eyebrow": {
       "localizations": {
         "en": {
@@ -5576,6 +5592,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veckan omgenererad"
+          }
+        }
+      }
+    },
+    "week.reason.backAfterBreak": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back after a break"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tillbaka efter en paus"
+          }
+        }
+      }
+    },
+    "week.reason.basedOnFeedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on what you like"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baserat på vad ni gillar"
+          }
+        }
+      }
+    },
+    "week.reason.familyRecipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own recipe"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ert eget recept"
+          }
+        }
+      }
+    },
+    "week.reason.likedBefore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One of your favorites"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En favorit hos er"
+          }
+        }
+      }
+    },
+    "week.reason.newForVariety": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New for you — a little variety"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ny för er — lite variation"
           }
         }
       }
