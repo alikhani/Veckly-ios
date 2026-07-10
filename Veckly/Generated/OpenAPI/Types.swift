@@ -2114,25 +2114,50 @@ internal enum Components {
                     internal var dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.dayOfWeekPayload
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/recipeRef`.
                     internal var recipeRef: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/reason`.
+                    internal enum reasonPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case family_hyphen_recipe = "family-recipe"
+                        case liked_hyphen_before = "liked-before"
+                        case back_hyphen_after_hyphen_break = "back-after-break"
+                        case based_hyphen_on_hyphen_feedback = "based-on-feedback"
+                        case new_hyphen_for_hyphen_variety = "new-for-variety"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/reason`.
+                    internal var reason: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.reasonPayload?
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/confidence`.
+                    internal enum confidencePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case ok = "ok"
+                        case low = "low"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/confidence`.
+                    internal var confidence: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.confidencePayload?
                     /// Creates a new `Case3Payload`.
                     ///
                     /// - Parameters:
                     ///   - eventType:
                     ///   - dayOfWeek:
                     ///   - recipeRef:
+                    ///   - reason:
+                    ///   - confidence:
                     internal init(
                         eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.eventTypePayload,
                         dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.dayOfWeekPayload,
-                        recipeRef: Swift.String
+                        recipeRef: Swift.String,
+                        reason: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.reasonPayload? = nil,
+                        confidence: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.confidencePayload? = nil
                     ) {
                         self.eventType = eventType
                         self.dayOfWeek = dayOfWeek
                         self.recipeRef = recipeRef
+                        self.reason = reason
+                        self.confidence = confidence
                     }
                     internal enum CodingKeys: String, CodingKey {
                         case eventType
                         case dayOfWeek
                         case recipeRef
+                        case reason
+                        case confidence
                     }
                 }
                 /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3`.
@@ -2711,6 +2736,23 @@ internal enum Components {
             internal var isLocked: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/recipe`.
             internal var recipe: Components.Schemas.WeekPlanSummaryRecipe?
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/reason`.
+            internal enum reasonPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case family_hyphen_recipe = "family-recipe"
+                case liked_hyphen_before = "liked-before"
+                case back_hyphen_after_hyphen_break = "back-after-break"
+                case based_hyphen_on_hyphen_feedback = "based-on-feedback"
+                case new_hyphen_for_hyphen_variety = "new-for-variety"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/reason`.
+            internal var reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload?
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/confidence`.
+            internal enum confidencePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case ok = "ok"
+                case low = "low"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/confidence`.
+            internal var confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload?
             /// Creates a new `WeekPlanSummaryDay`.
             ///
             /// - Parameters:
@@ -2719,18 +2761,24 @@ internal enum Components {
             ///   - state:
             ///   - isLocked:
             ///   - recipe:
+            ///   - reason:
+            ///   - confidence:
             internal init(
                 dayOfWeek: Components.Schemas.WeekPlanSummaryDay.dayOfWeekPayload,
                 date: Swift.String,
                 state: Components.Schemas.WeekPlanSummaryDay.statePayload,
                 isLocked: Swift.Bool,
-                recipe: Components.Schemas.WeekPlanSummaryRecipe? = nil
+                recipe: Components.Schemas.WeekPlanSummaryRecipe? = nil,
+                reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload? = nil,
+                confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload? = nil
             ) {
                 self.dayOfWeek = dayOfWeek
                 self.date = date
                 self.state = state
                 self.isLocked = isLocked
                 self.recipe = recipe
+                self.reason = reason
+                self.confidence = confidence
             }
             internal enum CodingKeys: String, CodingKey {
                 case dayOfWeek
@@ -2738,6 +2786,8 @@ internal enum Components {
                 case state
                 case isLocked
                 case recipe
+                case reason
+                case confidence
             }
         }
         /// - Remark: Generated from `#/components/schemas/WeekPlanSummary`.
