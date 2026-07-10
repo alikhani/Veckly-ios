@@ -64,6 +64,7 @@ struct WeekTabView: View {
     @State private var showRegenerateConfirmation = false
     @State private var regenerateUndoContext: RegenerateUndoContext?
     @State private var regenerateUndoDismissTask: Task<Void, Never>?
+    @State private var retroViewModel = RetroCardViewModel()
 
     private var viewedWeekStartDate: String {
         WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: viewedWeekOffset.rawValue)
@@ -117,6 +118,15 @@ struct WeekTabView: View {
                 }
 
                 header
+
+                if isViewingCurrentWeek, !retroViewModel.rows.isEmpty {
+                    RetroCard(
+                        viewModel: retroViewModel,
+                        feedbackStore: appModel.feedbackStore,
+                        householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                        onResolved: { retroViewModel.clear() }
+                    )
+                }
 
                 if appModel.weekStore.hasPendingSync && isViewingCurrentWeek {
                     HStack(spacing: 8) {
@@ -330,7 +340,8 @@ struct WeekTabView: View {
             guard let household = appModel.householdStore.activeHousehold else { return }
             async let week: Void = appModel.weekStore.loadCurrentWeek(household: household)
             async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: WeekCalendar.currentWeekStartDate())
-            _ = await (week, prep)
+            async let retro: Void = retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore)
+            _ = await (week, prep, retro)
             await refreshNextWeekEmptyState()
         }
         .onAppear {
@@ -351,6 +362,7 @@ struct WeekTabView: View {
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     await appModel.weekStore.loadCurrentWeek(household: household)
                     await refreshNextWeekEmptyState()
+                    await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore)
                 }
             }
         }

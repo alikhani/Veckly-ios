@@ -112,16 +112,16 @@ final class WeekStore {
         }
     }
 
-    /// Side-effect-free check used by the weekend nudge to ask "does next week
-    /// have anything planned yet?" without disturbing the currently displayed
+    /// Side-effect-free fetch used by the weekend nudge and the Sunday retro to
+    /// peek at another week's plan without disturbing the currently displayed
     /// week's `summary`/`dayRows`/`isLoading` state.
+    func peekWeekSummary(household: Household, weekStartDate: String) async -> WeekSummary? {
+        try? await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
+    }
+
     func peekHasContent(household: Household, weekStartDate: String) async -> Bool {
-        do {
-            let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
-            return summary.days.contains { $0.recipe != nil || $0.state == .skipped }
-        } catch {
-            return false
-        }
+        guard let summary = await peekWeekSummary(household: household, weekStartDate: weekStartDate) else { return false }
+        return summary.days.contains { $0.recipe != nil || $0.state == .skipped }
     }
 
     func toggleLock(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
