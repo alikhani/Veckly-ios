@@ -4317,6 +4317,22 @@
         }
       }
     },
+    "recipes.suggestions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions for you"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Förslag för er"
+          }
+        }
+      }
+    },
     "recipes.search": {
       "extractionState": "stale",
       "localizations": {

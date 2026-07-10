@@ -63,6 +63,19 @@ struct MealPickerSheet: View {
         filtered.filter { appModel.feedbackStore.vote(for: $0.id) != .up }
     }
 
+    /// AI-ranked picks (see `RecipeRecommendationStore`), resolved against
+    /// the loaded recipe list and ranked in the order Claude returned them.
+    /// Hidden while searching — suggestions answer "what should we cook?",
+    /// not "find this specific dish."
+    private var suggestedRecipes: [(recipe: FullRecipe, reason: String)] {
+        guard searchText.isEmpty else { return [] }
+        let recipesByID = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0) })
+        return appModel.recipeRecommendationStore.recommendations(for: householdID).compactMap { recommendation in
+            guard let recipe = recipesByID[recommendation.mealID] else { return nil }
+            return (recipe, recommendation.reason)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -139,14 +152,12 @@ struct MealPickerSheet: View {
                 }
                 if confirmedRecipe == nil {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: {
+                        Button(isSkipped ? "meal.plan" : "meal.skip") {
                             if day.recipe != nil && !isSkipped {
                                 showSkipConfirmation = true
                             } else {
                                 onSkip(); onDismiss()
                             }
-                        }) {
-                            Image(systemName: isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
                         }
                         .accessibilityLabel(isSkipped ? L10n.format("accessibility.planDayInstead", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
                     }
@@ -186,6 +197,17 @@ struct MealPickerSheet: View {
                         }
                     }
                     .buttonStyle(.plain)
+                }
+            }
+
+            if !suggestedRecipes.isEmpty {
+                Section(L10n.string("recipes.suggestions")) {
+                    ForEach(suggestedRecipes, id: \.recipe.id) { entry in
+                        Button { previewRecipeID = entry.recipe.id } label: {
+                            RecipePickerRow(recipe: entry.recipe, reason: entry.reason)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
 
@@ -245,6 +267,13 @@ struct MealPickerSheet: View {
 
     private func loadRecipes() async {
         await appModel.loadRecipesAndSeedFeedback(householdID: householdID)
+        guard let profile = appModel.householdStore.cachedProfile(for: householdID) else { return }
+        await appModel.recipeRecommendationStore.loadIfNeeded(
+            householdID: householdID,
+            householdProfile: profile,
+            feedbackVotes: appModel.feedbackStore.allVotes,
+            recipes: appModel.recipeStore.recipes
+        )
     }
 }
 
@@ -266,23 +295,42 @@ private struct SearchableWhenPickingModifier: ViewModifier {
 
 private struct RecipePickerRow: View {
     let recipe: FullRecipe
+    /// Set only for rows in the "Suggestions for you" section — Claude's
+    /// one-sentence reason for this pick, in the same language as the title.
+    var reason: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(recipe.title)
                 .font(.body.weight(.medium))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
+            if let reason {
+                Text(reason)
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .lineLimit(1)
+            }
             HStack(spacing: 6) {
-                Text(L10n.format("format.servings", recipe.servings))
+                chip(L10n.format("format.servings", recipe.servings))
                 if let total = cookTime {
-                    Text("·")
-                    Text("\(total) min")
+                    chip("\(total) min")
+                }
+                if let cuisine = recipe.cuisine {
+                    chip(cuisine)
                 }
             }
-            .font(.caption)
-            .foregroundStyle(VecklyDesign.Colors.inkFaint)
         }
         .padding(.vertical, 4)
+    }
+
+    private func chip(_ text: String) -> some View {
+        Text(text)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(VecklyDesign.Colors.inkMid)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color("chipSurface"))
+            .clipShape(Capsule())
     }
 
     private var cookTime: Int? {

@@ -1,0 +1,103 @@
+import Foundation
+import Testing
+@testable import Veckly
+
+@MainActor
+struct RecipeRecommendationStoreTests {
+    private func profile(householdID: String = "household-1") -> HouseholdProfile {
+        HouseholdProfile(householdId: householdID, adults: 2, children: 1, priorities: [.quick], avoidIngredients: [], selectedDays: [])
+    }
+
+    private func recipe(_ id: String, title: String) -> FullRecipe {
+        FullRecipe(id: id, title: title, description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 15, tags: [], ingredients: [], steps: [], userVote: nil)
+    }
+
+    @Test func populatesRecommendationsOnSuccess() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([MealRecommendation(mealID: "pasta", reason: "A family favorite")]))
+        let store = RecipeRecommendationStore(apiClient: client)
+
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: [recipe("pasta", title: "Pasta")])
+
+        #expect(store.recommendations(for: "household-1") == [MealRecommendation(mealID: "pasta", reason: "A family favorite")])
+    }
+
+    @Test func leavesRecommendationsEmptyOnFailureInsteadOfThrowing() async {
+        let client = StubRecipeRecommendationAPIClient(result: .failure(APIError.server(statusCode: 429)))
+        let store = RecipeRecommendationStore(apiClient: client)
+
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: [recipe("pasta", title: "Pasta")])
+
+        #expect(store.recommendations(for: "household-1") == [])
+    }
+
+    @Test func skipsTheCallEntirelyWhenThereAreNoCandidateRecipes() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([MealRecommendation(mealID: "pasta", reason: "unused")]))
+        let store = RecipeRecommendationStore(apiClient: client)
+
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: [])
+
+        #expect(client.callCount == 0)
+        #expect(store.recommendations(for: "household-1") == [])
+    }
+
+    @Test func onlyCallsTheAPIOnceForTheSameHouseholdWithinASession() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([MealRecommendation(mealID: "pasta", reason: "A family favorite")]))
+        let store = RecipeRecommendationStore(apiClient: client)
+        let recipes = [recipe("pasta", title: "Pasta")]
+
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: recipes)
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: recipes)
+
+        #expect(client.callCount == 1)
+    }
+
+    @Test func resetAllowsAFreshLoadForTheSameHousehold() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([MealRecommendation(mealID: "pasta", reason: "A family favorite")]))
+        let store = RecipeRecommendationStore(apiClient: client)
+        let recipes = [recipe("pasta", title: "Pasta")]
+
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: recipes)
+        store.reset()
+        await store.loadIfNeeded(householdID: "household-1", householdProfile: profile(), feedbackVotes: [:], recipes: recipes)
+
+        #expect(client.callCount == 2)
+    }
+
+    @Test func pairsVotesWithTitlesAndDropsVotesForRecipesOutsideTheCandidatePool() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([]))
+        let store = RecipeRecommendationStore(apiClient: client)
+        let recipes = [recipe("pasta", title: "Pasta")]
+
+        await store.loadIfNeeded(
+            householdID: "household-1",
+            householdProfile: profile(),
+            feedbackVotes: ["pasta": .up, "orphan-id-not-in-recipes": .down],
+            recipes: recipes
+        )
+
+        let sentFeedback = client.lastFeedbackSummary ?? []
+        #expect(sentFeedback.map(\.mealID) == ["pasta"])
+        #expect(sentFeedback.first?.mealTitle == "Pasta")
+        #expect(sentFeedback.first?.vote == .up)
+    }
+}
+
+private final class StubRecipeRecommendationAPIClient: RecipeRecommendationAPIClient {
+    let result: Result<[MealRecommendation], Error>
+    private(set) var callCount = 0
+    private(set) var lastFeedbackSummary: [MealRecommendationFeedbackItem]?
+
+    init(result: Result<[MealRecommendation], Error>) {
+        self.result = result
+    }
+
+    func recommendMeals(
+        householdProfile: HouseholdProfile,
+        feedbackSummary: [MealRecommendationFeedbackItem],
+        candidateMeals: [MealRecommendationCandidate]
+    ) async throws -> [MealRecommendation] {
+        callCount += 1
+        lastFeedbackSummary = feedbackSummary
+        return try result.get()
+    }
+}

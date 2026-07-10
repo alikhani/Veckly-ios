@@ -13,6 +13,7 @@ final class AppModel {
     let recipeStore: RecipeStore
     let prepBatchStore: PrepBatchStore
     let feedbackStore: FeedbackStore
+    let recipeRecommendationStore: RecipeRecommendationStore
     let userProfileStore: UserProfileStore
     private let usesSeededCoreReader: Bool
 
@@ -34,6 +35,7 @@ final class AppModel {
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
         self.feedbackStore = FeedbackStore(apiClient: apiClient)
+        self.recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)
 
         if usesSeededCoreReader {
@@ -121,6 +123,7 @@ final class AppModel {
             recipeStore.reset()
             prepBatchStore.reset()
             feedbackStore.reset()
+            recipeRecommendationStore.reset()
         }
         // Keep household-scoped profile/member context in sync with week/shopping
         // data when the active household changes after a switch/join/leave/delete.
@@ -151,6 +154,7 @@ final class AppModel {
         recipeStore.reset()
         prepBatchStore.reset()
         feedbackStore.reset()
+        recipeRecommendationStore.reset()
         userProfileStore.reset()
     }
 

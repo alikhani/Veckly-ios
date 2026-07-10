@@ -23,6 +23,14 @@ final class FeedbackStore {
         votes[recipeID]
     }
 
+    /// A snapshot of every recipe this household has voted on — used to build
+    /// the `feedbackSummary` sent to `/recipes/recommend` (see
+    /// `RecipeRecommendationStore`), which needs the full list, not a
+    /// single-recipe lookup.
+    var allVotes: [String: MealVote] {
+        votes
+    }
+
     func voteString(for recipeID: String) -> String? {
         votes[recipeID]?.rawValue
     }

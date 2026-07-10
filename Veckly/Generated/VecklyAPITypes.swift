@@ -252,8 +252,35 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
     let ingredients: [RecipeIngredient]
     let steps: [RecipeStep]
     let userVote: String? // "up" | "down" | nil
+    let cuisine: String?
 
     var isLiked: Bool { userVote == "up" }
+
+    init(
+        id: String,
+        title: String,
+        description: String,
+        servings: Int,
+        prepTimeMinutes: Int?,
+        cookTimeMinutes: Int?,
+        tags: [String],
+        ingredients: [RecipeIngredient],
+        steps: [RecipeStep],
+        userVote: String?,
+        cuisine: String? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.servings = servings
+        self.prepTimeMinutes = prepTimeMinutes
+        self.cookTimeMinutes = cookTimeMinutes
+        self.tags = tags
+        self.ingredients = ingredients
+        self.steps = steps
+        self.userVote = userVote
+        self.cuisine = cuisine
+    }
 }
 
 enum MealVote: String, Codable {
@@ -300,6 +327,30 @@ struct HouseholdProfile: Equatable {
     let priorities: [HouseholdPriority]
     let avoidIngredients: [String]
     let selectedDays: [Weekday]
+}
+
+/// Input to `POST /recipes/recommend` — one vote from `FeedbackStore.allVotes`,
+/// paired with the recipe title the AI prompt needs (the store only keys
+/// votes by id).
+struct MealRecommendationFeedbackItem {
+    let mealID: String
+    let mealTitle: String
+    let vote: MealVote
+}
+
+/// Input to `POST /recipes/recommend` — the pool of recipes the AI is allowed
+/// to choose from.
+struct MealRecommendationCandidate {
+    let id: String
+    let title: String
+}
+
+/// One AI-ranked suggestion — `reason` is a short, already-localized-to-the-
+/// meal's-language sentence from Claude, shown directly under the title.
+struct MealRecommendation: Equatable, Identifiable {
+    let mealID: String
+    let reason: String
+    var id: String { mealID }
 }
 
 struct HouseholdInvite: Identifiable, Equatable {

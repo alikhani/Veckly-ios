@@ -311,6 +311,42 @@ struct VecklyAPIClient {
         }
     }
 
+    func recommendMeals(
+        householdProfile: HouseholdProfile,
+        feedbackSummary: [MealRecommendationFeedbackItem],
+        candidateMeals: [MealRecommendationCandidate]
+    ) async throws -> [MealRecommendation] {
+        let profile = Components.Schemas.MealRecommendationsRequest.householdProfilePayload(
+            adults: Double(householdProfile.adults),
+            children: Double(householdProfile.children),
+            priorities: householdProfile.priorities.map(\.rawValue),
+            avoidIngredients: householdProfile.avoidIngredients
+        )
+        let feedback = feedbackSummary.map {
+            Components.Schemas.MealRecommendationsRequest.feedbackSummaryPayloadPayload(
+                mealId: $0.mealID,
+                mealTitle: $0.mealTitle,
+                vote: $0.vote == .up ? .up : .down
+            )
+        }
+        let candidates = candidateMeals.map {
+            Components.Schemas.MealRecommendationsRequest.candidateMealsPayloadPayload(id: $0.id, title: $0.title)
+        }
+        let output = try await _client.recommendMeals(
+            body: .json(.init(householdProfile: profile, feedbackSummary: feedback, candidateMeals: candidates))
+        )
+        switch output {
+        case let .ok(r):
+            return try r.body.json.recommendations.map { MealRecommendation(mealID: $0.mealId, reason: $0.reason) }
+        case .unauthorized: throw APIError.unauthorized
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unprocessableContent: throw APIError.server(statusCode: 422)
+        case .tooManyRequests: throw APIError.server(statusCode: 429)
+        case .internalServerError: throw APIError.server(statusCode: 500)
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
         let output = try await _client.generateWeekPlan(
             path: .init(householdId: householdID, weekStartDate: weekStartDate),
@@ -936,7 +972,8 @@ private extension Components.Schemas.Recipe {
             tags: tags,
             ingredients: ingredients.map(\.appModel),
             steps: steps.map(\.appModel),
-            userVote: userVote?.rawValue
+            userVote: userVote?.rawValue,
+            cuisine: cuisine
         )
     }
 }
