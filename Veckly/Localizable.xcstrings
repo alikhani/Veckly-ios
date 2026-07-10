@@ -5612,6 +5612,38 @@
         }
       }
     },
+    "week.sessionEnd.cta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the shopping list"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se inköpslistan"
+          }
+        }
+      }
+    },
+    "week.sessionEnd.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The week is planned."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veckan är klar."
+          }
+        }
+      }
+    },
     "week.summary.openDays.one": {
       "extractionState": "stale",
       "localizations": {

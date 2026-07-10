@@ -51,6 +51,7 @@ private let weekendNudgeDismissalKey = "veckly.week.weekendNudgeDismissedDate"
 struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
+    var onGoToShoppingTab: (() -> Void)? = nil
     @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
     @State private var selectedDayForDetail: WeekDayRowViewModel?
@@ -65,6 +66,7 @@ struct WeekTabView: View {
     @State private var regenerateUndoContext: RegenerateUndoContext?
     @State private var regenerateUndoDismissTask: Task<Void, Never>?
     @State private var retroViewModel = RetroCardViewModel()
+    @State private var showSessionEndBeat = false
 
     private var viewedWeekStartDate: String {
         WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: viewedWeekOffset.rawValue)
@@ -118,6 +120,8 @@ struct WeekTabView: View {
                 }
 
                 header
+
+                sessionEndBeatCard
 
                 if isViewingCurrentWeek, !retroViewModel.rows.isEmpty {
                     RetroCard(
@@ -226,9 +230,11 @@ struct WeekTabView: View {
                 onSelect: { recipe in
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
+                        let wasEmptyBefore = appModel.weekStore.hasEmptyDays
                         Task {
                             await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             appModel.shoppingListStore.invalidateCache()
+                            checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
                         }
                     } else {
                         Task { await appModel.handleUnauthorized() }
@@ -249,7 +255,11 @@ struct WeekTabView: View {
                 onSkip: {
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
-                        Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
+                        let wasEmptyBefore = appModel.weekStore.hasEmptyDays
+                        Task {
+                            await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
+                            checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
+                        }
                     } else {
                         Task { await appModel.handleUnauthorized() }
                     }
@@ -408,6 +418,7 @@ struct WeekTabView: View {
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isLocked && !$0.isSkipped }
             : []
+        let wasEmptyBefore = appModel.weekStore.hasEmptyDays
 
         await appModel.weekStore.generateWeek(
             household: household,
@@ -416,9 +427,19 @@ struct WeekTabView: View {
             viewedWeekStartDate: viewedWeekStartDate
         )
         appModel.shoppingListStore.invalidateCache()
+        checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
 
         guard regenerate, appModel.weekStore.mutationError == nil, !preRegenerateSnapshot.isEmpty else { return }
         presentRegenerateUndo(rows: preRegenerateSnapshot, weekStartDate: viewedWeekStartDate)
+    }
+
+    /// Fires the "Veckan är klar" beat the instant the last empty day gets
+    /// filled or skipped by a real user action — never on merely browsing to
+    /// an already-full week (only mutators that can close the last gap call
+    /// this, each with `hasEmptyDays` captured just before they ran).
+    private func checkForSessionEnd(wasEmptyBefore: Bool) {
+        guard isViewingCurrentWeek, wasEmptyBefore, !appModel.weekStore.hasEmptyDays, plannedDinnerCount > 0 else { return }
+        showSessionEndBeat = true
     }
 
     private func presentRegenerateUndo(rows: [WeekDayRowViewModel], weekStartDate: String) {
@@ -654,6 +675,46 @@ struct WeekTabView: View {
     private func dismissWeekendNudgeForToday() {
         UserDefaults.standard.set(Date(), forKey: weekendNudgeDismissalKey)
         weekendNudgeDismissedToday = true
+    }
+
+    /// "Veckan är klar" — a one-time, dismissible beat shown the moment the
+    /// last empty day of the current week gets filled or skipped (see
+    /// `checkForSessionEnd`). Not persisted anywhere: it's local `@State`,
+    /// scoped to this session, gone once dismissed or the CTA is tapped.
+    @ViewBuilder
+    private var sessionEndBeatCard: some View {
+        if showSessionEndBeat, isViewingCurrentWeek {
+            VecklyCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("week.sessionEnd.title")
+                            .font(VecklyDesign.Typography.displayHeading(size: 20))
+                            .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                        Spacer()
+                        Button {
+                            showSessionEndBeat = false
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        }
+                        .accessibilityLabel(L10n.string("common.dismiss"))
+                    }
+
+                    Text(L10n.format(plannedDinnerCount == 1 ? "week.summary.plannedDinners.one" : "week.summary.plannedDinners.other", plannedDinnerCount))
+                        .font(.body)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+                    Button("week.sessionEnd.cta") {
+                        showSessionEndBeat = false
+                        onGoToShoppingTab?()
+                    }
+                    .buttonStyle(VecklyPrimaryButtonStyle())
+                    .padding(.top, 4)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 
     private var emptyWeekView: some View {

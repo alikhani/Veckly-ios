@@ -6,7 +6,7 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                WeekTabView()
+                WeekTabView(onGoToShoppingTab: { selectedTab = 1 })
             }
             .tabItem {
                 Label("tabs.week", systemImage: "calendar")
