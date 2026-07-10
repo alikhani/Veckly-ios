@@ -150,6 +150,7 @@ struct WeekViewModelMapperTests {
         store.seedForUITests()
 
         let monday = store.dayRows.first { $0.weekday == .monday }!
+        #expect(monday.recipe != nil)
 
         await store.toggleSkip(
             day: monday,
@@ -162,10 +163,35 @@ struct WeekViewModelMapperTests {
         #expect(updatedMonday != monday)
         #expect(updatedMonday.isSkipped == true)
         #expect(updatedMonday.isEmpty == false)
-        #expect(updatedMonday.recipe == nil)
+        // Skip is a flag layered on top of the assignment, not a deletion — the
+        // meal must survive so a quick undo restores it without a refetch.
+        #expect(updatedMonday.recipe == monday.recipe)
+        #expect(updatedMonday.mealTitle == monday.mealTitle)
         #expect(store.skippedDays.contains(.monday) == true)
         #expect(store.hasPendingSync == true)
         #expect(store.mutationError == L10n.string("error.week.pendingSync"))
+    }
+
+    @MainActor
+    @Test func toggleSkipThenUndoRestoresTheMealWithoutARefetch() async {
+        let store = WeekStore(apiClient: CapturingWeekStoreAPIClient())
+        store.seedForUITests()
+
+        let monday = store.dayRows.first { $0.weekday == .monday }!
+        #expect(monday.recipe != nil)
+        let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
+        let userID = "33333333-3333-3333-3333-333333333333"
+
+        await store.toggleSkip(day: monday, household: household, userID: userID)
+        let skippedMonday = store.dayRows.first { $0.weekday == .monday }!
+        #expect(skippedMonday.isSkipped == true)
+        #expect(skippedMonday.recipe == monday.recipe)
+
+        await store.toggleSkip(day: skippedMonday, household: household, userID: userID)
+        let restoredMonday = store.dayRows.first { $0.weekday == .monday }!
+        #expect(restoredMonday.isSkipped == false)
+        #expect(restoredMonday.recipe == monday.recipe)
+        #expect(restoredMonday.mealTitle == monday.mealTitle)
     }
 
     @MainActor

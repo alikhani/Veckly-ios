@@ -127,7 +127,7 @@ private enum TestRecipes {
         prepTimeMinutes: 10,
         cookTimeMinutes: 15,
         ingredients: [DraftIngredient(item: "Pasta", amount: "400", unit: "g")],
-        steps: ["Boil pasta"]
+        steps: [StepItem("Boil pasta")]
     )
 
     static func recipe(id: String, title: String) -> FullRecipe {
@@ -162,7 +162,7 @@ private enum TestRecipes {
                     category: nil
                 )
             },
-            steps: draft.steps.map { RecipeStep(text: $0) },
+            steps: draft.steps.map { RecipeStep(text: $0.text) },
             userVote: nil
         )
     }

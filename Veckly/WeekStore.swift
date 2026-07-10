@@ -551,6 +551,11 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.recipe = recipe
     }
 
+    /// Skip is a flag layered on top of an existing meal assignment, not a
+    /// deletion — it never clears `recipe`/`mealTitle`/`detail`. This matches
+    /// the backend model (`getWeekPlanSummary` returns the assigned recipe
+    /// alongside `state: 'skipped'` whenever one exists) and lets un-skipping
+    /// restore the meal instantly, without a refetch.
     func withSkipped(_ isSkipped: Bool) -> WeekDayRowViewModel {
         WeekDayRowViewModel(
             id: id,
@@ -558,14 +563,14 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             weekdayLabel: weekdayLabel,
             date: date,
             dateLabel: dateLabel,
-            mealTitle: isSkipped ? "" : mealTitle,
-            detail: isSkipped ? "" : detail,
+            mealTitle: mealTitle,
+            detail: detail,
             isToday: isToday,
             isPast: isPast,
             isEmpty: !isSkipped && recipe == nil,
             isLocked: isSkipped ? false : isLocked,
             isSkipped: isSkipped,
-            recipe: isSkipped ? nil : recipe
+            recipe: recipe
         )
     }
 

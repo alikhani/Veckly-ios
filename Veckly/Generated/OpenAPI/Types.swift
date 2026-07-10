@@ -1619,6 +1619,7 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanError/error`.
             internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case NO_RECIPES = "NO_RECIPES"
+                case ALL_RECIPES_EXCLUDED = "ALL_RECIPES_EXCLUDED"
             }
             /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanError/error`.
             internal var error: Components.Schemas.GenerateWeekPlanError.errorPayload
@@ -5744,37 +5745,44 @@ internal enum Components {
         }
         /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan`.
         internal struct UpsertSavedPlan: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/id`.
-            internal var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/createdAt`.
-            internal var createdAt: Swift.String
-            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/label`.
-            internal var label: Swift.String
-            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/state`.
-            internal var state: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/value1`.
+            internal var value1: Components.Schemas.SavedPlan
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/value2`.
+            internal struct Value2Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/value2/createdAt`.
+                internal var createdAt: Foundation.Date?
+                /// Creates a new `Value2Payload`.
+                ///
+                /// - Parameters:
+                ///   - createdAt:
+                internal init(createdAt: Foundation.Date? = nil) {
+                    self.createdAt = createdAt
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case createdAt
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UpsertSavedPlan/value2`.
+            internal var value2: Components.Schemas.UpsertSavedPlan.Value2Payload
             /// Creates a new `UpsertSavedPlan`.
             ///
             /// - Parameters:
-            ///   - id:
-            ///   - createdAt:
-            ///   - label:
-            ///   - state:
+            ///   - value1:
+            ///   - value2:
             internal init(
-                id: Swift.String,
-                createdAt: Swift.String,
-                label: Swift.String,
-                state: Swift.String
+                value1: Components.Schemas.SavedPlan,
+                value2: Components.Schemas.UpsertSavedPlan.Value2Payload
             ) {
-                self.id = id
-                self.createdAt = createdAt
-                self.label = label
-                self.state = state
+                self.value1 = value1
+                self.value2 = value2
             }
-            internal enum CodingKeys: String, CodingKey {
-                case id
-                case createdAt
-                case label
-                case state
+            internal init(from decoder: any Swift.Decoder) throws {
+                self.value1 = try .init(from: decoder)
+                self.value2 = try .init(from: decoder)
+            }
+            internal func encode(to encoder: any Swift.Encoder) throws {
+                try self.value1.encode(to: encoder)
+                try self.value2.encode(to: encoder)
             }
         }
         /// - Remark: Generated from `#/components/schemas/RenameSavedPlan`.

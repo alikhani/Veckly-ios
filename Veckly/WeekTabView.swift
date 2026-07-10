@@ -52,8 +52,6 @@ struct WeekTabView: View {
     @State private var nextWeekIsEmpty: Bool?
     @AppStorage("hasSeenLockExplanation") private var hasSeenLockExplanation = false
     @State private var showLockExplanation = false
-    @AppStorage("hasSeenSwipeHint") private var hasSeenSwipeHint = false
-    @State private var showSwipeHintText = false
 
     private var viewedWeekStartDate: String {
         WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: viewedWeekOffset.rawValue)
@@ -335,17 +333,6 @@ struct WeekTabView: View {
             refreshWeekendNudgeDismissalState()
             Task { await reloadViewedWeek() }
             Task { await refreshNextWeekEmptyState() }
-            if !hasSeenSwipeHint {
-                let eligible = appModel.weekStore.dayRows.first(where: { !$0.isPast && !$0.isSkipped })
-                if eligible != nil {
-                    hasSeenSwipeHint = true
-                    withAnimation { showSwipeHintText = true }
-                    Task {
-                        try? await Task.sleep(for: .seconds(2))
-                        withAnimation { showSwipeHintText = false }
-                    }
-                }
-            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
@@ -642,8 +629,12 @@ struct WeekTabView: View {
         prepBatchCoverage(for: day.date, mealType: .dinner, batches: appModel.prepBatchStore.batches, recipes: appModel.recipeStore.recipes)
     }
 
+    /// A skipped day keeps its `recipe` (skip is a flag layered on top of an
+    /// assignment, not a deletion — see `withSkipped`), so `isSkipped` must be
+    /// checked explicitly here or a skipped "today" could still surface as
+    /// tonight's hero.
     private func isDayConsideredPlanned(_ day: WeekDayRowViewModel) -> Bool {
-        day.recipe != nil || coverage(for: day) != nil
+        !day.isSkipped && (day.recipe != nil || coverage(for: day) != nil)
     }
 
     /// Sheets in SwiftUI can't be swapped directly — presenting a new one
@@ -963,7 +954,6 @@ struct WeekTabView: View {
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 .padding(.bottom, 4)
 
-            let firstEligibleID = listDays.first(where: { !$0.isPast && !$0.isSkipped })?.id
             ForEach(listDays) { day in
                 CompactDayRow(
                     day: day,
@@ -976,25 +966,8 @@ struct WeekTabView: View {
                         }
                         if day.recipe != nil { selectedDayForDetail = day }
                         else if !day.isPast { mealPickerDay = day }
-                    },
-                    onToggleSkip: {
-                        guard let household = appModel.householdStore.activeHousehold else { return }
-                        if let userID = appModel.authSessionStore.userID {
-                            appModel.weekStore.clearMutationError()
-                            Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
-                        } else {
-                            Task { await appModel.handleUnauthorized() }
-                        }
                     }
                 )
-                if showSwipeHintText && day.id == firstEligibleID {
-                    Text(L10n.string("week.swipeHint"))
-                        .font(.caption)
-                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                        .padding(.leading, 56)
-                        .padding(.bottom, 2)
-                        .transition(.opacity)
-                }
                 if day.id != listDays.last?.id {
                     Divider().padding(.leading, 56)
                 }
@@ -1016,7 +989,6 @@ struct CompactDayRow: View {
     var coverage: PrepBatchCoverage? = nil
     var isViewOnly: Bool = false
     let onTap: () -> Void
-    let onToggleSkip: () -> Void
 
     var body: some View {
         Button(action: onTap) {
@@ -1024,7 +996,6 @@ struct CompactDayRow: View {
         }
         .buttonStyle(.plain)
         .opacity(day.isPast ? 0.7 : 1)
-        .modifier(SwipeSkipModifier(day: day, isViewOnly: isViewOnly, onToggleSkip: onToggleSkip))
     }
 
     private var rowContent: some View {
@@ -1102,11 +1073,25 @@ struct CompactDayRow: View {
         }
     }
 
+    /// A skipped day keeps its assigned meal (see `WeekDayRowViewModel.withSkipped`)
+    /// so it's shown here, dimmed, alongside a "Skipped" badge — instead of a
+    /// blank row that would make un-skipping look like it lost the plan.
     private var skippedContent: some View {
         HStack(alignment: .center, spacing: 8) {
+            if !day.mealTitle.isEmpty {
+                Text(day.mealTitle)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                    .lineLimit(1)
+                    .strikethrough(color: VecklyDesign.Colors.inkFaint)
+            }
             Text("meal.skipped")
-                .font(.body)
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(VecklyDesign.Colors.surfaceStrong)
+                .clipShape(Capsule())
             Spacer()
             if !day.isPast && !isViewOnly {
                 Text("meal.plan")
@@ -1168,35 +1153,6 @@ private struct FlowLayout: Layout {
             subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
             x += size.width
             rowHeight = max(rowHeight, size.height)
-        }
-    }
-}
-
-/// Attaches a swipe-to-skip action only when the day is not in the past and
-/// the row isn't in a view-only week (Last week — no planning actions at all).
-/// The condition is resolved outside the swipeActions ViewBuilder so SwiftUI
-/// never receives a conditionally-empty modifier body, which can leave a ghost
-/// swipe handle on some versions of UIKit.
-private struct SwipeSkipModifier: ViewModifier {
-    let day: WeekDayRowViewModel
-    var isViewOnly: Bool = false
-    let onToggleSkip: () -> Void
-
-    func body(content: Content) -> some View {
-        if day.isPast || isViewOnly {
-            content
-        } else {
-            content
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(action: onToggleSkip) {
-                        Label(
-                            day.isSkipped ? L10n.string("meal.plan") : L10n.string("meal.skip"),
-                            systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus"
-                        )
-                    }
-                    .tint(VecklyDesign.Colors.inkMid)
-                    .accessibilityLabel(day.isSkipped ? L10n.format("accessibility.planDay", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
-                }
         }
     }
 }
