@@ -58,6 +58,10 @@ struct RecipeDetailView: View {
 
                 voteRow
 
+                if let fullRecipe, isCommunityRecipe(fullRecipe) {
+                    householdBookmarkRow(recipeID: fullRecipe.id)
+                }
+
                 if isLoadingFull {
                     ProgressView()
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -205,6 +209,34 @@ struct RecipeDetailView: View {
             .font(.title3)
             .accessibilityLabel(L10n.string(currentVote == .down ? "recipes.removeThumbsDown" : "recipes.thumbsDown"))
         }
+    }
+
+    // MARK: - Household bookmark (Plan A3b)
+
+    /// True only for a recipe owned by *another* household — excludes the
+    /// caller's own household recipes (already in the generation pool) and
+    /// builtin recipes (`householdId == nil`, already in every household's
+    /// pool — see `week-plan.ts`'s candidate query, Plan A3a).
+    private func isCommunityRecipe(_ recipe: FullRecipe) -> Bool {
+        guard let recipeHouseholdID = recipe.householdId else { return false }
+        return recipeHouseholdID != householdID
+    }
+
+    private func householdBookmarkRow(recipeID: String) -> some View {
+        let isAdded = appModel.householdSavedRecipesStore.isAdded(recipeID)
+        return Button {
+            Task {
+                await appModel.householdSavedRecipesStore.setAdded(householdID: householdID, recipeID: recipeID, added: !isAdded)
+            }
+        } label: {
+            Label(
+                isAdded ? "recipes.addedToHousehold" : "recipes.addToHousehold",
+                systemImage: isAdded ? "checkmark.circle.fill" : "plus.circle"
+            )
+            .font(.subheadline.weight(.medium))
+        }
+        .tint(isAdded ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+        .buttonStyle(.bordered)
     }
 
     @ViewBuilder

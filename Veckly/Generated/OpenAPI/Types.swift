@@ -36,6 +36,21 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /households/{householdId}/family-cookbook`.
     /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)`.
     func getFamilyCookbook(_ input: Operations.getFamilyCookbook.Input) async throws -> Operations.getFamilyCookbook.Output
+    /// The household's shared bookmark list
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/saved-recipes`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)`.
+    func listHouseholdSavedRecipes(_ input: Operations.listHouseholdSavedRecipes.Input) async throws -> Operations.listHouseholdSavedRecipes.Output
+    /// Add a recipe to the household bookmark list
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/saved-recipes/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)`.
+    func addHouseholdSavedRecipe(_ input: Operations.addHouseholdSavedRecipe.Input) async throws -> Operations.addHouseholdSavedRecipe.Output
+    /// Remove a recipe from the household bookmark list
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/saved-recipes/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)`.
+    func removeHouseholdSavedRecipe(_ input: Operations.removeHouseholdSavedRecipe.Input) async throws -> Operations.removeHouseholdSavedRecipe.Output
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.
@@ -349,6 +364,45 @@ extension APIProtocol {
         try await getFamilyCookbook(Operations.getFamilyCookbook.Input(
             path: path,
             query: query,
+            headers: headers
+        ))
+    }
+    /// The household's shared bookmark list
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/saved-recipes`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)`.
+    internal func listHouseholdSavedRecipes(
+        path: Operations.listHouseholdSavedRecipes.Input.Path,
+        headers: Operations.listHouseholdSavedRecipes.Input.Headers = .init()
+    ) async throws -> Operations.listHouseholdSavedRecipes.Output {
+        try await listHouseholdSavedRecipes(Operations.listHouseholdSavedRecipes.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Add a recipe to the household bookmark list
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/saved-recipes/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)`.
+    internal func addHouseholdSavedRecipe(
+        path: Operations.addHouseholdSavedRecipe.Input.Path,
+        headers: Operations.addHouseholdSavedRecipe.Input.Headers = .init()
+    ) async throws -> Operations.addHouseholdSavedRecipe.Output {
+        try await addHouseholdSavedRecipe(Operations.addHouseholdSavedRecipe.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Remove a recipe from the household bookmark list
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/saved-recipes/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)`.
+    internal func removeHouseholdSavedRecipe(
+        path: Operations.removeHouseholdSavedRecipe.Input.Path,
+        headers: Operations.removeHouseholdSavedRecipe.Input.Headers = .init()
+    ) async throws -> Operations.removeHouseholdSavedRecipe.Output {
+        try await removeHouseholdSavedRecipe(Operations.removeHouseholdSavedRecipe.Input(
+            path: path,
             headers: headers
         ))
     }
@@ -1184,6 +1238,235 @@ internal enum Components {
                 case totalFamilyLikedCount
                 case favorites
                 case dueAgain
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecipeIngredient`.
+        internal struct RecipeIngredient: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/item`.
+            internal var item: Swift.String
+            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/amount`.
+            internal var amount: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/unit`.
+            internal var unit: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/category`.
+            internal var category: Swift.String?
+            /// Creates a new `RecipeIngredient`.
+            ///
+            /// - Parameters:
+            ///   - item:
+            ///   - amount:
+            ///   - unit:
+            ///   - category:
+            internal init(
+                item: Swift.String,
+                amount: Swift.String? = nil,
+                unit: Swift.String? = nil,
+                category: Swift.String? = nil
+            ) {
+                self.item = item
+                self.amount = amount
+                self.unit = unit
+                self.category = category
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case item
+                case amount
+                case unit
+                case category
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecipeStep`.
+        internal struct RecipeStep: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecipeStep/text`.
+            internal var text: Swift.String
+            /// Creates a new `RecipeStep`.
+            ///
+            /// - Parameters:
+            ///   - text:
+            internal init(text: Swift.String) {
+                self.text = text
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case text
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/Recipe`.
+        internal struct Recipe: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/Recipe/id`.
+            internal var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/householdId`.
+            internal var householdId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Recipe/title`.
+            internal var title: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/description`.
+            internal var description: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/servings`.
+            internal var servings: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/Recipe/ingredients`.
+            internal var ingredients: [Components.Schemas.RecipeIngredient]
+            /// - Remark: Generated from `#/components/schemas/Recipe/steps`.
+            internal var steps: [Components.Schemas.RecipeStep]
+            /// - Remark: Generated from `#/components/schemas/Recipe/tags`.
+            internal var tags: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/Recipe/prepTimeMinutes`.
+            internal var prepTimeMinutes: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/Recipe/cookTimeMinutes`.
+            internal var cookTimeMinutes: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/Recipe/cuisine`.
+            internal var cuisine: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Recipe/proteinSource`.
+            internal var proteinSource: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Recipe/mealWeight`.
+            internal var mealWeight: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Recipe/sourceUrl`.
+            internal var sourceUrl: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Recipe/source`.
+            internal enum sourcePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case user_created = "user_created"
+                case url_import = "url_import"
+                case ai_generated = "ai_generated"
+                case builtin = "builtin"
+            }
+            /// - Remark: Generated from `#/components/schemas/Recipe/source`.
+            internal var source: Components.Schemas.Recipe.sourcePayload
+            /// - Remark: Generated from `#/components/schemas/Recipe/isPublic`.
+            internal var isPublic: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/Recipe/isArchived`.
+            internal var isArchived: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/Recipe/createdBy`.
+            internal var createdBy: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/createdAt`.
+            internal var createdAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/updatedAt`.
+            internal var updatedAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Recipe/userVote`.
+            internal enum userVotePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case up = "up"
+                case down = "down"
+            }
+            /// - Remark: Generated from `#/components/schemas/Recipe/userVote`.
+            internal var userVote: Components.Schemas.Recipe.userVotePayload?
+            /// Creates a new `Recipe`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - householdId:
+            ///   - title:
+            ///   - description:
+            ///   - servings:
+            ///   - ingredients:
+            ///   - steps:
+            ///   - tags:
+            ///   - prepTimeMinutes:
+            ///   - cookTimeMinutes:
+            ///   - cuisine:
+            ///   - proteinSource:
+            ///   - mealWeight:
+            ///   - sourceUrl:
+            ///   - source:
+            ///   - isPublic:
+            ///   - isArchived:
+            ///   - createdBy:
+            ///   - createdAt:
+            ///   - updatedAt:
+            ///   - userVote:
+            internal init(
+                id: Swift.String,
+                householdId: Swift.String? = nil,
+                title: Swift.String,
+                description: Swift.String,
+                servings: Swift.Int,
+                ingredients: [Components.Schemas.RecipeIngredient],
+                steps: [Components.Schemas.RecipeStep],
+                tags: [Swift.String],
+                prepTimeMinutes: Swift.Int? = nil,
+                cookTimeMinutes: Swift.Int? = nil,
+                cuisine: Swift.String? = nil,
+                proteinSource: Swift.String? = nil,
+                mealWeight: Swift.String? = nil,
+                sourceUrl: Swift.String? = nil,
+                source: Components.Schemas.Recipe.sourcePayload,
+                isPublic: Swift.Bool,
+                isArchived: Swift.Bool,
+                createdBy: Swift.String,
+                createdAt: Swift.String,
+                updatedAt: Swift.String,
+                userVote: Components.Schemas.Recipe.userVotePayload? = nil
+            ) {
+                self.id = id
+                self.householdId = householdId
+                self.title = title
+                self.description = description
+                self.servings = servings
+                self.ingredients = ingredients
+                self.steps = steps
+                self.tags = tags
+                self.prepTimeMinutes = prepTimeMinutes
+                self.cookTimeMinutes = cookTimeMinutes
+                self.cuisine = cuisine
+                self.proteinSource = proteinSource
+                self.mealWeight = mealWeight
+                self.sourceUrl = sourceUrl
+                self.source = source
+                self.isPublic = isPublic
+                self.isArchived = isArchived
+                self.createdBy = createdBy
+                self.createdAt = createdAt
+                self.updatedAt = updatedAt
+                self.userVote = userVote
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case id
+                case householdId
+                case title
+                case description
+                case servings
+                case ingredients
+                case steps
+                case tags
+                case prepTimeMinutes
+                case cookTimeMinutes
+                case cuisine
+                case proteinSource
+                case mealWeight
+                case sourceUrl
+                case source
+                case isPublic
+                case isArchived
+                case createdBy
+                case createdAt
+                case updatedAt
+                case userVote
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/HouseholdSavedRecipesEnvelope`.
+        internal struct HouseholdSavedRecipesEnvelope: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/HouseholdSavedRecipesEnvelope/recipes`.
+            internal var recipes: [Components.Schemas.Recipe]
+            /// Creates a new `HouseholdSavedRecipesEnvelope`.
+            ///
+            /// - Parameters:
+            ///   - recipes:
+            internal init(recipes: [Components.Schemas.Recipe]) {
+                self.recipes = recipes
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case recipes
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/OkResponse`.
+        internal struct OkResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/OkResponse/ok`.
+            internal var ok: Swift.Bool
+            /// Creates a new `OkResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            internal init(ok: Swift.Bool) {
+                self.ok = ok
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
             }
         }
         /// - Remark: Generated from `#/components/schemas/Household`.
@@ -4595,205 +4878,6 @@ internal enum Components {
                 case state
             }
         }
-        /// - Remark: Generated from `#/components/schemas/RecipeIngredient`.
-        internal struct RecipeIngredient: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/item`.
-            internal var item: Swift.String
-            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/amount`.
-            internal var amount: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/unit`.
-            internal var unit: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/RecipeIngredient/category`.
-            internal var category: Swift.String?
-            /// Creates a new `RecipeIngredient`.
-            ///
-            /// - Parameters:
-            ///   - item:
-            ///   - amount:
-            ///   - unit:
-            ///   - category:
-            internal init(
-                item: Swift.String,
-                amount: Swift.String? = nil,
-                unit: Swift.String? = nil,
-                category: Swift.String? = nil
-            ) {
-                self.item = item
-                self.amount = amount
-                self.unit = unit
-                self.category = category
-            }
-            internal enum CodingKeys: String, CodingKey {
-                case item
-                case amount
-                case unit
-                case category
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/RecipeStep`.
-        internal struct RecipeStep: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/RecipeStep/text`.
-            internal var text: Swift.String
-            /// Creates a new `RecipeStep`.
-            ///
-            /// - Parameters:
-            ///   - text:
-            internal init(text: Swift.String) {
-                self.text = text
-            }
-            internal enum CodingKeys: String, CodingKey {
-                case text
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/Recipe`.
-        internal struct Recipe: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/Recipe/id`.
-            internal var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Recipe/householdId`.
-            internal var householdId: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Recipe/title`.
-            internal var title: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Recipe/description`.
-            internal var description: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Recipe/servings`.
-            internal var servings: Swift.Int
-            /// - Remark: Generated from `#/components/schemas/Recipe/ingredients`.
-            internal var ingredients: [Components.Schemas.RecipeIngredient]
-            /// - Remark: Generated from `#/components/schemas/Recipe/steps`.
-            internal var steps: [Components.Schemas.RecipeStep]
-            /// - Remark: Generated from `#/components/schemas/Recipe/tags`.
-            internal var tags: [Swift.String]
-            /// - Remark: Generated from `#/components/schemas/Recipe/prepTimeMinutes`.
-            internal var prepTimeMinutes: Swift.Int?
-            /// - Remark: Generated from `#/components/schemas/Recipe/cookTimeMinutes`.
-            internal var cookTimeMinutes: Swift.Int?
-            /// - Remark: Generated from `#/components/schemas/Recipe/cuisine`.
-            internal var cuisine: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Recipe/proteinSource`.
-            internal var proteinSource: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Recipe/mealWeight`.
-            internal var mealWeight: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Recipe/sourceUrl`.
-            internal var sourceUrl: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Recipe/source`.
-            internal enum sourcePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                case user_created = "user_created"
-                case url_import = "url_import"
-                case ai_generated = "ai_generated"
-                case builtin = "builtin"
-            }
-            /// - Remark: Generated from `#/components/schemas/Recipe/source`.
-            internal var source: Components.Schemas.Recipe.sourcePayload
-            /// - Remark: Generated from `#/components/schemas/Recipe/isPublic`.
-            internal var isPublic: Swift.Bool
-            /// - Remark: Generated from `#/components/schemas/Recipe/isArchived`.
-            internal var isArchived: Swift.Bool
-            /// - Remark: Generated from `#/components/schemas/Recipe/createdBy`.
-            internal var createdBy: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Recipe/createdAt`.
-            internal var createdAt: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Recipe/updatedAt`.
-            internal var updatedAt: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Recipe/userVote`.
-            internal enum userVotePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                case up = "up"
-                case down = "down"
-            }
-            /// - Remark: Generated from `#/components/schemas/Recipe/userVote`.
-            internal var userVote: Components.Schemas.Recipe.userVotePayload?
-            /// Creates a new `Recipe`.
-            ///
-            /// - Parameters:
-            ///   - id:
-            ///   - householdId:
-            ///   - title:
-            ///   - description:
-            ///   - servings:
-            ///   - ingredients:
-            ///   - steps:
-            ///   - tags:
-            ///   - prepTimeMinutes:
-            ///   - cookTimeMinutes:
-            ///   - cuisine:
-            ///   - proteinSource:
-            ///   - mealWeight:
-            ///   - sourceUrl:
-            ///   - source:
-            ///   - isPublic:
-            ///   - isArchived:
-            ///   - createdBy:
-            ///   - createdAt:
-            ///   - updatedAt:
-            ///   - userVote:
-            internal init(
-                id: Swift.String,
-                householdId: Swift.String? = nil,
-                title: Swift.String,
-                description: Swift.String,
-                servings: Swift.Int,
-                ingredients: [Components.Schemas.RecipeIngredient],
-                steps: [Components.Schemas.RecipeStep],
-                tags: [Swift.String],
-                prepTimeMinutes: Swift.Int? = nil,
-                cookTimeMinutes: Swift.Int? = nil,
-                cuisine: Swift.String? = nil,
-                proteinSource: Swift.String? = nil,
-                mealWeight: Swift.String? = nil,
-                sourceUrl: Swift.String? = nil,
-                source: Components.Schemas.Recipe.sourcePayload,
-                isPublic: Swift.Bool,
-                isArchived: Swift.Bool,
-                createdBy: Swift.String,
-                createdAt: Swift.String,
-                updatedAt: Swift.String,
-                userVote: Components.Schemas.Recipe.userVotePayload? = nil
-            ) {
-                self.id = id
-                self.householdId = householdId
-                self.title = title
-                self.description = description
-                self.servings = servings
-                self.ingredients = ingredients
-                self.steps = steps
-                self.tags = tags
-                self.prepTimeMinutes = prepTimeMinutes
-                self.cookTimeMinutes = cookTimeMinutes
-                self.cuisine = cuisine
-                self.proteinSource = proteinSource
-                self.mealWeight = mealWeight
-                self.sourceUrl = sourceUrl
-                self.source = source
-                self.isPublic = isPublic
-                self.isArchived = isArchived
-                self.createdBy = createdBy
-                self.createdAt = createdAt
-                self.updatedAt = updatedAt
-                self.userVote = userVote
-            }
-            internal enum CodingKeys: String, CodingKey {
-                case id
-                case householdId
-                case title
-                case description
-                case servings
-                case ingredients
-                case steps
-                case tags
-                case prepTimeMinutes
-                case cookTimeMinutes
-                case cuisine
-                case proteinSource
-                case mealWeight
-                case sourceUrl
-                case source
-                case isPublic
-                case isArchived
-                case createdBy
-                case createdAt
-                case updatedAt
-                case userVote
-            }
-        }
         /// - Remark: Generated from `#/components/schemas/CreateRecipe`.
         internal struct CreateRecipe: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/CreateRecipe/title`.
@@ -5003,21 +5087,6 @@ internal enum Components {
             }
             internal enum CodingKeys: String, CodingKey {
                 case recipes
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/OkResponse`.
-        internal struct OkResponse: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/OkResponse/ok`.
-            internal var ok: Swift.Bool
-            /// Creates a new `OkResponse`.
-            ///
-            /// - Parameters:
-            ///   - ok:
-            internal init(ok: Swift.Bool) {
-                self.ok = ok
-            }
-            internal enum CodingKeys: String, CodingKey {
-                case ok
             }
         }
         /// - Remark: Generated from `#/components/schemas/RecipeFillInIngredient`.
@@ -7119,6 +7188,614 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.getFamilyCookbook.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// The household's shared bookmark list
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/saved-recipes`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)`.
+    internal enum listHouseholdSavedRecipes {
+        internal static let id: Swift.String = "listHouseholdSavedRecipes"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.listHouseholdSavedRecipes.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listHouseholdSavedRecipes.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listHouseholdSavedRecipes.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listHouseholdSavedRecipes.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.listHouseholdSavedRecipes.Input.Path,
+                headers: Operations.listHouseholdSavedRecipes.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.HouseholdSavedRecipesEnvelope)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.HouseholdSavedRecipesEnvelope {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listHouseholdSavedRecipes.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listHouseholdSavedRecipes.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Household-saved recipes
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listHouseholdSavedRecipes.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listHouseholdSavedRecipes.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listHouseholdSavedRecipes.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listHouseholdSavedRecipes.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.listHouseholdSavedRecipes.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/get(listHouseholdSavedRecipes)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.listHouseholdSavedRecipes.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Add a recipe to the household bookmark list
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/saved-recipes/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)`.
+    internal enum addHouseholdSavedRecipe {
+        internal static let id: Swift.String = "addHouseholdSavedRecipe"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/POST/path/recipeId`.
+                internal var recipeId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - recipeId:
+                internal init(
+                    householdId: Swift.String,
+                    recipeId: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.recipeId = recipeId
+                }
+            }
+            internal var path: Operations.addHouseholdSavedRecipe.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.addHouseholdSavedRecipe.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.addHouseholdSavedRecipe.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.addHouseholdSavedRecipe.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.addHouseholdSavedRecipe.Input.Path,
+                headers: Operations.addHouseholdSavedRecipe.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/POST/responses/201/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.addHouseholdSavedRecipe.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.addHouseholdSavedRecipe.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Recipe added, or already added
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.addHouseholdSavedRecipe.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            internal var created: Operations.addHouseholdSavedRecipe.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.addHouseholdSavedRecipe.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.addHouseholdSavedRecipe.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found, caller is not a member, or recipe not found
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.addHouseholdSavedRecipe.Output.NotFound)
+            /// Household not found, caller is not a member, or recipe not found
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/post(addHouseholdSavedRecipe)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.addHouseholdSavedRecipe.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Remove a recipe from the household bookmark list
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/saved-recipes/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)`.
+    internal enum removeHouseholdSavedRecipe {
+        internal static let id: Swift.String = "removeHouseholdSavedRecipe"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/DELETE/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/DELETE/path/recipeId`.
+                internal var recipeId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - recipeId:
+                internal init(
+                    householdId: Swift.String,
+                    recipeId: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.recipeId = recipeId
+                }
+            }
+            internal var path: Operations.removeHouseholdSavedRecipe.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/DELETE/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.removeHouseholdSavedRecipe.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.removeHouseholdSavedRecipe.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.removeHouseholdSavedRecipe.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.removeHouseholdSavedRecipe.Input.Path,
+                headers: Operations.removeHouseholdSavedRecipe.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/DELETE/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/saved-recipes/{recipeId}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.removeHouseholdSavedRecipe.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.removeHouseholdSavedRecipe.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Recipe removed, or was not on the list
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.removeHouseholdSavedRecipe.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.removeHouseholdSavedRecipe.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.removeHouseholdSavedRecipe.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.removeHouseholdSavedRecipe.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.removeHouseholdSavedRecipe.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/saved-recipes/{recipeId}/delete(removeHouseholdSavedRecipe)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.removeHouseholdSavedRecipe.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):

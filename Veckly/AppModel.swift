@@ -15,6 +15,7 @@ final class AppModel {
     let feedbackStore: FeedbackStore
     let recipeRecommendationStore: RecipeRecommendationStore
     let familyCookbookStore: FamilyCookbookStore
+    let householdSavedRecipesStore: HouseholdSavedRecipesStore
     let userProfileStore: UserProfileStore
     let sundayReminderScheduler = SundayReminderScheduler()
     private let usesSeededCoreReader: Bool
@@ -39,6 +40,7 @@ final class AppModel {
         self.feedbackStore = FeedbackStore(apiClient: apiClient)
         self.recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
         self.familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
+        self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)
 
         if usesSeededCoreReader {
@@ -142,6 +144,7 @@ final class AppModel {
             feedbackStore.reset()
             recipeRecommendationStore.reset()
             familyCookbookStore.reset()
+            householdSavedRecipesStore.reset()
         }
         // Keep household-scoped profile/member context in sync with week/shopping
         // data when the active household changes after a switch/join/leave/delete.
@@ -174,6 +177,7 @@ final class AppModel {
         feedbackStore.reset()
         recipeRecommendationStore.reset()
         familyCookbookStore.reset()
+        householdSavedRecipesStore.reset()
         userProfileStore.reset()
     }
 

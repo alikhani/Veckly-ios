@@ -258,6 +258,7 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
     let steps: [RecipeStep]
     let userVote: String? // "up" | "down" | nil
     let cuisine: String?
+    let householdId: String?
 
     var isLiked: Bool { userVote == "up" }
 
@@ -272,7 +273,8 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
         ingredients: [RecipeIngredient],
         steps: [RecipeStep],
         userVote: String?,
-        cuisine: String? = nil
+        cuisine: String? = nil,
+        householdId: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -285,6 +287,7 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
         self.steps = steps
         self.userVote = userVote
         self.cuisine = cuisine
+        self.householdId = householdId
     }
 }
 

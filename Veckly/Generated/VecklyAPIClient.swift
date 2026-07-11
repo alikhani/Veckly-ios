@@ -106,6 +106,34 @@ struct VecklyAPIClient {
         }
     }
 
+    func addHouseholdSavedRecipe(householdID: String, recipeID: String) async throws {
+        let output = try await _client.addHouseholdSavedRecipe(path: .init(householdId: householdID, recipeId: recipeID))
+        switch output {
+        case .created:
+            return
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func removeHouseholdSavedRecipe(householdID: String, recipeID: String) async throws {
+        let output = try await _client.removeHouseholdSavedRecipe(path: .init(householdId: householdID, recipeId: recipeID))
+        switch output {
+        case .ok:
+            return
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
         let output = try await _client.getShoppingListSummary(
             path: .init(householdId: householdID, weekStartDate: weekStartDate)
@@ -1016,7 +1044,8 @@ private extension Components.Schemas.Recipe {
             ingredients: ingredients.map(\.appModel),
             steps: steps.map(\.appModel),
             userVote: userVote?.rawValue,
-            cuisine: cuisine
+            cuisine: cuisine,
+            householdId: householdId
         )
     }
 }

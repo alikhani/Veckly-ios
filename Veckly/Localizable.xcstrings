@@ -4046,6 +4046,38 @@
         }
       }
     },
+    "recipes.addToHousehold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to household"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lägg till i hushållet"
+          }
+        }
+      }
+    },
+    "recipes.addedToHousehold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to household"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tillagd i hushållet"
+          }
+        }
+      }
+    },
     "recipes.all": {
       "extractionState": "stale",
       "localizations": {
