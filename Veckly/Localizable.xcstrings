@@ -1628,6 +1628,54 @@
         }
       }
     },
+    "household.cookbook.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your cookbook: %d dishes you love"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er kokbok: %d rätter ni gillar"
+          }
+        }
+      }
+    },
+    "household.cookbook.timesCooked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooked %d times"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagad %d gånger"
+          }
+        }
+      }
+    },
+    "household.cookbook.dueAgain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time again?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dags igen?"
+          }
+        }
+      }
+    },
     "household.cookingDays": {
       "localizations": {
         "en": {

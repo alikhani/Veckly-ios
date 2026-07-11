@@ -370,6 +370,23 @@ struct FamilyRecap: Equatable {
     }
 }
 
+/// D3's "Er familj"-panel — the signed-in family member's own liked recipes
+/// (feedback is per-user; see `getFamilyCookbook`'s backend doc comment),
+/// split into still-active favorites and ones due for a repeat.
+struct FamilyCookbook: Equatable {
+    let totalFamilyLikedCount: Int
+    let favorites: [Recipe]
+    let dueAgain: [Recipe]
+
+    struct Recipe: Equatable, Identifiable {
+        let recipeID: String
+        let title: String
+        let timesCooked: Int
+        let weeksSinceCooked: Int
+        var id: String { recipeID }
+    }
+}
+
 struct HouseholdInvite: Identifiable, Equatable {
     let id: String
     let token: String

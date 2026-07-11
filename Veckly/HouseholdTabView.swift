@@ -40,6 +40,7 @@ struct HouseholdTabView: View {
                     householdErrorView
                 } else {
                     householdSummary
+                    familyCookbookSection
                     householdSection
                 }
                 appSection
@@ -50,6 +51,10 @@ struct HouseholdTabView: View {
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
         .task(id: appModel.householdStore.activeHousehold?.id) { await appModel.userProfileStore.load() }
+        .task(id: appModel.householdStore.activeHousehold?.id) {
+            guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
+            await appModel.familyCookbookStore.loadIfNeeded(householdID: householdID)
+        }
         .confirmationDialog(
             deleteHouseholdConfirmationTitle,
             isPresented: $showDeleteHouseholdConfirmation,
@@ -158,6 +163,45 @@ struct HouseholdTabView: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    // D3 ("Er familj"-panel): framed as a growing family cookbook, never as
+    // a dashboard — a headline count, a short favorites list, and a gentle
+    // "time again?" nudge, all reading data that already exists (feedback +
+    // planning history). Hidden entirely until there's something to show —
+    // no empty-state copy for a brand-new household.
+    @ViewBuilder
+    private var familyCookbookSection: some View {
+        if let household, let cookbook = appModel.familyCookbookStore.cookbook(for: household.id), cookbook.totalFamilyLikedCount > 0 {
+            VecklyCard {
+                VStack(alignment: .leading, spacing: VecklyDesign.Spacing.medium) {
+                    Text(L10n.format("household.cookbook.title", cookbook.totalFamilyLikedCount))
+                        .font(VecklyDesign.Typography.displayHeading(size: 20))
+                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+                    ForEach(cookbook.favorites.prefix(5)) { recipe in
+                        cookbookRow(title: recipe.title, detail: L10n.format("household.cookbook.timesCooked", recipe.timesCooked))
+                    }
+
+                    ForEach(cookbook.dueAgain.prefix(3)) { recipe in
+                        cookbookRow(title: recipe.title, detail: L10n.string("household.cookbook.dueAgain"))
+                    }
+                }
+            }
+        }
+    }
+
+    private func cookbookRow(title: String, detail: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                .lineLimit(1)
+            Spacer()
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+        }
     }
 
     private var householdSwitcher: some View {

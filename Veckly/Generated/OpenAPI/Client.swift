@@ -282,6 +282,81 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// The household's liked recipes, framed as a growing family cookbook
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/family-cookbook`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)`.
+    internal func getFamilyCookbook(_ input: Operations.getFamilyCookbook.Input) async throws -> Operations.getFamilyCookbook.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.getFamilyCookbook.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/family-cookbook",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "weekStartDate",
+                    value: input.query.weekStartDate
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.getFamilyCookbook.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.FamilyCookbook.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.

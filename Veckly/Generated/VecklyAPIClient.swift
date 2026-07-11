@@ -82,6 +82,30 @@ struct VecklyAPIClient {
         }
     }
 
+    func familyCookbook(householdID: String, weekStartDate: String) async throws -> FamilyCookbook {
+        let output = try await _client.getFamilyCookbook(path: .init(householdId: householdID), query: .init(weekStartDate: weekStartDate))
+        switch output {
+        case let .ok(response):
+            let body = try response.body.json
+            func mapRecipe(_ recipe: Components.Schemas.FamilyCookbookRecipe) -> FamilyCookbook.Recipe {
+                FamilyCookbook.Recipe(recipeID: recipe.recipeId, title: recipe.title, timesCooked: recipe.timesCooked, weeksSinceCooked: recipe.weeksSinceCooked)
+            }
+            return FamilyCookbook(
+                totalFamilyLikedCount: body.totalFamilyLikedCount,
+                favorites: body.favorites.map(mapRecipe),
+                dueAgain: body.dueAgain.map(mapRecipe)
+            )
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
         let output = try await _client.getShoppingListSummary(
             path: .init(householdId: householdID, weekStartDate: weekStartDate)

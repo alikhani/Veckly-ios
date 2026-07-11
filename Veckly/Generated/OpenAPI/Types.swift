@@ -31,6 +31,11 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /households/{householdId}/recap`.
     /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)`.
     func getFamilyRecap(_ input: Operations.getFamilyRecap.Input) async throws -> Operations.getFamilyRecap.Output
+    /// The household's liked recipes, framed as a growing family cookbook
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/family-cookbook`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)`.
+    func getFamilyCookbook(_ input: Operations.getFamilyCookbook.Input) async throws -> Operations.getFamilyCookbook.Output
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.
@@ -329,6 +334,21 @@ extension APIProtocol {
     ) async throws -> Operations.getFamilyRecap.Output {
         try await getFamilyRecap(Operations.getFamilyRecap.Input(
             path: path,
+            headers: headers
+        ))
+    }
+    /// The household's liked recipes, framed as a growing family cookbook
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/family-cookbook`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)`.
+    internal func getFamilyCookbook(
+        path: Operations.getFamilyCookbook.Input.Path,
+        query: Operations.getFamilyCookbook.Input.Query,
+        headers: Operations.getFamilyCookbook.Input.Headers = .init()
+    ) async throws -> Operations.getFamilyCookbook.Output {
+        try await getFamilyCookbook(Operations.getFamilyCookbook.Input(
+            path: path,
+            query: query,
             headers: headers
         ))
     }
@@ -1100,6 +1120,70 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case plannedWeekCount
                 case topRecipeThisMonth
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe`.
+        internal struct FamilyCookbookRecipe: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/recipeId`.
+            internal var recipeId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/title`.
+            internal var title: Swift.String
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/timesCooked`.
+            internal var timesCooked: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/weeksSinceCooked`.
+            internal var weeksSinceCooked: Swift.Int
+            /// Creates a new `FamilyCookbookRecipe`.
+            ///
+            /// - Parameters:
+            ///   - recipeId:
+            ///   - title:
+            ///   - timesCooked:
+            ///   - weeksSinceCooked:
+            internal init(
+                recipeId: Swift.String,
+                title: Swift.String,
+                timesCooked: Swift.Int,
+                weeksSinceCooked: Swift.Int
+            ) {
+                self.recipeId = recipeId
+                self.title = title
+                self.timesCooked = timesCooked
+                self.weeksSinceCooked = weeksSinceCooked
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case recipeId
+                case title
+                case timesCooked
+                case weeksSinceCooked
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/FamilyCookbook`.
+        internal struct FamilyCookbook: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbook/totalFamilyLikedCount`.
+            internal var totalFamilyLikedCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbook/favorites`.
+            internal var favorites: [Components.Schemas.FamilyCookbookRecipe]
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbook/dueAgain`.
+            internal var dueAgain: [Components.Schemas.FamilyCookbookRecipe]
+            /// Creates a new `FamilyCookbook`.
+            ///
+            /// - Parameters:
+            ///   - totalFamilyLikedCount:
+            ///   - favorites:
+            ///   - dueAgain:
+            internal init(
+                totalFamilyLikedCount: Swift.Int,
+                favorites: [Components.Schemas.FamilyCookbookRecipe],
+                dueAgain: [Components.Schemas.FamilyCookbookRecipe]
+            ) {
+                self.totalFamilyLikedCount = totalFamilyLikedCount
+                self.favorites = favorites
+                self.dueAgain = dueAgain
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case totalFamilyLikedCount
+                case favorites
+                case dueAgain
             }
         }
         /// - Remark: Generated from `#/components/schemas/Household`.
@@ -6786,6 +6870,255 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.getFamilyRecap.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// The household's liked recipes, framed as a growing family cookbook
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/family-cookbook`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)`.
+    internal enum getFamilyCookbook {
+        internal static let id: Swift.String = "getFamilyCookbook"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.getFamilyCookbook.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/query`.
+            internal struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/query/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - weekStartDate:
+                internal init(weekStartDate: Swift.String) {
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var query: Operations.getFamilyCookbook.Input.Query
+            /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getFamilyCookbook.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getFamilyCookbook.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getFamilyCookbook.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            internal init(
+                path: Operations.getFamilyCookbook.Input.Path,
+                query: Operations.getFamilyCookbook.Input.Query,
+                headers: Operations.getFamilyCookbook.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/family-cookbook/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.FamilyCookbook)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.FamilyCookbook {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getFamilyCookbook.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getFamilyCookbook.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Household favorites and recipes due for a repeat
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getFamilyCookbook.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getFamilyCookbook.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// weekStartDate must be a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getFamilyCookbook.Output.BadRequest)
+            /// weekStartDate must be a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getFamilyCookbook.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getFamilyCookbook.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getFamilyCookbook.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getFamilyCookbook.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getFamilyCookbook.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
