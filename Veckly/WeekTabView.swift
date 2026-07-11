@@ -921,6 +921,12 @@ struct WeekTabView: View {
                             .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                     }
 
+                    if dayCoverage == nil, let streakWeeks = day.streakWeeks {
+                        Label(L10n.format("week.satiation.hint", streakWeeks), systemImage: "arrow.2.squarepath")
+                            .font(.caption)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    }
+
                     if dayCoverage == nil {
                         FlowLayout(spacing: 8) {
                             Button {

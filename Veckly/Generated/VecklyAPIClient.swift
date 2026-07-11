@@ -828,7 +828,8 @@ private extension Components.Schemas.WeekPlanSummaryDay {
             isLocked: isLocked,
             recipe: recipe?.appModel,
             reason: reason?.appModel,
-            confidence: confidence?.appModel
+            confidence: confidence?.appModel,
+            streakWeeks: streakWeeks
         )
     }
 }

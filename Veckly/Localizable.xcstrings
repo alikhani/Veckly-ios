@@ -5286,6 +5286,22 @@
         }
       }
     },
+    "week.satiation.hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d weeks running — give it a rest?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d veckor i rad — vila den en vecka?"
+          }
+        }
+      }
+    },
     "week.empty.eyebrow": {
       "localizations": {
         "en": {

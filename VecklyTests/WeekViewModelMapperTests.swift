@@ -111,6 +111,73 @@ struct WeekViewModelMapperTests {
         #expect(locked.confidence == .ok)
     }
 
+    @Test func mapsStreakWeeksFromASatiationEligibleMeal() {
+        let recipe = WeekSummaryRecipe(
+            id: "55555555-5555-5555-5555-555555555555",
+            title: "Friday Salmon",
+            description: "Weekend salmon",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 20,
+            tags: []
+        )
+        let summary = WeekSummary(
+            household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+            weekStartDate: "2026-06-08",
+            updatedAt: nil,
+            days: [
+                WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: recipe, streakWeeks: 3),
+            ]
+        )
+        let today = WeekCalendar.date(from: "2026-06-08")!
+
+        let mapped = WeekViewModelMapper.map(summary: summary, today: today)
+
+        #expect(mapped.days.first?.streakWeeks == 3)
+    }
+
+    @Test func skippingAndLockingPreserveStreakWeeks() {
+        let recipe = WeekSummaryRecipe(
+            id: "66666666-6666-6666-6666-666666666666",
+            title: "Friday Salmon",
+            description: "Weekend salmon",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 20,
+            tags: []
+        )
+        let summary = WeekSummary(
+            household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+            weekStartDate: "2026-06-08",
+            updatedAt: nil,
+            days: [
+                WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: recipe, streakWeeks: 4),
+            ]
+        )
+        let today = WeekCalendar.date(from: "2026-06-08")!
+        let day = WeekViewModelMapper.map(summary: summary, today: today).days[0]
+
+        #expect(day.withSkipped(true).streakWeeks == 4)
+        #expect(day.withLocked(true).streakWeeks == 4)
+    }
+
+    @Test func manualReassignmentClearsStreakWeeks() {
+        let recipe = WeekSummaryRecipe(
+            id: "77777777-7777-7777-7777-777777777777",
+            title: "Tuesday Tacos",
+            description: "Quick weeknight tacos",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 15,
+            tags: []
+        )
+        let generated = WeekViewModelMapper.emptyRows(weekStartDate: "2026-06-08")[0]
+
+        let manuallyAssigned = generated.withPlannedRecipe(recipe)
+
+        #expect(manuallyAssigned.streakWeeks == nil)
+    }
+
     @Test func withPlannedRecipeAppliesRecipeWhilePreservingDayIdentity() {
         let empty = WeekViewModelMapper.emptyRows(weekStartDate: "2026-06-08")[0].withLocked(true)
         let recipe = WeekSummaryRecipe(

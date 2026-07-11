@@ -2753,6 +2753,8 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/confidence`.
             internal var confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload?
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/streakWeeks`.
+            internal var streakWeeks: Swift.Int?
             /// Creates a new `WeekPlanSummaryDay`.
             ///
             /// - Parameters:
@@ -2763,6 +2765,7 @@ internal enum Components {
             ///   - recipe:
             ///   - reason:
             ///   - confidence:
+            ///   - streakWeeks:
             internal init(
                 dayOfWeek: Components.Schemas.WeekPlanSummaryDay.dayOfWeekPayload,
                 date: Swift.String,
@@ -2770,7 +2773,8 @@ internal enum Components {
                 isLocked: Swift.Bool,
                 recipe: Components.Schemas.WeekPlanSummaryRecipe? = nil,
                 reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload? = nil,
-                confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload? = nil
+                confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload? = nil,
+                streakWeeks: Swift.Int? = nil
             ) {
                 self.dayOfWeek = dayOfWeek
                 self.date = date
@@ -2779,6 +2783,7 @@ internal enum Components {
                 self.recipe = recipe
                 self.reason = reason
                 self.confidence = confidence
+                self.streakWeeks = streakWeeks
             }
             internal enum CodingKeys: String, CodingKey {
                 case dayOfWeek
@@ -2788,6 +2793,7 @@ internal enum Components {
                 case recipe
                 case reason
                 case confidence
+                case streakWeeks
             }
         }
         /// - Remark: Generated from `#/components/schemas/WeekPlanSummary`.

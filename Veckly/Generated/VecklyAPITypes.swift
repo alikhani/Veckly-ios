@@ -35,6 +35,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
     let recipe: WeekSummaryRecipe?
     let reason: AssignmentReason?
     let confidence: AssignmentConfidence?
+    let streakWeeks: Int?
 
     var id: String { date }
 
@@ -45,7 +46,8 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         isLocked: Bool = false,
         recipe: WeekSummaryRecipe?,
         reason: AssignmentReason? = nil,
-        confidence: AssignmentConfidence? = nil
+        confidence: AssignmentConfidence? = nil,
+        streakWeeks: Int? = nil
     ) {
         self.dayOfWeek = dayOfWeek
         self.date = date
@@ -54,6 +56,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         self.recipe = recipe
         self.reason = reason
         self.confidence = confidence
+        self.streakWeeks = streakWeeks
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -64,6 +67,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         case recipe
         case reason
         case confidence
+        case streakWeeks
     }
 
     init(from decoder: Decoder) throws {
@@ -75,6 +79,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         recipe = try container.decodeIfPresent(WeekSummaryRecipe.self, forKey: .recipe)
         reason = try container.decodeIfPresent(AssignmentReason.self, forKey: .reason)
         confidence = try container.decodeIfPresent(AssignmentConfidence.self, forKey: .confidence)
+        streakWeeks = try container.decodeIfPresent(Int.self, forKey: .streakWeeks)
     }
 }
 

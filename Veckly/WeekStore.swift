@@ -523,6 +523,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
     let recipe: WeekSummaryRecipe?
     let reason: AssignmentReason?
     let confidence: AssignmentConfidence?
+    let streakWeeks: Int?
 
     init(
         id: String,
@@ -539,7 +540,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         isSkipped: Bool = false,
         recipe: WeekSummaryRecipe?,
         reason: AssignmentReason? = nil,
-        confidence: AssignmentConfidence? = nil
+        confidence: AssignmentConfidence? = nil,
+        streakWeeks: Int? = nil
     ) {
         self.id = id
         self.weekday = weekday
@@ -556,6 +558,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.recipe = recipe
         self.reason = reason
         self.confidence = confidence
+        self.streakWeeks = streakWeeks
     }
 
     /// Skip is a flag layered on top of an existing meal assignment, not a
@@ -579,7 +582,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             isSkipped: isSkipped,
             recipe: recipe,
             reason: reason,
-            confidence: confidence
+            confidence: confidence,
+            streakWeeks: streakWeeks
         )
     }
 
@@ -599,7 +603,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             isSkipped: isSkipped,
             recipe: recipe,
             reason: reason,
-            confidence: confidence
+            confidence: confidence,
+            streakWeeks: streakWeeks
         )
     }
 
@@ -679,7 +684,8 @@ struct WeekViewModelMapper {
             isSkipped: isSkipped,
             recipe: recipe,
             reason: day.reason,
-            confidence: day.confidence
+            confidence: day.confidence,
+            streakWeeks: day.streakWeeks
         )
     }
 
