@@ -37,9 +37,11 @@ final class FamilyCookbookStore {
                 weekStartDate: WeekCalendar.currentWeekStartDate()
             )
         } catch {
-            // Silent fallback — the panel just stays hidden for the rest of
-            // the session rather than surfacing an error for a purely
-            // decorative recognition feature.
+            // Silent fallback — cache an empty cookbook (the panel already
+            // hides itself when `totalFamilyLikedCount == 0`) rather than
+            // leaving the entry unset, which would make `loadIfNeeded` retry
+            // on every subsequent call instead of just once per session.
+            cookbookByHousehold[householdID] = FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: [])
         }
     }
 

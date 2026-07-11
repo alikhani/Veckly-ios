@@ -21,13 +21,23 @@ struct FamilyCookbookStoreTests {
         #expect(store.cookbook(for: "household-1") == cookbook())
     }
 
-    @Test func leavesCookbookNilOnFailureInsteadOfThrowing() async {
+    @Test func cachesAnEmptyCookbookOnFailureInsteadOfThrowing() async {
         let client = StubFamilyCookbookAPIClient(result: .failure(APIError.server(statusCode: 500)))
         let store = FamilyCookbookStore(apiClient: client)
 
         await store.loadIfNeeded(householdID: "household-1")
 
-        #expect(store.cookbook(for: "household-1") == nil)
+        #expect(store.cookbook(for: "household-1") == FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: []))
+    }
+
+    @Test func doesNotRetryAfterAFailureWithinTheSameSession() async {
+        let client = StubFamilyCookbookAPIClient(result: .failure(APIError.server(statusCode: 500)))
+        let store = FamilyCookbookStore(apiClient: client)
+
+        await store.loadIfNeeded(householdID: "household-1")
+        await store.loadIfNeeded(householdID: "household-1")
+
+        #expect(client.callCount == 1)
     }
 
     @Test func onlyCallsTheAPIOnceForTheSameHouseholdWithinASession() async {
