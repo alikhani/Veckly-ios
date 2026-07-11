@@ -362,6 +362,18 @@ struct WeekTabView: View {
             Task { await reloadViewedWeek() }
             Task { await refreshNextWeekEmptyState() }
         }
+        .onChange(of: viewedWeekOffset) { _, _ in
+            // The undo banner replays writes against `context.weekStartDate`
+            // by matching rows on weekday only, with no check that the
+            // currently-loaded `dayRows` still belong to that week — so if
+            // the user browses to a different week while the banner is still
+            // up, a tap on "Undo" would overwrite the *other* week's rows
+            // with the regenerated week's snapshot. Simplest safe fix: the
+            // banner only makes sense for the week it was generated for, so
+            // drop it the moment the user navigates away from that week.
+            regenerateUndoDismissTask?.cancel()
+            regenerateUndoContext = nil
+        }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
             // Handles the app being backgrounded over a week/day boundary
@@ -415,6 +427,13 @@ struct WeekTabView: View {
             return
         }
 
+        // Captured once, up front — `viewedWeekStartDate` is a computed
+        // property that tracks live navigation, and the API call below can
+        // take long enough for the user to browse to a different week
+        // before it resolves. Everything about *this* generate run (the
+        // snapshot, the API call, and the undo banner it may offer) must
+        // stay pinned to the week it was actually generated for.
+        let targetWeekStartDate = viewedWeekStartDate
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isLocked && !$0.isSkipped }
             : []
@@ -424,13 +443,18 @@ struct WeekTabView: View {
             household: household,
             userID: userID,
             regenerate: regenerate,
-            viewedWeekStartDate: viewedWeekStartDate
+            viewedWeekStartDate: targetWeekStartDate
         )
         appModel.shoppingListStore.invalidateCache()
         checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
 
         guard regenerate, appModel.weekStore.mutationError == nil, !preRegenerateSnapshot.isEmpty else { return }
-        presentRegenerateUndo(rows: preRegenerateSnapshot, weekStartDate: viewedWeekStartDate)
+        // Only offer undo if the user is still looking at the week that was
+        // just regenerated — otherwise there's nothing sensible to restore
+        // into the currently-visible week, and no banner should appear for
+        // a week that isn't on screen.
+        guard viewedWeekStartDate == targetWeekStartDate else { return }
+        presentRegenerateUndo(rows: preRegenerateSnapshot, weekStartDate: targetWeekStartDate)
     }
 
     /// Fires the "Veckan är klar" beat the instant the last empty day gets
@@ -457,6 +481,10 @@ struct WeekTabView: View {
         regenerateUndoContext = nil
         guard let household = appModel.householdStore.activeHousehold,
               let userID = appModel.authSessionStore.userID else { return }
+        // Defense in depth alongside the `.onChange(of: viewedWeekOffset)`
+        // dismissal above — never replay a snapshot into a week other than
+        // the one it was taken from.
+        guard context.weekStartDate == viewedWeekStartDate else { return }
 
         Task {
             for row in context.rows {
