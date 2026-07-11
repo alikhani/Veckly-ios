@@ -3374,6 +3374,38 @@
         }
       }
     },
+    "retro.done.weekCount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %d planned together."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vecka %d planerad tillsammans."
+          }
+        }
+      }
+    },
+    "retro.done.topRecipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most cooked in %@: %@."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mest lagat i %@: %@."
+          }
+        }
+      }
+    },
     "accessibility.retro.voteUp": {
       "localizations": {
         "en": {

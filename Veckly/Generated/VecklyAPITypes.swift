@@ -358,6 +358,18 @@ struct MealRecommendation: Equatable, Identifiable {
     var id: String { mealID }
 }
 
+/// D5's Sunday-recap summary — a lightweight, presentation-only read of the
+/// household's planning history (never used for scoring/generation).
+struct FamilyRecap: Equatable {
+    let plannedWeekCount: Int
+    let topRecipeThisMonth: TopRecipe?
+
+    struct TopRecipe: Equatable {
+        let title: String
+        let count: Int
+    }
+}
+
 struct HouseholdInvite: Identifiable, Equatable {
     let id: String
     let token: String

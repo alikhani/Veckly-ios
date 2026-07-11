@@ -3,6 +3,12 @@ import Observation
 
 private let retroResolvedWeekKey = "veckly.retro.resolvedWeek"
 
+protocol RetroCardAPIClient {
+    func familyRecap(householdID: String) async throws -> FamilyRecap
+}
+
+extension VecklyAPIClient: RetroCardAPIClient {}
+
 /// Loads last week's un-rated meals for the Sunday retro ("Hur blev veckan?")
 /// and owns the per-device dismissed/resolved state. Vote taps go straight
 /// through `FeedbackStore` from the view — this model only decides *what* to
@@ -19,6 +25,11 @@ final class RetroCardViewModel {
 
     private(set) var rows: [Row] = []
     private(set) var weekStartDate: String?
+    // D5: fetched alongside `rows` (only when the retro will actually show)
+    // so the done-row can upgrade its copy with recap-copy once collapsed —
+    // silently absent (nil) on any fetch failure, matching the calm,
+    // never-block-the-ritual fallback used elsewhere in this card.
+    private(set) var recap: FamilyRecap?
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -29,7 +40,7 @@ final class RetroCardViewModel {
     /// current user hasn't rated yet. Leaves `rows` empty (card stays hidden)
     /// when last week had nothing planned, everything is already rated, or
     /// the user already dismissed the retro for that week on this device.
-    func load(household: Household, weekStore: WeekStore, feedbackStore: FeedbackStore) async {
+    func load(household: Household, weekStore: WeekStore, feedbackStore: FeedbackStore, apiClient: any RetroCardAPIClient) async {
         let lastWeekStart = WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1)
         weekStartDate = lastWeekStart
 
@@ -43,6 +54,8 @@ final class RetroCardViewModel {
         }
 
         rows = Self.buildRows(days: summary.days, feedbackStore: feedbackStore)
+        guard !rows.isEmpty else { return }
+        recap = try? await apiClient.familyRecap(householdID: household.id)
     }
 
     /// Pure grouping/filter step, split out from `load` so it's testable
@@ -90,6 +103,18 @@ final class RetroCardViewModel {
     private func isDismissed(for weekStartDate: String) -> Bool {
         defaults.string(forKey: retroResolvedWeekKey) == weekStartDate
     }
+
+    /// D5: builds the collapsed done-row's copy — recap-copy when there's
+    /// history to draw on, the original plain confirmation otherwise. Pure
+    /// (and `monthName` injected) so it's testable without a live clock.
+    static func doneCopy(recap: FamilyRecap?, monthName: String) -> String {
+        guard let recap, recap.plannedWeekCount > 0 else {
+            return L10n.string("retro.done")
+        }
+        let weekLine = L10n.format("retro.done.weekCount", recap.plannedWeekCount)
+        guard let topRecipe = recap.topRecipeThisMonth else { return weekLine }
+        return "\(weekLine) \(L10n.format("retro.done.topRecipe", monthName, topRecipe.title))"
+    }
 }
 
 /// "Hur blev veckan?" — a quick, skippable thumbs-up/down pass over last
@@ -110,7 +135,7 @@ struct RetroCard: View {
     var body: some View {
         VecklyCard {
             if isCollapsing {
-                Text("retro.done")
+                Text(RetroCardViewModel.doneCopy(recap: viewModel.recap, monthName: Date.now.formatted(.dateTime.month(.wide))))
                     .font(.subheadline)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
                     .frame(maxWidth: .infinity, alignment: .leading)

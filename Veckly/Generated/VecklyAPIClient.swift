@@ -64,6 +64,24 @@ struct VecklyAPIClient {
         }
     }
 
+    func familyRecap(householdID: String) async throws -> FamilyRecap {
+        let output = try await _client.getFamilyRecap(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(response):
+            let body = try response.body.json
+            return FamilyRecap(
+                plannedWeekCount: body.plannedWeekCount,
+                topRecipeThisMonth: body.topRecipeThisMonth.map { FamilyRecap.TopRecipe(title: $0.title, count: $0.count) }
+            )
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
         let output = try await _client.getShoppingListSummary(
             path: .init(householdId: householdID, weekStartDate: weekStartDate)

@@ -26,6 +26,11 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /households/{householdId}/active-week`.
     /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)`.
     func clearHouseholdActiveWeek(_ input: Operations.clearHouseholdActiveWeek.Input) async throws -> Operations.clearHouseholdActiveWeek.Output
+    /// A lightweight summary of the household's planning history (Sunday retro)
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/recap`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)`.
+    func getFamilyRecap(_ input: Operations.getFamilyRecap.Input) async throws -> Operations.getFamilyRecap.Output
     /// List the households the authenticated user belongs to
     ///
     /// - Remark: HTTP `GET /households/me`.
@@ -313,6 +318,19 @@ extension APIProtocol {
     /// - Remark: Generated from `#/paths//households/{householdId}/active-week/delete(clearHouseholdActiveWeek)`.
     internal func clearHouseholdActiveWeek(path: Operations.clearHouseholdActiveWeek.Input.Path) async throws -> Operations.clearHouseholdActiveWeek.Output {
         try await clearHouseholdActiveWeek(Operations.clearHouseholdActiveWeek.Input(path: path))
+    }
+    /// A lightweight summary of the household's planning history (Sunday retro)
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/recap`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)`.
+    internal func getFamilyRecap(
+        path: Operations.getFamilyRecap.Input.Path,
+        headers: Operations.getFamilyRecap.Input.Headers = .init()
+    ) async throws -> Operations.getFamilyRecap.Output {
+        try await getFamilyRecap(Operations.getFamilyRecap.Input(
+            path: path,
+            headers: headers
+        ))
     }
     /// List the households the authenticated user belongs to
     ///
@@ -1036,6 +1054,52 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case weekStartDate
                 case timezone
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/FamilyRecap`.
+        internal struct FamilyRecap: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/FamilyRecap/plannedWeekCount`.
+            internal var plannedWeekCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/FamilyRecap/topRecipeThisMonth`.
+            internal struct topRecipeThisMonthPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/FamilyRecap/topRecipeThisMonth/title`.
+                internal var title: Swift.String
+                /// - Remark: Generated from `#/components/schemas/FamilyRecap/topRecipeThisMonth/count`.
+                internal var count: Swift.Int
+                /// Creates a new `topRecipeThisMonthPayload`.
+                ///
+                /// - Parameters:
+                ///   - title:
+                ///   - count:
+                internal init(
+                    title: Swift.String,
+                    count: Swift.Int
+                ) {
+                    self.title = title
+                    self.count = count
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case title
+                    case count
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/FamilyRecap/topRecipeThisMonth`.
+            internal var topRecipeThisMonth: Components.Schemas.FamilyRecap.topRecipeThisMonthPayload?
+            /// Creates a new `FamilyRecap`.
+            ///
+            /// - Parameters:
+            ///   - plannedWeekCount:
+            ///   - topRecipeThisMonth:
+            internal init(
+                plannedWeekCount: Swift.Int,
+                topRecipeThisMonth: Components.Schemas.FamilyRecap.topRecipeThisMonthPayload? = nil
+            ) {
+                self.plannedWeekCount = plannedWeekCount
+                self.topRecipeThisMonth = topRecipeThisMonth
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case plannedWeekCount
+                case topRecipeThisMonth
             }
         }
         /// - Remark: Generated from `#/components/schemas/Household`.
@@ -6565,6 +6629,204 @@ internal enum Operations {
             ///
             /// A response with a code that is not documented in the OpenAPI document.
             case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// A lightweight summary of the household's planning history (Sunday retro)
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/recap`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)`.
+    internal enum getFamilyRecap {
+        internal static let id: Swift.String = "getFamilyRecap"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/recap/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/recap/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.getFamilyRecap.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/recap/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getFamilyRecap.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getFamilyRecap.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getFamilyRecap.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getFamilyRecap.Input.Path,
+                headers: Operations.getFamilyRecap.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/recap/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/recap/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.FamilyRecap)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.FamilyRecap {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getFamilyRecap.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getFamilyRecap.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Planned-week count and the most-cooked recipe this calendar month
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getFamilyRecap.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getFamilyRecap.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getFamilyRecap.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getFamilyRecap.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getFamilyRecap.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recap/get(getFamilyRecap)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getFamilyRecap.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
         }
     }
     /// List the households the authenticated user belongs to

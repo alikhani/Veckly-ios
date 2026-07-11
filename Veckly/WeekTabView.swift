@@ -350,7 +350,7 @@ struct WeekTabView: View {
             guard let household = appModel.householdStore.activeHousehold else { return }
             async let week: Void = appModel.weekStore.loadCurrentWeek(household: household)
             async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: WeekCalendar.currentWeekStartDate())
-            async let retro: Void = retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore)
+            async let retro: Void = retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
             _ = await (week, prep, retro)
             await refreshNextWeekEmptyState()
         }
@@ -372,7 +372,7 @@ struct WeekTabView: View {
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     await appModel.weekStore.loadCurrentWeek(household: household)
                     await refreshNextWeekEmptyState()
-                    await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore)
+                    await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
                 }
             }
         }

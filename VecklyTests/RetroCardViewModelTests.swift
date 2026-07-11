@@ -82,6 +82,32 @@ struct RetroCardViewModelTests {
 
         #expect(rows.map(\.recipeID) == ["tacos"])
     }
+
+    @Test func doneCopyFallsBackToThePlainConfirmationWithNoRecap() {
+        let copy = RetroCardViewModel.doneCopy(recap: nil, monthName: "June")
+
+        #expect(copy == L10n.string("retro.done"))
+    }
+
+    @Test func doneCopyFallsBackToThePlainConfirmationWhenNoWeeksArePlannedYet() {
+        let copy = RetroCardViewModel.doneCopy(recap: FamilyRecap(plannedWeekCount: 0, topRecipeThisMonth: nil), monthName: "June")
+
+        #expect(copy == L10n.string("retro.done"))
+    }
+
+    @Test func doneCopyShowsWeekCountAloneWithNoTopRecipe() {
+        let copy = RetroCardViewModel.doneCopy(recap: FamilyRecap(plannedWeekCount: 8, topRecipeThisMonth: nil), monthName: "June")
+
+        #expect(copy == L10n.format("retro.done.weekCount", 8))
+    }
+
+    @Test func doneCopyIncludesTheTopRecipeWhenAvailable() {
+        let recap = FamilyRecap(plannedWeekCount: 8, topRecipeThisMonth: .init(title: "Korvstroganoff", count: 3))
+
+        let copy = RetroCardViewModel.doneCopy(recap: recap, monthName: "June")
+
+        #expect(copy == "\(L10n.format("retro.done.weekCount", 8)) \(L10n.format("retro.done.topRecipe", "June", "Korvstroganoff"))")
+    }
 }
 
 private final class NoopFeedbackStoreAPIClient: FeedbackStoreAPIClient {
