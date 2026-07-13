@@ -163,6 +163,7 @@ struct WeekTabView: View {
                     }
                 } else {
                     tonightHeroCard
+                    weekQualityCard
                     if !isViewingLastWeek || appModel.weekStore.hasPlannedMeals {
                         weekList
                     }
@@ -963,6 +964,61 @@ struct WeekTabView: View {
         let dinnersPart = L10n.format(dinnerCount == 1 ? "week.summary.plannedDinners.one" : "week.summary.plannedDinners.other", dinnerCount)
         let daysPart = L10n.format(dayCount == 1 ? "week.summary.openDays.one" : "week.summary.openDays.other", dayCount)
         return "\(dinnersPart) · \(daysPart)"
+    }
+
+    private var weekQualitySummary: WeekQualitySummary {
+        let prepCoveredDates = Set(appModel.weekStore.dayRows.compactMap { day in
+            coverage(for: day) == nil ? nil : day.date
+        })
+        return WeekQualitySummary.make(days: appModel.weekStore.dayRows, prepCoveredDates: prepCoveredDates)
+    }
+
+    @ViewBuilder
+    private var weekQualityCard: some View {
+        if !isViewingLastWeek, !weekQualitySummary.insights.isEmpty {
+            VecklyCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("week.quality.title")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        .textCase(.uppercase)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(weekQualitySummary.insights) { insight in
+                            Label {
+                                Text(verbatim: weekQualityText(for: insight))
+                                    .font(.subheadline)
+                                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            } icon: {
+                                Image(systemName: insight.icon)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func weekQualityText(for insight: WeekQualitySummary.Insight) -> String {
+        switch insight.kind {
+        case .openDays(let count):
+            L10n.format(count == 1 ? "week.quality.openDays.one" : "week.quality.openDays.other", count)
+        case .quickRhythm(let count):
+            L10n.format(count == 1 ? "week.quality.quick.one" : "week.quality.quick.other", count)
+        case .heavyWeek(let count):
+            L10n.format(count == 1 ? "week.quality.heavy.one" : "week.quality.heavy.other", count)
+        case .prepFriendly(let count):
+            L10n.format(count == 1 ? "week.quality.prep.one" : "week.quality.prep.other", count)
+        case .lowConfidence(let count):
+            L10n.format(count == 1 ? "week.quality.lowConfidence.one" : "week.quality.lowConfidence.other", count)
+        case .goodVariation:
+            L10n.string("week.quality.variation")
+        case .looksReasonable:
+            L10n.string("week.quality.reasonable")
+        }
     }
 
     @ViewBuilder

@@ -6404,6 +6404,214 @@
         }
       }
     },
+    "week.quality.heavy.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One dinner is a little longer — worth checking the day"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En middag tar lite längre tid — värt att kolla dagen"
+          }
+        }
+      }
+    },
+    "week.quality.heavy.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners take a little longer — keep an eye on those days"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar tar lite längre tid — håll koll på de dagarna"
+          }
+        }
+      }
+    },
+    "week.quality.lowConfidence.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One pick is a compromise — swap if it feels off"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ett val är en kompromiss — byt om det känns fel"
+          }
+        }
+      }
+    },
+    "week.quality.lowConfidence.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d picks are compromises — swap if the week feels off"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d val är kompromisser — byt om veckan känns fel"
+          }
+        }
+      }
+    },
+    "week.quality.openDays.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One day still needs a dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En dag behöver fortfarande middag"
+          }
+        }
+      }
+    },
+    "week.quality.openDays.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d days still need dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dagar behöver fortfarande middag"
+          }
+        }
+      }
+    },
+    "week.quality.prep.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One dinner helps carry food forward"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En middag hjälper maten räcka vidare"
+          }
+        }
+      }
+    },
+    "week.quality.prep.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners help carry food forward"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar hjälper maten räcka vidare"
+          }
+        }
+      }
+    },
+    "week.quality.quick.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One quick dinner gives the week breathing room"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En snabb middag ger veckan lite luft"
+          }
+        }
+      }
+    },
+    "week.quality.quick.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d quick dinners give the week breathing room"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d snabba middagar ger veckan lite luft"
+          }
+        }
+      }
+    },
+    "week.quality.reasonable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The week looks practical enough to start from"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckan ser praktisk nog ut att börja från"
+          }
+        }
+      }
+    },
+    "week.quality.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week check"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckokoll"
+          }
+        }
+      }
+    },
+    "week.quality.variation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good variation across the week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bra variation över veckan"
+          }
+        }
+      }
+    },
     "week.regenerate" : {
       "localizations" : {
         "en" : {

@@ -20,6 +20,30 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 12 | Systemspråk: engelska/svenska lokalisering | ✅ Klart (2026-06-18) |
 | 13 | Onboarding cold-start upgrade (go-to dish, prioriteringar, undvik) | 🟡 Pågår (första slice 2026-07-13) |
 | 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
+| 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
+
+---
+
+## Fas 15 — Veckokvalitet och synlig realism
+
+**Status:** 🟡 Pågår — första slice klar 2026-07-13
+
+### Mål
+
+Göra planeringsmotorns praktiska kvalitet begriplig utan att införa poäng, dashboard eller AI-chat. Familjen ska snabbt se om veckan är rimlig: finns luckor, snabb rytm, tunga dagar, prep/rester, kompromisser eller bra variation?
+
+### Vad som gjordes
+
+- Ny `WeekQualitySummary` bygger en lokal, regelbaserad sammanfattning från `WeekDayRowViewModel` och prep coverage-datum.
+- Week-vyn visar ett kompakt `Veckokoll`-kort för aktuell/nästa vecka när veckan har innehåll, max tre insikter.
+- Reglerna prioriterar öppna dagar och låg confidence före positiva signaler, så kortet hjälper först där familjen behöver agera.
+- Positiva signaler täcker snabb vardagsrytm, prep-/restvänliga middagar, variation och en neutral fallback: veckan ser praktisk nog ut att börja från.
+- Ny unit-testfil täcker quick/variation, open/low-confidence-prioritet, prep coverage utan recipe och fallback.
+
+### Kvar i fasen
+
+- Finjustera copy efter verklig beta-feedback: särskilt om “kompromiss” känns för tekniskt eller negativt.
+- Besluta om variation ska bygga på backendens cuisine/protein-signaler om sådana exponeras senare.
 
 ---
 
