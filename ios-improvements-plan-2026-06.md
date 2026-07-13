@@ -19,6 +19,30 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 11 | Shopping list redesign (kategorigruppering, progress, staples) | ✅ Klart (2026-06-17) |
 | 12 | Systemspråk: engelska/svenska lokalisering | ✅ Klart (2026-06-18) |
 | 13 | Onboarding cold-start upgrade (go-to dish, prioriteringar, undvik) | 🟡 Pågår (första slice 2026-07-13) |
+| 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
+
+---
+
+## Fas 14 — Veckan är klar-handoff
+
+**Status:** 🟡 Pågår — första slice klar 2026-07-13
+
+### Mål
+
+Ge planeringssessionen en tydlig och lugn slutpunkt: när sista luckan i nuvarande vecka fylls ska familjen förstå att veckan är redo och direkt kunna gå vidare till inköpslistan.
+
+### Vad som gjordes
+
+- Befintliga `sessionEndBeatCard` byggdes ut i stället för att ersättas, så beteendet är fortsatt lokalt, dismissible och bara kopplat till rätt ögonblick.
+- Kortet visar nu planerade middagar, snabba kvällar när recipe-tid finns, prep-/restvänliga middagar när prep coverage eller tags signalerar det, samt att inköpslistan är redo.
+- Primär CTA leder till shopping-tabben via befintlig tab-callback.
+- Om hushållet är owner-styrt och bara har en medlem visas en lugn invite-nudge med CTA till hushållsfliken.
+- Week-tabben laddar hushållsdetaljer tillsammans med veckan så invite-nudgen baseras på aktuell medlemslista.
+
+### Kvar i fasen
+
+- Ren view model/test för completion summary om kortet växer mer.
+- Beslut om kortet även ska visas när användaren återvänder till en redan komplett vecka, eller bara direkt efter att veckan blev komplett.
 
 ---
 

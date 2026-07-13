@@ -6552,6 +6552,118 @@
         }
       }
     },
+    "week.sessionEnd.inviteCta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share household"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dela hushåll"
+          }
+        }
+      }
+    },
+    "week.sessionEnd.inviteHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning with someone else? Share the household so the shopping list stays in sync."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planerar ni tillsammans? Dela hushållet så hålls inköpslistan synkad."
+          }
+        }
+      }
+    },
+    "week.sessionEnd.prep.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d prep-friendly dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d prepvänlig middag"
+          }
+        }
+      }
+    },
+    "week.sessionEnd.prep.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d prep-friendly dinners"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d prepvänliga middagar"
+          }
+        }
+      }
+    },
+    "week.sessionEnd.quick.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d quick evening"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d snabb kväll"
+          }
+        }
+      }
+    },
+    "week.sessionEnd.quick.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d quick evenings"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d snabba kvällar"
+          }
+        }
+      }
+    },
+    "week.sessionEnd.shoppingReady" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shopping list is ready"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inköpslistan är redo"
+          }
+        }
+      }
+    },
     "week.sessionEnd.title" : {
       "localizations" : {
         "en" : {

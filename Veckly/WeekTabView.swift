@@ -52,6 +52,7 @@ struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
     var onGoToShoppingTab: (() -> Void)? = nil
+    var onGoToHouseholdTab: (() -> Void)? = nil
     @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
     @State private var selectedDayForDetail: WeekDayRowViewModel?
@@ -351,7 +352,8 @@ struct WeekTabView: View {
             async let week: Void = appModel.weekStore.loadCurrentWeek(household: household)
             async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: WeekCalendar.currentWeekStartDate())
             async let retro: Void = retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
-            _ = await (week, prep, retro)
+            async let details: Void = appModel.householdStore.loadHouseholdDetails(householdID: household.id)
+            _ = await (week, prep, retro, details)
             await refreshNextWeekEmptyState()
         }
         .onAppear {
@@ -730,8 +732,23 @@ struct WeekTabView: View {
                     }
 
                     Text(L10n.format(plannedDinnerCount == 1 ? "week.summary.plannedDinners.one" : "week.summary.plannedDinners.other", plannedDinnerCount))
-                        .font(.body)
+                        .font(.body.weight(.medium))
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(sessionEndSummaryRows.enumerated()), id: \.offset) { _, row in
+                            Label {
+                                Text(verbatim: row.text)
+                                    .font(.subheadline)
+                                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            } icon: {
+                                Image(systemName: row.icon)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            }
+                        }
+                    }
+                    .padding(.top, 2)
 
                     Button("week.sessionEnd.cta") {
                         showSessionEndBeat = false
@@ -739,6 +756,21 @@ struct WeekTabView: View {
                     }
                     .buttonStyle(VecklyPrimaryButtonStyle())
                     .padding(.top, 4)
+
+                    if shouldShowSessionEndInviteNudge {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("week.sessionEnd.inviteHint")
+                                .font(.footnote)
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            Button("week.sessionEnd.inviteCta") {
+                                showSessionEndBeat = false
+                                onGoToHouseholdTab?()
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                        }
+                        .padding(.top, 2)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -867,6 +899,58 @@ struct WeekTabView: View {
 
     private var plannedDinnerCount: Int {
         appModel.weekStore.dayRows.filter { !$0.isSkipped && ($0.recipe != nil || coverage(for: $0) != nil) }.count
+    }
+
+    private var quickDinnerCount: Int {
+        appModel.weekStore.dayRows.filter { day in
+            guard !day.isSkipped, let recipe = day.recipe, let totalMinutes = totalMinutes(for: recipe) else { return false }
+            return totalMinutes <= 30
+        }.count
+    }
+
+    private var prepFriendlyDinnerCount: Int {
+        appModel.weekStore.dayRows.filter { day in
+            guard !day.isSkipped else { return false }
+            if coverage(for: day) != nil { return true }
+            guard let recipe = day.recipe else { return false }
+            return recipe.tags.contains { tag in
+                let normalized = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return normalized.contains("leftover")
+                    || normalized.contains("rester")
+                    || normalized.contains("meal prep")
+                    || normalized.contains("batch")
+                    || normalized.contains("storkok")
+            }
+        }.count
+    }
+
+    private var sessionEndSummaryRows: [(icon: String, text: String)] {
+        var rows: [(icon: String, text: String)] = []
+        if quickDinnerCount > 0 {
+            rows.append((
+                icon: "clock",
+                text: L10n.format(quickDinnerCount == 1 ? "week.sessionEnd.quick.one" : "week.sessionEnd.quick.other", quickDinnerCount)
+            ))
+        }
+        if prepFriendlyDinnerCount > 0 {
+            rows.append((
+                icon: "takeoutbag.and.cup.and.straw",
+                text: L10n.format(prepFriendlyDinnerCount == 1 ? "week.sessionEnd.prep.one" : "week.sessionEnd.prep.other", prepFriendlyDinnerCount)
+            ))
+        }
+        rows.append((icon: "cart", text: L10n.string("week.sessionEnd.shoppingReady")))
+        return rows
+    }
+
+    private var shouldShowSessionEndInviteNudge: Bool {
+        guard let household = appModel.householdStore.activeHousehold, household.role == .owner else { return false }
+        return appModel.householdStore.detailsHouseholdID == household.id
+            && appModel.householdStore.members.count <= 1
+    }
+
+    private func totalMinutes(for recipe: WeekSummaryRecipe) -> Int? {
+        let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
+        return total > 0 ? total : nil
     }
 
     private var openDayCount: Int {
