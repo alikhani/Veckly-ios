@@ -18,6 +18,51 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 10 | Onboarding-flöde (hushållsstorlek + planeringsdagar) | ✅ Klart (2026-06-16) |
 | 11 | Shopping list redesign (kategorigruppering, progress, staples) | ✅ Klart (2026-06-17) |
 | 12 | Systemspråk: engelska/svenska lokalisering | ✅ Klart (2026-06-18) |
+| 13 | Onboarding cold-start upgrade (go-to dish, prioriteringar, undvik) | 🟡 Pågår (första slice 2026-07-13) |
+
+---
+
+## Fas 13 — Onboarding cold-start upgrade
+
+**Status:** 🟡 Pågår — första slice klar 2026-07-13
+
+### Mål
+
+Göra första iOS-veckan mer personlig utan att göra onboarding tung. Den nya familjen ska ge Veckly tillräckligt med signaler för att generatorn och familjeminnet ska börja på rätt ställe: vilka dagar de lagar middag, en rätt som brukar fungera, några praktiska prioriteringar och ingredienser att undvika.
+
+### Produktbeslut
+
+Go-to dish sparas som ett hushållsrecept, inte bara som en tillfällig generation-hint. Motivet är att det är familjens första explicita "det här funkar hemma"-signal. `RecipeStore.fillIn` körs best effort för att fylla ingredienser/steg; om AI eller nätverk misslyckas sparas ett title-only-recept via `RecipeStore.createRecipe`, så onboarding aldrig blockeras av AI.
+
+Första veckan autogenereras inte efter onboarding. iOS fortsätter följa den explicita generation-modellen: profilen och go-to-rätten sparas, sedan landar användaren i Week och väljer själv när veckan ska skapas.
+
+### Vad som gjordes
+
+**Onboarding flow**
+- `OnboardingStep` utökades från enbart planeringsdagar till fyra efterföljande steg: planeringsdagar, go-to dish, prioriteringar och undvik-ingredienser.
+- Hushållsstorlek-steget är oförändrat.
+- Prioriteringar använder befintlig `HouseholdPriority`-modell och begränsas till max två val i onboarding för att hålla starten lugn.
+- Undvik-ingredienser samlas som enkel fritextlista och sparas till `avoidIngredients`.
+
+**Profil + recept**
+- `HouseholdStore.saveProfile` får nu onboardingens `priorities` och normaliserade `avoidIngredients` i stället för tomma arrayer.
+- Go-to dish sparas som hushållsrecept. AI fill-in används när möjligt, med title-only fallback.
+
+**Lokalisering**
+- Nya semantiska nycklar lades till i `Localizable.xcstrings` för go-to dish, prioriteringar, undvik-ingredienser och `common.remove`.
+- Copy följer Veckly-rösten: praktisk och lugn, ingen AI-exponering i onboarding.
+
+### Kvar i fasen
+
+- Dedikerad onboarding-testtäckning för att verifiera att profile + go-to dish sparas rätt.
+- Beslut om en lätt dagrytm-fråga hör hemma i onboarding eller om dagrytm ska förbli en Household preferences-yta tills betan visar behov.
+
+### Test/Verifiering
+
+- Build verifierad med:
+  `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'generic/platform=iOS Simulator' build`
+- Regressionsslice verifierad med:
+  `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/AppModelTests`
 
 ---
 

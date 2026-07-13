@@ -547,6 +547,22 @@
         }
       }
     },
+    "common.remove" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort"
+          }
+        }
+      }
+    },
     "common.cancel" : {
       "localizations" : {
         "en" : {
@@ -3217,6 +3233,70 @@
         }
       }
     },
+    "onboarding.avoid.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ingredients added. You can leave this empty."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inga ingredienser tillagda. Du kan lämna det tomt."
+          }
+        }
+      }
+    },
+    "onboarding.avoid.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. peanuts, mushrooms"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "t.ex. jordnötter, svamp"
+          }
+        }
+      }
+    },
+    "onboarding.avoid.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly avoids recipes that include these ingredients."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly undviker recept som innehåller de här ingredienserna."
+          }
+        }
+      }
+    },
+    "onboarding.avoid.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything to avoid?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Något ni vill undvika?"
+          }
+        }
+      }
+    },
     "onboarding.days.subtitle" : {
       "localizations" : {
         "en" : {
@@ -3245,6 +3325,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vilka dagar lagar ni middag?"
+          }
+        }
+      }
+    },
+    "onboarding.goToDish.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. pasta bolognese"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "t.ex. pasta bolognese"
+          }
+        }
+      }
+    },
+    "onboarding.goToDish.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save one reliable dish so Veckly has something familiar to build from."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spara en rätt som brukar fungera, så har Veckly något bekant att bygga från."
+          }
+        }
+      }
+    },
+    "onboarding.goToDish.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's one dinner that works at home?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vilken middag brukar fungera hemma?"
+          }
+        }
+      }
+    },
+    "onboarding.priorities.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose up to two. You can change this later."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Välj upp till två. Du kan ändra det senare."
+          }
+        }
+      }
+    },
+    "onboarding.priorities.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should this week lean toward?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vad ska veckan luta åt?"
           }
         }
       }
