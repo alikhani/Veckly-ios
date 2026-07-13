@@ -516,7 +516,7 @@ struct VecklyAPIClient {
         adults: Int, children: Int,
         priorities: [HouseholdPriority],
         avoidIngredients: [String],
-        selectedDays: [Weekday]
+        selectedDays: [HouseholdDaySelection]
     ) async throws -> HouseholdProfile {
         typealias DayPayload = Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload
         typealias PrioPayload = Components.Schemas.UpsertHouseholdProfile.prioritiesPayloadPayload
@@ -526,8 +526,16 @@ struct VecklyAPIClient {
             priorities: priorities.compactMap { PrioPayload(rawValue: $0.rawValue) },
             avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
             selectedDays: selectedDays.compactMap { item in
-                guard let day = DayPayload.dayPayload(rawValue: item.rawValue) else { return nil }
-                return DayPayload(day: day)
+                guard let day = DayPayload.dayPayload(rawValue: item.day.rawValue) else { return nil }
+                return DayPayload(
+                    day: day,
+                    servingsOverride: item.servingsOverride,
+                    occasion: DayPayload.occasionPayload(rawValue: item.occasion.rawValue),
+                    effortLevel: DayPayload.effortLevelPayload(rawValue: item.effortLevel.rawValue),
+                    leftoversIntent: item.leftoversIntent ? true : nil,
+                    lateEvening: item.lateEvening ? true : nil,
+                    cookingTolerance: DayPayload.cookingTolerancePayload(rawValue: item.cookingTolerance.rawValue)
+                )
             }
         )
         let output = try await _client.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
@@ -917,6 +925,8 @@ private extension Components.Schemas.WeekPlanSummaryDay.reasonPayload {
             return .basedOnFeedback
         case .new_hyphen_for_hyphen_variety:
             return .newForVariety
+        case .quick_hyphen_weekday:
+            return .quickWeekday
         }
     }
 }
@@ -1107,7 +1117,18 @@ private extension Components.Schemas.HouseholdProfile {
             children: children,
             priorities: priorities.compactMap { HouseholdPriority(rawValue: $0.rawValue) },
             avoidIngredients: avoidIngredients,
-            selectedDays: selectedDays.compactMap { Weekday(rawValue: $0.day.rawValue) }
+            selectedDays: selectedDays.compactMap { daySelection in
+                guard let day = Weekday(rawValue: daySelection.day.rawValue) else { return nil }
+                return HouseholdDaySelection(
+                    day: day,
+                    servingsOverride: daySelection.servingsOverride,
+                    occasion: daySelection.occasion.flatMap { DayOccasion(rawValue: $0.rawValue) } ?? .standard,
+                    effortLevel: daySelection.effortLevel.flatMap { DayEffortLevel(rawValue: $0.rawValue) } ?? .standard,
+                    leftoversIntent: daySelection.leftoversIntent ?? false,
+                    lateEvening: daySelection.lateEvening ?? false,
+                    cookingTolerance: daySelection.cookingTolerance.flatMap { DayCookingTolerance(rawValue: $0.rawValue) } ?? .standard
+                )
+            }
         )
     }
 }

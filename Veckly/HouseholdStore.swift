@@ -102,7 +102,7 @@ final class HouseholdStore {
         adults: Int, children: Int,
         priorities: [HouseholdPriority],
         avoidIngredients: [String],
-        selectedDays: [Weekday]
+        selectedDays: [HouseholdDaySelection]
     ) async throws {
         let savedProfile = try await apiClient.saveProfile(
             householdID: householdID,
@@ -214,7 +214,7 @@ final class HouseholdStore {
             children: 1,
             priorities: [.quick, .childFriendly],
             avoidIngredients: [],
-            selectedDays: [.monday, .tuesday, .wednesday, .thursday, .friday]
+            selectedDays: [.monday, .tuesday, .wednesday, .thursday, .friday].map { HouseholdDaySelection(day: $0) }
         )
         detailsHouseholdID = household.id
         detailsLastFetchedAt = Date()
@@ -309,7 +309,7 @@ protocol HouseholdStoreAPIClient {
         children: Int,
         priorities: [HouseholdPriority],
         avoidIngredients: [String],
-        selectedDays: [Weekday]
+        selectedDays: [HouseholdDaySelection]
     ) async throws -> HouseholdProfile
     func createInvite(householdID: String) async throws -> HouseholdInvite
     func listInvites(householdID: String) async throws -> [HouseholdInvite]

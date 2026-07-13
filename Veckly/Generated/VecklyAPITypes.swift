@@ -93,6 +93,7 @@ enum AssignmentReason: String, Decodable {
     case backAfterBreak = "back-after-break"
     case basedOnFeedback = "based-on-feedback"
     case newForVariety = "new-for-variety"
+    case quickWeekday = "quick-weekday"
 
     var label: String {
         switch self {
@@ -101,6 +102,7 @@ enum AssignmentReason: String, Decodable {
         case .backAfterBreak: return L10n.string("week.reason.backAfterBreak")
         case .basedOnFeedback: return L10n.string("week.reason.basedOnFeedback")
         case .newForVariety: return L10n.string("week.reason.newForVariety")
+        case .quickWeekday: return L10n.string("week.reason.quickWeekday")
         }
     }
 }
@@ -334,7 +336,75 @@ struct HouseholdProfile: Equatable {
     let children: Int
     let priorities: [HouseholdPriority]
     let avoidIngredients: [String]
-    let selectedDays: [Weekday]
+    let selectedDays: [HouseholdDaySelection]
+}
+
+enum DayOccasion: String, CaseIterable, Hashable {
+    case standard
+    case guests
+    case treat
+
+    var label: String {
+        switch self {
+        case .standard: return L10n.string("daySettings.occasion.standard")
+        case .guests: return L10n.string("daySettings.occasion.guests")
+        case .treat: return L10n.string("daySettings.occasion.treat")
+        }
+    }
+}
+
+enum DayEffortLevel: String, CaseIterable, Hashable {
+    case standard
+    case busy
+
+    var label: String {
+        switch self {
+        case .standard: return L10n.string("daySettings.effort.standard")
+        case .busy: return L10n.string("daySettings.effort.busy")
+        }
+    }
+}
+
+enum DayCookingTolerance: String, CaseIterable, Hashable {
+    case standard
+    case relaxed
+
+    var label: String {
+        switch self {
+        case .standard: return L10n.string("daySettings.tolerance.standard")
+        case .relaxed: return L10n.string("daySettings.tolerance.relaxed")
+        }
+    }
+}
+
+struct HouseholdDaySelection: Equatable, Identifiable {
+    let day: Weekday
+    var servingsOverride: Int?
+    var occasion: DayOccasion
+    var effortLevel: DayEffortLevel
+    var leftoversIntent: Bool
+    var lateEvening: Bool
+    var cookingTolerance: DayCookingTolerance
+
+    var id: Weekday { day }
+
+    init(
+        day: Weekday,
+        servingsOverride: Int? = nil,
+        occasion: DayOccasion = .standard,
+        effortLevel: DayEffortLevel = .standard,
+        leftoversIntent: Bool = false,
+        lateEvening: Bool = false,
+        cookingTolerance: DayCookingTolerance = .standard
+    ) {
+        self.day = day
+        self.servingsOverride = servingsOverride
+        self.occasion = occasion
+        self.effortLevel = effortLevel
+        self.leftoversIntent = leftoversIntent
+        self.lateEvening = lateEvening
+        self.cookingTolerance = cookingTolerance
+    }
 }
 
 /// Input to `POST /recipes/recommend` — one vote from `FeedbackStore.allVotes`,

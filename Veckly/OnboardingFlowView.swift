@@ -189,7 +189,9 @@ private struct OnboardingPlanningDaysView: View {
         errorMessage = nil
         defer { isSaving = false }
 
-        let orderedDays = Weekday.allCases.filter { selectedDays.contains($0) }
+        let orderedDays = Weekday.allCases
+            .filter { selectedDays.contains($0) }
+            .map { HouseholdDaySelection(day: $0) }
         do {
             try await appModel.householdStore.saveProfile(
                 householdID: household.id,

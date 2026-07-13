@@ -151,7 +151,7 @@ private actor SlowFakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
         children: Int,
         priorities: [HouseholdPriority],
         avoidIngredients: [String],
-        selectedDays: [Weekday]
+        selectedDays: [HouseholdDaySelection]
     ) async throws -> HouseholdProfile {
         HouseholdProfile(
             householdId: householdID,
@@ -223,7 +223,7 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
             children: 0,
             priorities: [.quick],
             avoidIngredients: [],
-            selectedDays: [.monday, .tuesday]
+            selectedDays: [.monday, .tuesday].map { HouseholdDaySelection(day: $0) }
         )
     }
 
@@ -233,7 +233,7 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
         children: Int,
         priorities: [HouseholdPriority],
         avoidIngredients: [String],
-        selectedDays: [Weekday]
+        selectedDays: [HouseholdDaySelection]
     ) async throws -> HouseholdProfile {
         HouseholdProfile(
             householdId: householdID,

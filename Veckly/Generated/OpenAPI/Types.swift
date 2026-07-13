@@ -2552,6 +2552,7 @@ internal enum Components {
                         case back_hyphen_after_hyphen_break = "back-after-break"
                         case based_hyphen_on_hyphen_feedback = "based-on-feedback"
                         case new_hyphen_for_hyphen_variety = "new-for-variety"
+                        case quick_hyphen_weekday = "quick-weekday"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/reason`.
                     internal var reason: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.reasonPayload?
@@ -3174,6 +3175,7 @@ internal enum Components {
                 case back_hyphen_after_hyphen_break = "back-after-break"
                 case based_hyphen_on_hyphen_feedback = "based-on-feedback"
                 case new_hyphen_for_hyphen_variety = "new-for-variety"
+                case quick_hyphen_weekday = "quick-weekday"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/reason`.
             internal var reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload?

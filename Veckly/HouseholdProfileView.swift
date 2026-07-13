@@ -7,6 +7,9 @@ struct HouseholdProfileView: View {
     @State private var adults = 1
     @State private var children = 0
     @State private var selectedDays: Set<Weekday> = [.monday, .tuesday, .wednesday, .thursday, .friday]
+    @State private var daySettings: [Weekday: HouseholdDaySelection] = Dictionary(
+        uniqueKeysWithValues: [Weekday.monday, .tuesday, .wednesday, .thursday, .friday].map { ($0, HouseholdDaySelection(day: $0)) }
+    )
     @State private var priorities: Set<HouseholdPriority> = []
     @State private var avoidIngredients: [String] = []
     @State private var newIngredient = ""
@@ -30,6 +33,7 @@ struct HouseholdProfileView: View {
                 }
                 sizeSection
                 daysSection
+                daySettingsSection
                 prioritiesSection
                 avoidSection
             }
@@ -67,13 +71,35 @@ struct HouseholdProfileView: View {
             ForEach(Weekday.allCases, id: \.self) { day in
                 Toggle(day.displayName, isOn: Binding(
                     get: { selectedDays.contains(day) },
-                    set: { if $0 { selectedDays.insert(day) } else { selectedDays.remove(day) } }
+                    set: { isOn in
+                        if isOn {
+                            selectedDays.insert(day)
+                            daySettings[day] = daySettings[day] ?? HouseholdDaySelection(day: day)
+                        } else {
+                            selectedDays.remove(day)
+                            daySettings.removeValue(forKey: day)
+                        }
+                    }
                 ))
             }
         } header: {
             Text("household.cookingDays")
         } footer: {
             Text("household.cookingDaysFooter")
+        }
+    }
+
+    private var daySettingsSection: some View {
+        Section {
+            ForEach(Weekday.allCases.filter { selectedDays.contains($0) }, id: \.self) { day in
+                DisclosureGroup(day.displayName) {
+                    DaySettingsRows(selection: binding(for: day))
+                }
+            }
+        } header: {
+            Text("daySettings.section")
+        } footer: {
+            Text("daySettings.footer")
         }
     }
 
@@ -140,7 +166,8 @@ struct HouseholdProfileView: View {
     private func apply(_ p: HouseholdProfile) {
         adults = p.adults
         children = p.children
-        selectedDays = Set(p.selectedDays)
+        selectedDays = Set(p.selectedDays.map(\.day))
+        daySettings = Dictionary(uniqueKeysWithValues: p.selectedDays.map { ($0.day, $0) })
         priorities = Set(p.priorities)
         avoidIngredients = p.avoidIngredients
     }
@@ -155,7 +182,9 @@ struct HouseholdProfileView: View {
                 adults: adults, children: children,
                 priorities: Array(priorities),
                 avoidIngredients: avoidIngredients.map(normalizedIngredient).filter { !$0.isEmpty },
-                selectedDays: Weekday.allCases.filter { selectedDays.contains($0) }
+                selectedDays: Weekday.allCases
+                    .filter { selectedDays.contains($0) }
+                    .map { daySettings[$0] ?? HouseholdDaySelection(day: $0) }
             )
             dismiss()
         } catch {
@@ -165,5 +194,39 @@ struct HouseholdProfileView: View {
 
     private func normalizedIngredient(_ raw: String) -> String {
         raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func binding(for day: Weekday) -> Binding<HouseholdDaySelection> {
+        Binding(
+            get: { daySettings[day] ?? HouseholdDaySelection(day: day) },
+            set: { daySettings[day] = $0 }
+        )
+    }
+}
+
+private struct DaySettingsRows: View {
+    @Binding var selection: HouseholdDaySelection
+
+    var body: some View {
+        Picker("daySettings.occasion", selection: $selection.occasion) {
+            ForEach(DayOccasion.allCases, id: \.self) { option in
+                Text(option.label).tag(option)
+            }
+        }
+
+        Picker("daySettings.effort", selection: $selection.effortLevel) {
+            ForEach(DayEffortLevel.allCases, id: \.self) { option in
+                Text(option.label).tag(option)
+            }
+        }
+
+        Toggle("daySettings.lateEvening", isOn: $selection.lateEvening)
+        Toggle("daySettings.leftovers", isOn: $selection.leftoversIntent)
+
+        Picker("daySettings.tolerance", selection: $selection.cookingTolerance) {
+            ForEach(DayCookingTolerance.allCases, id: \.self) { option in
+                Text(option.label).tag(option)
+            }
+        }
     }
 }
