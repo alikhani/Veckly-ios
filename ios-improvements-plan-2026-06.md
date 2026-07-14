@@ -22,13 +22,13 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
 | 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
 | 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
-| 17 | Hushållskompromiss v1 | 🟡 Pågår (DayDetail UI-slice 2026-07-14) |
+| 17 | Hushållskompromiss v1 | ✅ Klart (2026-07-14) |
 
 ---
 
 ## Fas 17 — Hushållskompromiss v1
 
-**Status:** 🟡 Pågår — DayDetail UI-slice klar 2026-07-14
+**Status:** ✅ Klart 2026-07-14
 
 ### Mål
 
@@ -42,11 +42,6 @@ Göra skillnad på personlig smak och hushållets gemensamma minne: "jag gillar 
 - iOS ska visa signalen sparsamt, i retro eller DayDetailSheet, inte på varje receptkort.
 - Om en hushållssignal-write misslyckas ska retro/planering inte blockeras.
 
-### Kvar i fasen
-
-- Utvärdera om retro ska få en mild "Funkar för familjen?"-prompt efter tumme upp.
-- Testa DayDetail UI mer direkt om vi börjar ha snapshot/UI-test för sheets.
-
 ### Implementerat 2026-07-14
 
 - Backend har public API för `GET/PUT /households/{householdId}/meal-signals`.
@@ -55,6 +50,10 @@ Göra skillnad på personlig smak och hushållets gemensamma minne: "jag gillar 
 - iOS-build verifierar att de nya genererade typerna kompilerar.
 - `HouseholdMealSignalStore` laddar, sätter, tar bort och rollbackar optimistiska ändringar.
 - `DayDetailSheet` visar en separat familjesignal-yta under den privata tumme upp/ner-raden.
+
+### Avslut
+
+Retro-prompten ingår inte i v1. DayDetail är vald som första yta eftersom den är kontextuell och mindre störande än söndagsretro. Om beta visar att familjer inte hittar signalen kan retro få en mild uppföljning senare.
 
 ---
 
