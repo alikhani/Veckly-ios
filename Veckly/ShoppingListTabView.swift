@@ -8,6 +8,9 @@ struct ShoppingListTabView: View {
     @State private var clearedKeys: [String] = []
     @State private var undoTask: Task<Void, Never>?
     @State private var reportedCompletedShoppingListWeeks: Set<String> = []
+    @State private var reminderExporter = ShoppingListReminderExporter()
+    @State private var reminderExportNotice: ShoppingReminderExportNotice?
+    @State private var isExportingReminders = false
 
     /// Base recipe servings are baked into the shopping list items by the backend.
     /// The backend stores raw ingredient amounts (no household scaling), so we scale
@@ -87,11 +90,20 @@ struct ShoppingListTabView: View {
                         }
                         Spacer()
                         if !shoppingReminderItems.isEmpty {
-                            ShareLink(
-                                items: shoppingReminderItems,
-                                subject: Text(L10n.string("shopping.title")),
-                                message: Text(weekContextLine ?? "")
-                            ) {
+                            Menu {
+                                Button {
+                                    Task { await exportShoppingListToReminders() }
+                                } label: {
+                                    Label("Lägg i Påminnelser", systemImage: "checklist")
+                                }
+                                .disabled(isExportingReminders)
+
+                                if let shoppingShareText {
+                                    ShareLink(item: shoppingShareText) {
+                                        Label("Dela som text", systemImage: "square.and.arrow.up")
+                                    }
+                                }
+                            } label: {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.callout.weight(.semibold))
                                     .frame(width: 34, height: 34)
@@ -304,6 +316,13 @@ struct ShoppingListTabView: View {
             guard isCompleted == true else { return }
             recordShoppingMainListCompletedIfNeeded()
         }
+        .alert(item: $reminderExportNotice) { notice in
+            Alert(
+                title: Text(notice.title),
+                message: Text(notice.message),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 
     private func removeCustomItem(key: String) {
@@ -350,6 +369,38 @@ struct ShoppingListTabView: View {
         )
     }
 
+    private func exportShoppingListToReminders() async {
+        guard !isExportingReminders else { return }
+        isExportingReminders = true
+        defer { isExportingReminders = false }
+
+        do {
+            let count = try await reminderExporter.export(
+                items: shoppingReminderItems,
+                listTitle: L10n.string("shopping.title"),
+                notes: weekContextLine
+            )
+            reminderExportNotice = ShoppingReminderExportNotice(
+                title: "Påminnelser",
+                message: "\(count) varor lades till som separata påminnelser."
+            )
+            appModel.recordProductEvent(.shoppingShared, weekStartDate: appModel.weekStore.weekStartDate, properties: [
+                "items": .int(count),
+                "checkedItems": .int(checkedItemCount)
+            ])
+        } catch ShoppingListReminderExportError.accessDenied {
+            reminderExportNotice = ShoppingReminderExportNotice(
+                title: "Påminnelser är inte aktiverat",
+                message: "Ge Veckly åtkomst till Påminnelser i Inställningar och försök igen."
+            )
+        } catch {
+            reminderExportNotice = ShoppingReminderExportNotice(
+                title: "Kunde inte lägga till påminnelser",
+                message: "Testa igen, eller använd Dela som text."
+            )
+        }
+    }
+
     private func recordShoppingMainListCompletedIfNeeded() {
         let weekStartDate = appModel.weekStore.weekStartDate
         guard reportedCompletedShoppingListWeeks.insert(weekStartDate).inserted else { return }
@@ -357,6 +408,12 @@ struct ShoppingListTabView: View {
             "items": .int(totalItemCount)
         ])
     }
+}
+
+private struct ShoppingReminderExportNotice: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
 }
 
 private extension ShoppingListHandoffState {

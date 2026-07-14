@@ -40,7 +40,7 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - `ShoppingListTabView` har nu en native share action i shoppinglistans header när listan inte är tom.
 - Share-texten byggs av `ShoppingListShareText`, en testbar formatter som återanvänder samma kategorier och mängdskalning som shoppinglistans UI.
 - Texten inkluderar veckokontext, kategorirubriker, checkad status, custom items, staples/"Likely at home" och hushållsskalade mängder.
-- Share sheet skickar nu även en separat rad per kvarvarande huvudvara, så Påminnelser kan skapa en checkbar reminder per vara i stället för en enda "Inköpslista"-reminder.
+- Eftersom iOS Påminnelser slår ihop share sheet-text till en enda reminder använder appen nu en separat EventKit-export som skapar en reminder per kvarvarande huvudvara.
 - Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
 - Lokaliserad VoiceOver-label lades till för share-knappen.
 - Completion-kortets partner-nudge har nu konkret copy: bjud in partner när någon annan ska kunna handla från samma lista.
