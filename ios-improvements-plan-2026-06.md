@@ -44,6 +44,8 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - Påminnelser-menyn visar hur många varor som exporteras, har lokaliserade success-/felmeddelanden och behåller "Dela som text" som tydlig fallback.
 - Backendens shopping-summary slår nu ihop singular/plural-varianter när båda finns i samma lista, till exempel `carrot` + `carrots`, utan att ändra fristående labels som `tomatoes`.
 - Svenska iOS-klienter får nu en v1-lokalisering av vanliga builtin-råvaror och enheter i shopping-summaryn via `Accept-Language`, utan att skriva om användarens receptdata eller ändra item keys.
+- Shoppinglistan markerar cache som stale direkt när week-planen börjar ändras, så borttagna/ändrade rätter inte kan lämna kvar gamla varor om användaren snabbt går till shoppingfliken.
+- Custom items dedupliceras på label + kategori, så samma manuella vara (till exempel "Toapapper") inte visas flera gånger om den råkar läggas till igen eller redan finns dubbelt i server-state.
 - Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
 - Lokaliserad VoiceOver-label lades till för share-knappen.
 - Completion-kortets partner-nudge har nu konkret copy: bjud in partner när någon annan ska kunna handla från samma lista.

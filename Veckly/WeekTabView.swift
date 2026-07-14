@@ -237,8 +237,8 @@ struct WeekTabView: View {
                     if let userID = appModel.authSessionStore.userID {
                         let wasEmptyBefore = appModel.weekStore.hasEmptyDays
                         Task {
-                            await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             appModel.shoppingListStore.invalidateCache()
+                            await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
                         }
                     } else {
@@ -250,8 +250,8 @@ struct WeekTabView: View {
                     if let userID = appModel.authSessionStore.userID {
                         mealPickerDay = nil
                         Task {
-                            await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             appModel.shoppingListStore.invalidateCache()
+                            await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                         }
                     } else {
                         Task { await appModel.handleUnauthorized() }
@@ -332,8 +332,8 @@ struct WeekTabView: View {
                     if let userID = appModel.authSessionStore.userID {
                         selectedDayForDetail = nil
                         Task {
-                            await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             appModel.shoppingListStore.invalidateCache()
+                            await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                         }
                     } else {
                         Task { await appModel.handleUnauthorized() }
@@ -446,13 +446,13 @@ struct WeekTabView: View {
         let wasEmptyBefore = appModel.weekStore.hasEmptyDays
         let hadWeekContentBefore = appModel.weekStore.hasWeekContent
 
+        appModel.shoppingListStore.invalidateCache()
         await appModel.weekStore.generateWeek(
             household: household,
             userID: userID,
             regenerate: regenerate,
             viewedWeekStartDate: targetWeekStartDate
         )
-        appModel.shoppingListStore.invalidateCache()
         if !regenerate, !hadWeekContentBefore, appModel.weekStore.mutationError == nil {
             appModel.recordProductEvent(.firstWeekGenerated, weekStartDate: targetWeekStartDate, properties: [
                 "plannedDinners": .int(plannedDinnerCount)
@@ -504,6 +504,7 @@ struct WeekTabView: View {
         guard context.weekStartDate == viewedWeekStartDate else { return }
 
         Task {
+            appModel.shoppingListStore.invalidateCache()
             for row in context.rows {
                 if let recipe = row.recipe {
                     await appModel.weekStore.assignMeal(day: row, recipe: recipe, household: household, userID: userID, viewedWeekStartDate: context.weekStartDate)
@@ -511,7 +512,6 @@ struct WeekTabView: View {
                     await appModel.weekStore.unassignMeal(day: row, household: household, userID: userID, viewedWeekStartDate: context.weekStartDate)
                 }
             }
-            appModel.shoppingListStore.invalidateCache()
         }
     }
 

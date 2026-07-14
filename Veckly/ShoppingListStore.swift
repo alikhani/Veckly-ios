@@ -158,6 +158,7 @@ final class ShoppingListStore {
     func addCustomItem(label: String, category: ShoppingCategory = .other) {
         let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        guard !customItems.contains(where: { isSameCustomItem($0, label: trimmed, category: category.backendValue) }) else { return }
 
         let customItem = ShoppingCustomItem(
             itemKey: "custom:\(UUID().uuidString.lowercased())",
@@ -230,12 +231,30 @@ final class ShoppingListStore {
     ) {
         self.checkedItems = checkedItems
         self.pantryStock = pantryStock
-        self.customItems = customItems
+        self.customItems = deduplicatedCustomItems(customItems)
         groups = ShoppingListViewModelMapper.inject(
-            customItems: customItems,
+            customItems: self.customItems,
             into: regularGroups,
             checkedItems: checkedItems
         )
+    }
+
+    private func deduplicatedCustomItems(_ items: [ShoppingCustomItem]) -> [ShoppingCustomItem] {
+        var seen: Set<String> = []
+        return items.filter { item in
+            let key = customItemIdentity(label: item.label, category: item.category)
+            return seen.insert(key).inserted
+        }
+    }
+
+    private func isSameCustomItem(_ item: ShoppingCustomItem, label: String, category: String) -> Bool {
+        customItemIdentity(label: item.label, category: item.category) == customItemIdentity(label: label, category: category)
+    }
+
+    private func customItemIdentity(label: String, category: String) -> String {
+        let normalizedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return "\(normalizedCategory):\(normalizedLabel)"
     }
 
     private func currentState() -> MutableShoppingListState {

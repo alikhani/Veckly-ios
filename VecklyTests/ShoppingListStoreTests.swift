@@ -57,6 +57,30 @@ struct ShoppingListStoreTests {
         #expect(store.customItems.contains(where: { $0.label == "Milk" }))
     }
 
+    @Test func duplicateCustomItemsAreCollapsedByLabelAndCategory() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(
+            checkedItems: [],
+            pantryStock: [:],
+            customItems: [
+                ShoppingCustomItem(itemKey: "custom:first", label: "Toapapper", category: "Other"),
+                ShoppingCustomItem(itemKey: "custom:second", label: " toapapper ", category: "Other"),
+            ]
+        )
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+        store.addCustomItem(label: "TOAPAPPER", category: .other)
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        #expect(store.customItems.map(\.label) == ["Toapapper"])
+        #expect(apiClient.updateRequests.isEmpty)
+    }
+
     @Test func toggleFailureKeepsLocalStateAndMarksPendingSync() async {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
