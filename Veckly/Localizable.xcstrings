@@ -111,6 +111,7 @@
       }
     },
     "accessibility.householdSignal.markNotForUs" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -127,6 +128,7 @@
       }
     },
     "accessibility.householdSignal.markWorks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -143,6 +145,7 @@
       }
     },
     "accessibility.householdSignal.removeNotForUs" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -159,6 +162,7 @@
       }
     },
     "accessibility.householdSignal.removeWorks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -611,22 +615,6 @@
         }
       }
     },
-    "common.remove" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ta bort"
-          }
-        }
-      }
-    },
     "common.cancel" : {
       "localizations" : {
         "en" : {
@@ -776,6 +764,23 @@
         }
       }
     },
+    "common.remove" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort"
+          }
+        }
+      }
+    },
     "common.save" : {
       "localizations" : {
         "en" : {
@@ -824,6 +829,240 @@
           }
         }
       }
+    },
+    "daySettings.effort" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pace"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempo"
+          }
+        }
+      }
+    },
+    "daySettings.effort.busy" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busy"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stressig"
+          }
+        }
+      }
+    },
+    "daySettings.effort.standard" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "daySettings.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly uses this rhythm the next time it fills your week."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly använder rytmen nästa gång veckan fylls."
+          }
+        }
+      }
+    },
+    "daySettings.lateEvening" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Late evening"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sen kväll"
+          }
+        }
+      }
+    },
+    "daySettings.leftovers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good for leftovers"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bra för rester"
+          }
+        }
+      }
+    },
+    "daySettings.occasion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occasion"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillfälle"
+          }
+        }
+      }
+    },
+    "daySettings.occasion.guests" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guests"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gäster"
+          }
+        }
+      }
+    },
+    "daySettings.occasion.standard" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Middag"
+          }
+        }
+      }
+    },
+    "daySettings.occasion.treat" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treat"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lite extra"
+          }
+        }
+      }
+    },
+    "daySettings.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day rhythm"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagrytm"
+          }
+        }
+      }
+    },
+    "daySettings.tolerance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cooking window"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matlagningsfönster"
+          }
+        }
+      }
+    },
+    "daySettings.tolerance.relaxed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Room to cook"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid att laga"
+          }
+        }
+      }
+    },
+    "daySettings.tolerance.standard" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "Dela som text" : {
+
     },
     "error.auth.createAccount" : {
       "extractionState" : "stale",
@@ -1845,230 +2084,6 @@
         }
       }
     },
-    "daySettings.effort" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pace"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tempo"
-          }
-        }
-      }
-    },
-    "daySettings.effort.busy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busy"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stressig"
-          }
-        }
-      }
-    },
-    "daySettings.effort.standard" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        }
-      }
-    },
-    "daySettings.footer" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckly uses this rhythm the next time it fills your week."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckly använder rytmen nästa gång veckan fylls."
-          }
-        }
-      }
-    },
-    "daySettings.lateEvening" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Late evening"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sen kväll"
-          }
-        }
-      }
-    },
-    "daySettings.leftovers" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Good for leftovers"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bra för rester"
-          }
-        }
-      }
-    },
-    "daySettings.occasion" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Occasion"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tillfälle"
-          }
-        }
-      }
-    },
-    "daySettings.occasion.guests" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guests"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gäster"
-          }
-        }
-      }
-    },
-    "daySettings.occasion.standard" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dinner"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Middag"
-          }
-        }
-      }
-    },
-    "daySettings.occasion.treat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Treat"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lite extra"
-          }
-        }
-      }
-    },
-    "daySettings.section" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Day rhythm"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dagrytm"
-          }
-        }
-      }
-    },
-    "daySettings.tolerance" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cooking window"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Matlagningsfönster"
-          }
-        }
-      }
-    },
-    "daySettings.tolerance.relaxed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Room to cook"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tid att laga"
-          }
-        }
-      }
-    },
-    "daySettings.tolerance.standard" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        }
-      }
-    },
     "household.cookingDays" : {
       "localizations" : {
         "en" : {
@@ -2438,6 +2453,9 @@
         }
       }
     },
+    "Lägg i Påminnelser" : {
+
+    },
     "language.english" : {
       "localizations" : {
         "en" : {
@@ -2531,6 +2549,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ta bort middag"
+          }
+        }
+      }
+    },
+    "meal.householdSignal.notForUs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not for us"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inte för oss"
+          }
+        }
+      }
+    },
+    "meal.householdSignal.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared with everyone in the household."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syns för alla i hushållet."
+          }
+        }
+      }
+    },
+    "meal.householdSignal.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family signal"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Familjens signal"
+          }
+        }
+      }
+    },
+    "meal.householdSignal.works" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Works for family"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funkar för familjen"
           }
         }
       }
@@ -2700,23 +2782,8 @@
         }
       }
     },
-    "meal.swapMeal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swap meal"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byt middag"
-          }
-        }
-      }
-    },
     "meal.swapIntent.any" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2733,6 +2800,7 @@
       }
     },
     "meal.swapIntent.childFriendly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2765,6 +2833,7 @@
       }
     },
     "meal.swapIntent.moreVariation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2781,6 +2850,7 @@
       }
     },
     "meal.swapIntent.quicker" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2797,6 +2867,7 @@
       }
     },
     "meal.swapIntent.reason.childFriendly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2813,6 +2884,7 @@
       }
     },
     "meal.swapIntent.reason.moreVariation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2829,6 +2901,7 @@
       }
     },
     "meal.swapIntent.reason.quicker" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2845,6 +2918,7 @@
       }
     },
     "meal.swapIntent.reason.sameFeel" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2861,6 +2935,7 @@
       }
     },
     "meal.swapIntent.reason.simplerShopping" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2877,6 +2952,7 @@
       }
     },
     "meal.swapIntent.sameFeel" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2893,6 +2969,7 @@
       }
     },
     "meal.swapIntent.simplerShopping" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2920,6 +2997,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vad ska ändras?"
+          }
+        }
+      }
+    },
+    "meal.swapMeal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swap meal"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt middag"
           }
         }
       }
@@ -2953,70 +3046,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "I kväll"
-          }
-        }
-      }
-    },
-    "meal.householdSignal.notForUs" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not for us"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inte för oss"
-          }
-        }
-      }
-    },
-    "meal.householdSignal.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shared with everyone in the household."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Syns för alla i hushållet."
-          }
-        }
-      }
-    },
-    "meal.householdSignal.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Family signal"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Familjens signal"
-          }
-        }
-      }
-    },
-    "meal.householdSignal.works" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Works for family"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Funkar för familjen"
           }
         }
       }
@@ -3553,21 +3582,8 @@
         }
       }
     },
-    "onboarding.continue" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fortsätt"
-          }
-        }
-      }
+    "OK" : {
+
     },
     "onboarding.avoid.empty" : {
       "localizations" : {
@@ -3586,6 +3602,7 @@
       }
     },
     "onboarding.avoid.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3633,6 +3650,22 @@
         }
       }
     },
+    "onboarding.continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortsätt"
+          }
+        }
+      }
+    },
     "onboarding.days.subtitle" : {
       "localizations" : {
         "en" : {
@@ -3666,6 +3699,7 @@
       }
     },
     "onboarding.goToDish.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5354,86 +5388,6 @@
         }
       }
     },
-    "retro.feedback.emailIntro" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hi Veckly,"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hej Veckly,"
-          }
-        }
-      }
-    },
-    "retro.feedback.emailPrompt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This did not fit our week:"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Det här passade inte vår vecka:"
-          }
-        }
-      }
-    },
-    "retro.feedback.emailSubject" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckly beta feedback"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckly beta-feedback"
-          }
-        }
-      }
-    },
-    "retro.feedback.emailWeek" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Week starting %@"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vecka som börjar %@"
-          }
-        }
-      }
-    },
-    "retro.feedback.link" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tell us what did not work"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Berätta vad som inte funkade"
-          }
-        }
-      }
-    },
     "retro.done.topRecipe" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5480,6 +5434,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Förra veckan"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailIntro" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi Veckly,"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hej Veckly,"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailPrompt" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This did not fit our week:"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det här passade inte vår vecka:"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailSubject" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly beta feedback"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly beta-feedback"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailWeek" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week starting %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vecka som börjar %@"
+          }
+        }
+      }
+    },
+    "retro.feedback.link" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell us what did not work"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berätta vad som inte funkade"
           }
         }
       }
@@ -6138,6 +6177,7 @@
       }
     },
     "shopping.handoff.completed.message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6154,6 +6194,7 @@
       }
     },
     "shopping.handoff.completed.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6170,6 +6211,7 @@
       }
     },
     "shopping.handoff.ready.message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6186,6 +6228,7 @@
       }
     },
     "shopping.handoff.ready.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6320,6 +6363,7 @@
       }
     },
     "shopping.share.action" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6799,6 +6843,226 @@
         }
       }
     },
+    "week.quality.heavy.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One dinner is a little longer — worth checking the day"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En middag tar lite längre tid — värt att kolla dagen"
+          }
+        }
+      }
+    },
+    "week.quality.heavy.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners take a little longer — keep an eye on those days"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar tar lite längre tid — håll koll på de dagarna"
+          }
+        }
+      }
+    },
+    "week.quality.lowConfidence.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One pick is a compromise — swap if it feels off"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ett val är en kompromiss — byt om det känns fel"
+          }
+        }
+      }
+    },
+    "week.quality.lowConfidence.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d picks are compromises — swap if the week feels off"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d val är kompromisser — byt om veckan känns fel"
+          }
+        }
+      }
+    },
+    "week.quality.openDays.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One day still needs a dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En dag behöver fortfarande middag"
+          }
+        }
+      }
+    },
+    "week.quality.openDays.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d days still need dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dagar behöver fortfarande middag"
+          }
+        }
+      }
+    },
+    "week.quality.prep.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One dinner helps carry food forward"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En middag hjälper maten räcka vidare"
+          }
+        }
+      }
+    },
+    "week.quality.prep.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners help carry food forward"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar hjälper maten räcka vidare"
+          }
+        }
+      }
+    },
+    "week.quality.quick.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One quick dinner gives the week breathing room"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En snabb middag ger veckan lite luft"
+          }
+        }
+      }
+    },
+    "week.quality.quick.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d quick dinners give the week breathing room"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d snabba middagar ger veckan lite luft"
+          }
+        }
+      }
+    },
+    "week.quality.reasonable" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The week looks practical enough to start from"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckan ser praktisk nog ut att börja från"
+          }
+        }
+      }
+    },
+    "week.quality.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week check"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckokoll"
+          }
+        }
+      }
+    },
+    "week.quality.variation" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good variation across the week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bra variation över veckan"
+          }
+        }
+      }
+    },
     "week.reason.backAfterBreak" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6885,6 +7149,7 @@
       }
     },
     "week.reason.quickWeekday" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6896,214 +7161,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Snabbt nog för idag"
-          }
-        }
-      }
-    },
-    "week.quality.heavy.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One dinner is a little longer — worth checking the day"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En middag tar lite längre tid — värt att kolla dagen"
-          }
-        }
-      }
-    },
-    "week.quality.heavy.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d dinners take a little longer — keep an eye on those days"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d middagar tar lite längre tid — håll koll på de dagarna"
-          }
-        }
-      }
-    },
-    "week.quality.lowConfidence.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One pick is a compromise — swap if it feels off"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ett val är en kompromiss — byt om det känns fel"
-          }
-        }
-      }
-    },
-    "week.quality.lowConfidence.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d picks are compromises — swap if the week feels off"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d val är kompromisser — byt om veckan känns fel"
-          }
-        }
-      }
-    },
-    "week.quality.openDays.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One day still needs a dinner"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En dag behöver fortfarande middag"
-          }
-        }
-      }
-    },
-    "week.quality.openDays.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d days still need dinner"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d dagar behöver fortfarande middag"
-          }
-        }
-      }
-    },
-    "week.quality.prep.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One dinner helps carry food forward"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En middag hjälper maten räcka vidare"
-          }
-        }
-      }
-    },
-    "week.quality.prep.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d dinners help carry food forward"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d middagar hjälper maten räcka vidare"
-          }
-        }
-      }
-    },
-    "week.quality.quick.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One quick dinner gives the week breathing room"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En snabb middag ger veckan lite luft"
-          }
-        }
-      }
-    },
-    "week.quality.quick.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d quick dinners give the week breathing room"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d snabba middagar ger veckan lite luft"
-          }
-        }
-      }
-    },
-    "week.quality.reasonable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The week looks practical enough to start from"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckan ser praktisk nog ut att börja från"
-          }
-        }
-      }
-    },
-    "week.quality.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Week check"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckokoll"
-          }
-        }
-      }
-    },
-    "week.quality.variation" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Good variation across the week"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bra variation över veckan"
           }
         }
       }
@@ -7192,6 +7249,7 @@
       }
     },
     "week.rest" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7289,6 +7347,7 @@
       }
     },
     "week.sessionEnd.prep.one" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7305,6 +7364,7 @@
       }
     },
     "week.sessionEnd.prep.other" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7321,6 +7381,7 @@
       }
     },
     "week.sessionEnd.quick.one" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7337,6 +7398,7 @@
       }
     },
     "week.sessionEnd.quick.other" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7353,6 +7415,7 @@
       }
     },
     "week.sessionEnd.shoppingReady" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
