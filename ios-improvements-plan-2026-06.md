@@ -22,13 +22,13 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
 | 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
 | 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
-| 17 | Hushållskompromiss v1 | 🟡 Pågår (backend/API-slice 2026-07-14) |
+| 17 | Hushållskompromiss v1 | 🟡 Pågår (backend/API + scoring 2026-07-14) |
 
 ---
 
 ## Fas 17 — Hushållskompromiss v1
 
-**Status:** 🟡 Pågår — backend/API-slice klar 2026-07-14
+**Status:** 🟡 Pågår — backend/API + scoring-slices klara 2026-07-14
 
 ### Mål
 
@@ -44,13 +44,13 @@ Göra skillnad på personlig smak och hushållets gemensamma minne: "jag gillar 
 
 ### Kvar i fasen
 
-- Backend: koppla `household_meal_signals` till generation/scoring.
 - iOS: bygg `HouseholdMealSignalStore`, lägg minsta UI i retro eller DayDetailSheet.
 - Testa att personlig feedback och hushållssignal inte blandas i UI-state.
 
 ### Implementerat 2026-07-14
 
 - Backend har public API för `GET/PUT /households/{householdId}/meal-signals`.
+- Backend-generationen läser nu hushållssignaler: `works_for_family` boostar, `not_for_us` straffar starkt men blockerar inte absolut.
 - OpenAPI-specen är uppdaterad i iOS och Swift-klienten är regenererad.
 - iOS-build verifierar att de nya genererade typerna kompilerar.
 
