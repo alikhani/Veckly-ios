@@ -53,6 +53,31 @@ struct WeekQualitySummaryTests {
         #expect(summary.insights.map(\.id) == ["looks-reasonable"])
     }
 
+    @Test func sessionEndInviteNudgeRequiresSoloOwnerWithLoadedDetails() {
+        let household = Household(id: "household-1", name: "Home", role: .owner)
+
+        #expect(SessionEndInviteNudgeEligibility.shouldShow(
+            activeHousehold: household,
+            detailsHouseholdID: "household-1",
+            memberCount: 1
+        ))
+        #expect(!SessionEndInviteNudgeEligibility.shouldShow(
+            activeHousehold: Household(id: "household-1", name: "Home", role: .member),
+            detailsHouseholdID: "household-1",
+            memberCount: 1
+        ))
+        #expect(!SessionEndInviteNudgeEligibility.shouldShow(
+            activeHousehold: household,
+            detailsHouseholdID: "other-household",
+            memberCount: 1
+        ))
+        #expect(!SessionEndInviteNudgeEligibility.shouldShow(
+            activeHousehold: household,
+            detailsHouseholdID: "household-1",
+            memberCount: 2
+        ))
+    }
+
     private func recipe(_ title: String, total: Int, tags: [String]) -> WeekSummaryRecipe {
         WeekSummaryRecipe(
             id: title.lowercased(),

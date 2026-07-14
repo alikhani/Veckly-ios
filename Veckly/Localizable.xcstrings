@@ -7117,13 +7117,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share household"
+            "value" : "Invite partner"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dela hushåll"
+            "value" : "Bjud in partner"
           }
         }
       }
@@ -7133,13 +7133,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planning with someone else? Share the household so the shopping list stays in sync."
+            "value" : "Want someone else to shop from the same list? Invite them now while the week is ready."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planerar ni tillsammans? Dela hushållet så hålls inköpslistan synkad."
+            "value" : "Ska någon annan kunna handla från samma lista? Bjud in nu när veckan är klar."
           }
         }
       }

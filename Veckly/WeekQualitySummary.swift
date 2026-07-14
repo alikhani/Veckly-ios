@@ -101,3 +101,14 @@ struct WeekQualitySummary: Equatable {
             .filter { !$0.isEmpty && !ignoredTags.contains($0) }
     }
 }
+
+enum SessionEndInviteNudgeEligibility {
+    static func shouldShow(
+        activeHousehold: Household?,
+        detailsHouseholdID: String?,
+        memberCount: Int
+    ) -> Bool {
+        guard let activeHousehold, activeHousehold.role == .owner else { return false }
+        return detailsHouseholdID == activeHousehold.id && memberCount <= 1
+    }
+}

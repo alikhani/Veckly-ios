@@ -29,7 +29,7 @@ Recommended execution order, from highest daily-use value to lowest friction:
 
 ## Fas 18 — Shopping-handoff och partnerdelning
 
-**Status:** 🟡 Pågår — första slice klar 2026-07-14
+**Status:** 🟡 Pågår — andra slice klar 2026-07-14
 
 ### Mål
 
@@ -42,16 +42,19 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - Texten inkluderar veckokontext, kategorirubriker, checkad status, custom items, staples/"Likely at home" och hushållsskalade mängder.
 - Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
 - Lokaliserad VoiceOver-label lades till för share-knappen.
+- Completion-kortets partner-nudge har nu konkret copy: bjud in partner när någon annan ska kunna handla från samma lista.
+- Invite-nudgen styrs av en testbar eligibility-regel: aktiv owner, household details för rätt hushåll och högst en medlem.
 
 ### Test/Verifiering
 
 - `Localizable.xcstrings` validerad som JSON.
 - `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/ShoppingListStoreTests`
+- `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/WeekQualitySummaryTests`
 - `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' build`
 
 ### Nästa steg
 
-Lägg en kontextuell "Dela med partner"-CTA efter första färdiga vecka för solo-hushåll. Den ska kännas kopplad till konkret nytta, helst veckans shoppinglista, och inte visas i onboarding.
+Gör shoppingfliken tydligare efter handoff: ett "veckans lista är redo"-läge när listan har varor, och ett separat "allt handlat"-läge när huvudvarorna är ibockade.
 
 ---
 

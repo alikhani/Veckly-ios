@@ -944,9 +944,11 @@ struct WeekTabView: View {
     }
 
     private var shouldShowSessionEndInviteNudge: Bool {
-        guard let household = appModel.householdStore.activeHousehold, household.role == .owner else { return false }
-        return appModel.householdStore.detailsHouseholdID == household.id
-            && appModel.householdStore.members.count <= 1
+        SessionEndInviteNudgeEligibility.shouldShow(
+            activeHousehold: appModel.householdStore.activeHousehold,
+            detailsHouseholdID: appModel.householdStore.detailsHouseholdID,
+            memberCount: appModel.householdStore.members.count
+        )
     }
 
     private func totalMinutes(for recipe: WeekSummaryRecipe) -> Int? {
