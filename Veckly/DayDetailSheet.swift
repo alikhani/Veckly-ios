@@ -108,6 +108,8 @@ struct DayDetailContent: View {
                 // Vote buttons
                 voteButtons(recipeID: recipe.id)
 
+                householdSignalCard(recipeID: recipe.id)
+
                 // Action buttons
                 HStack(spacing: 12) {
                     Button {
@@ -204,6 +206,48 @@ struct DayDetailContent: View {
         }
     }
 
+    @ViewBuilder
+    private func householdSignalCard(recipeID: String) -> some View {
+        let currentSignal = appModel.householdMealSignalStore.signal(for: recipeID)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("meal.householdSignal.title")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                .textCase(.uppercase)
+            Text("meal.householdSignal.subtitle")
+                .font(.footnote)
+                .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+            HStack(spacing: 10) {
+                householdSignalButton(.worksForFamily, currentSignal: currentSignal, recipeID: recipeID)
+                householdSignalButton(.notForUs, currentSignal: currentSignal, recipeID: recipeID)
+            }
+        }
+        .padding(14)
+        .background(VecklyDesign.Colors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func householdSignalButton(_ signal: HouseholdMealSignal, currentSignal: HouseholdMealSignal?, recipeID: String) -> some View {
+        let isSelected = currentSignal == signal
+        return Button {
+            Task {
+                await appModel.householdMealSignalStore.setSignal(
+                    householdID: householdID,
+                    recipeID: recipeID,
+                    signal: isSelected ? nil : signal
+                )
+            }
+        } label: {
+            Label(signal.labelKey, systemImage: signal.systemImage)
+                .font(.footnote.weight(.semibold))
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .tint(isSelected ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+        .accessibilityLabel(L10n.string(signal.accessibilityKey(isSelected: isSelected)))
+    }
+
     private func toggleVote(_ vote: MealVote, recipeID: String) async {
         let newVote: MealVote? = currentVote == vote ? nil : vote
         await appModel.feedbackStore.setVote(
@@ -211,5 +255,30 @@ struct DayDetailContent: View {
             recipeID: recipeID,
             vote: newVote
         )
+    }
+}
+
+private extension HouseholdMealSignal {
+    var labelKey: LocalizedStringKey {
+        switch self {
+        case .worksForFamily: return "meal.householdSignal.works"
+        case .notForUs: return "meal.householdSignal.notForUs"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .worksForFamily: return "checkmark.seal"
+        case .notForUs: return "xmark.seal"
+        }
+    }
+
+    func accessibilityKey(isSelected: Bool) -> String {
+        switch (self, isSelected) {
+        case (.worksForFamily, false): return "accessibility.householdSignal.markWorks"
+        case (.worksForFamily, true): return "accessibility.householdSignal.removeWorks"
+        case (.notForUs, false): return "accessibility.householdSignal.markNotForUs"
+        case (.notForUs, true): return "accessibility.householdSignal.removeNotForUs"
+        }
     }
 }

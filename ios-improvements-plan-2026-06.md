@@ -22,13 +22,13 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
 | 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
 | 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
-| 17 | Hushållskompromiss v1 | 🟡 Pågår (backend/API + scoring 2026-07-14) |
+| 17 | Hushållskompromiss v1 | 🟡 Pågår (DayDetail UI-slice 2026-07-14) |
 
 ---
 
 ## Fas 17 — Hushållskompromiss v1
 
-**Status:** 🟡 Pågår — backend/API + scoring-slices klara 2026-07-14
+**Status:** 🟡 Pågår — DayDetail UI-slice klar 2026-07-14
 
 ### Mål
 
@@ -44,8 +44,8 @@ Göra skillnad på personlig smak och hushållets gemensamma minne: "jag gillar 
 
 ### Kvar i fasen
 
-- iOS: bygg `HouseholdMealSignalStore`, lägg minsta UI i retro eller DayDetailSheet.
-- Testa att personlig feedback och hushållssignal inte blandas i UI-state.
+- Utvärdera om retro ska få en mild "Funkar för familjen?"-prompt efter tumme upp.
+- Testa DayDetail UI mer direkt om vi börjar ha snapshot/UI-test för sheets.
 
 ### Implementerat 2026-07-14
 
@@ -53,6 +53,8 @@ Göra skillnad på personlig smak och hushållets gemensamma minne: "jag gillar 
 - Backend-generationen läser nu hushållssignaler: `works_for_family` boostar, `not_for_us` straffar starkt men blockerar inte absolut.
 - OpenAPI-specen är uppdaterad i iOS och Swift-klienten är regenererad.
 - iOS-build verifierar att de nya genererade typerna kompilerar.
+- `HouseholdMealSignalStore` laddar, sätter, tar bort och rollbackar optimistiska ändringar.
+- `DayDetailSheet` visar en separat familjesignal-yta under den privata tumme upp/ner-raden.
 
 ---
 

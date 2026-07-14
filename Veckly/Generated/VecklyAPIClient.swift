@@ -279,6 +279,67 @@ struct VecklyAPIClient {
         }
     }
 
+    func householdMealSignals(householdID: String) async throws -> [String: HouseholdMealSignal] {
+        let output = try await _client.listHouseholdMealSignals(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(response):
+            return try response.body.json.signals.additionalProperties.compactMapValues(\.appModel)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func setHouseholdMealSignal(householdID: String, mealID: String, signal: HouseholdMealSignal) async throws {
+        let signalData = try JSONEncoder().encode(signal.apiModel)
+        let requestSignal = try JSONDecoder().decode(
+            Components.Schemas.UpsertHouseholdMealSignal.signalPayload.self,
+            from: signalData
+        )
+        let requestBody = Components.Schemas.UpsertHouseholdMealSignal(
+            mealId: mealID,
+            signal: requestSignal
+        )
+        let output = try await _client.upsertHouseholdMealSignal(
+            path: .init(householdId: householdID),
+            body: .json(requestBody)
+        )
+        switch output {
+        case .ok:
+            return
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func removeHouseholdMealSignal(householdID: String, mealID: String) async throws {
+        guard let token = await getToken() else { throw APIError.unauthorized }
+        let url = baseURL.appendingPathComponent("households/\(householdID)/meal-signals")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalePreference.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
+        let escapedMealID = mealID.replacingOccurrences(of: "\"", with: "\\\"")
+        let jsonString = #"{"mealId":"\#(escapedMealID)","signal":null}"#
+        request.httpBody = Data(jsonString.utf8)
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        switch http.statusCode {
+        case 200: return
+        case 401: throw APIError.unauthorized
+        case 404: throw APIError.notFound
+        default: throw APIError.server(statusCode: http.statusCode)
+        }
+    }
+
     func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe {
         let output = try await _client.createRecipe(
             path: .init(householdId: householdID),

@@ -298,6 +298,24 @@ enum MealVote: String, Codable {
     case down
 }
 
+extension HouseholdMealSignal {
+    var apiModel: Components.Schemas.HouseholdMealSignal {
+        switch self {
+        case .worksForFamily: return .works_for_family
+        case .notForUs: return .not_for_us
+        }
+    }
+}
+
+extension Components.Schemas.HouseholdMealSignal {
+    var appModel: HouseholdMealSignal? {
+        switch self {
+        case .works_for_family: return .worksForFamily
+        case .not_for_us: return .notForUs
+        }
+    }
+}
+
 struct HouseholdMember: Identifiable, Equatable {
     var id: String { userId }
     let userId: String

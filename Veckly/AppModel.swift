@@ -13,6 +13,7 @@ final class AppModel {
     let recipeStore: RecipeStore
     let prepBatchStore: PrepBatchStore
     let feedbackStore: FeedbackStore
+    let householdMealSignalStore: HouseholdMealSignalStore
     let recipeRecommendationStore: RecipeRecommendationStore
     let familyCookbookStore: FamilyCookbookStore
     let householdSavedRecipesStore: HouseholdSavedRecipesStore
@@ -38,6 +39,7 @@ final class AppModel {
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
         self.feedbackStore = FeedbackStore(apiClient: apiClient)
+        self.householdMealSignalStore = HouseholdMealSignalStore(apiClient: apiClient)
         self.recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
         self.familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
         self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
@@ -142,6 +144,7 @@ final class AppModel {
             recipeStore.reset()
             prepBatchStore.reset()
             feedbackStore.reset()
+            householdMealSignalStore.reset()
             recipeRecommendationStore.reset()
             familyCookbookStore.reset()
             householdSavedRecipesStore.reset()
@@ -154,8 +157,9 @@ final class AppModel {
         async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
         async let prep: Void = prepBatchStore.load(householdID: household.id, weekStartDate: weekStartDate)
         async let feedback: Void = feedbackStore.loadFeedback(householdID: household.id)
+        async let householdSignals: Void = householdMealSignalStore.loadSignals(householdID: household.id)
         async let recipes: Void = recipeStore.loadRecipes(householdID: household.id)
-        _ = await (week, shopping, prep, feedback, recipes)
+        _ = await (week, shopping, prep, feedback, householdSignals, recipes)
     }
 
     func signOut() {
@@ -175,6 +179,7 @@ final class AppModel {
         recipeStore.reset()
         prepBatchStore.reset()
         feedbackStore.reset()
+        householdMealSignalStore.reset()
         recipeRecommendationStore.reset()
         familyCookbookStore.reset()
         householdSavedRecipesStore.reset()
