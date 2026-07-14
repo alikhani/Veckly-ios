@@ -467,7 +467,7 @@ struct ShoppingListViewModelMapper {
                     into: ([ShoppingListItem](), [ShoppingListItem]())
                 ) { acc, item in
                     if item.isCustom {
-                        acc.0.append(item)
+                        return
                     } else if isStaple(item.label) {
                         acc.1.append(item)
                     } else {

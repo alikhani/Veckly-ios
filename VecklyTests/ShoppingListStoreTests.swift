@@ -81,6 +81,38 @@ struct ShoppingListStoreTests {
         #expect(apiClient.updateRequests.isEmpty)
     }
 
+    @Test func customItemsFromSummaryAndStateAreNotRenderedTwice() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.summary = TestShoppingListFixtures.summaryWithCustomItem(
+            ShoppingListItem(
+                itemKey: "custom:summary-toapapper",
+                label: "Toapapper",
+                amount: nil,
+                unit: nil,
+                checked: false,
+                isCustom: true
+            )
+        )
+        apiClient.state = ShoppingListSharedState(
+            checkedItems: [],
+            pantryStock: [:],
+            customItems: [
+                ShoppingCustomItem(itemKey: "custom:state-toapapper", label: " Toapapper ", category: "Other"),
+            ]
+        )
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        let renderedCustomItems = store.groups.flatMap(\.items).filter(\.isCustom)
+        #expect(renderedCustomItems.count == 1)
+        #expect(renderedCustomItems.first?.label.trimmingCharacters(in: .whitespacesAndNewlines) == "Toapapper")
+    }
+
     @Test func toggleFailureKeepsLocalStateAndMarksPendingSync() async {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
@@ -367,6 +399,21 @@ private enum TestShoppingListFixtures {
             ]
         )
     }
+
+    static func summaryWithCustomItem(_ customItem: ShoppingListItem) -> ShoppingListSummary {
+        ShoppingListSummary(
+            household: SummaryHousehold(id: household.id, name: household.name),
+            weekStartDate: weekStartDate,
+            updatedAt: "2026-06-22T09:00:00.000Z",
+            groups: [
+                ShoppingListGroup(
+                    category: "Other",
+                    items: [customItem]
+                )
+            ]
+        )
+    }
+
     static let serverCustomItem = ShoppingCustomItem(
         itemKey: "custom:server",
         label: "Coffee",

@@ -49,6 +49,7 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - Backendens shopping-summary exkluderar nu middagar vars datum redan passerat, så gårdagens middag inte fortsätter bidra med varor till dagens inköpslista.
 - iOS skickar nu `X-Veckly-Today` med enhetens lokala datum på API-anrop, och backend använder det för shopping-summary. Det gör att gårdagens middag kan filtreras bort utan att en ny framtida rätt, t.ex. onsdagens carbonara, tappas på grund av serverns klocka.
 - Shopping-summary får inte längre HTTP-cacheas: backend svarar `Cache-Control: no-store` och iOS skickar `Cache-Control: no-cache`, så pull-to-refresh kan inte återanvända en gammal lista i upp till fem minuter.
+- Custom items från backend-summary filtreras bort från regularGroups innan state-baserade custom items injiceras, så samma manuella vara inte visas dubbelt efter refresh.
 - Custom items dedupliceras på label + kategori, så samma manuella vara (till exempel "Toapapper") inte visas flera gånger om den råkar läggas till igen eller redan finns dubbelt i server-state.
 - Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
 - Lokaliserad VoiceOver-label lades till för share-knappen.
