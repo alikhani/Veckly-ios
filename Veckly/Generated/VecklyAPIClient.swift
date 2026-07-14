@@ -872,6 +872,7 @@ private struct RequestHeaderMiddleware: ClientMiddleware {
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
         request.headerFields[.acceptLanguage] = AppLocalePreference.acceptLanguageHeader
+        request.headerFields[.cacheControl] = "no-cache"
         request.headerFields[.vecklyToday] = Self.localTodayHeaderValue()
         return try await next(request, body, baseURL)
     }
