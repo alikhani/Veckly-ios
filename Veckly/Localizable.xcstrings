@@ -2652,6 +2652,198 @@
         }
       }
     },
+    "meal.swapIntent.any" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alla"
+          }
+        }
+      }
+    },
+    "meal.swapIntent.childFriendly" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Child-friendly"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barnvänligare"
+          }
+        }
+      }
+    },
+    "meal.swapIntent.moreVariation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More variation"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mer variation"
+          }
+        }
+      }
+    },
+    "meal.swapIntent.quicker" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quicker"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snabbare"
+          }
+        }
+      }
+    },
+    "meal.swapIntent.reason.childFriendly" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows recipes tagged for kids, family meals, or familiar weeknights."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visar recept taggade för barn, familj eller bekanta vardagar."
+          }
+        }
+      }
+    },
+    "meal.swapIntent.reason.moreVariation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looks for a different cuisine or style than today's meal."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letar efter annan stil eller annat kök än dagens rätt."
+          }
+        }
+      }
+    },
+    "meal.swapIntent.reason.quicker" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prioritizes dinners around 30 minutes or less."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prioriterar middagar runt 30 minuter eller mindre."
+          }
+        }
+      }
+    },
+    "meal.swapIntent.reason.sameFeel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps close to the current meal's cuisine or style."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håller sig nära nuvarande rätts stil eller kök."
+          }
+        }
+      }
+    },
+    "meal.swapIntent.reason.simplerShopping" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prioritizes shorter ingredient lists and pantry-friendly tags."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prioriterar kortare ingredienslistor och skafferivänliga taggar."
+          }
+        }
+      }
+    },
+    "meal.swapIntent.sameFeel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same feel"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samma känsla"
+          }
+        }
+      }
+    },
+    "meal.swapIntent.simplerShopping" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simpler shopping"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enklare inköp"
+          }
+        }
+      }
+    },
+    "meal.swapIntent.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should change?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vad ska ändras?"
+          }
+        }
+      }
+    },
     "meal.today" : {
       "localizations" : {
         "en" : {

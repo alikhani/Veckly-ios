@@ -47,12 +47,15 @@ struct MealPickerSheet: View {
     @State private var showClearConfirmation = false
     @State private var showSkipConfirmation = false
     @State private var showAddRecipeSheet = false
+    @State private var selectedIntent: MealSwapIntent = .any
 
     private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
 
     var filtered: [FullRecipe] {
-        guard !searchText.isEmpty else { return recipes }
-        return recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        let matchesSearch = searchText.isEmpty
+            ? recipes
+            : recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        return MealSwapIntentRanker.rank(matchesSearch, intent: searchText.isEmpty ? selectedIntent : .any, currentRecipe: day.recipe)
     }
 
     private var likedRecipes: [FullRecipe] {
@@ -200,6 +203,10 @@ struct MealPickerSheet: View {
                 }
             }
 
+            if searchText.isEmpty {
+                swapIntentSection
+            }
+
             if !suggestedRecipes.isEmpty {
                 Section(L10n.string("recipes.suggestions")) {
                     ForEach(suggestedRecipes, id: \.recipe.id) { entry in
@@ -245,6 +252,36 @@ struct MealPickerSheet: View {
             }
         }
         .listStyle(.insetGrouped)
+    }
+
+    private var swapIntentSection: some View {
+        Section {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(MealSwapIntent.allCases) { intent in
+                        Button {
+                            selectedIntent = intent
+                        } label: {
+                            Text(intent.label)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(selectedIntent == intent ? .white : VecklyDesign.Colors.inkMid)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(selectedIntent == intent ? VecklyDesign.Colors.hearthOrange : Color("chipSurface"))
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        } header: {
+            Text("meal.swapIntent.title")
+        } footer: {
+            if let reason = selectedIntent.reasonLabel {
+                Text(verbatim: reason)
+            }
+        }
     }
 
     private func coverageBanner(_ coverage: PrepBatchCoverage) -> some View {

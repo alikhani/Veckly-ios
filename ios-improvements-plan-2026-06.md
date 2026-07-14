@@ -21,6 +21,30 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 13 | Onboarding cold-start upgrade (go-to dish, prioriteringar, undvik) | 🟡 Pågår (första slice 2026-07-13) |
 | 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
 | 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
+| 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
+
+---
+
+## Fas 16 — Avsiktsstyrda swappar
+
+**Status:** 🟡 Pågår — första slice klar 2026-07-14
+
+### Mål
+
+Göra byten lugnare genom att låta familjen säga varför de byter, utan att göra pickern till en AI-chat eller kräva nytt backendkontrakt.
+
+### Vad som gjordes
+
+- Ny `MealSwapIntent` med valen Alla, Snabbare, Barnvänligare, Enklare inköp, Mer variation och Samma känsla.
+- Ny `MealSwapIntentRanker` sorterar/filtrerar lokalt utifrån recipe-tid, tags, ingrediensantal och signaler från nuvarande rätt.
+- `MealPickerSheet` visar intent-chips när användaren inte söker, och sök fortsätter fungera som en neutral fritextsökning.
+- AI-förslag behålls som separat sektion; intent v1 är lokal och gör inte `/recipes/recommend` till hårt beroende.
+- Unit tests täcker snabbare, barnvänligt, enklare inköp samt variation/samma känsla.
+
+### Kvar i fasen
+
+- Utvärdera om tomma intent-resultat ska visa en mild fallback i stället för tom receptlista.
+- Fast follow: skicka `swapContext` till `/recipes/recommend` om lokal scoring inte räcker i beta.
 
 ---
 
