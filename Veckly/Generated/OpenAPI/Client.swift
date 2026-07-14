@@ -357,6 +357,149 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// List the household's shared meal signals
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)`.
+    internal func listHouseholdMealSignals(_ input: Operations.listHouseholdMealSignals.Input) async throws -> Operations.listHouseholdMealSignals.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.listHouseholdMealSignals.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/meal-signals",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.listHouseholdMealSignals.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ListHouseholdMealSignalsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Upsert or remove a shared household meal signal
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)`.
+    internal func upsertHouseholdMealSignal(_ input: Operations.upsertHouseholdMealSignal.Input) async throws -> Operations.upsertHouseholdMealSignal.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.upsertHouseholdMealSignal.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/meal-signals",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .put
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.upsertHouseholdMealSignal.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.OkResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// The household's shared bookmark list
     ///
     /// - Remark: HTTP `GET /households/{householdId}/saved-recipes`.

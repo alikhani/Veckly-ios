@@ -36,6 +36,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /households/{householdId}/family-cookbook`.
     /// - Remark: Generated from `#/paths//households/{householdId}/family-cookbook/get(getFamilyCookbook)`.
     func getFamilyCookbook(_ input: Operations.getFamilyCookbook.Input) async throws -> Operations.getFamilyCookbook.Output
+    /// List the household's shared meal signals
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)`.
+    func listHouseholdMealSignals(_ input: Operations.listHouseholdMealSignals.Input) async throws -> Operations.listHouseholdMealSignals.Output
+    /// Upsert or remove a shared household meal signal
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)`.
+    func upsertHouseholdMealSignal(_ input: Operations.upsertHouseholdMealSignal.Input) async throws -> Operations.upsertHouseholdMealSignal.Output
     /// The household's shared bookmark list
     ///
     /// - Remark: HTTP `GET /households/{householdId}/saved-recipes`.
@@ -365,6 +375,34 @@ extension APIProtocol {
             path: path,
             query: query,
             headers: headers
+        ))
+    }
+    /// List the household's shared meal signals
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)`.
+    internal func listHouseholdMealSignals(
+        path: Operations.listHouseholdMealSignals.Input.Path,
+        headers: Operations.listHouseholdMealSignals.Input.Headers = .init()
+    ) async throws -> Operations.listHouseholdMealSignals.Output {
+        try await listHouseholdMealSignals(Operations.listHouseholdMealSignals.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Upsert or remove a shared household meal signal
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)`.
+    internal func upsertHouseholdMealSignal(
+        path: Operations.upsertHouseholdMealSignal.Input.Path,
+        headers: Operations.upsertHouseholdMealSignal.Input.Headers = .init(),
+        body: Operations.upsertHouseholdMealSignal.Input.Body? = nil
+    ) async throws -> Operations.upsertHouseholdMealSignal.Output {
+        try await upsertHouseholdMealSignal(Operations.upsertHouseholdMealSignal.Input(
+            path: path,
+            headers: headers,
+            body: body
         ))
     }
     /// The household's shared bookmark list
@@ -1240,6 +1278,151 @@ internal enum Components {
                 case dueAgain
             }
         }
+        /// - Remark: Generated from `#/components/schemas/HouseholdMealSignal`.
+        internal enum HouseholdMealSignal: String, Codable, Hashable, Sendable, CaseIterable {
+            case works_for_family = "works_for_family"
+            case not_for_us = "not_for_us"
+        }
+        /// - Remark: Generated from `#/components/schemas/HouseholdMealSignalState`.
+        internal struct HouseholdMealSignalState: Codable, Hashable, Sendable {
+            /// A container of undocumented properties.
+            internal var additionalProperties: [String: Components.Schemas.HouseholdMealSignal]
+            /// Creates a new `HouseholdMealSignalState`.
+            ///
+            /// - Parameters:
+            ///   - additionalProperties: A container of undocumented properties.
+            internal init(additionalProperties: [String: Components.Schemas.HouseholdMealSignal] = .init()) {
+                self.additionalProperties = additionalProperties
+            }
+            internal init(from decoder: any Swift.Decoder) throws {
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+            }
+            internal func encode(to encoder: any Swift.Encoder) throws {
+                try encoder.encodeAdditionalProperties(additionalProperties)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/HouseholdMealSignalRecord`.
+        internal struct HouseholdMealSignalRecord: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/HouseholdMealSignalRecord/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdMealSignalRecord/mealId`.
+            internal var mealId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/HouseholdMealSignalRecord/signal`.
+            internal var signal: Components.Schemas.HouseholdMealSignal
+            /// - Remark: Generated from `#/components/schemas/HouseholdMealSignalRecord/updatedAt`.
+            internal var updatedAt: Swift.String
+            /// Creates a new `HouseholdMealSignalRecord`.
+            ///
+            /// - Parameters:
+            ///   - householdId:
+            ///   - mealId:
+            ///   - signal:
+            ///   - updatedAt:
+            internal init(
+                householdId: Swift.String,
+                mealId: Swift.String,
+                signal: Components.Schemas.HouseholdMealSignal,
+                updatedAt: Swift.String
+            ) {
+                self.householdId = householdId
+                self.mealId = mealId
+                self.signal = signal
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case householdId
+                case mealId
+                case signal
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ListHouseholdMealSignalsResponse`.
+        internal struct ListHouseholdMealSignalsResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ListHouseholdMealSignalsResponse/signals`.
+            internal var signals: Components.Schemas.HouseholdMealSignalState
+            /// - Remark: Generated from `#/components/schemas/ListHouseholdMealSignalsResponse/items`.
+            internal var items: [Components.Schemas.HouseholdMealSignalRecord]
+            /// Creates a new `ListHouseholdMealSignalsResponse`.
+            ///
+            /// - Parameters:
+            ///   - signals:
+            ///   - items:
+            internal init(
+                signals: Components.Schemas.HouseholdMealSignalState,
+                items: [Components.Schemas.HouseholdMealSignalRecord]
+            ) {
+                self.signals = signals
+                self.items = items
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case signals
+                case items
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/OkResponse`.
+        internal struct OkResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/OkResponse/ok`.
+            internal var ok: Swift.Bool
+            /// Creates a new `OkResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            internal init(ok: Swift.Bool) {
+                self.ok = ok
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpsertHouseholdMealSignal`.
+        internal struct UpsertHouseholdMealSignal: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdMealSignal/mealId`.
+            internal var mealId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdMealSignal/signal`.
+            internal struct signalPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdMealSignal/signal/value1`.
+                internal var value1: Components.Schemas.HouseholdMealSignal
+                /// - Remark: Generated from `#/components/schemas/UpsertHouseholdMealSignal/signal/value2`.
+                internal var value2: OpenAPIRuntime.OpenAPIValueContainer
+                /// Creates a new `signalPayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                ///   - value2:
+                internal init(
+                    value1: Components.Schemas.HouseholdMealSignal,
+                    value2: OpenAPIRuntime.OpenAPIValueContainer
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try decoder.decodeFromSingleValueContainer()
+                    self.value2 = try .init(from: decoder)
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeToSingleValueContainer(self.value1)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UpsertHouseholdMealSignal/signal`.
+            internal var signal: Components.Schemas.UpsertHouseholdMealSignal.signalPayload
+            /// Creates a new `UpsertHouseholdMealSignal`.
+            ///
+            /// - Parameters:
+            ///   - mealId:
+            ///   - signal:
+            internal init(
+                mealId: Swift.String,
+                signal: Components.Schemas.UpsertHouseholdMealSignal.signalPayload
+            ) {
+                self.mealId = mealId
+                self.signal = signal
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case mealId
+                case signal
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/RecipeIngredient`.
         internal struct RecipeIngredient: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/RecipeIngredient/item`.
@@ -1452,21 +1635,6 @@ internal enum Components {
             }
             internal enum CodingKeys: String, CodingKey {
                 case recipes
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/OkResponse`.
-        internal struct OkResponse: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/OkResponse/ok`.
-            internal var ok: Swift.Bool
-            /// Creates a new `OkResponse`.
-            ///
-            /// - Parameters:
-            ///   - ok:
-            internal init(ok: Swift.Bool) {
-                self.ok = ok
-            }
-            internal enum CodingKeys: String, CodingKey {
-                case ok
             }
         }
         /// - Remark: Generated from `#/components/schemas/Household`.
@@ -7190,6 +7358,411 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.getFamilyCookbook.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List the household's shared meal signals
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)`.
+    internal enum listHouseholdMealSignals {
+        internal static let id: Swift.String = "listHouseholdMealSignals"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.listHouseholdMealSignals.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listHouseholdMealSignals.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listHouseholdMealSignals.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listHouseholdMealSignals.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.listHouseholdMealSignals.Input.Path,
+                headers: Operations.listHouseholdMealSignals.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ListHouseholdMealSignalsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ListHouseholdMealSignalsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listHouseholdMealSignals.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listHouseholdMealSignals.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Household meal signals keyed by meal id, plus ordered records
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listHouseholdMealSignals.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listHouseholdMealSignals.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listHouseholdMealSignals.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listHouseholdMealSignals.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.listHouseholdMealSignals.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/get(listHouseholdMealSignals)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.listHouseholdMealSignals.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Upsert or remove a shared household meal signal
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-signals`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)`.
+    internal enum upsertHouseholdMealSignal {
+        internal static let id: Swift.String = "upsertHouseholdMealSignal"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.upsertHouseholdMealSignal.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertHouseholdMealSignal.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertHouseholdMealSignal.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertHouseholdMealSignal.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpsertHouseholdMealSignal)
+            }
+            internal var body: Operations.upsertHouseholdMealSignal.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.upsertHouseholdMealSignal.Input.Path,
+                headers: Operations.upsertHouseholdMealSignal.Input.Headers = .init(),
+                body: Operations.upsertHouseholdMealSignal.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-signals/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.OkResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.OkResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertHouseholdMealSignal.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertHouseholdMealSignal.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Household signal saved or removed
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertHouseholdMealSignal.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertHouseholdMealSignal.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertHouseholdMealSignal.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertHouseholdMealSignal.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.upsertHouseholdMealSignal.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.upsertHouseholdMealSignal.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
