@@ -872,8 +872,23 @@ private struct RequestHeaderMiddleware: ClientMiddleware {
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
         request.headerFields[.acceptLanguage] = AppLocalePreference.acceptLanguageHeader
+        request.headerFields[.vecklyToday] = Self.localTodayHeaderValue()
         return try await next(request, body, baseURL)
     }
+
+    private static func localTodayHeaderValue(now: Date = Date()) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .autoupdatingCurrent
+        let components = calendar.dateComponents([.year, .month, .day], from: now)
+        guard let year = components.year, let month = components.month, let day = components.day else {
+            return WeekCalendar.string(from: now)
+        }
+        return String(format: "%04d-%02d-%02d", year, month, day)
+    }
+}
+
+private extension HTTPField.Name {
+    static let vecklyToday = Self("X-Veckly-Today")!
 }
 
 enum APIError: Error, Equatable {
