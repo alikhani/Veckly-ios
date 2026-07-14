@@ -186,6 +186,41 @@ struct ShoppingListStoreTests {
         #expect(text?.contains(L10n.string("shopping.likelyAtHome")) == true)
         #expect(text?.contains("- [ ] Salt") == true)
     }
+
+    @Test func handoffStateIsNilForEmptyMainList() {
+        #expect(ShoppingListHandoffState.make(groups: [], checkedItems: []) == nil)
+    }
+
+    @Test func handoffStateIsReadyUntilMainItemsAreChecked() {
+        let groups = [
+            ShoppingListGroup(
+                category: "Produce",
+                items: [
+                    ShoppingListItem(itemKey: "produce:apples:", label: "Apples", amount: "4", unit: nil, checked: false),
+                    ShoppingListItem(itemKey: "produce:bananas:", label: "Bananas", amount: "6", unit: nil, checked: false),
+                ]
+            )
+        ]
+
+        #expect(ShoppingListHandoffState.make(groups: groups, checkedItems: ["produce:apples:"]) == .ready(totalItems: 2, checkedItems: 1))
+    }
+
+    @Test func handoffStateCompletesWhenAllMainItemsAreChecked() {
+        let groups = [
+            ShoppingListGroup(
+                category: "Produce",
+                items: [
+                    ShoppingListItem(itemKey: "produce:apples:", label: "Apples", amount: "4", unit: nil, checked: false),
+                    ShoppingListItem(itemKey: "produce:bananas:", label: "Bananas", amount: "6", unit: nil, checked: false),
+                ]
+            )
+        ]
+
+        #expect(ShoppingListHandoffState.make(
+            groups: groups,
+            checkedItems: ["produce:apples:", "produce:bananas:", "pantry:salt:"]
+        ) == .completed(totalItems: 2))
+    }
 }
 
 private enum TestShoppingListFixtures {

@@ -568,6 +568,22 @@ enum ShoppingListShareText {
     }
 }
 
+enum ShoppingListHandoffState: Equatable {
+    case ready(totalItems: Int, checkedItems: Int)
+    case completed(totalItems: Int)
+
+    static func make(groups: [ShoppingListGroup], checkedItems: Set<String>) -> ShoppingListHandoffState? {
+        let itemKeys = groups.flatMap { $0.items.map(\.itemKey) }
+        guard !itemKeys.isEmpty else { return nil }
+
+        let checkedCount = itemKeys.filter { checkedItems.contains($0) }.count
+        if checkedCount >= itemKeys.count {
+            return .completed(totalItems: itemKeys.count)
+        }
+        return .ready(totalItems: itemKeys.count, checkedItems: checkedCount)
+    }
+}
+
 protocol ShoppingListStoreAPIClient {
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary
     func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?)

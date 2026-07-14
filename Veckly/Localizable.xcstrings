@@ -6057,6 +6057,70 @@
         }
       }
     },
+    "shopping.handoff.completed.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The main list is checked off. Staples can still be reviewed below."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huvudlistan är avbockad. Basvaror kan fortfarande kollas nedan."
+          }
+        }
+      }
+    },
+    "shopping.handoff.completed.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything important is checked"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allt viktigt är avbockat"
+          }
+        }
+      }
+    },
+    "shopping.handoff.ready.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld main items checked. Share it or start shopping when you are ready."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld av %lld huvudvaror är avbockade. Dela listan eller börja handla när det passar."
+          }
+        }
+      }
+    },
+    "shopping.handoff.ready.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week’s list is ready"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckans lista är redo"
+          }
+        }
+      }
+    },
     "shopping.item.checked" : {
       "extractionState" : "stale",
       "localizations" : {

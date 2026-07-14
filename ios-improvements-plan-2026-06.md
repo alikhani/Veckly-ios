@@ -23,13 +23,13 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
 | 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
 | 17 | Hushållskompromiss v1 | ✅ Klart (2026-07-14) |
-| 18 | Shopping-handoff och partnerdelning | 🟡 Pågår (första slice 2026-07-14) |
+| 18 | Shopping-handoff och partnerdelning | ✅ Klart (2026-07-14) |
 
 ---
 
 ## Fas 18 — Shopping-handoff och partnerdelning
 
-**Status:** 🟡 Pågår — andra slice klar 2026-07-14
+**Status:** ✅ Klart 2026-07-14
 
 ### Mål
 
@@ -44,6 +44,9 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - Lokaliserad VoiceOver-label lades till för share-knappen.
 - Completion-kortets partner-nudge har nu konkret copy: bjud in partner när någon annan ska kunna handla från samma lista.
 - Invite-nudgen styrs av en testbar eligibility-regel: aktiv owner, household details för rätt hushåll och högst en medlem.
+- Ny `ShoppingListHandoffState` skiljer på redo huvudlista och helt avbockad huvudlista.
+- Shoppingfliken visar ett kompakt statuskort för "veckans lista är redo" och "allt viktigt är avbockat".
+- Staples/"Likely at home" räknas inte som huvudvaror, så allt-handlat-läget gäller faktisk shoppinglista.
 
 ### Test/Verifiering
 
@@ -52,9 +55,9 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/WeekQualitySummaryTests`
 - `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' build`
 
-### Nästa steg
+### Avslut
 
-Gör shoppingfliken tydligare efter handoff: ett "veckans lista är redo"-läge när listan har varor, och ett separat "allt handlat"-läge när huvudvarorna är ibockade.
+Fas 18 är stängd för v1. Nästa rekommenderade steg är beta-research och mätning: validera om share, partnerinvite och shoppingstatus faktiskt hjälper familjer genom första söndagsplaneringen.
 
 ---
 
