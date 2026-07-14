@@ -187,6 +187,52 @@ struct ShoppingListStoreTests {
         #expect(text?.contains("- [ ] Salt") == true)
     }
 
+    @Test func reminderShareItemsIncludeOnlyUncheckedMainItems() {
+        let groups = [
+            ShoppingListGroup(
+                category: "Produce",
+                items: [
+                    ShoppingListItem(
+                        itemKey: "produce:avocado:",
+                        label: "Avocado",
+                        amount: "0.5",
+                        unit: "pc",
+                        checked: false
+                    ),
+                    ShoppingListItem(
+                        itemKey: "produce:apples:",
+                        label: "Apples",
+                        amount: "2",
+                        unit: "st",
+                        checked: false
+                    ),
+                ]
+            ),
+            ShoppingListGroup(
+                category: "Pantry",
+                items: [
+                    ShoppingListItem(
+                        itemKey: "pantry:rice:g",
+                        label: "Rice",
+                        amount: "100",
+                        unit: "g",
+                        checked: false
+                    ),
+                ]
+            ),
+        ]
+
+        let items = ShoppingListShareText.reminderItems(
+            groups: groups,
+            checkedItems: ["produce:apples:"],
+            scaleFactor: 2.0
+        )
+
+        #expect(items == ["Avocado 1 pc", "Rice 200 g"])
+        #expect(!items.contains("Shopping list"))
+        #expect(!items.contains(where: { $0.contains("Apples") }))
+    }
+
     @Test func handoffStateIsNilForEmptyMainList() {
         #expect(ShoppingListHandoffState.make(groups: [], checkedItems: []) == nil)
     }

@@ -566,6 +566,19 @@ enum ShoppingListShareText {
         let suffix = amountLabel.isEmpty ? "" : " \(amountLabel)"
         return "- [\(state)] \(item.label)\(suffix)"
     }
+
+    static func reminderItems(
+        groups: [ShoppingListGroup],
+        checkedItems: Set<String>,
+        scaleFactor: Double
+    ) -> [String] {
+        groups.flatMap(\.items).compactMap { item in
+            guard !checkedItems.contains(item.itemKey) else { return nil }
+            let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
+            let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
+            return amountLabel.isEmpty ? item.label : "\(item.label) \(amountLabel)"
+        }
+    }
 }
 
 enum ShoppingListHandoffState: Equatable {

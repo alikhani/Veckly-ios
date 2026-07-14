@@ -86,8 +86,12 @@ struct ShoppingListTabView: View {
                                 .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                         }
                         Spacer()
-                        if let shoppingShareText {
-                            ShareLink(item: shoppingShareText) {
+                        if !shoppingReminderItems.isEmpty {
+                            ShareLink(
+                                items: shoppingReminderItems,
+                                subject: Text(L10n.string("shopping.title")),
+                                message: Text(weekContextLine ?? "")
+                            ) {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.callout.weight(.semibold))
                                     .frame(width: 34, height: 34)
@@ -323,6 +327,20 @@ struct ShoppingListTabView: View {
             checkedItems: appModel.shoppingListStore.checkedItems,
             scaleFactor: shoppingScaleFactor
         )
+    }
+
+    private var shoppingReminderItems: [String] {
+        let reminderItems = ShoppingListShareText.reminderItems(
+            groups: appModel.shoppingListStore.groups,
+            checkedItems: appModel.shoppingListStore.checkedItems,
+            scaleFactor: shoppingScaleFactor
+        )
+
+        if !reminderItems.isEmpty {
+            return reminderItems
+        }
+
+        return shoppingShareText.map { [$0] } ?? []
     }
 
     private var shoppingHandoffState: ShoppingListHandoffState? {
