@@ -845,3 +845,30 @@ Länk, ämne och mailtext finns på engelska och svenska i `Localizable.xcstring
 Resultat: `BUILD SUCCEEDED`.
 
 Riktat `RetroCardViewModelTests`-test kompilerade men själva XCTest-körningen avbröts på grund av simulatorhängning i Instruments/device service, inte ett Swift-kompileringsfel.
+
+---
+
+## Fas 13 — Genereringsfel i simulator/beta
+
+**Status:** ✅ Klart (2026-07-14)
+
+### Mål
+
+När en familj inte kan generera veckan ska appen visa ett användbart fel istället för en generisk banner. I debug/simulator ska okända backendfel dessutom bära HTTP-status så vi snabbt ser om problemet är receptdata, avoid-listan, auth eller server.
+
+### Utfört
+
+**Backendfel mappas mer exakt**
+`VecklyAPIClient.generateWeekPlan(...)` läser nu 422-body från OpenAPI-klienten och skiljer på `NO_RECIPES` och `ALL_RECIPES_EXCLUDED`.
+
+**Bättre UI-feedback**
+`WeekStore.generateWeek(...)` visar befintlig “lägg till recept”-copy för tom receptpool, ny avoid-list-copy när alla recept filtrerats bort, och `HTTP <status>` i debug-buildar för serverfel.
+
+**Regressionstester**
+`WeekViewModelMapperTests` täcker båda förväntade generatorfelen så vi inte råkar falla tillbaka till generisk banner.
+
+### Verifiering
+
+`xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/WeekViewModelMapperTests`
+
+Resultat: `TEST SUCCEEDED`.

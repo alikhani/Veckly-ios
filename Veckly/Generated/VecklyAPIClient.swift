@@ -519,8 +519,13 @@ struct VecklyAPIClient {
         switch output {
         case .ok:
             return
-        case .unprocessableContent:
-            throw APIError.noRecipesForGeneration
+        case let .unprocessableContent(r):
+            switch try r.body.json.error {
+            case .NO_RECIPES:
+                throw APIError.noRecipesForGeneration
+            case .ALL_RECIPES_EXCLUDED:
+                throw APIError.allRecipesExcludedForGeneration
+            }
         case .unauthorized:
             throw APIError.unauthorized
         case let .undocumented(statusCode, _):
@@ -879,6 +884,7 @@ enum APIError: Error, Equatable {
     case stale(latestUpdatedAt: String?)
     case recipeImport(RecipeImportFailure)
     case noRecipesForGeneration
+    case allRecipesExcludedForGeneration
 }
 
 enum RecipeImportFailure: Equatable {

@@ -282,6 +282,32 @@ struct WeekViewModelMapperTests {
     }
 
     @MainActor
+    @Test func generateWeekShowsNoRecipesMessageWhenPlannerHasNoPool() async {
+        let store = WeekStore(apiClient: GenerateFailingWeekStoreAPIClient(error: .noRecipesForGeneration))
+
+        await store.generateWeek(
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+            userID: "33333333-3333-3333-3333-333333333333"
+        )
+
+        #expect(store.mutationError == L10n.string("error.week.noRecipes"))
+    }
+
+    @MainActor
+    @Test func generateWeekShowsAvoidListMessageWhenEveryRecipeIsExcluded() async {
+        let store = WeekStore(apiClient: GenerateFailingWeekStoreAPIClient(error: .allRecipesExcludedForGeneration))
+
+        await store.generateWeek(
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+            userID: "33333333-3333-3333-3333-333333333333"
+        )
+
+        #expect(store.mutationError != L10n.string("error.week.generate"))
+        #expect(store.mutationError != L10n.string("error.week.noRecipes"))
+        #expect(store.mutationError?.contains("undvik") == true || store.mutationError?.contains("avoid") == true)
+    }
+
+    @MainActor
     @Test func toggleSkipKeepsLocalDayRowWhenAPIRequestFails() async {
         let store = WeekStore(
             apiClient: FailingWeekStoreAPIClient(),
@@ -565,6 +591,33 @@ struct WeekViewModelMapperTests {
             Issue.record("Expected final desired state to collapse to a single skip event for Monday")
         }
         #expect(store.hasPendingSync == false)
+    }
+}
+
+private final class GenerateFailingWeekStoreAPIClient: WeekStoreAPIClient {
+    let error: APIError
+
+    init(error: APIError) {
+        self.error = error
+    }
+
+    func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
+        throw APIError.notFound
+    }
+
+    func appendWeekPlanEvent(
+        householdID: String,
+        weekStartDate: String,
+        userID: String,
+        event: WeekPlanEventInput
+    ) async throws {}
+
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
+        throw error
+    }
+
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
+        throw APIError.notFound
     }
 }
 

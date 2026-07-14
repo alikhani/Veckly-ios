@@ -174,9 +174,25 @@ final class WeekStore {
             }
         } catch APIError.noRecipesForGeneration {
             mutationError = L10n.string("error.week.noRecipes")
+        } catch APIError.allRecipesExcludedForGeneration {
+            mutationError = Self.allRecipesExcludedGenerationMessage
+        } catch APIError.server(let statusCode) {
+            #if DEBUG
+            mutationError = "\(L10n.string("error.week.generate")) (HTTP \(statusCode))"
+            #else
+            mutationError = L10n.string("error.week.generate")
+            #endif
         } catch {
             mutationError = L10n.string("error.week.generate")
         }
+    }
+
+    private static var allRecipesExcludedGenerationMessage: String {
+        let languageCode = AppLocalePreference.effectiveLocale.language.languageCode?.identifier
+        if languageCode == "sv" {
+            return "Alla sparade recept matchar något ni vill undvika. Justera undvik-listan eller lägg till fler recept."
+        }
+        return "Every saved recipe matches something your household avoids. Adjust the avoid list or add more recipes."
     }
 
     func assignMeal(day: WeekDayRowViewModel, recipe: WeekSummaryRecipe, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
