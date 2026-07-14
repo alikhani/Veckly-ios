@@ -172,6 +172,39 @@ struct VecklyAPIClient {
         }
     }
 
+    func createProductEvent(
+        householdID: String,
+        eventName: ProductEventName,
+        weekStartDate: String?,
+        properties: ProductEventProperties
+    ) async throws {
+        guard let token = await getToken() else { throw APIError.unauthorized }
+        let url = baseURL.appendingPathComponent("households/\(householdID)/product-events")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalePreference.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
+        request.httpBody = try JSONEncoder().encode(ProductEventRequest(
+            eventName: eventName.rawValue,
+            weekStartDate: weekStartDate,
+            properties: properties
+        ))
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        switch http.statusCode {
+        case 201:
+            return
+        case 401:
+            throw APIError.unauthorized
+        case 404:
+            throw APIError.notFound
+        default:
+            throw APIError.server(statusCode: http.statusCode)
+        }
+    }
+
     func appendWeekPlanEvent(
         householdID: String,
         weekStartDate: String,
@@ -794,6 +827,12 @@ private struct StaleShoppingListStateResponse: Decodable {
 private struct ShoppingListStateResponse: Decodable {
     let state: ShoppingListSharedState?
     let updatedAt: String?
+}
+
+private struct ProductEventRequest: Encodable {
+    let eventName: String
+    let weekStartDate: String?
+    let properties: ProductEventProperties
 }
 
 private struct RequestHeaderMiddleware: ClientMiddleware {

@@ -7,6 +7,7 @@ struct ShoppingListTabView: View {
     @State private var showCustomItemSheet = false
     @State private var clearedKeys: [String] = []
     @State private var undoTask: Task<Void, Never>?
+    @State private var reportedCompletedShoppingListWeeks: Set<String> = []
 
     /// Base recipe servings are baked into the shopping list items by the backend.
     /// The backend stores raw ingredient amounts (no household scaling), so we scale
@@ -94,6 +95,12 @@ struct ShoppingListTabView: View {
                             .buttonStyle(.bordered)
                             .tint(VecklyDesign.Colors.inkMid)
                             .accessibilityLabel(L10n.string("shopping.share.action"))
+                            .simultaneousGesture(TapGesture().onEnded {
+                                appModel.recordProductEvent(.shoppingShared, weekStartDate: appModel.weekStore.weekStartDate, properties: [
+                                    "items": .int(totalItemCount),
+                                    "checkedItems": .int(checkedItemCount)
+                                ])
+                            })
                         }
                         Button {
                             showCustomItemSheet = true
@@ -289,6 +296,10 @@ struct ShoppingListTabView: View {
             appModel.shoppingListStore.invalidateCache()
             await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
         }
+        .onChange(of: shoppingHandoffState?.isCompleted) { _, isCompleted in
+            guard isCompleted == true else { return }
+            recordShoppingMainListCompletedIfNeeded()
+        }
     }
 
     private func removeCustomItem(key: String) {
@@ -319,6 +330,23 @@ struct ShoppingListTabView: View {
             groups: appModel.shoppingListStore.groups,
             checkedItems: appModel.shoppingListStore.checkedItems
         )
+    }
+
+    private func recordShoppingMainListCompletedIfNeeded() {
+        let weekStartDate = appModel.weekStore.weekStartDate
+        guard reportedCompletedShoppingListWeeks.insert(weekStartDate).inserted else { return }
+        appModel.recordProductEvent(.shoppingMainListCompleted, weekStartDate: weekStartDate, properties: [
+            "items": .int(totalItemCount)
+        ])
+    }
+}
+
+private extension ShoppingListHandoffState {
+    var isCompleted: Bool {
+        switch self {
+        case .completed: true
+        case .ready: false
+        }
     }
 }
 

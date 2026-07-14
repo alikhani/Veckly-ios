@@ -18,6 +18,7 @@ final class AppModel {
     let familyCookbookStore: FamilyCookbookStore
     let householdSavedRecipesStore: HouseholdSavedRecipesStore
     let userProfileStore: UserProfileStore
+    let productEventStore: ProductEventStore
     let sundayReminderScheduler = SundayReminderScheduler()
     private let usesSeededCoreReader: Bool
 
@@ -44,6 +45,7 @@ final class AppModel {
         self.familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
         self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)
+        self.productEventStore = ProductEventStore(apiClient: apiClient)
 
         if usesSeededCoreReader {
             authSessionStore.seedForUITests()
@@ -206,6 +208,22 @@ final class AppModel {
             await loadCoreReader()
         } else {
             signOut()
+        }
+    }
+
+    func recordProductEvent(
+        _ eventName: ProductEventName,
+        weekStartDate: String? = nil,
+        properties: ProductEventProperties = [:]
+    ) {
+        guard !usesSeededCoreReader, let householdID = householdStore.activeHousehold?.id else { return }
+        Task {
+            await productEventStore.record(
+                eventName,
+                householdID: householdID,
+                weekStartDate: weekStartDate,
+                properties: properties
+            )
         }
     }
 }

@@ -429,6 +429,14 @@ private struct OnboardingAvoidIngredientsView: View {
                 selectedDays: orderedDays
             )
             await saveGoToDishIfNeeded(householdID: household.id)
+            appModel.recordProductEvent(.onboardingCompleted, properties: [
+                "adults": .int(adults),
+                "children": .int(children),
+                "selectedDays": .int(selectedDays.count),
+                "priorities": .int(selectedPriorities.count),
+                "avoidIngredients": .int(avoidIngredients.count),
+                "goToDishSaved": .bool(!goToDishTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            ])
             // Profile is now non-nil → needsOnboarding becomes false → cover dismisses automatically
             // No week generation here — user will choose to generate or add meals manually
         } catch {

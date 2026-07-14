@@ -129,7 +129,10 @@ struct WeekTabView: View {
                         viewModel: retroViewModel,
                         feedbackStore: appModel.feedbackStore,
                         householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                        onResolved: { retroViewModel.clear() }
+                        onResolved: {
+                            appModel.recordProductEvent(.retroCompleted, weekStartDate: WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1))
+                            retroViewModel.clear()
+                        }
                     )
                 }
 
@@ -441,6 +444,7 @@ struct WeekTabView: View {
             ? appModel.weekStore.dayRows.filter { !$0.isLocked && !$0.isSkipped }
             : []
         let wasEmptyBefore = appModel.weekStore.hasEmptyDays
+        let hadWeekContentBefore = appModel.weekStore.hasWeekContent
 
         await appModel.weekStore.generateWeek(
             household: household,
@@ -449,6 +453,11 @@ struct WeekTabView: View {
             viewedWeekStartDate: targetWeekStartDate
         )
         appModel.shoppingListStore.invalidateCache()
+        if !regenerate, !hadWeekContentBefore, appModel.weekStore.mutationError == nil {
+            appModel.recordProductEvent(.firstWeekGenerated, weekStartDate: targetWeekStartDate, properties: [
+                "plannedDinners": .int(plannedDinnerCount)
+            ])
+        }
         checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
 
         guard regenerate, appModel.weekStore.mutationError == nil, !preRegenerateSnapshot.isEmpty else { return }
@@ -467,6 +476,11 @@ struct WeekTabView: View {
     private func checkForSessionEnd(wasEmptyBefore: Bool) {
         guard isViewingCurrentWeek, wasEmptyBefore, !appModel.weekStore.hasEmptyDays, plannedDinnerCount > 0 else { return }
         showSessionEndBeat = true
+        appModel.recordProductEvent(.weekCompleted, weekStartDate: viewedWeekStartDate, properties: [
+            "plannedDinners": .int(plannedDinnerCount),
+            "quickDinners": .int(quickDinnerCount),
+            "prepFriendlyDinners": .int(prepFriendlyDinnerCount)
+        ])
     }
 
     private func presentRegenerateUndo(rows: [WeekDayRowViewModel], weekStartDate: String) {
@@ -753,6 +767,7 @@ struct WeekTabView: View {
 
                     Button("week.sessionEnd.cta") {
                         showSessionEndBeat = false
+                        appModel.recordProductEvent(.shoppingOpenedAfterWeekCompleted, weekStartDate: viewedWeekStartDate)
                         onGoToShoppingTab?()
                     }
                     .buttonStyle(VecklyPrimaryButtonStyle())
@@ -765,6 +780,7 @@ struct WeekTabView: View {
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
                             Button("week.sessionEnd.inviteCta") {
                                 showSessionEndBeat = false
+                                appModel.recordProductEvent(.partnerInviteClicked, weekStartDate: viewedWeekStartDate)
                                 onGoToHouseholdTab?()
                             }
                             .font(.subheadline.weight(.semibold))

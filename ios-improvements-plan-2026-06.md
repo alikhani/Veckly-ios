@@ -786,3 +786,33 @@ När appen är write-capable i planeringssidan är dessa naturliga nästa steg:
 - **Onboarding** — ny användare utan veckoplan möts av tomt state; 3-stegs
   preferensflöde kan mappa mot `appendWeekPlanEvent` med `planning_request_updated`.
 - **Notiser** — "Veckans plan är klar" push-notis när ny vecka genereras.
+
+---
+
+## Fas 11 — Beta product events
+
+**Status:** ✅ Klart (2026-07-14)
+
+### Mål
+
+iOS ska skicka de viktigaste beta-signalerna till backend/Supabase utan att lägga till ett separat analytics-SDK eller blockera användarflödet.
+
+### Utfört
+
+**Best-effort event store**
+`ProductEventStore` skickar events via `ProductEventStoreAPIClient` och sväljer fel. Mätning får inte bli ett user-facing fel i onboarding, planering eller shopping.
+
+**Backend-koppling**
+`VecklyAPIClient.createProductEvent(...)` postar till `POST /households/{householdId}/product-events` med samma bearer-token och `Accept-Language`-header som övriga manuella klientmetoder.
+
+**V1-event triggers**
+`onboarding_completed`, `first_week_generated`, `week_completed`, `shopping_opened_after_week_completed`, `shopping_shared`, `partner_invite_clicked`, `shopping_main_list_completed` och `retro_completed` triggas i respektive iOS-flöde.
+
+**Properties**
+Events skickar lågriskmått som antal vuxna/barn, valda planeringsdagar, planerade middagar, snabba/prep-vänliga middagar och antal shoppingitems. Inget receptinnehåll eller fri text skickas som analytics-property.
+
+### Verifiering
+
+`xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/ProductEventStoreTests`
+
+Resultat: `TEST SUCCEEDED`.
