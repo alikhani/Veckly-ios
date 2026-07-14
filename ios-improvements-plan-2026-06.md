@@ -816,3 +816,32 @@ Events skickar lågriskmått som antal vuxna/barn, valda planeringsdagar, planer
 `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/ProductEventStoreTests`
 
 Resultat: `TEST SUCCEEDED`.
+
+---
+
+## Fas 12 — Beta feedback efter retro
+
+**Status:** ✅ Klart (2026-07-14)
+
+### Mål
+
+Ge beta-familjer ett lätt sätt att säga vad som inte passade veckan direkt efter söndagsretro, utan att bygga ett nytt feedbacksystem eller samla in mer strukturerad data än vi behöver.
+
+### Utfört
+
+**Diskret mailto-länk**
+När retro-kortet kollapsar efter att alla rätter har fått tumme upp/ner visas länken “Berätta vad som inte funkade”. Den öppnar `support@veckly.app` med förifyllt ämne och veckokontext.
+
+**Ingen ny backend**
+Feedbackkanalen är avsiktligt manuell för första TestFlight-vågen. Produkt-events mäter funneln; mailen fångar kvalitativa beta-noteringar.
+
+**Lokalisering**
+Länk, ämne och mailtext finns på engelska och svenska i `Localizable.xcstrings`.
+
+### Verifiering
+
+`xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' build`
+
+Resultat: `BUILD SUCCEEDED`.
+
+Riktat `RetroCardViewModelTests`-test kompilerade men själva XCTest-körningen avbröts på grund av simulatorhängning i Instruments/device service, inte ett Swift-kompileringsfel.

@@ -108,6 +108,15 @@ struct RetroCardViewModelTests {
 
         #expect(copy == "\(L10n.format("retro.done.weekCount", 8)) \(L10n.format("retro.done.topRecipe", "June", "Korvstroganoff"))")
     }
+
+    @Test func betaFeedbackMailURLIncludesSubjectAndWeekContext() {
+        let url = RetroCardViewModel.betaFeedbackMailURL(weekStartDate: "2026-07-06")
+
+        #expect(url?.scheme == "mailto")
+        #expect(url?.absoluteString.contains("support@veckly.app") == true)
+        #expect(url?.absoluteString.contains("subject=") == true)
+        #expect(url?.absoluteString.contains("2026-07-06") == true)
+    }
 }
 
 private final class NoopFeedbackStoreAPIClient: FeedbackStoreAPIClient {

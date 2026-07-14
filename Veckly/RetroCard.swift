@@ -115,6 +115,27 @@ final class RetroCardViewModel {
         guard let topRecipe = recap.topRecipeThisMonth else { return weekLine }
         return "\(weekLine) \(L10n.format("retro.done.topRecipe", monthName, topRecipe.title))"
     }
+
+    static func betaFeedbackMailURL(weekStartDate: String?) -> URL? {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = "support@veckly.app"
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: L10n.string("retro.feedback.emailSubject")),
+            URLQueryItem(name: "body", value: betaFeedbackEmailBody(weekStartDate: weekStartDate))
+        ]
+        return components.url
+    }
+
+    private static func betaFeedbackEmailBody(weekStartDate: String?) -> String {
+        let weekLine = weekStartDate.map { L10n.format("retro.feedback.emailWeek", $0) }
+        return [
+            L10n.string("retro.feedback.emailIntro"),
+            weekLine,
+            "",
+            L10n.string("retro.feedback.emailPrompt")
+        ].compactMap { $0 }.joined(separator: "\n")
+    }
 }
 
 /// "Hur blev veckan?" — a quick, skippable thumbs-up/down pass over last
@@ -135,10 +156,19 @@ struct RetroCard: View {
     var body: some View {
         VecklyCard {
             if isCollapsing {
-                Text(RetroCardViewModel.doneCopy(recap: viewModel.recap, monthName: Date.now.formatted(.dateTime.month(.wide))))
-                    .font(.subheadline)
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(RetroCardViewModel.doneCopy(recap: viewModel.recap, monthName: Date.now.formatted(.dateTime.month(.wide))))
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    if let feedbackURL = RetroCardViewModel.betaFeedbackMailURL(weekStartDate: viewModel.weekStartDate) {
+                        Link(destination: feedbackURL) {
+                            Label(L10n.string("retro.feedback.link"), systemImage: "envelope")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
                     header

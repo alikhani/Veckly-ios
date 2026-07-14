@@ -5354,6 +5354,86 @@
         }
       }
     },
+    "retro.feedback.emailIntro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi Veckly,"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hej Veckly,"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailPrompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This did not fit our week:"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det här passade inte vår vecka:"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailSubject" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly beta feedback"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckly beta-feedback"
+          }
+        }
+      }
+    },
+    "retro.feedback.emailWeek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week starting %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vecka som börjar %@"
+          }
+        }
+      }
+    },
+    "retro.feedback.link" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell us what did not work"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berätta vad som inte funkade"
+          }
+        }
+      }
+    },
     "retro.done.topRecipe" : {
       "extractionState" : "stale",
       "localizations" : {
