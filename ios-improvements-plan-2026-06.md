@@ -42,6 +42,7 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - Texten inkluderar veckokontext, kategorirubriker, checkad status, custom items, staples/"Likely at home" och hushållsskalade mängder.
 - Eftersom iOS Påminnelser slår ihop share sheet-text till en enda reminder använder appen nu en separat EventKit-export som skapar en reminder per kvarvarande huvudvara.
 - Påminnelser-menyn visar hur många varor som exporteras, har lokaliserade success-/felmeddelanden och behåller "Dela som text" som tydlig fallback.
+- Backendens shopping-summary slår nu ihop singular/plural-varianter när båda finns i samma lista, till exempel `carrot` + `carrots`, utan att ändra fristående labels som `tomatoes`.
 - Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
 - Lokaliserad VoiceOver-label lades till för share-knappen.
 - Completion-kortets partner-nudge har nu konkret copy: bjud in partner när någon annan ska kunna handla från samma lista.
