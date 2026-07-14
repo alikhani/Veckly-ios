@@ -94,13 +94,13 @@ struct ShoppingListTabView: View {
                                 Button {
                                     Task { await exportShoppingListToReminders() }
                                 } label: {
-                                    Label("Lägg i Påminnelser", systemImage: "checklist")
+                                    Label(remindersExportButtonLabel, systemImage: "checklist")
                                 }
                                 .disabled(isExportingReminders)
 
                                 if let shoppingShareText {
                                     ShareLink(item: shoppingShareText) {
-                                        Label("Dela som text", systemImage: "square.and.arrow.up")
+                                        Label(L10n.string("shopping.share.textFallback"), systemImage: "square.and.arrow.up")
                                     }
                                 }
                             } label: {
@@ -111,12 +111,6 @@ struct ShoppingListTabView: View {
                             .buttonStyle(.bordered)
                             .tint(VecklyDesign.Colors.inkMid)
                             .accessibilityLabel(L10n.string("shopping.share.action"))
-                            .simultaneousGesture(TapGesture().onEnded {
-                                appModel.recordProductEvent(.shoppingShared, weekStartDate: appModel.weekStore.weekStartDate, properties: [
-                                    "items": .int(totalItemCount),
-                                    "checkedItems": .int(checkedItemCount)
-                                ])
-                            })
                         }
                         Button {
                             showCustomItemSheet = true
@@ -320,7 +314,7 @@ struct ShoppingListTabView: View {
             Alert(
                 title: Text(notice.title),
                 message: Text(notice.message),
-                dismissButton: .default(Text("OK"))
+                dismissButton: .default(Text(L10n.string("common.ok")))
             )
         }
     }
@@ -362,6 +356,12 @@ struct ShoppingListTabView: View {
         return shoppingShareText.map { [$0] } ?? []
     }
 
+    private var remindersExportButtonLabel: String {
+        let count = shoppingReminderItems.count
+        let key = count == 1 ? "shopping.reminders.export.one" : "shopping.reminders.export.other"
+        return L10n.format(key, count)
+    }
+
     private var shoppingHandoffState: ShoppingListHandoffState? {
         ShoppingListHandoffState.make(
             groups: appModel.shoppingListStore.groups,
@@ -381,8 +381,11 @@ struct ShoppingListTabView: View {
                 notes: weekContextLine
             )
             reminderExportNotice = ShoppingReminderExportNotice(
-                title: "Påminnelser",
-                message: "\(count) varor lades till som separata påminnelser."
+                title: L10n.string("shopping.reminders.success.title"),
+                message: L10n.format(
+                    count == 1 ? "shopping.reminders.success.message.one" : "shopping.reminders.success.message.other",
+                    count
+                )
             )
             appModel.recordProductEvent(.shoppingShared, weekStartDate: appModel.weekStore.weekStartDate, properties: [
                 "items": .int(count),
@@ -390,13 +393,13 @@ struct ShoppingListTabView: View {
             ])
         } catch ShoppingListReminderExportError.accessDenied {
             reminderExportNotice = ShoppingReminderExportNotice(
-                title: "Påminnelser är inte aktiverat",
-                message: "Ge Veckly åtkomst till Påminnelser i Inställningar och försök igen."
+                title: L10n.string("shopping.reminders.denied.title"),
+                message: L10n.string("shopping.reminders.denied.message")
             )
         } catch {
             reminderExportNotice = ShoppingReminderExportNotice(
-                title: "Kunde inte lägga till påminnelser",
-                message: "Testa igen, eller använd Dela som text."
+                title: L10n.string("shopping.reminders.error.title"),
+                message: L10n.string("shopping.reminders.error.message")
             )
         }
     }
