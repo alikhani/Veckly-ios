@@ -239,6 +239,7 @@ struct WeekTabView: View {
                         Task {
                             appModel.shoppingListStore.invalidateCache()
                             await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
+                            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
                             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
                         }
                     } else {
@@ -252,6 +253,7 @@ struct WeekTabView: View {
                         Task {
                             appModel.shoppingListStore.invalidateCache()
                             await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
+                            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
                         }
                     } else {
                         Task { await appModel.handleUnauthorized() }
@@ -334,6 +336,7 @@ struct WeekTabView: View {
                         Task {
                             appModel.shoppingListStore.invalidateCache()
                             await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
+                            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
                         }
                     } else {
                         Task { await appModel.handleUnauthorized() }
@@ -453,6 +456,7 @@ struct WeekTabView: View {
             regenerate: regenerate,
             viewedWeekStartDate: targetWeekStartDate
         )
+        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: targetWeekStartDate)
         if !regenerate, !hadWeekContentBefore, appModel.weekStore.mutationError == nil {
             appModel.recordProductEvent(.firstWeekGenerated, weekStartDate: targetWeekStartDate, properties: [
                 "plannedDinners": .int(plannedDinnerCount)
@@ -512,7 +516,14 @@ struct WeekTabView: View {
                     await appModel.weekStore.unassignMeal(day: row, household: household, userID: userID, viewedWeekStartDate: context.weekStartDate)
                 }
             }
+            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: context.weekStartDate)
         }
+    }
+
+    private func refreshShoppingListAfterWeekMutation(household: Household, weekStartDate: String) async {
+        guard appModel.weekStore.mutationError == nil else { return }
+        appModel.shoppingListStore.invalidateCache()
+        await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
     }
 
     private func regenerateUndoBanner(_ context: RegenerateUndoContext) -> some View {
