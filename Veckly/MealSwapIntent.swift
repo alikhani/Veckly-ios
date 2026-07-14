@@ -34,6 +34,23 @@ enum MealSwapIntent: String, CaseIterable, Identifiable {
 }
 
 struct MealSwapIntentRanker {
+    struct Result: Equatable {
+        let recipes: [FullRecipe]
+        let isFallback: Bool
+    }
+
+    static func rankWithFallback(
+        _ recipes: [FullRecipe],
+        intent: MealSwapIntent,
+        currentRecipe: WeekSummaryRecipe?
+    ) -> Result {
+        let ranked = rank(recipes, intent: intent, currentRecipe: currentRecipe)
+        guard intent != .any, ranked.isEmpty, !recipes.isEmpty else {
+            return Result(recipes: ranked, isFallback: false)
+        }
+        return Result(recipes: recipes, isFallback: true)
+    }
+
     static func rank(
         _ recipes: [FullRecipe],
         intent: MealSwapIntent,

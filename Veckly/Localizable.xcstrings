@@ -2684,6 +2684,22 @@
         }
       }
     },
+    "meal.swapIntent.fallback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No clear matches for this change, so we're showing all recipes."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inga tydliga träffar för den här ändringen, så vi visar alla recept."
+          }
+        }
+      }
+    },
     "meal.swapIntent.moreVariation" : {
       "localizations" : {
         "en" : {

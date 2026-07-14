@@ -43,6 +43,16 @@ struct MealSwapIntentRankerTests {
         #expect(sameFeel.map(\.title) == ["Risotto"])
     }
 
+    @Test func rankWithFallbackReturnsAllRecipesWhenIntentHasNoMatches() {
+        let slow = fullRecipe("Slow Stew", prep: 20, cook: 70, tags: [])
+        let current = weekRecipe("Current", prep: 10, cook: 20, tags: [])
+
+        let result = MealSwapIntentRanker.rankWithFallback([slow], intent: .quicker, currentRecipe: current)
+
+        #expect(result.isFallback)
+        #expect(result.recipes.map(\.title) == ["Slow Stew"])
+    }
+
     private func fullRecipe(
         _ title: String,
         prep: Int? = 10,

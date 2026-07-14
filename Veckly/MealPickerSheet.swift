@@ -51,11 +51,19 @@ struct MealPickerSheet: View {
 
     private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
 
-    var filtered: [FullRecipe] {
+    private var rankedResult: MealSwapIntentRanker.Result {
         let matchesSearch = searchText.isEmpty
             ? recipes
             : recipes.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
-        return MealSwapIntentRanker.rank(matchesSearch, intent: searchText.isEmpty ? selectedIntent : .any, currentRecipe: day.recipe)
+        return MealSwapIntentRanker.rankWithFallback(
+            matchesSearch,
+            intent: searchText.isEmpty ? selectedIntent : .any,
+            currentRecipe: day.recipe
+        )
+    }
+
+    var filtered: [FullRecipe] {
+        rankedResult.recipes
     }
 
     private var likedRecipes: [FullRecipe] {
@@ -207,6 +215,10 @@ struct MealPickerSheet: View {
                 swapIntentSection
             }
 
+            if rankedResult.isFallback {
+                intentFallbackSection
+            }
+
             if !suggestedRecipes.isEmpty {
                 Section(L10n.string("recipes.suggestions")) {
                     ForEach(suggestedRecipes, id: \.recipe.id) { entry in
@@ -252,6 +264,19 @@ struct MealPickerSheet: View {
             }
         }
         .listStyle(.insetGrouped)
+    }
+
+    private var intentFallbackSection: some View {
+        Section {
+            Label {
+                Text("meal.swapIntent.fallback")
+                    .font(.subheadline)
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+            } icon: {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            }
+        }
     }
 
     private var swapIntentSection: some View {
