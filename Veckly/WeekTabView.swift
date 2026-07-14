@@ -1295,10 +1295,7 @@ struct WeekTabView: View {
     }
 
     private var listDays: [WeekDayRowViewModel] {
-        guard isViewingCurrentWeek, let heroId = tonightHeroDay?.id else {
-            return appModel.weekStore.dayRows
-        }
-        return appModel.weekStore.dayRows.filter { $0.id != heroId }
+        appModel.weekStore.dayRows
     }
 
     private var weekList: some View {
@@ -1312,6 +1309,7 @@ struct WeekTabView: View {
                 CompactDayRow(
                     day: day,
                     coverage: coverage(for: day),
+                    isHighlighted: isViewingCurrentWeek && day.id == tonightHeroDay?.id,
                     isViewOnly: isViewingLastWeek,
                     onTap: {
                         if isViewingLastWeek {
@@ -1331,16 +1329,14 @@ struct WeekTabView: View {
     }
 
     private var weekListSectionLabel: LocalizedStringKey {
-        if isViewingCurrentWeek {
-            return tonightHeroDay == nil ? "week.section" : "week.rest"
-        }
-        return "week.section"
+        "week.section"
     }
 }
 
 struct CompactDayRow: View {
     let day: WeekDayRowViewModel
     var coverage: PrepBatchCoverage? = nil
+    var isHighlighted: Bool = false
     var isViewOnly: Bool = false
     let onTap: () -> Void
 
@@ -1350,6 +1346,16 @@ struct CompactDayRow: View {
         }
         .buttonStyle(.plain)
         .opacity(day.isPast ? 0.7 : 1)
+        .background {
+            if isHighlighted {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(VecklyDesign.Colors.surfaceStrong)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(VecklyDesign.Colors.edgeLight, lineWidth: 1)
+                    )
+            }
+        }
     }
 
     private var rowContent: some View {
@@ -1365,6 +1371,7 @@ struct CompactDayRow: View {
             }
         }
         .padding(.vertical, 12)
+        .padding(.horizontal, isHighlighted ? 10 : 0)
         .contentShape(Rectangle())
     }
 

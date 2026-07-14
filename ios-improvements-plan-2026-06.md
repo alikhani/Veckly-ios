@@ -872,3 +872,21 @@ När en familj inte kan generera veckan ska appen visa ett användbart fel istä
 `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/WeekViewModelMapperTests`
 
 Resultat: `TEST SUCCEEDED`.
+
+---
+
+## Fas 14 — Komplett veckolista efter generering
+
+**Status:** ✅ Klart (2026-07-14)
+
+### Mål
+
+Efter att veckan genererats ska hero-kortet och veckolistan inte kännas som två olika sanningar. Kvällens/nästa rätt får gärna lyftas, men den ska fortfarande synas på sin veckodag i listan.
+
+### Utfört
+
+**Alla dagar ligger kvar i listan**
+Veckolistan filtrerar inte längre bort hero-dagen. Rubriken är konsekvent “Veckan” istället för “Resten av veckan”, så användaren får en komplett veckokarta.
+
+**Hero-dagen markeras milt**
+Den dag som lyfts i kortet får en diskret markerad rad i listan, så kopplingen mellan kort och veckodag blir tydlig utan att skapa dubbelarbete.
