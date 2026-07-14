@@ -533,13 +533,20 @@ struct ShoppingListViewModelMapper {
             .map { category, items in
                 ShoppingListGroup(
                     category: category,
-                    items: items.sorted { left, right in
+                    items: deduplicatedShoppingItems(items).sorted { left, right in
                         if left.isCustom != right.isCustom { return left.isCustom && !right.isCustom }
                         return left.label.localizedCaseInsensitiveCompare(right.label) == .orderedAscending
                     }
                 )
             }
             .sorted { ShoppingCategory.from($0.category).sortIndex < ShoppingCategory.from($1.category).sortIndex }
+    }
+
+    private static func deduplicatedShoppingItems(_ items: [ShoppingListItem]) -> [ShoppingListItem] {
+        var seen: Set<String> = []
+        return items.filter { item in
+            seen.insert(item.itemKey).inserted
+        }
     }
 }
 

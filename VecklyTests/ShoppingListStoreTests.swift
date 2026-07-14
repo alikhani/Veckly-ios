@@ -113,6 +113,22 @@ struct ShoppingListStoreTests {
         #expect(renderedCustomItems.first?.label.trimmingCharacters(in: .whitespacesAndNewlines) == "Toapapper")
     }
 
+    @Test func duplicateItemKeysAreNotRenderedWithinTheSameGroup() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.summary = TestShoppingListFixtures.summaryWithDuplicateCustomItemKey
+        apiClient.state = nil
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        let renderedKeys = store.groups.flatMap(\.items).map(\.itemKey)
+        #expect(renderedKeys == ["custom:duplicate-servetter"])
+    }
+
     @Test func toggleFailureKeepsLocalStateAndMarksPendingSync() async {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
@@ -413,6 +429,21 @@ private enum TestShoppingListFixtures {
             ]
         )
     }
+
+    static let summaryWithDuplicateCustomItemKey = ShoppingListSummary(
+        household: SummaryHousehold(id: household.id, name: household.name),
+        weekStartDate: weekStartDate,
+        updatedAt: "2026-06-22T09:00:00.000Z",
+        groups: [
+            ShoppingListGroup(
+                category: "Other",
+                items: [
+                    ShoppingListItem(itemKey: "custom:duplicate-servetter", label: "Servetter", amount: nil, unit: nil, checked: false, isCustom: true),
+                    ShoppingListItem(itemKey: "custom:duplicate-servetter", label: "Servetter", amount: nil, unit: nil, checked: false, isCustom: true),
+                ]
+            )
+        ]
+    )
 
     static let serverCustomItem = ShoppingCustomItem(
         itemKey: "custom:server",
