@@ -242,19 +242,13 @@ final class ShoppingListStore {
     private func deduplicatedCustomItems(_ items: [ShoppingCustomItem]) -> [ShoppingCustomItem] {
         var seen: Set<String> = []
         return items.filter { item in
-            let key = customItemIdentity(label: item.label, category: item.category)
+            let key = shoppingCustomItemIdentity(label: item.label, category: item.category)
             return seen.insert(key).inserted
         }
     }
 
     private func isSameCustomItem(_ item: ShoppingCustomItem, label: String, category: String) -> Bool {
-        customItemIdentity(label: item.label, category: item.category) == customItemIdentity(label: label, category: category)
-    }
-
-    private func customItemIdentity(label: String, category: String) -> String {
-        let normalizedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let normalizedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return "\(normalizedCategory):\(normalizedLabel)"
+        shoppingCustomItemIdentity(label: item.label, category: item.category) == shoppingCustomItemIdentity(label: label, category: category)
     }
 
     private func currentState() -> MutableShoppingListState {
@@ -413,6 +407,16 @@ private struct MutableShoppingListState {
     var customItems: [ShoppingCustomItem]
 }
 
+private func shoppingCustomItemIdentity(_ item: ShoppingCustomItem) -> String {
+    shoppingCustomItemIdentity(label: item.label, category: item.category)
+}
+
+private func shoppingCustomItemIdentity(label: String, category: String) -> String {
+    let normalizedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    let normalizedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return "\(normalizedCategory):\(normalizedLabel)"
+}
+
 private enum ShoppingListMutation {
     case toggleChecked(String)
     case addCustomItem(ShoppingCustomItem)
@@ -427,7 +431,9 @@ private enum ShoppingListMutation {
                 state.checkedItems.insert(key)
             }
         case .addCustomItem(let item):
-            state.customItems.removeAll { $0.itemKey == item.itemKey }
+            state.customItems.removeAll { existing in
+                existing.itemKey == item.itemKey || shoppingCustomItemIdentity(existing) == shoppingCustomItemIdentity(item)
+            }
             state.customItems.append(item)
         case .removeCustomItem(let itemKey):
             state.customItems.removeAll { $0.itemKey == itemKey }

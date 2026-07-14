@@ -50,7 +50,7 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - iOS skickar nu `X-Veckly-Today` med enhetens lokala datum på API-anrop, och backend använder det för shopping-summary. Det gör att gårdagens middag kan filtreras bort utan att en ny framtida rätt, t.ex. onsdagens carbonara, tappas på grund av serverns klocka.
 - Shopping-summary får inte längre HTTP-cacheas: backend svarar `Cache-Control: no-store` och iOS skickar `Cache-Control: no-cache`, så pull-to-refresh kan inte återanvända en gammal lista i upp till fem minuter.
 - Custom items från backend-summary filtreras bort från regularGroups innan state-baserade custom items injiceras, så samma manuella vara inte visas dubbelt efter refresh.
-- Custom items dedupliceras på label + kategori, så samma manuella vara (till exempel "Toapapper") inte visas flera gånger om den råkar läggas till igen eller redan finns dubbelt i server-state.
+- Custom items dedupliceras på label + kategori både i iOS write-state och backend read/write-state, så samma manuella vara (till exempel "Toapapper" eller "Servetter") inte visas eller sparas flera gånger även om gamla server-state redan har dubletter.
 - Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
 - Lokaliserad VoiceOver-label lades till för share-knappen.
 - Completion-kortets partner-nudge har nu konkret copy: bjud in partner när någon annan ska kunna handla från samma lista.
