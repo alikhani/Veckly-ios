@@ -85,6 +85,16 @@ struct ShoppingListTabView: View {
                                 .foregroundStyle(VecklyDesign.Colors.hearthOrange)
                         }
                         Spacer()
+                        if let shoppingShareText {
+                            ShareLink(item: shoppingShareText) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.callout.weight(.semibold))
+                                    .frame(width: 34, height: 34)
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(VecklyDesign.Colors.inkMid)
+                            .accessibilityLabel(L10n.string("shopping.share.action"))
+                        }
                         Button {
                             showCustomItemSheet = true
                         } label: {
@@ -287,6 +297,17 @@ struct ShoppingListTabView: View {
 
     private var pendingSyncMessage: String {
         L10n.string("shopping.sync.pending")
+    }
+
+    private var shoppingShareText: String? {
+        ShoppingListShareText.make(
+            title: L10n.string("shopping.title"),
+            contextLine: weekContextLine,
+            groups: appModel.shoppingListStore.groups,
+            staples: appModel.shoppingListStore.stapledItems,
+            checkedItems: appModel.shoppingListStore.checkedItems,
+            scaleFactor: shoppingScaleFactor
+        )
     }
 }
 

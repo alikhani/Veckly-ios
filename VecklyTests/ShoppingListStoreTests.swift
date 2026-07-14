@@ -122,6 +122,70 @@ struct ShoppingListStoreTests {
         #expect(store.summary?.weekStartDate == requestedWeek)
         #expect(store.groups.flatMap(\.items).contains(where: { $0.itemKey == "produce:new:" }))
     }
+
+    @Test func shareTextIsNilForEmptyShoppingList() {
+        let text = ShoppingListShareText.make(
+            title: "Shopping list",
+            contextLine: "V.26",
+            groups: [],
+            staples: [],
+            checkedItems: [],
+            scaleFactor: 1.0
+        )
+
+        #expect(text == nil)
+    }
+
+    @Test func shareTextIncludesCustomItemsStaplesAndScaledAmounts() {
+        let groups = [
+            ShoppingListGroup(
+                category: "Produce",
+                items: [
+                    ShoppingListItem(
+                        itemKey: "custom:milk",
+                        label: "Milk",
+                        amount: nil,
+                        unit: nil,
+                        checked: false,
+                        isCustom: true
+                    ),
+                    ShoppingListItem(
+                        itemKey: "produce:apples:",
+                        label: "Apples",
+                        amount: "2",
+                        unit: "st",
+                        checked: false
+                    ),
+                ]
+            )
+        ]
+        let staples = [
+            ShoppingListItem(
+                itemKey: "pantry:salt:",
+                label: "Salt",
+                amount: nil,
+                unit: nil,
+                checked: false
+            )
+        ]
+
+        let text = ShoppingListShareText.make(
+            title: "Shopping list",
+            contextLine: "V.26 · 2 meals",
+            groups: groups,
+            staples: staples,
+            checkedItems: ["produce:apples:"],
+            scaleFactor: 2.0
+        )
+
+        #expect(text?.contains("Shopping list") == true)
+        #expect(text?.contains("V.26 · 2 meals") == true)
+        #expect(text?.contains(ShoppingCategory.produce.displayLabel) == true)
+        #expect(text?.contains("- [ ] Milk") == true)
+        #expect(text?.contains("- [x] Apples 4 st") == true)
+        #expect(text?.contains(L10n.string("shopping.likelyAtHome")) == true)
+        #expect(text?.contains("- [ ] Salt") == true)
+    }
 }
 
 private enum TestShoppingListFixtures {

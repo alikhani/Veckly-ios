@@ -6175,6 +6175,22 @@
         }
       }
     },
+    "shopping.share.action" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share shopping list"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dela inköpslista"
+          }
+        }
+      }
+    },
     "shopping.staples.collapsed" : {
       "extractionState" : "stale",
       "localizations" : {

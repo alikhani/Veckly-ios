@@ -23,6 +23,35 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
 | 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
 | 17 | Hushållskompromiss v1 | ✅ Klart (2026-07-14) |
+| 18 | Shopping-handoff och partnerdelning | 🟡 Pågår (första slice 2026-07-14) |
+
+---
+
+## Fas 18 — Shopping-handoff och partnerdelning
+
+**Status:** 🟡 Pågår — första slice klar 2026-07-14
+
+### Mål
+
+Göra övergången från färdig veckoplan till faktisk handling tydligare: shoppinglistan ska kunna lämnas över till någon annan direkt, även innan hushållsinvite och delad appanvändning sitter.
+
+### Vad som gjordes
+
+- `ShoppingListTabView` har nu en native share action i shoppinglistans header när listan inte är tom.
+- Share-texten byggs av `ShoppingListShareText`, en testbar formatter som återanvänder samma kategorier och mängdskalning som shoppinglistans UI.
+- Texten inkluderar veckokontext, kategorirubriker, checkad status, custom items, staples/"Likely at home" och hushållsskalade mängder.
+- Tom shoppinglista visar ingen share-knapp, så befintliga empty states fortsätter vara ostörda.
+- Lokaliserad VoiceOver-label lades till för share-knappen.
+
+### Test/Verifiering
+
+- `Localizable.xcstrings` validerad som JSON.
+- `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' test -only-testing:VecklyTests/ShoppingListStoreTests`
+- `xcodebuild -project Veckly-ios/Veckly.xcodeproj -scheme Veckly -destination 'platform=iOS Simulator,arch=arm64,id=2A7E6302-3C98-4F93-AC9A-EEAF9E558086' build`
+
+### Nästa steg
+
+Lägg en kontextuell "Dela med partner"-CTA efter första färdiga vecka för solo-hushåll. Den ska kännas kopplad till konkret nytta, helst veckans shoppinglista, och inte visas i onboarding.
 
 ---
 

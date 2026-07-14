@@ -518,6 +518,56 @@ struct ShoppingListViewModelMapper {
     }
 }
 
+// MARK: - Share text
+
+enum ShoppingListShareText {
+    static func make(
+        title: String,
+        contextLine: String?,
+        groups: [ShoppingListGroup],
+        staples: [ShoppingListItem],
+        checkedItems: Set<String>,
+        scaleFactor: Double
+    ) -> String? {
+        guard groups.contains(where: { !$0.items.isEmpty }) || !staples.isEmpty else { return nil }
+
+        var lines: [String] = [title]
+        if let contextLine, !contextLine.isEmpty {
+            lines.append(contextLine)
+        }
+
+        for group in groups where !group.items.isEmpty {
+            lines.append("")
+            lines.append(ShoppingCategory.from(group.category).displayLabel)
+            lines.append(contentsOf: group.items.map { item in
+                itemLine(item, checkedItems: checkedItems, scaleFactor: scaleFactor)
+            })
+        }
+
+        if !staples.isEmpty {
+            lines.append("")
+            lines.append(L10n.string("shopping.likelyAtHome"))
+            lines.append(contentsOf: staples.map { item in
+                itemLine(item, checkedItems: checkedItems, scaleFactor: scaleFactor)
+            })
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    private static func itemLine(
+        _ item: ShoppingListItem,
+        checkedItems: Set<String>,
+        scaleFactor: Double
+    ) -> String {
+        let state = checkedItems.contains(item.itemKey) ? "x" : " "
+        let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
+        let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
+        let suffix = amountLabel.isEmpty ? "" : " \(amountLabel)"
+        return "- [\(state)] \(item.label)\(suffix)"
+    }
+}
+
 protocol ShoppingListStoreAPIClient {
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary
     func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?)
