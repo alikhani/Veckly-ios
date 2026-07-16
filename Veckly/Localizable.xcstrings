@@ -1061,9 +1061,6 @@
         }
       }
     },
-    "Dela som text" : {
-
-    },
     "error.auth.createAccount" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2453,9 +2450,6 @@
         }
       }
     },
-    "Lägg i Påminnelser" : {
-
-    },
     "language.english" : {
       "localizations" : {
         "en" : {
@@ -3581,9 +3575,6 @@
           }
         }
       }
-    },
-    "OK" : {
-
     },
     "onboarding.avoid.empty" : {
       "localizations" : {
@@ -6362,6 +6353,159 @@
         }
       }
     },
+    "shopping.reminders.denied.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Veckly to add reminders in Settings, then try again."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ge Veckly åtkomst till Påminnelser i Inställningar och försök igen."
+          }
+        }
+      }
+    },
+    "shopping.reminders.denied.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders are not enabled"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Påminnelser är inte aktiverat"
+          }
+        }
+      }
+    },
+    "shopping.reminders.error.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again, or use Share as text."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testa igen, eller använd Dela som text."
+          }
+        }
+      }
+    },
+    "shopping.reminders.error.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not add reminders"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte lägga till påminnelser"
+          }
+        }
+      }
+    },
+    "shopping.reminders.export.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add %lld item to Reminders"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg %lld vara i Påminnelser"
+          }
+        }
+      }
+    },
+    "shopping.reminders.export.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add %lld items to Reminders"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg %lld varor i Påminnelser"
+          }
+        }
+      }
+    },
+    "shopping.reminders.success.message.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld item was added as a separate reminder."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld vara lades till som en separat påminnelse."
+          }
+        }
+      }
+    },
+    "shopping.reminders.success.message.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld items were added as separate reminders."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld varor lades till som separata påminnelser."
+          }
+        }
+      }
+    },
+    "shopping.reminders.success.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added to Reminders"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillagt i Påminnelser"
+          }
+        }
+      }
+    },
     "shopping.share.action" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6380,6 +6524,7 @@
       }
     },
     "shopping.share.textFallback" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6391,150 +6536,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dela som text"
-          }
-        }
-      }
-    },
-    "shopping.reminders.denied.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Veckly to add reminders in Settings, then try again."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ge Veckly åtkomst till Påminnelser i Inställningar och försök igen."
-          }
-        }
-      }
-    },
-    "shopping.reminders.denied.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminders are not enabled"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Påminnelser är inte aktiverat"
-          }
-        }
-      }
-    },
-    "shopping.reminders.error.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try again, or use Share as text."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Testa igen, eller använd Dela som text."
-          }
-        }
-      }
-    },
-    "shopping.reminders.error.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not add reminders"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kunde inte lägga till påminnelser"
-          }
-        }
-      }
-    },
-    "shopping.reminders.export.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add %lld item to Reminders"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lägg %lld vara i Påminnelser"
-          }
-        }
-      }
-    },
-    "shopping.reminders.export.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add %lld items to Reminders"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lägg %lld varor i Påminnelser"
-          }
-        }
-      }
-    },
-    "shopping.reminders.success.message.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld item was added as a separate reminder."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld vara lades till som en separat påminnelse."
-          }
-        }
-      }
-    },
-    "shopping.reminders.success.message.other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld items were added as separate reminders."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld varor lades till som separata påminnelser."
-          }
-        }
-      }
-    },
-    "shopping.reminders.success.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added to Reminders"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tillagt i Påminnelser"
           }
         }
       }
