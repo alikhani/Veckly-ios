@@ -12,24 +12,6 @@ struct ShoppingListTabView: View {
     @State private var reminderExportNotice: ShoppingReminderExportNotice?
     @State private var isExportingReminders = false
 
-    /// Base recipe servings are baked into the shopping list items by the backend.
-    /// The backend stores raw ingredient amounts (no household scaling), so we scale
-    /// on the client using the same factor as RecipeDetailView.
-    ///
-    /// The shopping list aggregates ingredients across multiple recipes that may each
-    /// have different base servings. Because each item's `amount` was written from a
-    /// specific recipe's ingredient row, they share the same base servings context.
-    /// For simplicity (and because most households plan one recipe per day from a
-    /// standard 4-serving base), we apply one global factor: householdSize / 4.
-    /// If the profile isn't loaded, factor is 1.0 (no change).
-    private var shoppingScaleFactor: Double {
-        guard let hid = appModel.householdStore.activeHousehold?.id,
-              let profile = appModel.householdStore.cachedProfile(for: hid) else { return 1.0 }
-        let householdSize = profile.adults + profile.children
-        // Shopping list backend uses raw recipe ingredient amounts; recipes default to 4 servings.
-        return IngredientScaler.scaleFactor(householdSize: householdSize, recipeServings: 4)
-    }
-
     private var totalItemCount: Int {
         appModel.shoppingListStore.groups.flatMap { $0.items }.count
     }
@@ -199,7 +181,6 @@ struct ShoppingListTabView: View {
                         ShoppingGroupView(
                             group: group,
                             checkedItems: appModel.shoppingListStore.checkedItems,
-                            scaleFactor: shoppingScaleFactor,
                             onToggle: { key in
                                 Task { await appModel.shoppingListStore.toggleItem(key: key) }
                             },
@@ -295,11 +276,6 @@ struct ShoppingListTabView: View {
             let weekStartDate = appModel.weekStore.weekStartDate
             Task { await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate) }
         }
-        .task(id: appModel.householdStore.activeHousehold?.id) {
-            guard let household = appModel.householdStore.activeHousehold else { return }
-            // Load profile so shoppingScaleFactor is accurate.
-            await appModel.householdStore.loadHouseholdDetails(householdID: household.id)
-        }
         .task(id: appModel.weekStore.weekStartDate) {
             guard let household = appModel.householdStore.activeHousehold else { return }
             let weekStartDate = appModel.weekStore.weekStartDate
@@ -337,16 +313,14 @@ struct ShoppingListTabView: View {
             contextLine: weekContextLine,
             groups: appModel.shoppingListStore.groups,
             staples: appModel.shoppingListStore.stapledItems,
-            checkedItems: appModel.shoppingListStore.checkedItems,
-            scaleFactor: shoppingScaleFactor
+            checkedItems: appModel.shoppingListStore.checkedItems
         )
     }
 
     private var shoppingReminderItems: [String] {
         let reminderItems = ShoppingListShareText.reminderItems(
             groups: appModel.shoppingListStore.groups,
-            checkedItems: appModel.shoppingListStore.checkedItems,
-            scaleFactor: shoppingScaleFactor
+            checkedItems: appModel.shoppingListStore.checkedItems
         )
 
         if !reminderItems.isEmpty {
@@ -530,7 +504,6 @@ private struct ShoppingCustomItemSheet: View {
 struct ShoppingGroupView: View {
     let group: ShoppingListGroup
     let checkedItems: Set<String>
-    var scaleFactor: Double = 1.0
     let onToggle: (String) -> Void
     let onRemoveCustom: (String) -> Void
 
@@ -545,8 +518,7 @@ struct ShoppingGroupView: View {
                 VStack(spacing: 0) {
                     ForEach(group.items) { item in
                         let isChecked = checkedItems.contains(item.itemKey)
-                        let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
-                        let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
+                        let amountLabel = [item.amount, item.unit].compactMap { $0 }.joined(separator: " ")
                         HStack {
                             Button {
                                 onToggle(item.itemKey)

@@ -558,8 +558,7 @@ enum ShoppingListShareText {
         contextLine: String?,
         groups: [ShoppingListGroup],
         staples: [ShoppingListItem],
-        checkedItems: Set<String>,
-        scaleFactor: Double
+        checkedItems: Set<String>
     ) -> String? {
         guard groups.contains(where: { !$0.items.isEmpty }) || !staples.isEmpty else { return nil }
 
@@ -572,7 +571,7 @@ enum ShoppingListShareText {
             lines.append("")
             lines.append(ShoppingCategory.from(group.category).displayLabel)
             lines.append(contentsOf: group.items.map { item in
-                itemLine(item, checkedItems: checkedItems, scaleFactor: scaleFactor)
+                itemLine(item, checkedItems: checkedItems)
             })
         }
 
@@ -580,7 +579,7 @@ enum ShoppingListShareText {
             lines.append("")
             lines.append(L10n.string("shopping.likelyAtHome"))
             lines.append(contentsOf: staples.map { item in
-                itemLine(item, checkedItems: checkedItems, scaleFactor: scaleFactor)
+                itemLine(item, checkedItems: checkedItems)
             })
         }
 
@@ -589,25 +588,21 @@ enum ShoppingListShareText {
 
     private static func itemLine(
         _ item: ShoppingListItem,
-        checkedItems: Set<String>,
-        scaleFactor: Double
+        checkedItems: Set<String>
     ) -> String {
         let state = checkedItems.contains(item.itemKey) ? "x" : " "
-        let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
-        let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
+        let amountLabel = [item.amount, item.unit].compactMap { $0 }.joined(separator: " ")
         let suffix = amountLabel.isEmpty ? "" : " \(amountLabel)"
         return "- [\(state)] \(item.label)\(suffix)"
     }
 
     static func reminderItems(
         groups: [ShoppingListGroup],
-        checkedItems: Set<String>,
-        scaleFactor: Double
+        checkedItems: Set<String>
     ) -> [String] {
         groups.flatMap(\.items).compactMap { item in
             guard !checkedItems.contains(item.itemKey) else { return nil }
-            let scaledAmount = IngredientScaler.scale(amount: item.amount, unit: item.unit, by: scaleFactor)
-            let amountLabel = [scaledAmount, item.unit].compactMap { $0 }.joined(separator: " ")
+            let amountLabel = [item.amount, item.unit].compactMap { $0 }.joined(separator: " ")
             return amountLabel.isEmpty ? item.label : "\(item.label) \(amountLabel)"
         }
     }

@@ -310,6 +310,11 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PUT /users/me/profile`.
     /// - Remark: Generated from `#/paths//users/me/profile/put(upsertMyProfile)`.
     func upsertMyProfile(_ input: Operations.upsertMyProfile.Input) async throws -> Operations.upsertMyProfile.Output
+    /// Record a beta product analytics event for a household
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/product-events`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)`.
+    func createProductEvent(_ input: Operations.createProductEvent.Input) async throws -> Operations.createProductEvent.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -1085,6 +1090,21 @@ extension APIProtocol {
         body: Operations.upsertMyProfile.Input.Body? = nil
     ) async throws -> Operations.upsertMyProfile.Output {
         try await upsertMyProfile(Operations.upsertMyProfile.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Record a beta product analytics event for a household
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/product-events`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)`.
+    internal func createProductEvent(
+        path: Operations.createProductEvent.Input.Path,
+        headers: Operations.createProductEvent.Input.Headers = .init(),
+        body: Operations.createProductEvent.Input.Body? = nil
+    ) async throws -> Operations.createProductEvent.Output {
+        try await createProductEvent(Operations.createProductEvent.Input(
+            path: path,
             headers: headers,
             body: body
         ))
@@ -6484,6 +6504,144 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case givenName
                 case familyName
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductEventName`.
+        internal enum ProductEventName: String, Codable, Hashable, Sendable, CaseIterable {
+            case onboarding_completed = "onboarding_completed"
+            case first_week_generated = "first_week_generated"
+            case week_completed = "week_completed"
+            case shopping_opened_after_week_completed = "shopping_opened_after_week_completed"
+            case shopping_shared = "shopping_shared"
+            case partner_invite_clicked = "partner_invite_clicked"
+            case shopping_main_list_completed = "shopping_main_list_completed"
+            case retro_completed = "retro_completed"
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductEventProperties`.
+        internal struct ProductEventProperties: Codable, Hashable, Sendable {
+            /// A container of undocumented properties.
+            internal var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+            /// Creates a new `ProductEventProperties`.
+            ///
+            /// - Parameters:
+            ///   - additionalProperties: A container of undocumented properties.
+            internal init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                self.additionalProperties = additionalProperties
+            }
+            internal init(from decoder: any Swift.Decoder) throws {
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+            }
+            internal func encode(to encoder: any Swift.Encoder) throws {
+                try encoder.encodeAdditionalProperties(additionalProperties)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductEvent`.
+        internal struct ProductEvent: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/id`.
+            internal var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/userId`.
+            internal var userId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/eventName`.
+            internal var eventName: Components.Schemas.ProductEventName
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/weekStartDate`.
+            internal var weekStartDate: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/properties`.
+            internal var properties: Components.Schemas.ProductEventProperties
+            /// - Remark: Generated from `#/components/schemas/ProductEvent/occurredAt`.
+            internal var occurredAt: Swift.String
+            /// Creates a new `ProductEvent`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - householdId:
+            ///   - userId:
+            ///   - eventName:
+            ///   - weekStartDate:
+            ///   - properties:
+            ///   - occurredAt:
+            internal init(
+                id: Swift.String,
+                householdId: Swift.String,
+                userId: Swift.String,
+                eventName: Components.Schemas.ProductEventName,
+                weekStartDate: Swift.String? = nil,
+                properties: Components.Schemas.ProductEventProperties,
+                occurredAt: Swift.String
+            ) {
+                self.id = id
+                self.householdId = householdId
+                self.userId = userId
+                self.eventName = eventName
+                self.weekStartDate = weekStartDate
+                self.properties = properties
+                self.occurredAt = occurredAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case id
+                case householdId
+                case userId
+                case eventName
+                case weekStartDate
+                case properties
+                case occurredAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/CreateProductEvent`.
+        internal struct CreateProductEvent: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/CreateProductEvent/eventName`.
+            internal var eventName: Components.Schemas.ProductEventName
+            /// - Remark: Generated from `#/components/schemas/CreateProductEvent/weekStartDate`.
+            internal var weekStartDate: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/CreateProductEvent/properties`.
+            internal struct propertiesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/CreateProductEvent/properties/value1`.
+                internal var value1: Components.Schemas.ProductEventProperties
+                /// - Remark: Generated from `#/components/schemas/CreateProductEvent/properties/value2`.
+                internal var value2: OpenAPIRuntime.OpenAPIValueContainer
+                /// Creates a new `propertiesPayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                ///   - value2:
+                internal init(
+                    value1: Components.Schemas.ProductEventProperties,
+                    value2: OpenAPIRuntime.OpenAPIValueContainer
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try .init(from: decoder)
+                    self.value2 = try .init(from: decoder)
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try self.value1.encode(to: encoder)
+                    try self.value2.encode(to: encoder)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/CreateProductEvent/properties`.
+            internal var properties: Components.Schemas.CreateProductEvent.propertiesPayload?
+            /// Creates a new `CreateProductEvent`.
+            ///
+            /// - Parameters:
+            ///   - eventName:
+            ///   - weekStartDate:
+            ///   - properties:
+            internal init(
+                eventName: Components.Schemas.ProductEventName,
+                weekStartDate: Swift.String? = nil,
+                properties: Components.Schemas.CreateProductEvent.propertiesPayload? = nil
+            ) {
+                self.eventName = eventName
+                self.weekStartDate = weekStartDate
+                self.properties = properties
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case eventName
+                case weekStartDate
+                case properties
             }
         }
     }
@@ -19226,6 +19384,213 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Record a beta product analytics event for a household
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/product-events`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)`.
+    internal enum createProductEvent {
+        internal static let id: Swift.String = "createProductEvent"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.createProductEvent.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.createProductEvent.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.createProductEvent.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.createProductEvent.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.CreateProductEvent)
+            }
+            internal var body: Operations.createProductEvent.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.createProductEvent.Input.Path,
+                headers: Operations.createProductEvent.Input.Headers = .init(),
+                body: Operations.createProductEvent.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/responses/201/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/product-events/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.ProductEvent)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ProductEvent {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.createProductEvent.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.createProductEvent.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Product event recorded
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.createProductEvent.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            internal var created: Operations.createProductEvent.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.createProductEvent.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.createProductEvent.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.createProductEvent.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.createProductEvent.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

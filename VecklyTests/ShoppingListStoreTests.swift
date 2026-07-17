@@ -201,14 +201,13 @@ struct ShoppingListStoreTests {
             contextLine: "V.26",
             groups: [],
             staples: [],
-            checkedItems: [],
-            scaleFactor: 1.0
+            checkedItems: []
         )
 
         #expect(text == nil)
     }
 
-    @Test func shareTextIncludesCustomItemsStaplesAndScaledAmounts() {
+    @Test func shareTextIncludesCustomItemsStaplesAndAmounts() {
         let groups = [
             ShoppingListGroup(
                 category: "Produce",
@@ -246,15 +245,14 @@ struct ShoppingListStoreTests {
             contextLine: "V.26 · 2 meals",
             groups: groups,
             staples: staples,
-            checkedItems: ["produce:apples:"],
-            scaleFactor: 2.0
+            checkedItems: ["produce:apples:"]
         )
 
         #expect(text?.contains("Shopping list") == true)
         #expect(text?.contains("V.26 · 2 meals") == true)
         #expect(text?.contains(ShoppingCategory.produce.displayLabel) == true)
         #expect(text?.contains("- [ ] Milk") == true)
-        #expect(text?.contains("- [x] Apples 4 st") == true)
+        #expect(text?.contains("- [x] Apples 2 st") == true)
         #expect(text?.contains(L10n.string("shopping.likelyAtHome")) == true)
         #expect(text?.contains("- [ ] Salt") == true)
     }
@@ -296,11 +294,10 @@ struct ShoppingListStoreTests {
 
         let items = ShoppingListShareText.reminderItems(
             groups: groups,
-            checkedItems: ["produce:apples:"],
-            scaleFactor: 2.0
+            checkedItems: ["produce:apples:"]
         )
 
-        #expect(items == ["Avocado 1 pc", "Rice 200 g"])
+        #expect(items == ["Avocado 0.5 pc", "Rice 100 g"])
         #expect(!items.contains("Shopping list"))
         #expect(!items.contains(where: { $0.contains("Apples") }))
     }
