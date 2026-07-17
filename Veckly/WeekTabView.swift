@@ -187,13 +187,13 @@ struct WeekTabView: View {
                             Task { await appModel.handleUnauthorized() }
                             return
                         }
-                        if appModel.weekStore.hasEmptyDays {
+                        if hasOpenRelevantDays {
                             Task { await performGenerate(regenerate: false) }
                         } else {
                             showRegenerateConfirmation = true
                         }
                     } label: {
-                        Text(appModel.weekStore.hasEmptyDays || !appModel.weekStore.hasWeekContent ? "week.generate" : "week.regenerate")
+                        Text(hasOpenRelevantDays || !appModel.weekStore.hasWeekContent ? "week.generate" : "week.regenerate")
                             .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
@@ -235,7 +235,7 @@ struct WeekTabView: View {
                 onSelect: { recipe in
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
-                        let wasEmptyBefore = appModel.weekStore.hasEmptyDays
+                        let wasEmptyBefore = hasOpenRelevantDays
                         Task {
                             appModel.shoppingListStore.invalidateCache()
                             await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
@@ -262,7 +262,7 @@ struct WeekTabView: View {
                 onSkip: {
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
-                        let wasEmptyBefore = appModel.weekStore.hasEmptyDays
+                        let wasEmptyBefore = hasOpenRelevantDays
                         Task {
                             await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
@@ -446,7 +446,7 @@ struct WeekTabView: View {
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isLocked && !$0.isSkipped }
             : []
-        let wasEmptyBefore = appModel.weekStore.hasEmptyDays
+        let wasEmptyBefore = hasOpenRelevantDays
         let hadWeekContentBefore = appModel.weekStore.hasWeekContent
 
         appModel.shoppingListStore.invalidateCache()
@@ -473,12 +473,13 @@ struct WeekTabView: View {
         presentRegenerateUndo(rows: preRegenerateSnapshot, weekStartDate: targetWeekStartDate)
     }
 
-    /// Fires the "Veckan är klar" beat the instant the last empty day gets
-    /// filled or skipped by a real user action — never on merely browsing to
-    /// an already-full week (only mutators that can close the last gap call
-    /// this, each with `hasEmptyDays` captured just before they ran).
+    /// Fires the "Veckan är klar" beat the instant the last *relevant* open
+    /// day gets filled or skipped by a real user action — never on merely
+    /// browsing to an already-full week (only mutators that can close the
+    /// last gap call this, each with `hasOpenRelevantDays` captured just
+    /// before they ran).
     private func checkForSessionEnd(wasEmptyBefore: Bool) {
-        guard isViewingCurrentWeek, wasEmptyBefore, !appModel.weekStore.hasEmptyDays, plannedDinnerCount > 0 else { return }
+        guard isViewingCurrentWeek, wasEmptyBefore, !hasOpenRelevantDays, plannedDinnerCount > 0 else { return }
         showSessionEndBeat = true
         appModel.recordProductEvent(.weekCompleted, weekStartDate: viewedWeekStartDate, properties: [
             "plannedDinners": .int(plannedDinnerCount),
@@ -880,6 +881,31 @@ struct WeekTabView: View {
         prepBatchCoverage(for: day.date, mealType: .dinner, batches: appModel.prepBatchStore.batches, recipes: appModel.recipeStore.recipes)
     }
 
+    /// Planning-days-are-the-truth (beslut 1): built from the household's
+    /// profile so open-day counts, the quality card, session-end, and the
+    /// generate/regenerate CTA all agree on which days actually count.
+    private var weekPlanningScope: WeekPlanningScope {
+        WeekPlanningScope(profile: appModel.householdStore.cachedProfile(
+            for: appModel.householdStore.activeHousehold?.id ?? ""
+        ))
+    }
+
+    /// Dates covered by a prep/leftovers batch but with no recipe of their
+    /// own — same rule `weekQualityCard` already used, now shared with the
+    /// scope so a prep-covered day counts as "done" everywhere.
+    private var prepCoveredDates: Set<String> {
+        Set(appModel.weekStore.dayRows.compactMap { day in
+            coverage(for: day) == nil ? nil : day.date
+        })
+    }
+
+    /// Scope-aware replacement for `WeekStore.hasEmptyDays`: true only when a
+    /// *relevant* planning day is still open. Days outside the household's
+    /// selected planning days never make this true.
+    private var hasOpenRelevantDays: Bool {
+        !weekPlanningScope.isComplete(days: appModel.weekStore.dayRows, coveredDates: prepCoveredDates)
+    }
+
     /// A skipped day keeps its `recipe` (skip is a flag layered on top of an
     /// assignment, not a deletion — see `withSkipped`), so `isSkipped` must be
     /// checked explicitly here or a skipped "today" could still surface as
@@ -926,7 +952,9 @@ struct WeekTabView: View {
     }
 
     private var plannedDinnerCount: Int {
-        appModel.weekStore.dayRows.filter { !$0.isSkipped && ($0.recipe != nil || coverage(for: $0) != nil) }.count
+        weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows)
+            .filter { !$0.isSkipped && ($0.recipe != nil || coverage(for: $0) != nil) }
+            .count
     }
 
     private var quickDinnerCount: Int {
@@ -984,7 +1012,7 @@ struct WeekTabView: View {
     }
 
     private var openDayCount: Int {
-        appModel.weekStore.dayRows.filter { $0.recipe == nil && !$0.isSkipped && coverage(for: $0) == nil }.count
+        weekPlanningScope.openDays(in: appModel.weekStore.dayRows, coveredDates: prepCoveredDates).count
     }
 
     private var weekSummaryLine: String {
@@ -996,10 +1024,10 @@ struct WeekTabView: View {
     }
 
     private var weekQualitySummary: WeekQualitySummary {
-        let prepCoveredDates = Set(appModel.weekStore.dayRows.compactMap { day in
-            coverage(for: day) == nil ? nil : day.date
-        })
-        return WeekQualitySummary.make(days: appModel.weekStore.dayRows, prepCoveredDates: prepCoveredDates)
+        WeekQualitySummary.make(
+            days: weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows),
+            prepCoveredDates: prepCoveredDates
+        )
     }
 
     @ViewBuilder

@@ -6821,6 +6821,22 @@
         }
       }
     },
+    "week.hideWeekend" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide weekend"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dölj helgen"
+          }
+        }
+      }
+    },
     "week.lastWeek" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7604,6 +7620,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veckan är klar."
+          }
+        }
+      }
+    },
+    "week.showWeekend" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show weekend"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa helgen"
           }
         }
       }
