@@ -8,6 +8,11 @@ struct DayDetailSheet: View {
     let onSkip: () -> Void
     let onClear: () -> Void
     let onMarkAsLeftover: () -> Void
+    /// Lock now lives here and in the week list's status icon, not as a
+    /// hero button (beslut 3, Fas 3) — `nil` hides the control entirely,
+    /// which `MealPickerSheet`'s not-yet-saved preview relies on.
+    var isLocked: Bool = false
+    var onToggleLock: (() -> Void)? = nil
     let onDismiss: () -> Void
 
     @State private var showClearConfirmation = false
@@ -22,7 +27,9 @@ struct DayDetailSheet: View {
                 onSwap: onSwap,
                 onSkip: { showSkipConfirmation = true },
                 onClear: onClear,
-                onMarkAsLeftover: onMarkAsLeftover
+                onMarkAsLeftover: onMarkAsLeftover,
+                isLocked: isLocked,
+                onToggleLock: onToggleLock
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -60,6 +67,8 @@ struct DayDetailContent: View {
     let onSkip: () -> Void
     let onClear: () -> Void
     let onMarkAsLeftover: () -> Void
+    var isLocked: Bool = false
+    var onToggleLock: (() -> Void)? = nil
 
     @Environment(AppModel.self) private var appModel
 
@@ -143,6 +152,22 @@ struct DayDetailContent: View {
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
                 }
                 .buttonStyle(.plain)
+
+                // Lock (Fas 3: moved out of the hero card, beslut 3)
+                if let onToggleLock {
+                    Button {
+                        onToggleLock()
+                    } label: {
+                        HStack {
+                            Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                            Text(isLocked ? L10n.string("meal.unlockDay") : L10n.string("meal.lockDay"))
+                            Spacer()
+                        }
+                        .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
+                }
 
                 // Skip
                 Button {

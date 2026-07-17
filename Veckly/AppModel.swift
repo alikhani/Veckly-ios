@@ -20,7 +20,13 @@ final class AppModel {
     let userProfileStore: UserProfileStore
     let productEventStore: ProductEventStore
     let sundayReminderScheduler = SundayReminderScheduler()
-    private let usesSeededCoreReader: Bool
+    /// Not `private` — views (starting with `WeekTabView`, Fas 3) need to
+    /// skip their own redundant `.task`/`.onAppear` network reloads under
+    /// seeded UI-test data, or a real network call silently overwrites the
+    /// seed with an error state. A full `AppRefreshCoordinator` that owns
+    /// this app-wide is Fas 7 scope; this flag is the minimal read views can
+    /// check themselves in the meantime.
+    let usesSeededCoreReader: Bool
 
     init(environment: AppEnvironment) {
         self.environment = environment
@@ -50,7 +56,9 @@ final class AppModel {
         if usesSeededCoreReader {
             authSessionStore.seedForUITests()
             householdStore.seedForUITests()
-            weekStore.seedForUITests()
+            let scenarioRawValue = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_WEEK_SCENARIO"]
+            let scenario = scenarioRawValue.flatMap(WeekStore.UITestWeekScenario.init(rawValue:)) ?? .legacyPartial
+            weekStore.seedForUITests(scenario: scenario)
             shoppingListStore.seedForUITests()
         }
     }

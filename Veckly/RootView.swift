@@ -26,6 +26,12 @@ struct RootView: View {
             await appModel.refreshSundayReminderIfNeeded()
         }
         .onChange(of: scenePhase) { _, newPhase in
+            // Seeded UI-test data must stay network-free — a real
+            // `loadCoreReader()` here (scenePhase turns `.active` moments
+            // after launch) would otherwise silently overwrite the seed
+            // with a load error. Full app-wide network-free UI-test mode is
+            // Fas 7 scope; this is the one call site that needs it today.
+            guard !appModel.usesSeededCoreReader else { return }
             guard newPhase == .active, appModel.authSessionStore.isSignedIn else { return }
             Task {
                 await appModel.loadCoreReader()

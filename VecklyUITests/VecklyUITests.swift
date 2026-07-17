@@ -75,6 +75,48 @@ final class VecklyUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Hushåll"].waitForExistence(timeout: 5))
     }
 
+    /// Fas 3: the hero and the planning-status card must agree with each
+    /// other for a week that still has open planning days — the toolbar CTA
+    /// copy is a secondary concern here, the content-area cards are what
+    /// beslut 16/6 actually gate on.
+    @MainActor
+    func testWeekTabShowsOpenTonightHeroAndDaysLeftStatus() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchEnvironment["VECKLY_UI_TEST_WEEK_SCENARIO"] = "openTonight"
+        // Explicit, not relying on the simulator's ambient language or on
+        // test run order — `testHouseholdTabChangesLanguageAtRuntime` really
+        // taps the Swedish option, which persists `veckly.app-language` in
+        // this app's UserDefaults for later launches too. `-AppleLanguages`
+        // covers plain SwiftUI `Text(key)` lookups; `-veckly.app-language`
+        // overrides the persisted in-app preference `L10n` reads for
+        // everything routed through it (see `AppLocalePreference`).
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-veckly.app-language", "english"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["What's for dinner tonight?"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Plan tonight"].exists)
+        XCTAssertTrue(app.staticTexts["3 planning days left"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Plan the rest"].exists)
+        XCTAssertFalse(app.staticTexts["The week is planned"].exists)
+    }
+
+    /// Fas 3: a fully planned week shows the closed-status card and the
+    /// ordinary "tonight" hero — no open-days CTA anywhere on screen.
+    @MainActor
+    func testWeekTabShowsCompleteStatusWhenEveryPlanningDayIsFilled() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchEnvironment["VECKLY_UI_TEST_WEEK_SCENARIO"] = "complete"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-veckly.app-language", "english"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Monday Pasta"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["The week is planned"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Open the shopping list"].exists)
+        XCTAssertFalse(app.buttons["Plan the rest"].exists)
+    }
+
     @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.

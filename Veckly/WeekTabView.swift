@@ -28,7 +28,8 @@ private struct RegenerateUndoContext: Identifiable {
 
 /// The 3-week browsing window. Last week is view-only (no planning actions);
 /// This/Next week behave like the active week but addressed explicitly.
-private enum ViewedWeekOffset: Int, CaseIterable, Identifiable {
+/// Not `private` — `WeekHeaderView` (Fas 3 extraction) needs it too.
+enum ViewedWeekOffset: Int, CaseIterable, Identifiable {
     case last = -1
     case current = 0
     case next = 1
@@ -46,11 +47,25 @@ private enum ViewedWeekOffset: Int, CaseIterable, Identifiable {
     var isViewOnly: Bool { self == .last }
 }
 
+extension ViewedWeekOffset {
+    var weekStartDate: String {
+        WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: rawValue)
+    }
+
+    func subtitleLabel() -> String {
+        let start = weekStartDate
+        let weekNumber = WeekCalendar.weekNumber(for: start)
+        let range = WeekCalendar.dateRangeLabel(weekStartDate: start)
+        return "\(L10n.format("format.week", weekNumber)) · \(range)"
+    }
+}
+
 private let weekendNudgeDismissalKey = "veckly.week.weekendNudgeDismissedDate"
 
 struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var onGoToShoppingTab: (() -> Void)? = nil
     var onGoToHouseholdTab: (() -> Void)? = nil
     @State private var selectedDayRecipe: SelectedDayRecipe?
@@ -68,9 +83,10 @@ struct WeekTabView: View {
     @State private var regenerateUndoDismissTask: Task<Void, Never>?
     @State private var retroViewModel = RetroCardViewModel()
     @State private var showSessionEndBeat = false
+    @State private var isWeekendExpanded = false
 
     private var viewedWeekStartDate: String {
-        WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: viewedWeekOffset.rawValue)
+        viewedWeekOffset.weekStartDate
     }
 
     private var isViewingCurrentWeek: Bool { viewedWeekOffset == .current }
@@ -120,7 +136,12 @@ struct WeekTabView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
 
-                header
+                WeekHeaderView(
+                    householdName: appModel.householdStore.activeHousehold?.name ?? L10n.string("week.yourHousehold"),
+                    viewedWeekOffset: $viewedWeekOffset,
+                    isWeekPickerPresented: $isWeekPickerPresented,
+                    onSelectWeek: { _ in Task { await reloadViewedWeek() } }
+                )
 
                 sessionEndBeatCard
 
@@ -166,13 +187,18 @@ struct WeekTabView: View {
                     }
                 } else {
                     tonightHeroCard
+                    if !isViewingLastWeek {
+                        weekPlanningStatusCard
+                    }
                     weekQualityCard
                     if !isViewingLastWeek || appModel.weekStore.hasPlannedMeals {
                         weekList
+                        collapsedWeekendSection
                     }
                 }
             }
             .padding(18)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: hasOpenRelevantDays)
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
@@ -193,7 +219,7 @@ struct WeekTabView: View {
                             showRegenerateConfirmation = true
                         }
                     } label: {
-                        Text(hasOpenRelevantDays || !appModel.weekStore.hasWeekContent ? "week.generate" : "week.regenerate")
+                        Text(toolbarGenerateLabelKey)
                             .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
@@ -348,6 +374,19 @@ struct WeekTabView: View {
                         presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date) }
                     }
                 },
+                isLocked: day.isLocked,
+                onToggleLock: {
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    guard let userID = appModel.authSessionStore.userID else {
+                        Task { await appModel.handleUnauthorized() }
+                        return
+                    }
+                    appModel.weekStore.clearMutationError()
+                    if !hasSeenLockExplanation {
+                        showLockExplanation = true
+                    }
+                    Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
+                },
                 onDismiss: { selectedDayForDetail = nil }
             )
         }
@@ -355,6 +394,9 @@ struct WeekTabView: View {
             PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date())
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
+            // See `reloadViewedWeek` — seeded UI-test data must stay
+            // network-free.
+            guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
             async let week: Void = appModel.weekStore.loadCurrentWeek(household: household)
             async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: WeekCalendar.currentWeekStartDate())
@@ -367,6 +409,7 @@ struct WeekTabView: View {
             // Browsing is a transient peek, not a persisted location — always
             // land back on the current week when the tab reappears.
             viewedWeekOffset = .current
+            isWeekendExpanded = false
             refreshWeekendNudgeDismissalState()
             Task { await reloadViewedWeek() }
             Task { await refreshNextWeekEmptyState() }
@@ -384,6 +427,7 @@ struct WeekTabView: View {
             regenerateUndoContext = nil
         }
         .onChange(of: scenePhase) { _, newPhase in
+            guard !appModel.usesSeededCoreReader else { return }
             guard newPhase == .active else { return }
             // Handles the app being backgrounded over a week/day boundary
             // without needing a live timer.
@@ -547,6 +591,12 @@ struct WeekTabView: View {
     }
 
     private func reloadViewedWeek() async {
+        // Seeded UI-test data is already final the moment `AppModel` seeds
+        // it — a real network reload here would silently overwrite it with
+        // a load error, since there's no backend behind it. A proper
+        // app-wide network-free UI-test mode is Fas 7 scope; this is the
+        // minimal guard `WeekTabView` needs in the meantime.
+        guard !appModel.usesSeededCoreReader else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
         if isViewingCurrentWeek {
             await appModel.weekStore.loadCurrentWeek(household: household)
@@ -555,120 +605,12 @@ struct WeekTabView: View {
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(appModel.householdStore.activeHousehold?.name ?? L10n.string("week.yourHousehold"))
-                .font(.subheadline)
-                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                .textCase(.uppercase)
-
-            Button {
-                isWeekPickerPresented = true
-            } label: {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(L10n.string(viewedWeekOffset.relativeLabelKey))
-                        .font(VecklyDesign.Typography.displayHeading(size: 34))
-                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(VecklyDesign.Colors.inkMid)
-                        .rotationEffect(.degrees(isWeekPickerPresented ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.15), value: isWeekPickerPresented)
-                }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(weekPickerTriggerAccessibilityLabel)
-            .accessibilityHint(L10n.string("week.picker.hint"))
-            .popover(isPresented: $isWeekPickerPresented, attachmentAnchor: .point(.bottomLeading), arrowEdge: .top) {
-                weekPickerMenu
-                    .presentationCompactAdaptation(.popover)
-            }
-
-            Text(weekSubtitleLabel)
-                .font(.subheadline)
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
-        }
-    }
-
-    private func weekStartDate(for offset: ViewedWeekOffset) -> String {
-        WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: offset.rawValue)
-    }
-
-    private func subtitleLabel(for offset: ViewedWeekOffset) -> String {
-        let start = weekStartDate(for: offset)
-        let weekNumber = WeekCalendar.weekNumber(for: start)
-        let range = WeekCalendar.dateRangeLabel(weekStartDate: start)
-        return "\(L10n.format("format.week", weekNumber)) · \(range)"
-    }
-
+    /// `WeekHeaderView` (Fas 3 extraction) owns the household/week-title/date
+    /// chrome and its own week-picker popover; this stays only because
+    /// `nextWeekSummaryCard`/`lastWeekSummaryCard` still need the plain
+    /// subtitle string for the currently-viewed offset.
     private var weekSubtitleLabel: String {
-        subtitleLabel(for: viewedWeekOffset)
-    }
-
-    private var weekPickerTriggerAccessibilityLabel: String {
-        "\(L10n.string(viewedWeekOffset.relativeLabelKey)), \(weekSubtitleLabel)"
-    }
-
-    private var weekPickerMenu: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(ViewedWeekOffset.allCases) { offset in
-                Button {
-                    viewedWeekOffset = offset
-                    isWeekPickerPresented = false
-                    Task { await reloadViewedWeek() }
-                } label: {
-                    weekPickerRow(for: offset)
-                }
-                .buttonStyle(.plain)
-
-                if offset != ViewedWeekOffset.allCases.last {
-                    Divider()
-                }
-            }
-        }
-        .frame(width: 260)
-        .padding(.vertical, 4)
-    }
-
-    private func weekPickerRow(for offset: ViewedWeekOffset) -> some View {
-        let isSelected = offset == viewedWeekOffset
-        return HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(L10n.string(offset.relativeLabelKey))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
-                    if offset.isViewOnly {
-                        Text("week.viewOnly")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(VecklyDesign.Colors.surfaceStrong)
-                            .clipShape(Capsule())
-                    }
-                }
-                Text(subtitleLabel(for: offset))
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
-            }
-            Spacer()
-            if isSelected {
-                Image(systemName: "checkmark")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            offset.isViewOnly
-                ? "\(L10n.string(offset.relativeLabelKey)), \(subtitleLabel(for: offset)), \(L10n.string("week.viewOnly"))"
-                : "\(L10n.string(offset.relativeLabelKey)), \(subtitleLabel(for: offset))"
-        )
-        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        viewedWeekOffset.subtitleLabel()
     }
 
     private var shouldShowWeekendNudge: Bool {
@@ -682,11 +624,12 @@ struct WeekTabView: View {
     /// `refreshNextWeekEmptyState`) only on weekend days while viewing the
     /// current week — it's not needed otherwise.
     private func refreshNextWeekEmptyState() async {
+        guard !appModel.usesSeededCoreReader else { return }
         guard isViewingCurrentWeek else { return }
         let weekday = Calendar.current.component(.weekday, from: Date())
         guard weekday == 1 || weekday == 7 else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
-        let nextWeekStart = weekStartDate(for: .next)
+        let nextWeekStart = ViewedWeekOffset.next.weekStartDate
         let hasContent = await appModel.weekStore.peekHasContent(household: household, weekStartDate: nextWeekStart)
         nextWeekIsEmpty = !hasContent
     }
@@ -906,12 +849,12 @@ struct WeekTabView: View {
         !weekPlanningScope.isComplete(days: appModel.weekStore.dayRows, coveredDates: prepCoveredDates)
     }
 
-    /// A skipped day keeps its `recipe` (skip is a flag layered on top of an
-    /// assignment, not a deletion — see `withSkipped`), so `isSkipped` must be
-    /// checked explicitly here or a skipped "today" could still surface as
-    /// tonight's hero.
-    private func isDayConsideredPlanned(_ day: WeekDayRowViewModel) -> Bool {
-        !day.isSkipped && (day.recipe != nil || coverage(for: day) != nil)
+    /// Three distinct CTA copies for three distinct states (beslut 6):
+    /// nothing planned yet, some relevant days still open, or a full week
+    /// being explicitly redone.
+    private var toolbarGenerateLabelKey: LocalizedStringKey {
+        if !appModel.weekStore.hasWeekContent { return "week.generate" }
+        return hasOpenRelevantDays ? "week.generateRest" : "week.regenerate"
     }
 
     /// Sheets in SwiftUI can't be swapped directly — presenting a new one
@@ -925,30 +868,28 @@ struct WeekTabView: View {
         }
     }
 
-    /// Only meaningful for the current week — Last/Next week have zero
-    /// `isToday` rows by definition, so callers must check `isViewingCurrentWeek`
-    /// before relying on this.
-    private var tonightHeroDay: WeekDayRowViewModel? {
-        let rows = appModel.weekStore.dayRows
-        if let today = rows.first(where: { $0.isToday && isDayConsideredPlanned($0) }) {
-            return today
-        }
-        let todayIndex = rows.firstIndex(where: { $0.isToday }) ?? -1
-        if todayIndex >= 0, let next = rows[(todayIndex + 1)...].first(where: { isDayConsideredPlanned($0) }) {
-            return next
-        }
-        return rows.first(where: { isDayConsideredPlanned($0) && !$0.isPast })
+    /// The four hero states (beslut 16) — only meaningful for the current
+    /// week (Last/Next week have zero `isToday` rows by definition, and are
+    /// rendered by `nextWeekHeroCard`/`nextWeekSummaryCard`/`lastWeekSummaryCard`
+    /// instead, which predate this phase and aren't "today"-framed).
+    private var heroMode: TonightMealCardMode {
+        TonightMealCardMode.compute(
+            dayRows: appModel.weekStore.dayRows,
+            scope: weekPlanningScope,
+            hasCoverage: { coverage(for: $0) != nil }
+        )
     }
 
-    private var tonightHeroLabel: String {
-        guard let hero = tonightHeroDay else { return "" }
-        if hero.isToday { return L10n.string("meal.tonight") }
-        let rows = appModel.weekStore.dayRows
-        let todayIndex = rows.firstIndex(where: { $0.isToday }) ?? -1
-        let heroIndex = rows.firstIndex(where: { $0.id == hero.id }) ?? -1
-        return heroIndex > todayIndex
-            ? "\(L10n.string("week.nextUp")) · \(hero.weekdayLabel)"
-            : "\(L10n.string("week.thisWeek")) · \(hero.weekdayLabel)"
+    /// True when the hero card is already showing *today's* row — in that
+    /// case the matching row in the week list below must not duplicate the
+    /// hero's actions (beslut 3). In the other two modes (`.upcomingMeal`,
+    /// `.weekDone`) the hero isn't representing today, so today's row (if
+    /// shown at all) behaves like any other row.
+    private var todayRowIsHeroOwned: Bool {
+        switch heroMode {
+        case .tonightMeal, .openTonight: true
+        case .upcomingMeal, .weekDone: false
+        }
     }
 
     private var plannedDinnerCount: Int {
@@ -1030,9 +971,23 @@ struct WeekTabView: View {
         )
     }
 
+    /// "Veckokoll" is replaced by `weekPlanningStatusCard` (Fas 3) — this
+    /// card now only appears for insights that carry an actual warning
+    /// (a heavy week, or several low-confidence picks), never for routine
+    /// observations like "good variation" that the status card already
+    /// covers in spirit.
+    private var weekQualityWarnings: [WeekQualitySummary.Insight] {
+        weekQualitySummary.insights.filter { insight in
+            switch insight.kind {
+            case .heavyWeek, .lowConfidence: true
+            case .openDays, .quickRhythm, .prepFriendly, .goodVariation, .looksReasonable: false
+            }
+        }
+    }
+
     @ViewBuilder
     private var weekQualityCard: some View {
-        if !isViewingLastWeek, !weekQualitySummary.insights.isEmpty {
+        if !isViewingLastWeek, !weekQualityWarnings.isEmpty {
             VecklyCard {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("week.quality.title")
@@ -1041,7 +996,7 @@ struct WeekTabView: View {
                         .textCase(.uppercase)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        ForEach(weekQualitySummary.insights) { insight in
+                        ForEach(weekQualityWarnings) { insight in
                             Label {
                                 Text(verbatim: weekQualityText(for: insight))
                                     .font(.subheadline)
@@ -1056,6 +1011,24 @@ struct WeekTabView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+    }
+
+    /// Replaces "Veckokoll" as the primary status surface (Fas 3): a single
+    /// primary CTA reflecting whether relevant planning days remain.
+    @ViewBuilder
+    private var weekPlanningStatusCard: some View {
+        if appModel.weekStore.hasWeekContent {
+            WeekPlanningStatusCard(
+                openDayCount: openDayCount,
+                isComplete: !hasOpenRelevantDays,
+                onPlanRest: {
+                    Task { await performGenerate(regenerate: false) }
+                },
+                onOpenShoppingList: {
+                    onGoToShoppingTab?()
+                }
+            )
         }
     }
 
@@ -1094,139 +1067,38 @@ struct WeekTabView: View {
         }
     }
 
-    @ViewBuilder
+    /// Beslut 16's four hero states, rendered by `TonightMealCard`. Lock
+    /// lives in `DayDetailSheet` and the list's status icon now, not here
+    /// (beslut 3) — so unlike the pre-Fas-3 hero, this view never needs
+    /// `hasSeenLockExplanation`/`showLockExplanation`.
     private var currentWeekHeroCard: some View {
-        if let day = tonightHeroDay {
-            // A day with no recipe of its own can still be tonight's hero if
-            // leftovers cover it — show the covering dish instead of the
-            // (empty) day fields, and hide the recipe/swap actions that
-            // assume a bound `WeekSummaryRecipe`.
-            let dayCoverage = day.recipe == nil ? coverage(for: day) : nil
-            VecklyCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(tonightHeroLabel)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                            .textCase(.uppercase)
-                        Spacer()
-                        if day.isToday {
-                            Text("meal.today")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrange, lineWidth: 1))
-                        }
-                    }
-
-                    Text(dayCoverage?.recipeTitle ?? day.mealTitle)
-                        .font(VecklyDesign.Typography.displayHeading(size: 24))
-                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
-
-                    if let dayCoverage {
-                        Text(L10n.format("prep.leftoversFrom", WeekCalendar.shortDateLabel(yyyyMmDd: dayCoverage.cookDate)))
-                            .font(.body)
-                            .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    } else if !day.detail.isEmpty {
-                        Text(day.detail)
-                            .font(.body)
-                            .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    }
-
-                    if dayCoverage == nil, let reason = day.reason {
-                        Text(reason.label)
-                            .font(.caption)
-                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                    }
-
-                    if dayCoverage == nil, day.confidence == .low {
-                        Label("week.confidence.low", systemImage: "arrow.triangle.2.circlepath")
-                            .font(.caption)
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    }
-
-                    if dayCoverage == nil, let streakWeeks = day.streakWeeks {
-                        Label(L10n.format("week.satiation.hint", streakWeeks), systemImage: "arrow.2.squarepath")
-                            .font(.caption)
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    }
-
-                    if dayCoverage == nil {
-                        FlowLayout(spacing: 8) {
-                            Button {
-                                if let recipe = day.recipe {
-                                    selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
-                                }
-                            } label: {
-                                Label("meal.recipe", systemImage: "book")
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(VecklyDesign.Colors.inkMid)
-                            .accessibilityLabel(L10n.format("accessibility.viewRecipeFor", day.mealTitle))
-
-                            Button {
-                                mealPickerDay = day
-                            } label: {
-                                Label("meal.swap", systemImage: "arrow.2.squarepath")
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(VecklyDesign.Colors.inkMid)
-                            .accessibilityLabel(L10n.format("accessibility.swapMealFor", day.weekdayLabel))
-
-                            if let recipe = day.recipe {
-                                Button {
-                                    prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
-                                } label: {
-                                    Label(L10n.string("prep.eatAgain"), systemImage: "arrow.3.trianglepath")
-                                }
-                                .buttonStyle(.bordered)
-                                .tint(VecklyDesign.Colors.inkMid)
-                            }
-
-                            Button {
-                                guard let household = appModel.householdStore.activeHousehold else { return }
-                                guard let userID = appModel.authSessionStore.userID else {
-                                    Task { await appModel.handleUnauthorized() }
-                                    return
-                                }
-                                appModel.weekStore.clearMutationError()
-                                if !hasSeenLockExplanation {
-                                    showLockExplanation = true
-                                }
-                                Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
-                            } label: {
-                                Image(systemName: day.isLocked ? "lock.fill" : "lock.open")
-                                    .frame(width: 20, height: 20)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(day.isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
-                            .accessibilityLabel(day.isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
-                        }
-                    } else if let dayCoverage {
-                        Button(role: .destructive) {
-                            guard let household = appModel.householdStore.activeHousehold else { return }
-                            Task {
-                                try? await appModel.prepBatchStore.removeAssignment(
-                                    householdID: household.id,
-                                    batchID: dayCoverage.batchID,
-                                    date: day.date,
-                                    mealType: dayCoverage.mealType
-                                )
-                            }
-                        } label: {
-                            Image(systemName: "trash")
-                                .frame(width: 20, height: 20)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(VecklyDesign.Colors.inkMid)
-                        .accessibilityLabel(L10n.string("prep.removeCoverage"))
-                    }
+        TonightMealCard(
+            mode: heroMode,
+            coverage: { coverage(for: $0) },
+            onViewRecipe: { day in
+                if let recipe = day.recipe {
+                    selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("tonightMealPanel")
+            },
+            onSwap: { day in mealPickerDay = day },
+            onPlanTonight: { day in mealPickerDay = day },
+            onEatExtra: { day in
+                if let recipe = day.recipe {
+                    prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
+                }
+            },
+            onRemoveCoverage: { day, dayCoverage in
+                guard let household = appModel.householdStore.activeHousehold else { return }
+                Task {
+                    try? await appModel.prepBatchStore.removeAssignment(
+                        householdID: household.id,
+                        batchID: dayCoverage.batchID,
+                        date: day.date,
+                        mealType: dayCoverage.mealType
+                    )
+                }
             }
-        }
+        )
     }
 
     /// Next week, nothing planned yet: forward-looking copy + a CTA to
@@ -1333,8 +1205,50 @@ struct WeekTabView: View {
         }
     }
 
+    /// Saturday/Sunday rows — only relevant when deciding whether to collapse
+    /// them (beslut 8); a household that plans the weekend never collapses it.
+    private var weekendDays: [WeekDayRowViewModel] {
+        appModel.weekStore.dayRows.filter { $0.weekday == .saturday || $0.weekday == .sunday }
+    }
+
+    /// Beslut 8: only households that never plan Sat/Sun get a collapsed
+    /// weekend section. A household with the weekend in `selectedDays` sees
+    /// it as regular rows in `listDays`, counted in scope like any other day.
+    private var shouldCollapseWeekend: Bool {
+        !weekPlanningScope.includesWeekend && !weekendDays.isEmpty
+    }
+
+    /// The week list always shows every relevant day, in order, with no
+    /// holes (beslut 3) — weekend days are the one exception, moved to
+    /// `collapsedWeekendSection` when the household doesn't plan them.
     private var listDays: [WeekDayRowViewModel] {
-        appModel.weekStore.dayRows
+        guard shouldCollapseWeekend else { return appModel.weekStore.dayRows }
+        return appModel.weekStore.dayRows.filter { $0.weekday != .saturday && $0.weekday != .sunday }
+    }
+
+    /// Shared tap handling for both the main list and the collapsed weekend
+    /// section — a day already owned by the hero (today, when the hero is
+    /// showing today) has no tap target of its own (beslut 3); the hero
+    /// itself carries the actions.
+    private func handleDayTap(_ day: WeekDayRowViewModel) {
+        if isViewingLastWeek {
+            if let recipe = day.recipe { selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe) }
+            return
+        }
+        if isViewingCurrentWeek, day.isToday, todayRowIsHeroOwned { return }
+        if day.recipe != nil { selectedDayForDetail = day }
+        else if !day.isPast { mealPickerDay = day }
+    }
+
+    private func dayRow(_ day: WeekDayRowViewModel) -> some View {
+        CompactDayRow(
+            day: day,
+            coverage: coverage(for: day),
+            isTodayBadge: day.isToday,
+            isHeroOwned: isViewingCurrentWeek && day.isToday && todayRowIsHeroOwned,
+            isViewOnly: isViewingLastWeek,
+            onTap: { handleDayTap(day) }
+        )
     }
 
     private var weekList: some View {
@@ -1345,20 +1259,7 @@ struct WeekTabView: View {
                 .padding(.bottom, 4)
 
             ForEach(listDays) { day in
-                CompactDayRow(
-                    day: day,
-                    coverage: coverage(for: day),
-                    isHighlighted: isViewingCurrentWeek && day.id == tonightHeroDay?.id,
-                    isViewOnly: isViewingLastWeek,
-                    onTap: {
-                        if isViewingLastWeek {
-                            if let recipe = day.recipe { selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe) }
-                            return
-                        }
-                        if day.recipe != nil { selectedDayForDetail = day }
-                        else if !day.isPast { mealPickerDay = day }
-                    }
-                )
+                dayRow(day)
                 if day.id != listDays.last?.id {
                     Divider().padding(.leading, 56)
                 }
@@ -1370,36 +1271,86 @@ struct WeekTabView: View {
     private var weekListSectionLabel: LocalizedStringKey {
         "week.section"
     }
+
+    /// Beslut 8: a disclosure the household can open to plan an optional
+    /// weekend day without it affecting scope, the status card, or the hero.
+    @ViewBuilder
+    private var collapsedWeekendSection: some View {
+        if shouldCollapseWeekend {
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                        isWeekendExpanded.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(isWeekendExpanded ? "week.hideWeekend" : "week.showWeekend")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .rotationEffect(.degrees(isWeekendExpanded ? 180 : 0))
+                        Spacer()
+                    }
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("weekendToggle")
+
+                if isWeekendExpanded {
+                    ForEach(weekendDays) { day in
+                        dayRow(day)
+                        if day.id != weekendDays.last?.id {
+                            Divider().padding(.leading, 56)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct CompactDayRow: View {
     let day: WeekDayRowViewModel
     var coverage: PrepBatchCoverage? = nil
-    var isHighlighted: Bool = false
+    /// Purely informational "I dag" chip — shown whenever this is literally
+    /// today's row, independent of whether the hero happens to be showing
+    /// today too. Informational redundancy between hero and list is
+    /// intentional (beslut 3); only action redundancy is forbidden.
+    var isTodayBadge: Bool = false
+    /// True when the hero card above is already showing this exact day —
+    /// only then does the row give up its tap target and trailing "Plan"
+    /// hint, so the hero's actions are never duplicated (beslut 3).
+    var isHeroOwned: Bool = false
     var isViewOnly: Bool = false
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            rowContent
-        }
-        .buttonStyle(.plain)
-        .opacity(day.isPast ? 0.7 : 1)
-        .background {
-            if isHighlighted {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(VecklyDesign.Colors.surfaceStrong)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(VecklyDesign.Colors.edgeLight, lineWidth: 1)
-                    )
+        Group {
+            if isHeroOwned {
+                rowContent
+                    .accessibilityElement(children: .combine)
+            } else {
+                Button(action: onTap) {
+                    rowContent
+                }
+                .buttonStyle(.plain)
             }
         }
+        .opacity(isDimmed ? 0.7 : 1)
     }
+
+    private var isDimmed: Bool { day.isPast || isHeroOwned }
 
     private var rowContent: some View {
         HStack(alignment: .center, spacing: 12) {
             dateColumn
+
+            if isTodayBadge {
+                todayBadge
+            }
 
             if day.isSkipped {
                 skippedContent
@@ -1410,8 +1361,17 @@ struct CompactDayRow: View {
             }
         }
         .padding(.vertical, 12)
-        .padding(.horizontal, isHighlighted ? 10 : 0)
         .contentShape(Rectangle())
+    }
+
+    private var todayBadge: some View {
+        Text("meal.today")
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrange, lineWidth: 1))
+            .fixedSize()
     }
 
     private var dateColumn: some View {
@@ -1473,7 +1433,7 @@ struct CompactDayRow: View {
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
             }
             Spacer()
-            if !day.isPast && !isViewOnly {
+            if !day.isPast && !isViewOnly && !isHeroOwned {
                 Text("meal.plan")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
@@ -1501,66 +1461,12 @@ struct CompactDayRow: View {
                 .background(VecklyDesign.Colors.surfaceStrong)
                 .clipShape(Capsule())
             Spacer()
-            if !day.isPast && !isViewOnly {
+            if !day.isPast && !isViewOnly && !isHeroOwned {
                 Text("meal.plan")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrange)
             }
         }
         .opacity(0.7)
-    }
-}
-
-/// Left-to-right wrapping layout. Views are placed at their intrinsic size with
-/// `spacing` between them horizontally; when a view won't fit on the current
-/// row it starts a new one, also separated by `spacing` vertically.
-/// Requires iOS 16+ (Layout protocol); the app targets iOS 17, so this is safe.
-private struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
-        let containerWidth = proposal.replacingUnspecifiedDimensions().width
-        var rowX: CGFloat = 0
-        var totalY: CGFloat = 0
-        var rowHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            let neededX = rowX == 0 ? size.width : rowX + spacing + size.width
-
-            if rowX > 0 && neededX > containerWidth {
-                totalY += rowHeight + spacing
-                rowX = 0
-                rowHeight = 0
-            }
-
-            rowX = rowX == 0 ? size.width : rowX + spacing + size.width
-            rowHeight = max(rowHeight, size.height)
-        }
-
-        return CGSize(width: containerWidth, height: totalY + rowHeight)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
-        var x = bounds.minX
-        var y = bounds.minY
-        var rowHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            let needsWrap = x > bounds.minX && x + spacing + size.width > bounds.maxX
-
-            if needsWrap {
-                y += rowHeight + spacing
-                x = bounds.minX
-                rowHeight = 0
-            } else if x > bounds.minX {
-                x += spacing
-            }
-
-            subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-            x += size.width
-            rowHeight = max(rowHeight, size.height)
-        }
     }
 }

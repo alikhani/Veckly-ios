@@ -2611,6 +2611,22 @@
         }
       }
     },
+    "meal.lockDay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock day"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lås dagen"
+          }
+        }
+      }
+    },
     "meal.noAssigned" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2624,6 +2640,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ingen middag vald"
+          }
+        }
+      }
+    },
+    "meal.openRecipe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open recipe"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna recept"
           }
         }
       }
@@ -2657,6 +2689,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Planera den här dagen i stället"
+          }
+        }
+      }
+    },
+    "meal.planTonight" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan tonight"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planera i kväll"
           }
         }
       }
@@ -2765,13 +2813,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swap"
+            "value" : "Change"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Byt"
+            "value" : "Ändra"
           }
         }
       }
@@ -3040,6 +3088,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "I kväll"
+          }
+        }
+      }
+    },
+    "meal.unlockDay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock day"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lås upp dagen"
           }
         }
       }
@@ -3972,13 +4036,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Again"
+            "value" : "Cook extra"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Igen"
+            "value" : "Laga extra"
           }
         }
       }
@@ -6745,13 +6809,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plan my week for me"
+            "value" : "Plan the week"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planera min vecka åt mig"
+            "value" : "Planera veckan"
           }
         }
       }
@@ -6793,13 +6857,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generate"
+            "value" : "Plan the week"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generera"
+            "value" : "Planera veckan"
+          }
+        }
+      }
+    },
+    "week.generateRest" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan the rest"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planera resten"
           }
         }
       }
@@ -6817,6 +6897,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genererar din vecka..."
+          }
+        }
+      }
+    },
+    "week.hero.done.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicely done — next week is ready when you are."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bra jobbat — nästa vecka väntar när ni är redo."
+          }
+        }
+      }
+    },
+    "week.hero.done.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing more to cook this week"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inget mer att laga den här veckan"
+          }
+        }
+      }
+    },
+    "week.hero.open.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's for dinner tonight?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vad blir det till middag i kväll?"
           }
         }
       }
@@ -6944,13 +7072,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plan next week for me"
+            "value" : "Plan the week"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planera nästa vecka för mig"
+            "value" : "Planera veckan"
           }
         }
       }
@@ -7347,13 +7475,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Regenerate"
+            "value" : "Redo the week"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generera om"
+            "value" : "Gör om veckan"
           }
         }
       }
@@ -7636,6 +7764,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Visa helgen"
+          }
+        }
+      }
+    },
+    "week.status.complete.cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the shopping list"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna inköpslistan"
+          }
+        }
+      }
+    },
+    "week.status.complete.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The week is planned"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckan är klar"
+          }
+        }
+      }
+    },
+    "week.status.daysLeft.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d planning day left"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d planeringsdag kvar"
+          }
+        }
+      }
+    },
+    "week.status.daysLeft.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d planning days left"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d planeringsdagar kvar"
           }
         }
       }

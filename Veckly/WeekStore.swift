@@ -307,7 +307,28 @@ final class WeekStore {
         isFlushingPendingChanges = false
     }
 
-    func seedForUITests() {
+    /// Fas 3 UI-test fixtures for the four hero states — `.legacyPartial` is
+    /// the original, untouched seed shape (`testCoreReaderShowsWeekAndShoppingData`
+    /// and friends assert against it directly, so its exact days/states/lock
+    /// must not change). The others exist to drive
+    /// `testWeekTabShowsHeroAndStatusAcrossScenarios`.
+    enum UITestWeekScenario: String {
+        /// Monday (= "today") already planned+locked, Wednesday skipped,
+        /// the rest open — a Mon–Fri household mid-session.
+        case legacyPartial
+        /// Monday (= "today") is a planning day with nothing assigned yet —
+        /// exercises `.openTonight`.
+        case openTonight
+        /// Every Mon–Fri day planned — exercises the "week is planned"
+        /// status card and `.tonightMeal`.
+        case complete
+        /// Monday–Friday planned, Saturday (= "today") open and not a
+        /// planning day, Sunday planned — exercises `.upcomingMeal` on a
+        /// weekend day for a Mon–Fri household.
+        case saturdayUpcoming
+    }
+
+    func seedForUITests(scenario: UITestWeekScenario = .legacyPartial) {
         let recipe = WeekSummaryRecipe(
             id: "22222222-2222-2222-2222-222222222222",
             title: "Monday Pasta",
@@ -317,14 +338,63 @@ final class WeekStore {
             cookTimeMinutes: 15,
             tags: ["weekday"]
         )
-        let days = Weekday.allCases.enumerated().map { index, weekday in
-            WeekSummaryDay(
-                dayOfWeek: weekday,
-                date: WeekCalendar.addDays(to: weekStartDate, offset: index),
-                state: index == 0 ? .planned : index == 2 ? .skipped : .empty,
-                isLocked: index == 0,
-                recipe: index == 0 ? recipe : nil
-            )
+        let sundayRecipe = WeekSummaryRecipe(
+            id: "44444444-4444-4444-4444-444444444444",
+            title: "Sunday Soup",
+            description: "Warm and simple",
+            servings: 4,
+            prepTimeMinutes: 15,
+            cookTimeMinutes: 20,
+            tags: []
+        )
+
+        let days: [WeekSummaryDay]
+        let todayOffset: Int
+        switch scenario {
+        case .legacyPartial:
+            days = Weekday.allCases.enumerated().map { index, weekday in
+                WeekSummaryDay(
+                    dayOfWeek: weekday,
+                    date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                    state: index == 0 ? .planned : index == 2 ? .skipped : .empty,
+                    isLocked: index == 0,
+                    recipe: index == 0 ? recipe : nil
+                )
+            }
+            todayOffset = 0
+        case .openTonight:
+            days = Weekday.allCases.enumerated().map { index, weekday in
+                WeekSummaryDay(
+                    dayOfWeek: weekday,
+                    date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                    state: index == 1 ? .planned : index == 2 ? .skipped : .empty,
+                    isLocked: false,
+                    recipe: index == 1 ? recipe : nil
+                )
+            }
+            todayOffset = 0
+        case .complete:
+            days = Weekday.allCases.enumerated().map { index, weekday in
+                WeekSummaryDay(
+                    dayOfWeek: weekday,
+                    date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                    state: index < 5 ? .planned : .empty,
+                    isLocked: index == 0,
+                    recipe: index < 5 ? recipe : nil
+                )
+            }
+            todayOffset = 0
+        case .saturdayUpcoming:
+            days = Weekday.allCases.enumerated().map { index, weekday in
+                WeekSummaryDay(
+                    dayOfWeek: weekday,
+                    date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                    state: index < 5 ? .planned : index == 6 ? .planned : .empty,
+                    isLocked: false,
+                    recipe: index < 5 ? recipe : index == 6 ? sundayRecipe : nil
+                )
+            }
+            todayOffset = 5 // Saturday
         }
         let summary = WeekSummary(
             household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
@@ -333,7 +403,8 @@ final class WeekStore {
             days: days
         )
         self.summary = summary
-        let mapped = WeekViewModelMapper.map(summary: summary, today: WeekCalendar.date(from: weekStartDate) ?? Date())
+        let todayDate = WeekCalendar.date(from: WeekCalendar.addDays(to: weekStartDate, offset: todayOffset)) ?? Date()
+        let mapped = WeekViewModelMapper.map(summary: summary, today: todayDate)
         dayRows = mapped.days
         today = mapped.today ?? mapped.days.first
         syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
