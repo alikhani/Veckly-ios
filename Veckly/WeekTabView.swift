@@ -202,29 +202,29 @@ struct WeekTabView: View {
         }
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
+        // The scroll content's own `.background(canvas)` above only paints
+        // what's actually laid out in the ScrollView; it doesn't reach the
+        // navigation bar / top safe-area's own scroll-edge material, which
+        // otherwise falls back to the system default (opaque black in dark
+        // mode) and makes the header/toolbar unreadable against it once
+        // content scrolls under it. Pinning both to canvas explicitly is
+        // what keeps the two layers visually seamless in both appearances.
+        .toolbarBackground(VecklyDesign.Colors.canvas, for: .navigationBar)
+        .toolbarBackgroundVisibility(.visible, for: .navigationBar)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
+            // Beslut: "Planera resten" (and, for a complete week, the full
+            // "Gör om veckan" redo) now live as CTAs inside
+            // `weekPlanningStatusCard`'s content card — the toolbar's only
+            // remaining job is refresh, which is why this is a single
+            // `ToolbarItem` rather than a `ToolbarItemGroup`: a group with
+            // exactly one control renders as an ambiguous empty-looking
+            // Liquid Glass pill on iOS 26.
+            if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
+                ToolbarItem(placement: .topBarTrailing) {
                     ProgressView()
-                } else if !isViewingLastWeek {
-                    Button {
-                        guard appModel.householdStore.activeHousehold != nil else { return }
-                        guard appModel.authSessionStore.userID != nil else {
-                            Task { await appModel.handleUnauthorized() }
-                            return
-                        }
-                        if hasOpenRelevantDays {
-                            Task { await performGenerate(regenerate: false) }
-                        } else {
-                            showRegenerateConfirmation = true
-                        }
-                    } label: {
-                        Text(toolbarGenerateLabelKey)
-                            .font(.subheadline.weight(.semibold))
-                    }
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
-                    .disabled(appModel.householdStore.activeHousehold == nil)
-
+                }
+            } else if !isViewingLastWeek {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task { await reloadViewedWeek() }
                     } label: {
@@ -849,14 +849,6 @@ struct WeekTabView: View {
         !weekPlanningScope.isComplete(days: appModel.weekStore.dayRows, coveredDates: prepCoveredDates)
     }
 
-    /// Three distinct CTA copies for three distinct states (beslut 6):
-    /// nothing planned yet, some relevant days still open, or a full week
-    /// being explicitly redone.
-    private var toolbarGenerateLabelKey: LocalizedStringKey {
-        if !appModel.weekStore.hasWeekContent { return "week.generate" }
-        return hasOpenRelevantDays ? "week.generateRest" : "week.regenerate"
-    }
-
     /// Sheets in SwiftUI can't be swapped directly — presenting a new one
     /// while another is still dismissing is silently dropped. A short delay
     /// lets the dismiss animation finish first; centralized here so all
@@ -1027,6 +1019,14 @@ struct WeekTabView: View {
                 },
                 onOpenShoppingList: {
                     onGoToShoppingTab?()
+                },
+                onRegenerate: {
+                    guard appModel.householdStore.activeHousehold != nil else { return }
+                    guard appModel.authSessionStore.userID != nil else {
+                        Task { await appModel.handleUnauthorized() }
+                        return
+                    }
+                    showRegenerateConfirmation = true
                 }
             )
         }
