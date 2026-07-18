@@ -105,9 +105,11 @@ struct RecipesTabView: View {
             }
         }
         .navigationTitle(L10n.string("tabs.recipes"))
-        .searchable(text: $searchText, prompt: L10n.string("recipes.search"))
+        .modifier(SearchableWhenLibraryHasRecipesModifier(hasRecipes: !appModel.recipeStore.recipes.isEmpty, searchText: $searchText))
         .toolbar {
-            Button { showAddSheet = true } label: { Image(systemName: "plus") }
+            if !appModel.recipeStore.recipes.isEmpty {
+                Button { showAddSheet = true } label: { Image(systemName: "plus") }
+            }
         }
         .sheet(isPresented: $showAddSheet) {
             RecipeFormSheet(mode: .create) { draft in
@@ -162,6 +164,24 @@ struct RecipesTabView: View {
 
     private var searchQuery: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+/// `.searchable` only once the household's real library has at least one
+/// recipe — an empty library has nothing to search, so the field would be a
+/// dead control next to the "Add recipe" CTA. Once the library has recipes,
+/// the field stays even if an individual search happens to match nothing
+/// (the user may want to try a different term).
+private struct SearchableWhenLibraryHasRecipesModifier: ViewModifier {
+    let hasRecipes: Bool
+    @Binding var searchText: String
+
+    func body(content: Content) -> some View {
+        if hasRecipes {
+            content.searchable(text: $searchText, prompt: L10n.string("recipes.search"))
+        } else {
+            content
+        }
     }
 }
 

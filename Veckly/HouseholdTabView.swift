@@ -259,6 +259,15 @@ struct HouseholdTabView: View {
             }
             .accessibilityIdentifier("householdPreferencesLink")
 
+            Divider()
+
+            NavigationLink {
+                RecipesTabView()
+            } label: {
+                navigationRow(title: L10n.string("household.familyRecipesLink"), systemImage: "fork.knife")
+            }
+            .accessibilityIdentifier("familyRecipesLink")
+
             if isOwner, let household {
                 Divider()
 

@@ -187,7 +187,14 @@ struct MealPickerSheet: View {
         .sheet(isPresented: $showAddRecipeSheet) {
             RecipeFormSheet(mode: .create) { draft in
                 guard let household = appModel.householdStore.activeHousehold else { return }
-                _ = try await appModel.recipeStore.createRecipe(householdID: household.id, draft: draft)
+                // A recipe created here (new or imported) is both saved to
+                // the household's Family recipes (createRecipe already does
+                // that) and assigned to the day being planned — the same
+                // outcome as tapping an existing row, so it follows the
+                // identical onSelect → confirmedRecipe hand-off (beslut 18).
+                let recipe = try await appModel.recipeStore.createRecipe(householdID: household.id, draft: draft)
+                onSelect(recipe)
+                confirmedRecipe = recipe.asWeekSummaryRecipe
             }
         }
     }
@@ -261,9 +268,25 @@ struct MealPickerSheet: View {
                         }
                     }
                 }
+                addRecipeRow
             }
         }
         .listStyle(.insetGrouped)
+    }
+
+    /// Quiet entry point at the end of the picker's results — for when
+    /// nothing above is quite right, without competing with the prominent
+    /// empty-state CTA above (beslut 18: "utan att appen framstår som en
+    /// receptapp").
+    private var addRecipeRow: some View {
+        Section {
+            Button { showAddRecipeSheet = true } label: {
+                Label(L10n.string("recipe.add"), systemImage: "plus.circle")
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("mealPickerAddRecipeRow")
+        }
     }
 
     private var intentFallbackSection: some View {

@@ -2198,6 +2198,22 @@
         }
       }
     },
+    "household.familyRecipesLink" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family recipes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Familjens recept"
+          }
+        }
+      }
+    },
     "household.loadError" : {
       "extractionState" : "stale",
       "localizations" : {

@@ -8,7 +8,7 @@ struct MainTabView: View {
             NavigationStack {
                 WeekTabView(
                     onGoToShoppingTab: { selectedTab = 1 },
-                    onGoToHouseholdTab: { selectedTab = 3 }
+                    onGoToHouseholdTab: { selectedTab = 2 }
                 )
             }
             .tabItem {
@@ -25,20 +25,12 @@ struct MainTabView: View {
             .tag(1)
 
             NavigationStack {
-                RecipesTabView()
-            }
-            .tabItem {
-                Label("tabs.recipes", systemImage: "fork.knife")
-            }
-            .tag(2)
-
-            NavigationStack {
                 HouseholdTabView()
             }
             .tabItem {
                 Label("tabs.household", systemImage: "person.2")
             }
-            .tag(3)
+            .tag(2)
         }
         .tint(VecklyDesign.Colors.hearthOrange)
     }
