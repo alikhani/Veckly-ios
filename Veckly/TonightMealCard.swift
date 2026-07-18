@@ -244,10 +244,16 @@ struct TonightMealCard: View {
                 .font(VecklyDesign.Typography.displayHeading(size: 22))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
+            // Bordered, not `VecklyPrimaryButtonStyle()` — the status card's
+            // "Plan the rest" is the page's one primary CTA (beslut 16, Fas 3
+            // acceptance: "only one primary CTA per state"). Same bordered
+            // vocabulary as the hero's other secondary actions below, just
+            // tinted orange so it still reads as the important one here.
             Button("meal.planTonight") {
                 onPlanTonight(day)
             }
-            .buttonStyle(VecklyPrimaryButtonStyle())
+            .buttonStyle(.bordered)
+            .tint(VecklyDesign.Colors.hearthOrange)
             .padding(.top, 4)
         }
     }
