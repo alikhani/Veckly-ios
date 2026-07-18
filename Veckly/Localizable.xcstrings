@@ -2181,6 +2181,22 @@
         }
       }
     },
+    "household.delete.typeToConfirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type \"%@\" to confirm."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv \"%@\" för att bekräfta."
+          }
+        }
+      }
+    },
     "household.detailLoadError" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5643,6 +5659,22 @@
         }
       }
     },
+    "settings.advanced" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avancerat"
+          }
+        }
+      }
+    },
     "settings.avoidIngredients" : {
       "localizations" : {
         "en" : {
@@ -5708,6 +5740,22 @@
         }
       }
     },
+    "settings.deleteConfirmWord" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DELETE"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TA BORT"
+          }
+        }
+      }
+    },
     "settings.deleteFailed" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5753,6 +5801,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ditt konto och all hushållsdata raderas permanent."
+          }
+        }
+      }
+    },
+    "settings.deleteTypeToConfirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type %@ to confirm."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv %@ för att bekräfta."
           }
         }
       }

@@ -9,6 +9,9 @@ struct HouseholdTabView: View {
     @State private var isDeletingAccount = false
     @State private var isDeletingHousehold = false
     @State private var deleteErrorMessage: String?
+    @State private var deleteHouseholdTypedName = ""
+    @State private var deleteAccountTypedConfirmation = ""
+    @State private var isAdvancedExpanded = false
 
     private var household: Household? {
         appModel.householdStore.activeHousehold
@@ -45,9 +48,11 @@ struct HouseholdTabView: View {
                 }
                 appSection
                 accountSection
+                advancedSection
             }
             .padding(VecklyDesign.Spacing.large)
         }
+        .safeAreaPadding(.bottom, VecklyDesign.Spacing.large)
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
         .task(id: appModel.householdStore.activeHousehold?.id) { await appModel.userProfileStore.load() }
@@ -55,36 +60,46 @@ struct HouseholdTabView: View {
             guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
             await appModel.familyCookbookStore.loadIfNeeded(householdID: householdID)
         }
-        .confirmationDialog(
+        .alert(
             deleteHouseholdConfirmationTitle,
-            isPresented: $showDeleteHouseholdConfirmation,
-            titleVisibility: .visible
+            isPresented: $showDeleteHouseholdConfirmation
         ) {
+            TextField(household?.name ?? "", text: $deleteHouseholdTypedName)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
             Button(deleteHouseholdActionTitle, role: .destructive) {
                 Task { await deleteHousehold() }
             }
-            Button("common.cancel", role: .cancel) {}
+            .disabled(!deleteHouseholdTypedNameMatches)
+            Button("common.cancel", role: .cancel) {
+                deleteHouseholdTypedName = ""
+            }
         } message: {
-            Text(deleteHouseholdMessage)
+            Text(deleteHouseholdTypedConfirmationMessage)
         }
-        .confirmationDialog(
+        .alert(
             L10n.string("settings.deleteConfirmation"),
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
+            isPresented: $showDeleteConfirmation
         ) {
+            TextField(deleteAccountConfirmWord, text: $deleteAccountTypedConfirmation)
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
             Button("settings.deleteAccount", role: .destructive) {
                 Task { await deleteAccount() }
             }
-            Button("common.cancel", role: .cancel) {}
+            .disabled(!deleteAccountTypedConfirmationMatches)
+            Button("common.cancel", role: .cancel) {
+                deleteAccountTypedConfirmation = ""
+            }
         } message: {
-            Text("settings.deleteMessage")
+            Text(deleteAccountTypedConfirmationMessage)
         }
         .confirmationDialog(
             L10n.string("account.signOut.confirmTitle"),
             isPresented: $showSignOutConfirmation,
             titleVisibility: .visible
         ) {
-            Button(L10n.string("account.signOut.confirm"), role: .destructive) {
+            Button(L10n.string("account.signOut.confirm")) {
                 appModel.signOut()
             }
             Button("common.cancel", role: .cancel) {}
@@ -144,13 +159,16 @@ struct HouseholdTabView: View {
                         ProgressView()
                             .controlSize(.small)
                     } else {
-                        Text(L10n.string("household.detailLoadError"))
-                            .font(.subheadline)
-                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                            .onTapGesture {
-                                guard let hid = household?.id else { return }
-                                Task { await appModel.householdStore.loadHouseholdDetails(householdID: hid) }
-                            }
+                        Button {
+                            guard let hid = household?.id else { return }
+                            Task { await appModel.householdStore.loadHouseholdDetails(householdID: hid) }
+                        } label: {
+                            Text(L10n.string("household.detailLoadError"))
+                                .font(.subheadline)
+                                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("householdDetailRetryButton")
                     }
 
                     if let household {
@@ -277,24 +295,6 @@ struct HouseholdTabView: View {
                     navigationRow(title: L10n.string("household.rename"), systemImage: "pencil")
                 }
                 .accessibilityIdentifier("renameHouseholdLink")
-
-                Divider()
-
-                Button(role: .destructive) {
-                    showDeleteHouseholdConfirmation = true
-                } label: {
-                    if isDeletingHousehold {
-                        HStack {
-                            ProgressView()
-                            Text(deleteHouseholdInProgressTitle)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        actionRow(title: deleteHouseholdActionTitle, systemImage: "trash")
-                    }
-                }
-                .disabled(isDeletingHousehold)
-                .accessibilityIdentifier("deleteHouseholdButton")
             }
         }
     }
@@ -329,35 +329,96 @@ struct HouseholdTabView: View {
 
             Divider()
 
-            Button(role: .destructive) {
+            Button {
                 showSignOutConfirmation = true
             } label: {
-                actionRow(title: L10n.string("settings.signOut"), systemImage: "rectangle.portrait.and.arrow.right")
+                actionRow(title: L10n.string("settings.signOut"), systemImage: "rectangle.portrait.and.arrow.right", tint: VecklyDesign.Colors.inkMid)
             }
             .accessibilityIdentifier("signOutButton")
-
-            Divider()
-
-            Button(role: .destructive) {
-                showDeleteConfirmation = true
-            } label: {
-                if isDeletingAccount {
-                    HStack {
-                        ProgressView()
-                        Text("settings.deletingAccount")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    actionRow(title: L10n.string("settings.deleteAccount"), systemImage: "trash")
-                }
-            }
-            .disabled(isDeletingAccount)
-            .accessibilityIdentifier("deleteAccountButton")
-
-            Text("settings.deleteFooter")
-                .font(.footnote)
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
         }
+    }
+
+    private var advancedSection: some View {
+        VStack(alignment: .leading, spacing: VecklyDesign.Spacing.small) {
+            Text(L10n.string("settings.advanced").uppercased(with: AppLocalePreference.effectiveLocale))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                .padding(.horizontal, 4)
+            VecklyCard {
+                DisclosureGroup(isExpanded: $isAdvancedExpanded) {
+                    VStack(spacing: 12) {
+                        if isOwner {
+                            Divider()
+                            deleteHouseholdRow
+                        }
+
+                        Divider()
+
+                        deleteAccountRow
+
+                        Text("settings.deleteFooter")
+                            .font(.footnote)
+                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                    }
+                    .padding(.top, VecklyDesign.Spacing.small)
+                } label: {
+                    // A plain `DisclosureGroup` label outside `List`/`Form`
+                    // only reacts to taps on the chevron itself, not the
+                    // full row — wrap it in a `Button` so the whole header
+                    // toggles, matching `navigationRow`/`actionRow`'s
+                    // full-row-tappable convention elsewhere in this view.
+                    Button {
+                        isAdvancedExpanded.toggle()
+                    } label: {
+                        Label(L10n.string("settings.advanced"), systemImage: "ellipsis.circle")
+                            .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("advancedSectionToggle")
+                }
+                .tint(VecklyDesign.Colors.inkMid)
+            }
+        }
+    }
+
+    private var deleteHouseholdRow: some View {
+        Button(role: .destructive) {
+            deleteHouseholdTypedName = ""
+            showDeleteHouseholdConfirmation = true
+        } label: {
+            if isDeletingHousehold {
+                HStack {
+                    ProgressView()
+                    Text(deleteHouseholdInProgressTitle)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                actionRow(title: deleteHouseholdActionTitle, systemImage: "trash")
+            }
+        }
+        .disabled(isDeletingHousehold)
+        .accessibilityIdentifier("deleteHouseholdButton")
+    }
+
+    private var deleteAccountRow: some View {
+        Button(role: .destructive) {
+            deleteAccountTypedConfirmation = ""
+            showDeleteConfirmation = true
+        } label: {
+            if isDeletingAccount {
+                HStack {
+                    ProgressView()
+                    Text("settings.deletingAccount")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                actionRow(title: L10n.string("settings.deleteAccount"), systemImage: "trash")
+            }
+        }
+        .disabled(isDeletingAccount)
+        .accessibilityIdentifier("deleteAccountButton")
     }
 
     private func settingsSection<Content: View>(
@@ -394,10 +455,19 @@ struct HouseholdTabView: View {
         .contentShape(Rectangle())
     }
 
-    private func actionRow(title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
-            .contentShape(Rectangle())
+    // `tint` is only applied when explicitly provided (e.g. the neutral
+    // sign-out row) — leaving it nil lets the button's own `role`
+    // (`.destructive` for the delete rows) drive the label color instead.
+    private func actionRow(title: String, systemImage: String, tint: Color? = nil) -> some View {
+        Group {
+            if let tint {
+                Label(title, systemImage: systemImage).foregroundStyle(tint)
+            } else {
+                Label(title, systemImage: systemImage)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     private func householdSummaryText(_ profile: HouseholdProfile) -> String {
@@ -459,5 +529,27 @@ struct HouseholdTabView: View {
 
     private var deleteHouseholdErrorText: String {
         L10n.string("error.household.delete")
+    }
+
+    private var deleteHouseholdTypedNameMatches: Bool {
+        guard let household else { return false }
+        return deleteHouseholdTypedName == household.name
+    }
+
+    private var deleteHouseholdTypedConfirmationMessage: String {
+        guard let household else { return deleteHouseholdMessage }
+        return deleteHouseholdMessage + "\n\n" + L10n.format("household.delete.typeToConfirm", household.name)
+    }
+
+    private var deleteAccountConfirmWord: String {
+        L10n.string("settings.deleteConfirmWord")
+    }
+
+    private var deleteAccountTypedConfirmationMatches: Bool {
+        deleteAccountTypedConfirmation == deleteAccountConfirmWord
+    }
+
+    private var deleteAccountTypedConfirmationMessage: String {
+        L10n.string("settings.deleteMessage") + "\n\n" + L10n.format("settings.deleteTypeToConfirm", deleteAccountConfirmWord)
     }
 }

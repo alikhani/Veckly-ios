@@ -117,6 +117,42 @@ final class VecklyUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Plan the rest"].exists)
     }
 
+    /// Fas 6: destructive account/household actions must stay tucked away
+    /// behind the collapsed "Advanced" disclosure — never visible directly
+    /// in the normal Household tab (beslut 13).
+    @MainActor
+    func testHouseholdTabAdvancedSectionHidesDestructiveActionsUntilExpanded() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-veckly.app-language", "english"]
+        app.launch()
+
+        app.tabBars.buttons["Household"].tap()
+        XCTAssertTrue(app.staticTexts["Test household"].waitForExistence(timeout: 5))
+
+        XCTAssertFalse(app.buttons["deleteHouseholdButton"].exists)
+        XCTAssertFalse(app.buttons["deleteAccountButton"].exists)
+
+        // SwiftUI's `DisclosureGroup` synthesizes an outer accessibility
+        // node that duplicates the inner label button's identifier on iOS
+        // 26 — `.firstMatch` sidesteps the resulting "multiple matching
+        // elements" ambiguity since both refer to the same control.
+        let advancedToggle = app.buttons.matching(identifier: "advancedSectionToggle").firstMatch
+        XCTAssertTrue(advancedToggle.waitForExistence(timeout: 5))
+        // The disclosure sits at the very bottom of the tab's ScrollView —
+        // `.tap()` requires the element to be hittable, not merely present
+        // in the tree, so scroll it into the viewport first.
+        var attempts = 0
+        while !advancedToggle.isHittable, attempts < 5 {
+            app.swipeUp()
+            attempts += 1
+        }
+        advancedToggle.tap()
+
+        XCTAssertTrue(app.buttons["deleteHouseholdButton"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["deleteAccountButton"].exists)
+    }
+
     @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
