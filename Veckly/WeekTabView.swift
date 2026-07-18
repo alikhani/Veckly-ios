@@ -177,7 +177,7 @@ struct WeekTabView: View {
                     LoadingPanel(title: L10n.string("week.generating"))
                 } else if let errorMessage = appModel.weekStore.errorMessage ?? appModel.householdStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
-                        Task { await reloadViewedWeek() }
+                        Task { await reloadViewedWeek(trigger: .pullToRefresh) }
                     }
                 } else if !appModel.weekStore.hasWeekContent {
                     if isViewingCurrentWeek {
@@ -226,7 +226,12 @@ struct WeekTabView: View {
             } else if !isViewingLastWeek {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        Task { await reloadViewedWeek() }
+                        // An explicit tap always forces a real reload —
+                        // this is the Week tab's pull-to-refresh equivalent
+                        // (it has no `.refreshable`, since the whole
+                        // ScrollView already scrolls the hero/status cards
+                        // along with the list).
+                        Task { await reloadViewedWeek(trigger: .pullToRefresh) }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
@@ -394,16 +399,18 @@ struct WeekTabView: View {
             PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date())
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
-            // See `reloadViewedWeek` — seeded UI-test data must stay
-            // network-free.
+            // Week/prep/household-details are core-reader resources —
+            // `RootView`'s `AppRefreshCoordinator.refreshCoreReader` (cold
+            // launch) and `AppModel.loadActiveHouseholdReaderData`
+            // (household switch/join/leave) already guarantee them fresh by
+            // the time this fires. Re-fetching them here too was Fas 7's
+            // core bug: a genuine second network call for the same data,
+            // not just a redundant guard. Retro isn't a coordinator-owned
+            // resource (it's this view's own `RetroCardViewModel`, reading
+            // *last* week, not the current one), so it stays here.
             guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
-            async let week: Void = appModel.weekStore.loadCurrentWeek(household: household)
-            async let prep: Void = appModel.prepBatchStore.load(householdID: household.id, weekStartDate: WeekCalendar.currentWeekStartDate())
-            async let retro: Void = retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
-            async let details: Void = appModel.householdStore.loadHouseholdDetails(householdID: household.id)
-            _ = await (week, prep, retro, details)
-            await refreshNextWeekEmptyState()
+            await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
         }
         .onAppear {
             // Browsing is a transient peek, not a persisted location — always
@@ -427,18 +434,20 @@ struct WeekTabView: View {
             regenerateUndoContext = nil
         }
         .onChange(of: scenePhase) { _, newPhase in
-            guard !appModel.usesSeededCoreReader else { return }
             guard newPhase == .active else { return }
             // Handles the app being backgrounded over a week/day boundary
             // without needing a live timer.
             refreshWeekendNudgeDismissalState()
-            if isViewingCurrentWeek {
-                Task {
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    await appModel.weekStore.loadCurrentWeek(household: household)
-                    await refreshNextWeekEmptyState()
-                    await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
-                }
+            // Week/shopping/prep/etc. are refreshed centrally by
+            // `RootView`'s own scene-active handler through
+            // `AppRefreshCoordinator` — this only covers what the
+            // coordinator doesn't own: the weekend next-week peek and the
+            // Sunday retro (see the `.task(id:)` comment above).
+            guard !appModel.usesSeededCoreReader, isViewingCurrentWeek,
+                  let household = appModel.householdStore.activeHousehold else { return }
+            Task {
+                await refreshNextWeekEmptyState()
+                await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
             }
         }
         .alert(L10n.string("week.lock.explainTitle"), isPresented: $showLockExplanation) {
@@ -590,17 +599,21 @@ struct WeekTabView: View {
         .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
     }
 
-    private func reloadViewedWeek() async {
-        // Seeded UI-test data is already final the moment `AppModel` seeds
-        // it — a real network reload here would silently overwrite it with
-        // a load error, since there's no backend behind it. A proper
-        // app-wide network-free UI-test mode is Fas 7 scope; this is the
-        // minimal guard `WeekTabView` needs in the meantime.
-        guard !appModel.usesSeededCoreReader else { return }
+    /// Default trigger (`.sceneActive`) is a "make sure it's fresh" request —
+    /// used when the tab reappears or the week picker re-selects the current
+    /// week, both of which happen far more often than the data actually
+    /// needs refetching. Explicit user actions (the toolbar refresh button,
+    /// an error retry) pass `.pullToRefresh` instead, which always forces a
+    /// real reload through `AppRefreshCoordinator`. Browsing to a different
+    /// week (Last/Next) isn't a coordinator-owned resource — `loadWeek`
+    /// still checks `usesSeededCoreReader` itself here, since nothing else
+    /// on that path does.
+    private func reloadViewedWeek(trigger: AppRefreshCoordinator.Trigger = .sceneActive) async {
         guard let household = appModel.householdStore.activeHousehold else { return }
         if isViewingCurrentWeek {
-            await appModel.weekStore.loadCurrentWeek(household: household)
+            await appModel.refreshCoordinator.refreshWeek(household: household, trigger: trigger)
         } else {
+            guard !appModel.usesSeededCoreReader else { return }
             await appModel.weekStore.loadWeek(household: household, weekStartDate: viewedWeekStartDate)
         }
     }

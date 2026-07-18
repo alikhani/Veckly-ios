@@ -26,15 +26,15 @@ struct RootView: View {
             await appModel.refreshSundayReminderIfNeeded()
         }
         .onChange(of: scenePhase) { _, newPhase in
-            // Seeded UI-test data must stay network-free — a real
-            // `loadCoreReader()` here (scenePhase turns `.active` moments
-            // after launch) would otherwise silently overwrite the seed
-            // with a load error. Full app-wide network-free UI-test mode is
-            // Fas 7 scope; this is the one call site that needs it today.
-            guard !appModel.usesSeededCoreReader else { return }
+            // The actual scene-active refresh logic — de-duping concurrent
+            // callers, skipping the reload entirely when data is still
+            // fresh, and never touching the network under seeded UI-test
+            // data — now lives in `AppRefreshCoordinator` (Fas 7). This is
+            // just the view-level trigger: is the phase transition one we
+            // care about, and is anyone signed in to refresh for.
             guard newPhase == .active, appModel.authSessionStore.isSignedIn else { return }
             Task {
-                await appModel.loadCoreReader()
+                await appModel.refreshCoordinator.refreshCoreReader(trigger: .sceneActive)
                 await appModel.refreshSundayReminderIfNeeded()
             }
         }

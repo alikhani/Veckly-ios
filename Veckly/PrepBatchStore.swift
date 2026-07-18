@@ -26,7 +26,10 @@ final class PrepBatchStore {
         self.cacheStore = cacheStore
     }
 
-    func load(householdID: String, weekStartDate: String) async {
+    /// `force` bypasses the freshness cache below — see the identical
+    /// parameter on `WeekStore.loadCurrentWeek` for why `AppRefreshCoordinator`
+    /// needs it for forcing triggers (pull-to-refresh, household switch).
+    func load(householdID: String, weekStartDate: String, force: Bool = false) async {
         let scopeChanged = self.householdID != householdID || self.weekStartDate != weekStartDate
         if scopeChanged {
             batches = []
@@ -37,7 +40,7 @@ final class PrepBatchStore {
             restorePersistedCacheIfNeeded(householdID: householdID, weekStartDate: weekStartDate)
         }
 
-        guard lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 else { return }
+        guard force || lastFetchedAt == nil || Date().timeIntervalSince(lastFetchedAt!) > 300 else { return }
         isLoading = batches.isEmpty
         errorMessage = nil
         defer { isLoading = false }

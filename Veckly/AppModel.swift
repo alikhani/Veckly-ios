@@ -20,13 +20,15 @@ final class AppModel {
     let userProfileStore: UserProfileStore
     let productEventStore: ProductEventStore
     let sundayReminderScheduler = SundayReminderScheduler()
-    /// Not `private` — views (starting with `WeekTabView`, Fas 3) need to
-    /// skip their own redundant `.task`/`.onAppear` network reloads under
-    /// seeded UI-test data, or a real network call silently overwrites the
-    /// seed with an error state. A full `AppRefreshCoordinator` that owns
-    /// this app-wide is Fas 7 scope; this flag is the minimal read views can
-    /// check themselves in the meantime.
+    /// Not `private` — a handful of call sites outside `AppRefreshCoordinator`
+    /// still need it directly: UI-test seeding at init (below),
+    /// `recordProductEvent`, and `refreshSundayReminderIfNeeded`. Every
+    /// network refresh decision itself (the thing that used to be four
+    /// scattered `guard !usesSeededCoreReader` checks across `RootView` and
+    /// `WeekTabView`) now goes through `refreshCoordinator`, which reads this
+    /// same flag once at construction time as its single source of truth.
     let usesSeededCoreReader: Bool
+    let refreshCoordinator: AppRefreshCoordinator
 
     init(environment: AppEnvironment) {
         self.environment = environment
@@ -52,6 +54,16 @@ final class AppModel {
         self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)
         self.productEventStore = ProductEventStore(apiClient: apiClient)
+        self.refreshCoordinator = AppRefreshCoordinator(
+            usesSeededCoreReader: usesSeededCoreReader,
+            householdStore: householdStore,
+            weekStore: weekStore,
+            shoppingListStore: shoppingListStore,
+            prepBatchStore: prepBatchStore,
+            feedbackStore: feedbackStore,
+            householdMealSignalStore: householdMealSignalStore,
+            recipeStore: recipeStore
+        )
 
         if usesSeededCoreReader {
             authSessionStore.seedForUITests()
@@ -141,11 +153,17 @@ final class AppModel {
         )
     }
 
-    func loadCoreReader() async {
-        await householdStore.bootstrapAndLoadHouseholds()
-        await loadActiveHouseholdReaderData(resetFeatureStores: false)
+    func loadCoreReader(trigger: AppRefreshCoordinator.Trigger = .coldLaunch) async {
+        await refreshCoordinator.refreshCoreReader(trigger: trigger)
     }
 
+    /// Resets household-scoped stores (when the active household itself
+    /// changed) and refreshes the new active household's data.
+    /// `refreshCoordinator.refreshActiveHouseholdData` already covers what
+    /// used to be a separate explicit `loadHouseholdDetails` call here plus
+    /// the week/shopping/prep/feedback/signals/recipes `async let` block —
+    /// see its doc comment for why household details are part of that same
+    /// bundle rather than fetched sequentially first.
     func loadActiveHouseholdReaderData(resetFeatureStores: Bool = true) async {
         guard let household = householdStore.activeHousehold else { return }
         if resetFeatureStores {
@@ -159,17 +177,7 @@ final class AppModel {
             familyCookbookStore.reset()
             householdSavedRecipesStore.reset()
         }
-        // Keep household-scoped profile/member context in sync with week/shopping
-        // data when the active household changes after a switch/join/leave/delete.
-        await householdStore.loadHouseholdDetails(householdID: household.id)
-        let weekStartDate = WeekCalendar.currentWeekStartDate()
-        async let week: Void = weekStore.loadCurrentWeek(household: household)
-        async let shopping: Void = shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
-        async let prep: Void = prepBatchStore.load(householdID: household.id, weekStartDate: weekStartDate)
-        async let feedback: Void = feedbackStore.loadFeedback(householdID: household.id)
-        async let householdSignals: Void = householdMealSignalStore.loadSignals(householdID: household.id)
-        async let recipes: Void = recipeStore.loadRecipes(householdID: household.id)
-        _ = await (week, shopping, prep, feedback, householdSignals, recipes)
+        await refreshCoordinator.refreshActiveHouseholdData(household: household, trigger: .householdChanged)
     }
 
     func signOut() {

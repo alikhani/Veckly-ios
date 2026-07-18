@@ -105,9 +105,13 @@ final class ShoppingListStore {
     /// (assign/unassign meal, generate week) so the shopping list stays in sync.
     func invalidateCache() { lastFetchedAt = nil }
 
-    func loadCurrentWeek(household: Household, weekStartDate: String) async {
+    /// `force` bypasses the freshness cache below — see the identical
+    /// parameter on `WeekStore.loadCurrentWeek` for why `AppRefreshCoordinator`
+    /// needs it for forcing triggers (pull-to-refresh, household switch).
+    func loadCurrentWeek(household: Household, weekStartDate: String, force: Bool = false) async {
         guard !isLoading else { return }
-        let hasFreshRequestedWeek = lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
+        let hasFreshRequestedWeek = !force
+            && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && summary?.weekStartDate == weekStartDate
         guard !hasFreshRequestedWeek else { return }
         isLoading = summary == nil

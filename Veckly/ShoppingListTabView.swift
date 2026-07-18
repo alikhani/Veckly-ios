@@ -123,7 +123,7 @@ struct ShoppingListTabView: View {
                     LoadingPanel(title: L10n.string("shopping.loading"))
                 } else if let errorMessage = appModel.shoppingListStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
-                        Task { await appModel.loadCoreReader() }
+                        Task { await appModel.loadCoreReader(trigger: .pullToRefresh) }
                     }
                 } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
                     if appModel.shoppingListStore.summary != nil {

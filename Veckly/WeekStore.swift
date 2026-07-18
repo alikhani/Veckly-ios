@@ -52,10 +52,17 @@ final class WeekStore {
 
     func clearMutationError() { mutationError = nil }
 
-    func loadCurrentWeek(household: Household) async {
+    /// `force` bypasses the freshness cache below — needed by
+    /// `AppRefreshCoordinator` for triggers that must produce a real reload
+    /// (an explicit pull-to-refresh, a household switch) even moments after
+    /// the last successful fetch. Without it, a caller asking for a forced
+    /// reload would still silently no-op here, since this freshness check
+    /// doesn't know anything about *why* the caller wants fresh data.
+    func loadCurrentWeek(household: Household, force: Bool = false) async {
         weekStartDate = WeekCalendar.currentWeekStartDate()
         guard !isLoading else { return }
-        let hasFreshCurrentWeek = lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
+        let hasFreshCurrentWeek = !force
+            && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && summary?.weekStartDate == weekStartDate
         guard !hasFreshCurrentWeek else { return }
         isLoading = summary == nil
@@ -406,8 +413,15 @@ final class WeekStore {
         let todayDate = WeekCalendar.date(from: WeekCalendar.addDays(to: weekStartDate, offset: todayOffset)) ?? Date()
         let mapped = WeekViewModelMapper.map(summary: summary, today: todayDate)
         dayRows = mapped.days
+        // Matches `loadCurrentWeek`: `currentWeekDayRows` (read by
+        // `ShoppingListTabView`'s "V.26 · 2 MIDDAGAR" context line) and
+        // `lastFetchedAt` (read by freshness checks) must be set here too,
+        // or seeded core-reader UI-test runs show a stale/empty shopping
+        // context line even though `dayRows` itself is fully seeded.
+        currentWeekDayRows = dayRows
         today = mapped.today ?? mapped.days.first
         syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+        lastFetchedAt = Date()
     }
 
     private func preparePendingSyncContext(

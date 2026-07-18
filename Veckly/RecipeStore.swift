@@ -27,7 +27,10 @@ final class RecipeStore {
         self.cacheStore = cacheStore
     }
 
-    func loadRecipes(householdID: String) async {
+    /// `force` bypasses the freshness cache below — see the identical
+    /// parameter on `WeekStore.loadCurrentWeek` for why `AppRefreshCoordinator`
+    /// needs it for forcing triggers (pull-to-refresh, household switch).
+    func loadRecipes(householdID: String, force: Bool = false) async {
         if recipesHouseholdID != householdID {
             clearRecipeState()
             recipesHouseholdID = householdID
@@ -35,7 +38,9 @@ final class RecipeStore {
 
         restorePersistedCacheIfNeeded(householdID: householdID)
 
-        let cacheIsFresh = lastFetchedAt.map { Date().timeIntervalSince($0) <= cacheTTL } == true && !recipes.isEmpty
+        let cacheIsFresh = !force
+            && lastFetchedAt.map { Date().timeIntervalSince($0) <= cacheTTL } == true
+            && !recipes.isEmpty
         guard !cacheIsFresh else { return }
 
         isLoading = recipes.isEmpty

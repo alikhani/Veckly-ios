@@ -32,17 +32,44 @@ final class VecklyUITests: XCTestCase {
         XCTAssertTrue(app.buttons["continueWithAppleButton"].exists)
     }
 
+    /// Fas 7 acceptance: "The seeded UI test makes zero network calls."
+    /// `VECKLY_API_BASE_URL` points every API call this process makes at a
+    /// port nothing listens on — `AppEnvironment.current` reads it via
+    /// `ProcessInfo`, no other wiring needed. If `AppRefreshCoordinator`, or
+    /// any of the view-local peeks it doesn't own (retro, the weekend
+    /// next-week check), ever slipped past the `usesSeededCoreReader` gate
+    /// under this mode, the resulting connection-refused failure would
+    /// surface immediately as a visible load-error banner — so asserting
+    /// the seeded content stays up with no error text, across a cold
+    /// launch, a tab switch, and a scenePhase-active-like re-appearance of
+    /// the Week tab, is the closest a UI test (with no network stub) can get
+    /// to proving "zero network calls."
     @MainActor
     func testCoreReaderShowsWeekAndShoppingData() throws {
         let app = XCUIApplication()
         app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchEnvironment["VECKLY_API_BASE_URL"] = "http://127.0.0.1:1"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-veckly.app-language", "english"]
         app.launch()
 
         XCTAssertTrue(app.staticTexts["Monday Pasta"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["We could not load this week."].exists)
+        XCTAssertFalse(app.staticTexts["We could not load your household."].exists)
 
         app.tabBars.buttons["Shopping"].tap()
-
         XCTAssertTrue(app.staticTexts["spaghetti"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["We could not load your shopping list."].exists)
+
+        app.tabBars.buttons["Household"].tap()
+        XCTAssertTrue(app.staticTexts["Test household"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["We could not load your household."].exists)
+
+        // Back to Week — re-triggers `.onAppear`'s reload and the weekend/
+        // retro peeks exactly like a real tab switch would. Still seeded,
+        // still no error.
+        app.tabBars.buttons["Week"].tap()
+        XCTAssertTrue(app.staticTexts["Monday Pasta"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["We could not load this week."].exists)
     }
 
     @MainActor
