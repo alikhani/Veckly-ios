@@ -612,7 +612,13 @@ struct WeekTabView: View {
     /// real reload through `AppRefreshCoordinator`. Browsing to a different
     /// week (Last/Next) isn't a coordinator-owned resource — `loadWeek`
     /// still checks `usesSeededCoreReader` itself here, since nothing else
-    /// on that path does.
+    /// on that path does — but it writes into the same `WeekStore.dayRows`
+    /// slot `refreshWeek` tracks freshness for, so it must invalidate that
+    /// tracking on the way out. Without this, browsing to Last/Next week and
+    /// back to This week inside the coordinator's freshness window left the
+    /// view stuck showing the browsed week's rows: the coordinator saw a
+    /// recent "current week" fetch and no-op'd the `.sceneActive` return,
+    /// never noticing `loadWeek` had overwritten the slot in between.
     private func reloadViewedWeek(trigger: AppRefreshCoordinator.Trigger = .sceneActive) async {
         guard let household = appModel.householdStore.activeHousehold else { return }
         if isViewingCurrentWeek {
@@ -620,6 +626,7 @@ struct WeekTabView: View {
         } else {
             guard !appModel.usesSeededCoreReader else { return }
             await appModel.weekStore.loadWeek(household: household, weekStartDate: viewedWeekStartDate)
+            appModel.refreshCoordinator.invalidateWeek(householdID: household.id)
         }
     }
 

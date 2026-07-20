@@ -194,4 +194,20 @@ final class AppRefreshCoordinator {
         guard let last = lastCompletedAt[resource] else { return false }
         return Date().timeIntervalSince(last) <= freshnessWindow
     }
+
+    /// `WeekStore.dayRows`/`summary` is a single shared "currently displayed
+    /// week" slot, written not only by this coordinator's own
+    /// `loadCurrentWeek` but also directly by `WeekTabView`'s Last/Next
+    /// browsing (`loadWeek`), which this coordinator doesn't own and can't
+    /// see. Without this call, browsing away and back within the freshness
+    /// window looks "fresh" to `refreshWeek`/`refreshActiveHouseholdData` —
+    /// the coordinator has no idea the slot was clobbered with a different
+    /// week's data in between — so a `sceneActive` return to the current
+    /// week silently no-ops and leaves stale browsed-week rows on screen
+    /// under a header that's already moved back to "this week". Callers that
+    /// write into that slot outside the coordinator must invalidate it here
+    /// so the next `sceneActive` request is forced to actually refetch.
+    func invalidateWeek(householdID: String) {
+        lastCompletedAt[.week(householdID)] = nil
+    }
 }

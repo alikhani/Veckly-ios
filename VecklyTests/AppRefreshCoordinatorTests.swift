@@ -139,6 +139,64 @@ struct AppRefreshCoordinatorTests {
 
         #expect(await apiClient.weekSummaryCount == 1)
     }
+
+    /// The Last/Next-week-and-back regression: `WeekTabView`'s own
+    /// `loadWeek` (Last/Next browsing) writes directly into `WeekStore`'s
+    /// shared `summary`/`dayRows` slot — the same slot `refreshWeek` tracks
+    /// freshness for — without going through this coordinator, so the
+    /// coordinator can't see it happen. Reproduces the full real sequence
+    /// (not just the coordinator in isolation): cold launch loads the
+    /// current week, browsing loads a *different* week directly on the
+    /// store (leaving `summary.weekStartDate` mismatched), then a
+    /// `sceneActive` return to the current week must actually refetch.
+    /// Without `invalidateWeek`, the coordinator's own freshness check
+    /// would short-circuit before `WeekStore.loadCurrentWeek` ever ran —
+    /// never giving its internal `summary.weekStartDate == weekStartDate`
+    /// self-heal a chance to notice the mismatch and correct it.
+    @Test func invalidateWeekForcesTheNextSceneActiveReturnToRefetch() async {
+        let apiClient = FakeAppRefreshAPIClient()
+        let (coordinator, weekStore) = TestCoordinatorFactory.makeWithWeekStore(apiClient: apiClient)
+
+        await coordinator.refreshWeek(household: TestAppRefreshFixtures.household, trigger: .coldLaunch)
+        #expect(await apiClient.weekSummaryCount == 1)
+        #expect(weekStore.summary?.weekStartDate == WeekCalendar.currentWeekStartDate())
+
+        // Simulates `WeekTabView.reloadViewedWeek`'s browsing branch: calls
+        // `loadWeek` directly (bypassing the coordinator) for a different
+        // week, then invalidates — exactly what the fixed call site does.
+        // `loadWeek` always fetches (no freshness gate of its own), so this
+        // is itself the 2nd `weekSummary` call.
+        let lastWeekStart = WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1)
+        await weekStore.loadWeek(household: TestAppRefreshFixtures.household, weekStartDate: lastWeekStart)
+        #expect(await apiClient.weekSummaryCount == 2)
+        #expect(weekStore.summary?.weekStartDate == lastWeekStart)
+        coordinator.invalidateWeek(householdID: TestAppRefreshFixtures.household.id)
+
+        await coordinator.refreshWeek(household: TestAppRefreshFixtures.household, trigger: .sceneActive)
+        #expect(await apiClient.weekSummaryCount == 3)
+        #expect(weekStore.summary?.weekStartDate == WeekCalendar.currentWeekStartDate())
+    }
+
+    /// The other half of the same regression: without `invalidateWeek`, the
+    /// coordinator's stale freshness stamp must reproduce the bug — proving
+    /// the fix above is actually load-bearing, not incidental.
+    @Test func withoutInvalidateWeekTheBrowsedWeekStaysStuckOnSceneActiveReturn() async {
+        let apiClient = FakeAppRefreshAPIClient()
+        let (coordinator, weekStore) = TestCoordinatorFactory.makeWithWeekStore(apiClient: apiClient)
+
+        await coordinator.refreshWeek(household: TestAppRefreshFixtures.household, trigger: .coldLaunch)
+        let lastWeekStart = WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1)
+        await weekStore.loadWeek(household: TestAppRefreshFixtures.household, weekStartDate: lastWeekStart)
+        // 2 calls so far: cold launch + the browsing fetch above.
+
+        // No `invalidateWeek` call here — the coordinator still thinks
+        // `.week` is fresh from the cold launch, so this should no-op and
+        // leave the browsed week's data on screen — the bug.
+        await coordinator.refreshWeek(household: TestAppRefreshFixtures.household, trigger: .sceneActive)
+
+        #expect(await apiClient.weekSummaryCount == 2)
+        #expect(weekStore.summary?.weekStartDate == lastWeekStart)
+    }
 }
 
 @MainActor
@@ -162,6 +220,34 @@ private enum TestCoordinatorFactory {
             householdMealSignalStore: householdMealSignalStore,
             recipeStore: recipeStore
         )
+    }
+
+    /// Like `make`, but also hands back the `WeekStore` instance the
+    /// coordinator was built with — needed by tests that (like
+    /// `WeekTabView.reloadViewedWeek`'s browsing branch) call `loadWeek`
+    /// directly on the store, bypassing the coordinator, to reproduce a
+    /// mismatch between the store's cached week and the coordinator's
+    /// freshness bookkeeping.
+    static func makeWithWeekStore(apiClient: FakeAppRefreshAPIClient, usesSeededCoreReader: Bool = false) -> (AppRefreshCoordinator, WeekStore) {
+        let householdStore = HouseholdStore(apiClient: apiClient, selectionStore: FakeAppRefreshSelectionStore())
+        let weekStore = WeekStore(apiClient: apiClient)
+        let shoppingListStore = ShoppingListStore(apiClient: apiClient)
+        let prepBatchStore = PrepBatchStore(apiClient: apiClient, cacheStore: FakeAppRefreshPrepBatchCache())
+        let feedbackStore = FeedbackStore(apiClient: apiClient)
+        let householdMealSignalStore = HouseholdMealSignalStore(apiClient: apiClient)
+        let recipeStore = RecipeStore(apiClient: apiClient, cacheStore: FakeAppRefreshRecipeCache())
+
+        let coordinator = AppRefreshCoordinator(
+            usesSeededCoreReader: usesSeededCoreReader,
+            householdStore: householdStore,
+            weekStore: weekStore,
+            shoppingListStore: shoppingListStore,
+            prepBatchStore: prepBatchStore,
+            feedbackStore: feedbackStore,
+            householdMealSignalStore: householdMealSignalStore,
+            recipeStore: recipeStore
+        )
+        return (coordinator, weekStore)
     }
 }
 
