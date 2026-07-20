@@ -176,7 +176,7 @@ private struct OnboardingPlanningDaysView: View {
                 .foregroundStyle(isSelected ? Color.white : VecklyDesign.Colors.inkMid)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(isSelected ? VecklyDesign.Colors.hearthOrange : Color("chipSurface"))
+                .background(isSelected ? VecklyDesign.Colors.hearthOrangePrimaryFill : Color("chipSurface"))
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -288,7 +288,7 @@ private struct OnboardingPrioritiesView: View {
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isSelected ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                    .foregroundStyle(isSelected ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkFaint)
             }
             .padding(14)
             .background(VecklyDesign.Colors.surface)

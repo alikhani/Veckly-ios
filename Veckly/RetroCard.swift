@@ -165,7 +165,7 @@ struct RetroCard: View {
                             Label(L10n.string("retro.feedback.link"), systemImage: "envelope")
                                 .font(.caption.weight(.semibold))
                         }
-                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -222,7 +222,7 @@ struct RetroCard: View {
 
             if vote != nil {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     .accessibilityHidden(true)
             } else {
                 HStack(spacing: 8) {

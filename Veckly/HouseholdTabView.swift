@@ -125,7 +125,7 @@ struct HouseholdTabView: View {
                     Task { await appModel.householdStore.bootstrapAndLoadHouseholds() }
                 }
                 .buttonStyle(.bordered)
-                .tint(VecklyDesign.Colors.hearthOrange)
+                .tint(VecklyDesign.Colors.hearthOrangeText)
             }
             .frame(maxWidth: .infinity)
             .padding(VecklyDesign.Spacing.medium)
@@ -137,7 +137,7 @@ struct HouseholdTabView: View {
             HStack(spacing: VecklyDesign.Spacing.medium) {
                 Image(systemName: "person.2.fill")
                     .font(.title2)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     .frame(width: 48, height: 48)
                     .background(VecklyDesign.Colors.surfaceStrong)
                     .clipShape(Circle())
@@ -441,7 +441,7 @@ struct HouseholdTabView: View {
     private func navigationRow(title: String, systemImage: String, value: String? = nil) -> some View {
         HStack(spacing: 12) {
             Image(systemName: systemImage)
-                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                 .frame(width: 24)
             Text(title)
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)

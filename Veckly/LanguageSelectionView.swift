@@ -14,7 +14,7 @@ struct LanguageSelectionView: View {
                     Spacer()
                     if languageStore.selection == language {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     }
                 }
                 .contentShape(Rectangle())

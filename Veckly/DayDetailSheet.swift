@@ -163,7 +163,7 @@ struct DayDetailContent: View {
                             Text(isLocked ? L10n.string("meal.unlockDay") : L10n.string("meal.lockDay"))
                             Spacer()
                         }
-                        .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                        .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
@@ -215,7 +215,7 @@ struct DayDetailContent: View {
                     .font(.title3)
             }
             .buttonStyle(.bordered)
-            .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkMid)
             .accessibilityLabel(L10n.string(currentVote == .up ? "recipes.removeLike" : "recipes.likeThis"))
 
             Button {
@@ -226,7 +226,7 @@ struct DayDetailContent: View {
                     .font(.title3)
             }
             .buttonStyle(.bordered)
-            .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkMid)
             .accessibilityLabel(L10n.string(currentVote == .down ? "recipes.removeDislike" : "recipes.dislikeThis"))
         }
     }
@@ -269,7 +269,7 @@ struct DayDetailContent: View {
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
-        .tint(isSelected ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+        .tint(isSelected ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
         .accessibilityLabel(L10n.string(signal.accessibilityKey(isSelected: isSelected)))
     }
 

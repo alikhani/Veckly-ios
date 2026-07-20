@@ -35,7 +35,7 @@ struct RecipesTabView: View {
                         Task { await appModel.recipeStore.loadRecipes(householdID: household.id) }
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(VecklyDesign.Colors.hearthOrange)
+                    .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                 }
             } else if filtered.isEmpty {
                 ContentUnavailableView {
@@ -46,7 +46,7 @@ struct RecipesTabView: View {
                     if searchQuery.isEmpty {
                         Button("recipe.add") { showAddSheet = true }
                             .buttonStyle(.borderedProminent)
-                            .tint(VecklyDesign.Colors.hearthOrange)
+                            .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                     }
                 }
             } else {
@@ -64,6 +64,8 @@ struct RecipesTabView: View {
                                     Image(systemName: "xmark")
                                         .font(.caption.weight(.semibold))
                                         .foregroundStyle(VecklyDesign.Colors.inkMid)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
                                 }
                                 .accessibilityLabel(L10n.string("common.dismissError"))
                             }
@@ -88,7 +90,7 @@ struct RecipesTabView: View {
                         .disabled(appModel.householdStore.activeHousehold == nil)
                         .swipeActions(edge: .trailing) {
                             Button("common.edit") { editingRecipe = recipe }
-                                .tint(VecklyDesign.Colors.hearthOrange)
+                                .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                             Button("recipes.archive", role: .destructive) {
                                 guard !isArchiving else { return }
                                 archiveCandidate = recipe

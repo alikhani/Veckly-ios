@@ -103,7 +103,7 @@ struct PrepBatchFormSheet: View {
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                 Button("prep.unlock") {
                     Task { await unlock(locked) }
                 }

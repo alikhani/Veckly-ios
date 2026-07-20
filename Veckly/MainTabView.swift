@@ -32,6 +32,6 @@ struct MainTabView: View {
             }
             .tag(2)
         }
-        .tint(VecklyDesign.Colors.hearthOrange)
+        .tint(VecklyDesign.Colors.hearthOrangeFill)
     }
 }

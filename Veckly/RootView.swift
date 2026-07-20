@@ -49,7 +49,7 @@ struct LoadingView: View {
             VecklyDesign.Colors.canvas.ignoresSafeArea()
             VStack(spacing: 14) {
                 ProgressView()
-                    .tint(VecklyDesign.Colors.hearthOrange)
+                    .tint(VecklyDesign.Colors.hearthOrangeFill)
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)

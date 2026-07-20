@@ -7,7 +7,7 @@ struct LoadingPanel: View {
         VecklyCard {
             HStack(spacing: 12) {
                 ProgressView()
-                    .tint(VecklyDesign.Colors.hearthOrange)
+                    .tint(VecklyDesign.Colors.hearthOrangeFill)
                 Text(title)
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             }

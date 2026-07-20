@@ -103,7 +103,7 @@ struct MealPickerSheet: View {
                 } else if appModel.recipeStore.isLoading {
                     VStack {
                         ProgressView()
-                            .tint(VecklyDesign.Colors.hearthOrange)
+                            .tint(VecklyDesign.Colors.hearthOrangeFill)
                         Text("recipes.loadingEllipsis")
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
                             .padding(.top, 8)
@@ -118,7 +118,7 @@ struct MealPickerSheet: View {
                         Button("common.tryAgain") {
                             Task { await loadRecipes() }
                         }
-                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding()
@@ -246,7 +246,7 @@ struct MealPickerSheet: View {
                     } actions: {
                         Button("recipe.add") { showAddRecipeSheet = true }
                             .buttonStyle(.borderedProminent)
-                            .tint(VecklyDesign.Colors.hearthOrange)
+                            .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                     }
                 }
                 .listRowBackground(Color.clear)
@@ -297,7 +297,7 @@ struct MealPickerSheet: View {
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             } icon: {
                 Image(systemName: "line.3.horizontal.decrease.circle")
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
             }
         }
     }
@@ -315,7 +315,7 @@ struct MealPickerSheet: View {
                                 .foregroundStyle(selectedIntent == intent ? .white : VecklyDesign.Colors.inkMid)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 7)
-                                .background(selectedIntent == intent ? VecklyDesign.Colors.hearthOrange : Color("chipSurface"))
+                                .background(selectedIntent == intent ? VecklyDesign.Colors.hearthOrangePrimaryFill : Color("chipSurface"))
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
@@ -392,7 +392,7 @@ private struct RecipePickerRow: View {
             if let reason {
                 Text(reason)
                     .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .lineLimit(1)
             }
             HStack(spacing: 6) {

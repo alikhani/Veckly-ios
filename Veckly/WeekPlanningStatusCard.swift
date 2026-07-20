@@ -26,7 +26,7 @@ struct WeekPlanningStatusCard: View {
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                     } icon: {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     }
 
                     Button("week.status.complete.cta", action: onOpenShoppingList)

@@ -124,7 +124,7 @@ struct TonightMealCard: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(verbatim: eyebrowText)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .textCase(.uppercase)
                 Spacer()
                 if showTodayBadge {
@@ -155,13 +155,13 @@ struct TonightMealCard: View {
             if dayCoverage == nil, day.confidence == .low {
                 Label("week.confidence.low", systemImage: "arrow.triangle.2.circlepath")
                     .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
             }
 
             if dayCoverage == nil, let streakWeeks = day.streakWeeks {
                 Label(L10n.format("week.satiation.hint", streakWeeks), systemImage: "arrow.2.squarepath")
                     .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
             }
 
             if let dayCoverage {
@@ -234,7 +234,7 @@ struct TonightMealCard: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("meal.tonight")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .textCase(.uppercase)
                 Spacer()
                 todayBadge
@@ -253,7 +253,7 @@ struct TonightMealCard: View {
                 onPlanTonight(day)
             }
             .buttonStyle(.bordered)
-            .tint(VecklyDesign.Colors.hearthOrange)
+            .tint(VecklyDesign.Colors.hearthOrangeText)
             .padding(.top, 4)
         }
     }
@@ -269,7 +269,7 @@ struct TonightMealCard: View {
             } icon: {
                 Image(systemName: "checkmark.circle")
                     .font(.title3)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
             }
 
             Text("week.hero.done.message")
@@ -281,9 +281,9 @@ struct TonightMealCard: View {
     private var todayBadge: some View {
         Text("meal.today")
             .font(.caption.weight(.semibold))
-            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrange, lineWidth: 1))
+            .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrangeText, lineWidth: 1))
     }
 }

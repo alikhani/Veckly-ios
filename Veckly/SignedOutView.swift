@@ -46,7 +46,7 @@ struct SignedOutView: View {
                                 .padding(.vertical, 7)
                                 .background(
                                     day == accentDay
-                                        ? VecklyDesign.Colors.hearthOrange
+                                        ? VecklyDesign.Colors.hearthOrangePrimaryFill
                                         : Color("chipSurface")
                                 )
                                 .clipShape(Capsule())
@@ -84,7 +84,7 @@ struct SignedOutView: View {
                     if appModel.authSessionStore.isSigningIn {
                         HStack(spacing: 8) {
                             ProgressView()
-                                .tint(VecklyDesign.Colors.hearthOrange)
+                                .tint(VecklyDesign.Colors.hearthOrangeFill)
                             Text("auth.signingIn")
                                 .font(.footnote)
                                 .foregroundStyle(Color("textMuted"))

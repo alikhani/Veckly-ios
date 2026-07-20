@@ -192,7 +192,7 @@ struct RecipeDetailView: View {
             } label: {
                 Label("recipes.thumbsUp", systemImage: "hand.thumbsup")
             }
-            .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            .tint(currentVote == .up ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkMid)
             .buttonStyle(.bordered)
             .labelStyle(.iconOnly)
             .font(.title3)
@@ -203,7 +203,7 @@ struct RecipeDetailView: View {
             } label: {
                 Label("recipes.thumbsDown", systemImage: "hand.thumbsdown")
             }
-            .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+            .tint(currentVote == .down ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkMid)
             .buttonStyle(.bordered)
             .labelStyle(.iconOnly)
             .font(.title3)
@@ -235,7 +235,7 @@ struct RecipeDetailView: View {
             )
             .font(.subheadline.weight(.medium))
         }
-        .tint(isAdded ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+        .tint(isAdded ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
         .buttonStyle(.bordered)
     }
 
@@ -280,7 +280,7 @@ struct RecipeDetailView: View {
                     HStack(alignment: .top, spacing: 12) {
                         Text("\(index + 1)")
                             .font(.footnote.weight(.bold))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                             .frame(width: 20, alignment: .center)
                             .padding(.top, 2)
                         Text(step.text)
