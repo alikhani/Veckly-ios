@@ -207,25 +207,27 @@ struct RetroCard: View {
 
     private func retroRow(_ row: RetroCardViewModel.Row) -> some View {
         let vote = feedbackStore.vote(for: row.recipeID)
-        return HStack(spacing: 12) {
+        return HStack(spacing: 10) {
             Text(row.weekdayLabel)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(VecklyDesign.Colors.inkMid)
-                .frame(width: 44, alignment: .leading)
+                .frame(width: 36, alignment: .leading)
 
             Text(row.title)
                 .font(.body)
                 .foregroundStyle(vote != nil ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
                 .lineLimit(1)
+                .layoutPriority(1)
 
-            Spacer()
+            Spacer(minLength: 8)
 
             if vote != nil {
                 Image(systemName: "checkmark.circle.fill")
+                    .font(.subheadline)
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     .accessibilityHidden(true)
             } else {
-                HStack(spacing: 8) {
+                HStack(spacing: 4) {
                     retroVoteButton(.up, row: row)
                     retroVoteButton(.down, row: row)
                 }
@@ -234,15 +236,25 @@ struct RetroCard: View {
         .accessibilityElement(children: vote != nil ? .combine : .contain)
     }
 
+    /// Visible affordance stays a compact 30pt circle — the 44×44 minimum
+    /// touch target (Fas 8) is met with an invisible `.contentShape` hit
+    /// area instead of `.buttonStyle(.bordered)`'s own chrome, which used
+    /// to inflate the drawn circle well past 44pt and crowd out the recipe
+    /// title next to it.
     private func retroVoteButton(_ vote: MealVote, row: RetroCardViewModel.Row) -> some View {
         Button {
             Task { await castVote(vote, for: row) }
         } label: {
             Image(systemName: vote == .up ? "hand.thumbsup" : "hand.thumbsdown")
-                .frame(width: 44, height: 44)
+                .font(.footnote)
+                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                .frame(width: 30, height: 30)
+                .background(VecklyDesign.Colors.surfaceStrong)
+                .clipShape(Circle())
         }
-        .buttonStyle(.bordered)
-        .tint(VecklyDesign.Colors.inkMid)
+        .buttonStyle(.plain)
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
         .accessibilityLabel(
             L10n.format(
                 vote == .up ? "accessibility.retro.voteUp" : "accessibility.retro.voteDown",
