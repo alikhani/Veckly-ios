@@ -169,7 +169,8 @@ struct TonightMealCard: View {
                     onRemoveCoverage(day, dayCoverage)
                 } label: {
                     Image(systemName: "trash")
-                        .frame(width: 20, height: 20)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.bordered)
                 .tint(VecklyDesign.Colors.inkMid)

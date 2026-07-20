@@ -143,6 +143,8 @@ struct RecipeFormSheet: View {
                         Image(systemName: "xmark")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .accessibilityLabel(L10n.string("common.dismiss"))
                 }

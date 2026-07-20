@@ -263,6 +263,40 @@
         }
       }
     },
+    "accessibility.removeCustomItem" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort %@"
+          }
+        }
+      }
+    },
+    "accessibility.removeMember" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort %@"
+          }
+        }
+      }
+    },
     "accessibility.retro.voteDown" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -293,6 +327,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gillade %@ (%@)"
+          }
+        }
+      }
+    },
+    "accessibility.revokeInvite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoke invite"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Återkalla inbjudan"
           }
         }
       }

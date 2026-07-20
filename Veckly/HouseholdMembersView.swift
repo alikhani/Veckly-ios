@@ -131,10 +131,13 @@ struct HouseholdMembersView: View {
                                 } else {
                                     Image(systemName: "person.fill.xmark")
                                         .font(.caption)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
                                 }
                             }
                             .buttonStyle(.borderless)
                             .disabled(removingMemberIDs.contains(member.userId))
+                            .accessibilityLabel(L10n.format("accessibility.removeMember", member.givenName ?? L10n.string("members.householdMember")))
                         }
                     }
                 }
@@ -194,10 +197,13 @@ struct HouseholdMembersView: View {
                             } else {
                                 Image(systemName: "trash")
                                     .font(.caption)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
                             }
                         }
                         .buttonStyle(.borderless)
                         .disabled(revokingInviteIDs.contains(invite.id))
+                        .accessibilityLabel(L10n.string("accessibility.revokeInvite"))
                     }
                 }
             }
