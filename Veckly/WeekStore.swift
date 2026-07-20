@@ -65,7 +65,18 @@ final class WeekStore {
             && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && summary?.weekStartDate == weekStartDate
         guard !hasFreshCurrentWeek else { return }
-        isLoading = summary == nil
+        // `summary == nil` alone used to gate this: "show a full loading
+        // state only if we have nothing to show yet, otherwise refresh
+        // quietly in place." That assumed the cached `summary` always
+        // belonged to *this* slot's own week, refreshed in place — true for
+        // an ordinary rescan of the current week. It breaks the moment
+        // `WeekTabView`'s Last/Next browsing (`loadWeek`) has left `summary`
+        // pointing at a *different* week: without the second condition, a
+        // return to the current week rendered that browsed week's stale
+        // cards for the duration of the refetch before snapping to the real
+        // (often very different, e.g. empty vs. complete) current-week
+        // state — a jarring flash, not a quiet update.
+        isLoading = summary == nil || summary?.weekStartDate != weekStartDate
         errorMessage = nil
         defer { isLoading = false }
 

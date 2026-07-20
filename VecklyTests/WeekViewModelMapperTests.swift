@@ -592,6 +592,70 @@ struct WeekViewModelMapperTests {
         }
         #expect(store.hasPendingSync == false)
     }
+
+    /// The other half of the Last/Next-and-back regression fixed alongside
+    /// `AppRefreshCoordinator.invalidateWeek`: forcing the refetch wasn't
+    /// enough on its own. `loadCurrentWeek`'s `isLoading` used to gate only
+    /// on `summary == nil`, assuming the cached `summary` always belonged to
+    /// the slot's own week. After browsing to a different week (`loadWeek`)
+    /// and back, that assumption breaks — `summary` is non-nil but for the
+    /// *wrong* week, so `isLoading` never flipped true and `WeekTabView`
+    /// rendered the browsed week's stale cards for the duration of the
+    /// refetch instead of the loading panel.
+    @MainActor
+    @Test func loadCurrentWeekShowsLoadingWhenTheCachedSummaryIsForADifferentWeek() async {
+        let apiClient = PausableWeekStoreAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
+        let currentWeekStart = WeekCalendar.currentWeekStartDate()
+        let lastWeekStart = WeekCalendar.addWeeks(to: currentWeekStart, offset: -1)
+
+        await apiClient.queueResult(makeWeekSummary(weekStartDate: currentWeekStart))
+        await store.loadCurrentWeek(household: household, force: true)
+        #expect(store.isLoading == false)
+
+        // Simulates browsing to Last week: `loadWeek` leaves `summary`
+        // pointing at a different week than `weekStartDate` will be on the
+        // next `loadCurrentWeek` call.
+        await apiClient.queueResult(makeWeekSummary(weekStartDate: lastWeekStart))
+        await store.loadWeek(household: household, weekStartDate: lastWeekStart)
+        #expect(store.summary?.weekStartDate == lastWeekStart)
+
+        // Returning to current week: the fetch is paused mid-flight so the
+        // test can observe `isLoading` before it resolves.
+        await apiClient.pauseNextRequest()
+        let loadTask = Task { await store.loadCurrentWeek(household: household, force: true) }
+        await apiClient.waitUntilRequestStarted()
+        #expect(store.isLoading == true)
+
+        await apiClient.resumePausedRequest(with: makeWeekSummary(weekStartDate: currentWeekStart))
+        await loadTask.value
+        #expect(store.isLoading == false)
+        #expect(store.summary?.weekStartDate == currentWeekStart)
+    }
+
+    /// Guards the original behavior the fix above must not regress: an
+    /// ordinary same-week refresh (no browsing detour in between) still
+    /// updates quietly in place, without flashing the loading panel over
+    /// content that's already correct for the week being shown.
+    @MainActor
+    @Test func loadCurrentWeekStaysQuietWhenRefreshingTheSameWeekItAlreadyHas() async {
+        let apiClient = PausableWeekStoreAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
+        let currentWeekStart = WeekCalendar.currentWeekStartDate()
+
+        await apiClient.queueResult(makeWeekSummary(weekStartDate: currentWeekStart))
+        await store.loadCurrentWeek(household: household, force: true)
+
+        await apiClient.pauseNextRequest()
+        let loadTask = Task { await store.loadCurrentWeek(household: household, force: true) }
+        await apiClient.waitUntilRequestStarted()
+        #expect(store.isLoading == false)
+
+        await apiClient.resumePausedRequest(with: makeWeekSummary(weekStartDate: currentWeekStart))
+        await loadTask.value
+    }
 }
 
 private final class GenerateFailingWeekStoreAPIClient: WeekStoreAPIClient {
@@ -738,6 +802,64 @@ private func makeWeekSummary(weekStartDate: String) -> WeekSummary {
             )
         }
     )
+}
+
+/// An `actor` (not a plain class, unlike the other fakes in this file) since
+/// `loadCurrentWeekShowsLoadingWhenTheCachedSummaryIsForADifferentWeek`
+/// needs to pause a request mid-flight and resume it from the test's own
+/// `Task`, running concurrently with `WeekStore`'s `@MainActor` caller — the
+/// same continuation-gating pattern `AppRefreshCoordinatorTests`'
+/// `FakeAppRefreshAPIClient` uses.
+private actor PausableWeekStoreAPIClient: WeekStoreAPIClient {
+    private var queuedResult: WeekSummary?
+    private var shouldPauseNextRequest = false
+    private var hasStartedARequestSinceLastWait = false
+    private var requestStartedContinuation: CheckedContinuation<Void, Never>?
+    private var pauseContinuation: CheckedContinuation<Void, Never>?
+    private var pausedResult: WeekSummary?
+
+    /// The next `weekSummary` call returns this immediately.
+    func queueResult(_ summary: WeekSummary) {
+        queuedResult = summary
+    }
+
+    /// The next `weekSummary` call suspends until `resumePausedRequest` is
+    /// called, so a test can observe `WeekStore.isLoading` while the fetch
+    /// is still in flight.
+    func pauseNextRequest() {
+        shouldPauseNextRequest = true
+    }
+
+    func waitUntilRequestStarted() async {
+        if hasStartedARequestSinceLastWait {
+            hasStartedARequestSinceLastWait = false
+            return
+        }
+        await withCheckedContinuation { requestStartedContinuation = $0 }
+    }
+
+    func resumePausedRequest(with summary: WeekSummary) {
+        pausedResult = summary
+        pauseContinuation?.resume()
+        pauseContinuation = nil
+    }
+
+    func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
+        hasStartedARequestSinceLastWait = true
+        requestStartedContinuation?.resume()
+        requestStartedContinuation = nil
+
+        if shouldPauseNextRequest {
+            shouldPauseNextRequest = false
+            await withCheckedContinuation { pauseContinuation = $0 }
+            return pausedResult!
+        }
+        return queuedResult!
+    }
+
+    func appendWeekPlanEvent(householdID: String, weekStartDate: String, userID: String, event: WeekPlanEventInput) async throws {}
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {}
+    func recipe(householdID: String, recipeID: String) async throws -> FullRecipe { throw APIError.notFound }
 }
 
 private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
