@@ -590,11 +590,11 @@ struct WeekTabView: View {
                 undoRegenerate(context)
             }
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            .foregroundStyle(VecklyDesign.Colors.hearthOrangeTextDark)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(VecklyDesign.Colors.inkDeep)
+        .background(VecklyDesign.Colors.toastSurface)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
     }
@@ -660,18 +660,20 @@ struct WeekTabView: View {
                     Task { await reloadViewedWeek() }
                 }
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                 Button {
                     dismissWeekendNudgeForToday()
                 } label: {
                     Image(systemName: "xmark")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .accessibilityLabel(L10n.string("common.dismiss"))
             }
             .padding(12)
-            .background(VecklyDesign.Colors.surfaceStrong)
+            .background(VecklyDesign.Colors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
     }
@@ -727,7 +729,7 @@ struct WeekTabView: View {
                             } icon: {
                                 Image(systemName: row.icon)
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                             }
                         }
                     }
@@ -752,7 +754,7 @@ struct WeekTabView: View {
                                 onGoToHouseholdTab?()
                             }
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                         }
                         .padding(.top, 2)
                     }
@@ -792,7 +794,7 @@ struct WeekTabView: View {
                     }
                     .disabled(appModel.weekStore.dayRows.isEmpty)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .frame(maxWidth: .infinity)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -810,7 +812,7 @@ struct WeekTabView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(day.weekdayLabel)
                                     .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                                    .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
                                 Text(day.dateLabel)
                                     .font(.caption)
                                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
@@ -1009,7 +1011,7 @@ struct WeekTabView: View {
                             } icon: {
                                 Image(systemName: insight.icon)
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                             }
                         }
                     }
@@ -1147,7 +1149,7 @@ struct WeekTabView: View {
                     }
                     .disabled(appModel.weekStore.dayRows.isEmpty)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .frame(maxWidth: .infinity)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1208,7 +1210,7 @@ struct WeekTabView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.string(viewedWeekOffset.relativeLabelKey))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .textCase(.uppercase)
                 Text(weekSummaryLine)
                     .font(VecklyDesign.Typography.displayHeading(size: 20))
@@ -1299,10 +1301,10 @@ struct WeekTabView: View {
                     HStack(spacing: 6) {
                         Text(isWeekendExpanded ? "week.hideWeekend" : "week.showWeekend")
                             .font(.subheadline.weight(.medium))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                         Image(systemName: "chevron.down")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                             .rotationEffect(.degrees(isWeekendExpanded ? 180 : 0))
                         Spacer()
                     }
@@ -1380,10 +1382,10 @@ struct CompactDayRow: View {
     private var todayBadge: some View {
         Text("meal.today")
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrange, lineWidth: 1))
+            .overlay(Capsule().stroke(VecklyDesign.Colors.hearthOrangeText, lineWidth: 1))
             .fixedSize()
     }
 
@@ -1391,7 +1393,7 @@ struct CompactDayRow: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(day.weekday.shortDisplayName)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkMid)
+                .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
             Text(day.dateLabel)
                 .font(.caption2)
                 .foregroundStyle(VecklyDesign.Colors.inkFaint)
@@ -1423,7 +1425,7 @@ struct CompactDayRow: View {
             if day.isLocked {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 12))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     .accessibilityLabel(L10n.string("accessibility.locked"))
             }
         }
@@ -1449,7 +1451,7 @@ struct CompactDayRow: View {
             if !day.isPast && !isViewOnly && !isHeroOwned {
                 Text("meal.plan")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
             }
         }
     }
@@ -1477,7 +1479,7 @@ struct CompactDayRow: View {
             if !day.isPast && !isViewOnly && !isHeroOwned {
                 Text("meal.plan")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
             }
         }
         .opacity(0.7)

@@ -16,7 +16,7 @@ struct WeekHeaderView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(householdName)
                 .font(.subheadline)
-                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                 .textCase(.uppercase)
 
             Button {
@@ -98,7 +98,7 @@ struct WeekHeaderView: View {
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
             }
         }
         .padding(.horizontal, 14)
