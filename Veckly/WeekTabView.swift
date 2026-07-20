@@ -200,6 +200,7 @@ struct WeekTabView: View {
             .padding(18)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: hasOpenRelevantDays)
         }
+        .safeAreaPadding(.bottom, VecklyDesign.Spacing.large)
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
         // The scroll content's own `.background(canvas)` above only paints

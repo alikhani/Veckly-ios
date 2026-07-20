@@ -211,6 +211,7 @@ struct ShoppingListTabView: View {
             appModel.shoppingListStore.invalidateCache()
             await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
         }
+        .safeAreaPadding(.bottom, VecklyDesign.Spacing.large)
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
