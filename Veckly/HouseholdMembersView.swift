@@ -107,7 +107,7 @@ struct HouseholdMembersView: View {
                         Spacer()
                         Text(member.role == .owner ? L10n.string("members.owner") : L10n.string("members.member"))
                             .font(.caption)
-                            .foregroundStyle(member.role == .owner ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                            .foregroundStyle(member.role == .owner ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkFaint)
 
                         if member.userId == myUserID {
                             Button(role: .destructive) {
@@ -152,7 +152,7 @@ struct HouseholdMembersView: View {
                         HStack { ProgressView(); Text("members.creating") }
                     } else {
                         Label("members.createInviteLink", systemImage: "link.badge.plus")
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     }
                 }
                 .disabled(isCreatingInvite)
@@ -228,7 +228,7 @@ struct HouseholdMembersView: View {
                         }
                         .disabled(isJoining || landingToken == nil)
                         .buttonStyle(.borderedProminent)
-                        .tint(VecklyDesign.Colors.hearthOrange)
+                        .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                         .controlSize(.small)
                     }
                 }
@@ -385,7 +385,7 @@ private struct InviteShareSheet: View {
             VStack(spacing: 24) {
                 Image(systemName: "link.circle.fill")
                     .font(.system(size: 56))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
 
                 VStack(spacing: 8) {
                     Text("members.inviteCreated")
@@ -418,7 +418,7 @@ private struct InviteShareSheet: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(VecklyDesign.Colors.hearthOrange)
+                .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                 .controlSize(.large)
 
                 Spacer()

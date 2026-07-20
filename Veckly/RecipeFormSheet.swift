@@ -132,7 +132,7 @@ struct RecipeFormSheet: View {
             Section {
                 HStack(spacing: 10) {
                     Image(systemName: "sparkles")
-                        .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     Text(L10n.string("recipeForm.aiBanner"))
                         .font(.subheadline)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
@@ -259,7 +259,7 @@ struct RecipeFormSheet: View {
                         HStack { ProgressView(); Text("recipeForm.fillingAI") }
                     } else {
                         Label("recipeForm.fillAI", systemImage: "sparkles")
-                            .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     }
                 }
                 .disabled(isFilling || isSaving || isImporting)

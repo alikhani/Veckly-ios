@@ -68,7 +68,7 @@ struct ShoppingListTabView: View {
                         if let contextLine = weekContextLine {
                             Text(contextLine)
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                                .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                         }
                         Spacer()
                         if !shoppingReminderItems.isEmpty {
@@ -101,7 +101,7 @@ struct ShoppingListTabView: View {
                                 .font(.callout.weight(.semibold))
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(VecklyDesign.Colors.hearthOrange)
+                        .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                     }
 
                     Text(L10n.string("shopping.title"))
@@ -162,7 +162,7 @@ struct ShoppingListTabView: View {
                     if totalItemCount > 0 {
                         HStack(spacing: 10) {
                             ProgressView(value: Double(checkedItemCount), total: Double(totalItemCount))
-                                .tint(VecklyDesign.Colors.hearthOrange)
+                                .tint(VecklyDesign.Colors.hearthOrangeFill)
                             Text("\(checkedItemCount) / \(totalItemCount)")
                                 .font(.caption)
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
@@ -248,11 +248,11 @@ struct ShoppingListTabView: View {
                         }
                     }
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeTextDark)
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 14)
-                .background(VecklyDesign.Colors.inkDeep)
+                .background(VecklyDesign.Colors.toastSurface)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .padding(.horizontal, 18)
                 .padding(.bottom, 12)
@@ -410,7 +410,7 @@ private struct ShoppingHandoffStatusCard: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: iconName)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrange)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     .frame(width: 28)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -525,7 +525,7 @@ struct ShoppingGroupView: View {
                             } label: {
                                 HStack {
                                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                                    .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkFaint)
                                 Text(item.label)
                                     .strikethrough(isChecked)
                                     .foregroundStyle(isChecked ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
@@ -593,7 +593,7 @@ struct StaplesGroupView: View {
                             } label: {
                                 HStack {
                                     Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
-                                        .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrange : VecklyDesign.Colors.inkFaint)
+                                        .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkFaint)
                                         .font(.body)
                                     Text(item.label)
                                         .strikethrough(isChecked)
