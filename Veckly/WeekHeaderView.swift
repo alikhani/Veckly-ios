@@ -5,6 +5,8 @@ import SwiftUI
 /// interleaved with hero/list logic. Purely presentational: week navigation
 /// state is owned by the caller via bindings.
 struct WeekHeaderView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let householdName: String
     @Binding var viewedWeekOffset: ViewedWeekOffset
     @Binding var isWeekPickerPresented: Bool
@@ -30,7 +32,7 @@ struct WeekHeaderView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                         .rotationEffect(.degrees(isWeekPickerPresented ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.15), value: isWeekPickerPresented)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: isWeekPickerPresented)
                 }
             }
             .buttonStyle(.plain)

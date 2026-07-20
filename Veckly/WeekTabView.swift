@@ -476,7 +476,7 @@ struct WeekTabView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: regenerateUndoContext?.id)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: regenerateUndoContext?.id)
     }
 
     /// Runs Generate/Regenerate. When replacing an already-full week, snapshots
