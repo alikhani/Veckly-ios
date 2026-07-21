@@ -275,11 +275,20 @@ struct ShoppingListTabView: View {
             // if data is fresh (< 5 min), so this is cheap during normal
             // browsing and only hits the network after `invalidateCache()` is
             // called following a week plan change.
+            //
+            // Unlike `WeekTabView`, this tab was never migrated onto
+            // `AppRefreshCoordinator` (Fas 7's migration only covered the
+            // Week tab), so it needs its own `usesSeededCoreReader` guard —
+            // without it, seeded UI-test mode still made a real network call
+            // here and silently overwrote the seeded shopping list with a
+            // load-error banner.
+            guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
             let weekStartDate = appModel.weekStore.weekStartDate
             Task { await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate) }
         }
         .task(id: appModel.weekStore.weekStartDate) {
+            guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
             let weekStartDate = appModel.weekStore.weekStartDate
             appModel.shoppingListStore.invalidateCache()
