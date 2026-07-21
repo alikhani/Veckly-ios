@@ -25,11 +25,24 @@ final class VecklyUITests: XCTestCase {
     @MainActor
     func testSignedOutScreenShowsAppleCTA() throws {
         let app = XCUIApplication()
+        // Explicit, not relying on the simulator's ambient system language —
+        // this test asserts hardcoded English copy but was the one test in
+        // this file without an override, so a simulator left on a non-English
+        // system language by other testing (verified to happen in practice:
+        // found this simulator defaulted to sv-SE) made it fail outside any
+        // code regression. Matches the defensive pattern already used by
+        // `testWeekTabShowsOpenTonightHeroAndDaysLeftStatus` and others.
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
 
         XCTAssertTrue(app.staticTexts["Veckly"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Plan the week once. Know what's for dinner before the day starts."].exists)
-        XCTAssertTrue(app.buttons["continueWithAppleButton"].exists)
+        // `waitForExistence`, not a bare `.exists` — the subtitle and CTA
+        // render fractionally after the title (custom-font layout pass), so
+        // an immediate check right after the title's own wait can race
+        // ahead of them and report a false negative even though everything
+        // is on screen a moment later.
+        XCTAssertTrue(app.staticTexts["Plan the week once. Know what's for dinner before the day starts."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["continueWithAppleButton"].waitForExistence(timeout: 5))
     }
 
     /// Fas 7 acceptance: "The seeded UI test makes zero network calls."
