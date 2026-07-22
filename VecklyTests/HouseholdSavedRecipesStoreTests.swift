@@ -63,17 +63,34 @@ struct HouseholdSavedRecipesStoreTests {
 
         #expect(!store.isAdded("recipe-1"))
     }
+
+    @Test func loadSavedRecipeIDsSeedsIsAddedFromAnEarlierSession() async {
+        let client = StubHouseholdSavedRecipesAPIClient()
+        client.savedRecipeIDs = ["recipe-1", "recipe-2"]
+        let store = HouseholdSavedRecipesStore(apiClient: client)
+
+        await store.loadSavedRecipeIDs(householdID: "household-1")
+
+        #expect(store.isAdded("recipe-1"))
+        #expect(store.isAdded("recipe-2"))
+        #expect(!store.isAdded("recipe-3"))
+    }
 }
 
 private final class StubHouseholdSavedRecipesAPIClient: HouseholdSavedRecipesAPIClient {
     let addResult: Result<Void, Error>
     let removeResult: Result<Void, Error>
+    var savedRecipeIDs: [String] = []
     private(set) var addCallCount = 0
     private(set) var removeCallCount = 0
 
     init(addResult: Result<Void, Error> = .success(()), removeResult: Result<Void, Error> = .success(())) {
         self.addResult = addResult
         self.removeResult = removeResult
+    }
+
+    func listHouseholdSavedRecipeIDs(householdID: String) async throws -> [String] {
+        savedRecipeIDs
     }
 
     func addHouseholdSavedRecipe(householdID: String, recipeID: String) async throws {

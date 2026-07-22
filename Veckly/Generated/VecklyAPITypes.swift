@@ -248,6 +248,13 @@ struct RecipeStep: Decodable, Equatable {
     let text: String
 }
 
+enum RecipeSource: String, Codable {
+    case userCreated = "user_created"
+    case urlImport = "url_import"
+    case aiGenerated = "ai_generated"
+    case builtin
+}
+
 struct FullRecipe: Decodable, Equatable, Identifiable {
     let id: String
     let title: String
@@ -261,8 +268,10 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
     let userVote: String? // "up" | "down" | nil
     let cuisine: String?
     let householdId: String?
+    let source: RecipeSource
 
     var isLiked: Bool { userVote == "up" }
+    var isBuiltIn: Bool { source == .builtin }
 
     init(
         id: String,
@@ -276,7 +285,8 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
         steps: [RecipeStep],
         userVote: String?,
         cuisine: String? = nil,
-        householdId: String? = nil
+        householdId: String? = nil,
+        source: RecipeSource = .builtin
     ) {
         self.id = id
         self.title = title
@@ -290,6 +300,7 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
         self.userVote = userVote
         self.cuisine = cuisine
         self.householdId = householdId
+        self.source = source
     }
 }
 

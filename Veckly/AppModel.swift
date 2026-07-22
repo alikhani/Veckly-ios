@@ -214,6 +214,7 @@ final class AppModel {
                 feedbackStore.seedVote(for: recipe.id, vote: vote)
             }
         }
+        await householdSavedRecipesStore.loadSavedRecipeIDs(householdID: householdID)
     }
 
     // Call when any API response returns 401. Tries to refresh the token and

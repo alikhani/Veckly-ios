@@ -106,6 +106,20 @@ struct VecklyAPIClient {
         }
     }
 
+    func listHouseholdSavedRecipeIDs(householdID: String) async throws -> [String] {
+        let output = try await _client.listHouseholdSavedRecipes(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(response):
+            return try response.body.json.recipes.map(\.id)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func addHouseholdSavedRecipe(householdID: String, recipeID: String) async throws {
         let output = try await _client.addHouseholdSavedRecipe(path: .init(householdId: householdID, recipeId: recipeID))
         switch output {
@@ -1177,7 +1191,8 @@ private extension Components.Schemas.Recipe {
             steps: steps.map(\.appModel),
             userVote: userVote?.rawValue,
             cuisine: cuisine,
-            householdId: householdId
+            householdId: householdId,
+            source: RecipeSource(rawValue: source.rawValue) ?? .builtin
         )
     }
 }

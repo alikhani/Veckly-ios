@@ -19,6 +19,17 @@ struct RecipesTabView: View {
         }
     }
 
+    /// Recipes the household created, imported, or generated with AI — kept
+    /// separate from the stock library below so a flat list of dozens of
+    /// built-in recipes doesn't bury what the household actually added.
+    private var householdRecipes: [FullRecipe] {
+        filtered.filter { !$0.isBuiltIn }
+    }
+
+    private var builtInRecipes: [FullRecipe] {
+        filtered.filter(\.isBuiltIn)
+    }
+
     var body: some View {
         Group {
             if appModel.recipeStore.isLoading {
@@ -77,23 +88,17 @@ struct RecipesTabView: View {
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                     }
-                    ForEach(filtered) { recipe in
-                        NavigationLink {
-                            if let household = appModel.householdStore.activeHousehold {
-                                RecipeDetailView(recipe: WeekSummaryRecipe(fullRecipe: recipe), householdID: household.id)
-                            } else {
-                                EmptyView()
+                    if !householdRecipes.isEmpty {
+                        Section(L10n.string("recipes.yourRecipes")) {
+                            ForEach(householdRecipes) { recipe in
+                                recipeRow(recipe)
                             }
-                        } label: {
-                            RecipeListRow(recipe: recipe)
                         }
-                        .disabled(appModel.householdStore.activeHousehold == nil)
-                        .swipeActions(edge: .trailing) {
-                            Button("common.edit") { editingRecipe = recipe }
-                                .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
-                            Button("recipes.archive", role: .destructive) {
-                                guard !isArchiving else { return }
-                                archiveCandidate = recipe
+                    }
+                    if !builtInRecipes.isEmpty {
+                        Section(L10n.string("recipes.builtInRecipes")) {
+                            ForEach(builtInRecipes) { recipe in
+                                recipeRow(recipe)
                             }
                         }
                     }
@@ -167,6 +172,36 @@ struct RecipesTabView: View {
     private var searchQuery: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    private func recipeRow(_ recipe: FullRecipe) -> some View {
+        NavigationLink {
+            if let household = appModel.householdStore.activeHousehold {
+                RecipeDetailView(recipe: WeekSummaryRecipe(fullRecipe: recipe), householdID: household.id)
+            } else {
+                EmptyView()
+            }
+        } label: {
+            RecipeListRow(
+                recipe: recipe,
+                isLiked: appModel.feedbackStore.vote(for: recipe.id) == .up,
+                isBookmarked: appModel.householdSavedRecipesStore.isAdded(recipe.id)
+            )
+        }
+        .disabled(appModel.householdStore.activeHousehold == nil)
+        .swipeActions(edge: .trailing) {
+            // Built-in recipes aren't owned by this household — the backend
+            // scopes updates/archiving to `recipes.householdId`, which
+            // built-ins don't have, so these actions would silently no-op.
+            if !recipe.isBuiltIn {
+                Button("common.edit") { editingRecipe = recipe }
+                    .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+                Button("recipes.archive", role: .destructive) {
+                    guard !isArchiving else { return }
+                    archiveCandidate = recipe
+                }
+            }
+        }
+    }
 }
 
 /// `.searchable` only once the household's real library has at least one
@@ -189,12 +224,28 @@ private struct SearchableWhenLibraryHasRecipesModifier: ViewModifier {
 
 private struct RecipeListRow: View {
     let recipe: FullRecipe
+    var isLiked: Bool = false
+    var isBookmarked: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(recipe.title)
-                .font(.body.weight(.medium))
-                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+            HStack(spacing: 6) {
+                Text(recipe.title)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                if isLiked {
+                    Image(systemName: "heart.fill")
+                        .font(.caption)
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
+                        .accessibilityLabel(L10n.string("recipes.liked"))
+                }
+                if isBookmarked {
+                    Image(systemName: "bookmark.fill")
+                        .font(.caption)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        .accessibilityLabel(L10n.string("recipes.bookmarked"))
+                }
+            }
             HStack(spacing: 6) {
                 Text(L10n.format("format.servings", recipe.servings))
                 if let total = cookTime {

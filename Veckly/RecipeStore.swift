@@ -202,6 +202,7 @@ struct PersistedRecipe: Codable {
     let steps: [PersistedRecipeStep]
     let userVote: String?
     let cuisine: String?
+    var source: RecipeSource = .builtin
 }
 
 struct PersistedRecipeIngredient: Codable {
@@ -282,7 +283,8 @@ extension PersistedRecipe {
             ingredients: fullRecipe.ingredients.map(PersistedRecipeIngredient.init),
             steps: fullRecipe.steps.map(PersistedRecipeStep.init),
             userVote: fullRecipe.userVote,
-            cuisine: fullRecipe.cuisine
+            cuisine: fullRecipe.cuisine,
+            source: fullRecipe.source
         )
     }
 
@@ -298,7 +300,8 @@ extension PersistedRecipe {
             ingredients: ingredients.map(\.recipeIngredient),
             steps: steps.map(\.recipeStep),
             userVote: userVote,
-            cuisine: cuisine
+            cuisine: cuisine,
+            source: source
         )
     }
 }

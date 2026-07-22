@@ -5075,6 +5075,38 @@
         }
       }
     },
+    "recipes.bookmarked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmarked"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bokmärkt"
+          }
+        }
+      }
+    },
+    "recipes.builtInRecipes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in recipes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inbyggda recept"
+          }
+        }
+      }
+    },
     "recipes.detailLoadFailed" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5505,6 +5537,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prova ett annat sökord."
+          }
+        }
+      }
+    },
+    "recipes.yourRecipes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recipes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Era recept"
           }
         }
       }
