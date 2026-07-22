@@ -3,6 +3,7 @@ import Observation
 
 protocol RecipeRecommendationAPIClient {
     func recommendMeals(
+        householdID: String,
         householdProfile: HouseholdProfile,
         feedbackSummary: [MealRecommendationFeedbackItem],
         candidateMeals: [MealRecommendationCandidate]
@@ -12,9 +13,11 @@ protocol RecipeRecommendationAPIClient {
 extension VecklyAPIClient: RecipeRecommendationAPIClient {}
 
 /// Backs the "Suggestions for you" section at the top of `MealPickerSheet`.
-/// Session-scoped, in-memory only: one AI call per household per app launch
-/// is the point (matches the backend's own 30s-per-user rate limit), not a
-/// live-updating feed — see Plan B3 in `PLAN-veckoritual-familjeminne-2026-07.md`.
+/// In-memory only on this client, but the backend now caches the actual AI
+/// result per household (keyed by `householdID`, ~1 week TTL — see
+/// `Veckly-backend/src/recipe-recommendations.ts`), so this in-memory guard
+/// is about not re-requesting within one session, not the only thing
+/// standing between the app and a fresh Claude call every launch.
 @MainActor
 @Observable
 final class RecipeRecommendationStore {
@@ -56,6 +59,7 @@ final class RecipeRecommendationStore {
 
         do {
             recommendationsByHousehold[householdID] = try await apiClient.recommendMeals(
+                householdID: householdID,
                 householdProfile: householdProfile,
                 feedbackSummary: feedbackSummary,
                 candidateMeals: candidates

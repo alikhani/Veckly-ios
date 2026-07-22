@@ -5823,6 +5823,8 @@ internal enum Components {
         }
         /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest`.
         internal struct MealRecommendationsRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/householdId`.
+            internal var householdId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/householdProfile`.
             internal struct householdProfilePayload: Codable, Hashable, Sendable {
                 /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/householdProfile/adults`.
@@ -5976,18 +5978,21 @@ internal enum Components {
             /// Creates a new `MealRecommendationsRequest`.
             ///
             /// - Parameters:
+            ///   - householdId:
             ///   - householdProfile:
             ///   - feedbackSummary:
             ///   - candidateMeals:
             ///   - recentMealIds:
             ///   - prepContext:
             internal init(
+                householdId: Swift.String? = nil,
                 householdProfile: Components.Schemas.MealRecommendationsRequest.householdProfilePayload,
                 feedbackSummary: Components.Schemas.MealRecommendationsRequest.feedbackSummaryPayload,
                 candidateMeals: Components.Schemas.MealRecommendationsRequest.candidateMealsPayload,
                 recentMealIds: Components.Schemas.MealRecommendationsRequest.recentMealIdsPayload? = nil,
                 prepContext: Components.Schemas.MealRecommendationsRequest.prepContextPayload? = nil
             ) {
+                self.householdId = householdId
                 self.householdProfile = householdProfile
                 self.feedbackSummary = feedbackSummary
                 self.candidateMeals = candidateMeals
@@ -5995,6 +6000,7 @@ internal enum Components {
                 self.prepContext = prepContext
             }
             internal enum CodingKeys: String, CodingKey {
+                case householdId
                 case householdProfile
                 case feedbackSummary
                 case candidateMeals

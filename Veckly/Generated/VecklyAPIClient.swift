@@ -490,6 +490,7 @@ struct VecklyAPIClient {
     }
 
     func recommendMeals(
+        householdID: String,
         householdProfile: HouseholdProfile,
         feedbackSummary: [MealRecommendationFeedbackItem],
         candidateMeals: [MealRecommendationCandidate]
@@ -511,7 +512,7 @@ struct VecklyAPIClient {
             Components.Schemas.MealRecommendationsRequest.candidateMealsPayloadPayload(id: $0.id, title: $0.title)
         }
         let output = try await _client.recommendMeals(
-            body: .json(.init(householdProfile: profile, feedbackSummary: feedback, candidateMeals: candidates))
+            body: .json(.init(householdId: householdID, householdProfile: profile, feedbackSummary: feedback, candidateMeals: candidates))
         )
         switch output {
         case let .ok(r):

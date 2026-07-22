@@ -503,6 +503,7 @@ private actor FakeAppRefreshAPIClient:
     }
 
     func recommendMeals(
+        householdID: String,
         householdProfile: HouseholdProfile,
         feedbackSummary: [MealRecommendationFeedbackItem],
         candidateMeals: [MealRecommendationCandidate]

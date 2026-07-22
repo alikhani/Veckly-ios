@@ -63,6 +63,18 @@ struct RecipeRecommendationStoreTests {
         #expect(client.callCount == 2)
     }
 
+    /// The backend now caches this call per household (~1 week TTL) — that
+    /// only works if the request actually carries the household id, not just
+    /// the client-side `recommendationsByHousehold` dictionary key.
+    @Test func passesTheHouseholdIDThroughToTheAPICall() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([]))
+        let store = RecipeRecommendationStore(apiClient: client)
+
+        await store.loadIfNeeded(householdID: "household-42", householdProfile: profile(householdID: "household-42"), feedbackVotes: [:], recipes: [recipe("pasta", title: "Pasta")])
+
+        #expect(client.lastHouseholdID == "household-42")
+    }
+
     @Test func pairsVotesWithTitlesAndDropsVotesForRecipesOutsideTheCandidatePool() async {
         let client = StubRecipeRecommendationAPIClient(result: .success([]))
         let store = RecipeRecommendationStore(apiClient: client)
@@ -91,12 +103,16 @@ private final class StubRecipeRecommendationAPIClient: RecipeRecommendationAPICl
         self.result = result
     }
 
+    private(set) var lastHouseholdID: String?
+
     func recommendMeals(
+        householdID: String,
         householdProfile: HouseholdProfile,
         feedbackSummary: [MealRecommendationFeedbackItem],
         candidateMeals: [MealRecommendationCandidate]
     ) async throws -> [MealRecommendation] {
         callCount += 1
+        lastHouseholdID = householdID
         lastFeedbackSummary = feedbackSummary
         return try result.get()
     }
