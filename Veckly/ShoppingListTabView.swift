@@ -90,7 +90,14 @@ struct ShoppingListTabView: View {
                             } label: {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.callout.weight(.semibold))
-                                    .frame(width: 34, height: 34)
+                                    // No explicit frame here: sizing purely from
+                                    // the font (matching "Lägg till vara"'s Label
+                                    // font below) is what makes both buttons come
+                                    // out the same height under the same button
+                                    // style. A fixed frame on just this icon used
+                                    // to override that and make the share button
+                                    // visibly taller than its neighbor.
+                                    .frame(minWidth: 20)
                             }
                             .buttonStyle(.bordered)
                             .tint(VecklyDesign.Colors.inkMid)
