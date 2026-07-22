@@ -593,17 +593,16 @@ struct WeekViewModelMapperTests {
         #expect(store.hasPendingSync == false)
     }
 
-    /// The other half of the Last/Next-and-back regression fixed alongside
-    /// `AppRefreshCoordinator.invalidateWeek`: forcing the refetch wasn't
-    /// enough on its own. `loadCurrentWeek`'s `isLoading` used to gate only
-    /// on `summary == nil`, assuming the cached `summary` always belonged to
-    /// the slot's own week. After browsing to a different week (`loadWeek`)
-    /// and back, that assumption breaks — `summary` is non-nil but for the
-    /// *wrong* week, so `isLoading` never flipped true and `WeekTabView`
-    /// rendered the browsed week's stale cards for the duration of the
-    /// refetch instead of the loading panel.
+    /// The Last/Next-and-back regression, fixed properly this time: each
+    /// week's summary is now cached independently by `weekStartDate` (see
+    /// `WeekStore.loadWeekData`), so returning to the current week after
+    /// browsing away shows the *correct* week's data immediately —
+    /// synchronously, from cache, before any network round trip — rather
+    /// than either flashing the browsed week's stale cards (the original
+    /// bug) or forcing the user to wait through a loading spinner for data
+    /// that was already fetched moments ago (the cost of the first fix).
     @MainActor
-    @Test func loadCurrentWeekShowsLoadingWhenTheCachedSummaryIsForADifferentWeek() async {
+    @Test func loadCurrentWeekShowsTheCorrectWeekInstantlyFromCacheAfterBrowsingAway() async {
         let apiClient = PausableWeekStoreAPIClient()
         let store = WeekStore(apiClient: apiClient)
         let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
@@ -614,19 +613,20 @@ struct WeekViewModelMapperTests {
         await store.loadCurrentWeek(household: household, force: true)
         #expect(store.isLoading == false)
 
-        // Simulates browsing to Last week: `loadWeek` leaves `summary`
-        // pointing at a different week than `weekStartDate` will be on the
-        // next `loadCurrentWeek` call.
+        // Browse to Last week — `loadWeek` leaves the display slot pointing
+        // at a different week than `loadCurrentWeek` will ask for next.
         await apiClient.queueResult(makeWeekSummary(weekStartDate: lastWeekStart))
         await store.loadWeek(household: household, weekStartDate: lastWeekStart)
         #expect(store.summary?.weekStartDate == lastWeekStart)
 
-        // Returning to current week: the fetch is paused mid-flight so the
-        // test can observe `isLoading` before it resolves.
+        // Return to This week: pause the network call so the only way this
+        // can already be correct is the synchronous cache-apply at the top
+        // of `loadWeekData`, before the (still-pending) fetch resolves.
         await apiClient.pauseNextRequest()
         let loadTask = Task { await store.loadCurrentWeek(household: household, force: true) }
         await apiClient.waitUntilRequestStarted()
-        #expect(store.isLoading == true)
+        #expect(store.summary?.weekStartDate == currentWeekStart)
+        #expect(store.isLoading == false)
 
         await apiClient.resumePausedRequest(with: makeWeekSummary(weekStartDate: currentWeekStart))
         await loadTask.value
@@ -655,6 +655,40 @@ struct WeekViewModelMapperTests {
 
         await apiClient.resumePausedRequest(with: makeWeekSummary(weekStartDate: currentWeekStart))
         await loadTask.value
+    }
+
+    /// A successful mutation (`assignMeal`) leaves the per-week cache
+    /// pointing at pre-mutation data unless it's explicitly invalidated —
+    /// without that, browsing away and back within the freshness window
+    /// would silently revert the just-made change back to what the week
+    /// looked like before it, straight from cache.
+    @MainActor
+    @Test func assignMealInvalidatesTheCacheSoBrowsingBackDoesNotShowThePreMutationWeek() async {
+        let currentWeek = WeekCalendar.currentWeekStartDate()
+        let otherWeek = WeekCalendar.addWeeks(to: currentWeek, offset: -1)
+        let apiClient = SequencedWeekSummaryAPIClient(summaries: [
+            makeWeekSummary(weekStartDate: currentWeek),
+            makeWeekSummary(weekStartDate: otherWeek),
+            makeWeekSummary(weekStartDate: currentWeek),
+        ])
+        let store = WeekStore(apiClient: apiClient)
+        let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
+
+        await store.loadCurrentWeek(household: household)
+        #expect(apiClient.fetchCount == 1)
+
+        let monday = store.dayRows.first { $0.weekday == .monday }!
+        let recipe = WeekSummaryRecipe(id: "r1", title: "New recipe", description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 10, tags: [])
+        await store.assignMeal(day: monday, recipe: recipe, household: household, userID: "33333333-3333-3333-3333-333333333333")
+
+        await store.loadWeek(household: household, weekStartDate: otherWeek)
+        #expect(apiClient.fetchCount == 2)
+
+        // Without invalidating the cache on a successful mutation, this
+        // would be a cache hit (fetchCount staying at 2) that silently
+        // redisplays the pre-`assignMeal` week.
+        await store.loadCurrentWeek(household: household)
+        #expect(apiClient.fetchCount == 3)
     }
 }
 

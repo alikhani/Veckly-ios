@@ -77,6 +77,7 @@ final class AppRefreshCoordinator {
     private let feedbackStore: FeedbackStore
     private let householdMealSignalStore: HouseholdMealSignalStore
     private let recipeStore: RecipeStore
+    private let recipeRecommendationStore: RecipeRecommendationStore?
 
     private let freshnessWindow: TimeInterval
     private var inFlight: [Resource: Task<Void, Never>] = [:]
@@ -91,6 +92,7 @@ final class AppRefreshCoordinator {
         feedbackStore: FeedbackStore,
         householdMealSignalStore: HouseholdMealSignalStore,
         recipeStore: RecipeStore,
+        recipeRecommendationStore: RecipeRecommendationStore? = nil,
         freshnessWindow: TimeInterval = 300
     ) {
         self.usesSeededCoreReader = usesSeededCoreReader
@@ -101,6 +103,7 @@ final class AppRefreshCoordinator {
         self.feedbackStore = feedbackStore
         self.householdMealSignalStore = householdMealSignalStore
         self.recipeStore = recipeStore
+        self.recipeRecommendationStore = recipeRecommendationStore
         self.freshnessWindow = freshnessWindow
     }
 
@@ -153,6 +156,27 @@ final class AppRefreshCoordinator {
             await self.recipeStore.loadRecipes(householdID: household.id, force: force)
         }
         _ = await (details, week, shopping, prep, feedback, signals, recipes)
+
+        // Fired, not awaited: the "Suggestions for you" AI call takes on the
+        // order of 10s, far longer than anything else this bundle loads —
+        // waiting on it here would make every cold launch and scene-active
+        // refresh that much slower. Starting it now, as soon as the profile
+        // and recipe list it needs are ready, means it's usually done (or
+        // much further along) by the time the user actually opens a day's
+        // meal picker, instead of only starting then. `loadIfNeeded` is its
+        // own de-dup guard, so calling this on every trigger is harmless.
+        if let recipeRecommendationStore, let profile = householdStore.cachedProfile(for: household.id) {
+            let recipesSnapshot = recipeStore.recipes
+            let feedbackVotes = feedbackStore.allVotes
+            Task {
+                await recipeRecommendationStore.loadIfNeeded(
+                    householdID: household.id,
+                    householdProfile: profile,
+                    feedbackVotes: feedbackVotes,
+                    recipes: recipesSnapshot
+                )
+            }
+        }
     }
 
     /// A narrower request for views that only need the current week kept
@@ -203,10 +227,16 @@ final class AppRefreshCoordinator {
     /// window looks "fresh" to `refreshWeek`/`refreshActiveHouseholdData` —
     /// the coordinator has no idea the slot was clobbered with a different
     /// week's data in between — so a `sceneActive` return to the current
-    /// week silently no-ops and leaves stale browsed-week rows on screen
+    /// week would silently no-op and leave the browsed week's rows on screen
     /// under a header that's already moved back to "this week". Callers that
     /// write into that slot outside the coordinator must invalidate it here
-    /// so the next `sceneActive` request is forced to actually refetch.
+    /// so the next `sceneActive` request actually calls back into
+    /// `WeekStore`. That doesn't necessarily mean a real network fetch,
+    /// though: `WeekStore` keeps its own per-week cache (see
+    /// `loadWeekData`), so a call this forces through often just re-applies
+    /// an already-fresh cached copy of the current week instead of hitting
+    /// the network — this method's job is only to make sure the call
+    /// happens, not to force the network round trip itself.
     func invalidateWeek(householdID: String) {
         lastCompletedAt[.week(householdID)] = nil
     }

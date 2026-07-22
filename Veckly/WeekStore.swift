@@ -40,6 +40,24 @@ final class WeekStore {
     private var flushTask: Task<Void, Never>?
     private var isFlushingPendingChanges = false
 
+    /// Per-week cache, keyed by `weekStartDate` — `loadCurrentWeek` and
+    /// `loadWeek` (browsing) both read/write it through `loadWeekData`
+    /// below, so switching between "This week", "Last week", and "Next
+    /// week" shows each week's own correct data straight from cache instead
+    /// of refetching every time, and returning to a week already shown
+    /// moments ago never has to wait on the network again.
+    private struct CachedWeek {
+        let summary: WeekSummary
+        let fetchedAt: Date
+    }
+    private var weekCache: [String: CachedWeek] = [:]
+    private var inFlightWeekFetches: Set<String> = []
+    /// Set synchronously at the top of every `loadWeekData` call — lets a
+    /// network response that resolves after the user has already browsed
+    /// somewhere else recognize it's stale and skip applying itself to the
+    /// display (it still gets cached for whichever week it was actually for).
+    private var latestRequestedWeekStartDate: String?
+
     init(
         apiClient: any WeekStoreAPIClient,
         syncDebounceNanoseconds: UInt64 = 400_000_000,
@@ -60,45 +78,7 @@ final class WeekStore {
     /// doesn't know anything about *why* the caller wants fresh data.
     func loadCurrentWeek(household: Household, force: Bool = false) async {
         weekStartDate = WeekCalendar.currentWeekStartDate()
-        guard !isLoading else { return }
-        let hasFreshCurrentWeek = !force
-            && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
-            && summary?.weekStartDate == weekStartDate
-        guard !hasFreshCurrentWeek else { return }
-        // `summary == nil` alone used to gate this: "show a full loading
-        // state only if we have nothing to show yet, otherwise refresh
-        // quietly in place." That assumed the cached `summary` always
-        // belonged to *this* slot's own week, refreshed in place — true for
-        // an ordinary rescan of the current week. It breaks the moment
-        // `WeekTabView`'s Last/Next browsing (`loadWeek`) has left `summary`
-        // pointing at a *different* week: without the second condition, a
-        // return to the current week rendered that browsed week's stale
-        // cards for the duration of the refetch before snapping to the real
-        // (often very different, e.g. empty vs. complete) current-week
-        // state — a jarring flash, not a quiet update.
-        isLoading = summary == nil || summary?.weekStartDate != weekStartDate
-        errorMessage = nil
-        defer { isLoading = false }
-
-        do {
-            let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
-            self.summary = summary
-            lastFetchedAt = Date()
-            let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
-            dayRows = mapped.days
-            currentWeekDayRows = dayRows
-            today = mapped.today
-            syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
-            reapplyPendingStateIfNeeded(for: weekStartDate)
-        } catch APIError.notFound {
-            summary = nil
-            dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
-            currentWeekDayRows = dayRows
-            today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
-            syncedDayStates = Dictionary(uniqueKeysWithValues: dayRows.map { ($0.weekday, WeekPendingDayState(row: $0)) })
-        } catch {
-            errorMessage = L10n.string("error.week.load")
-        }
+        await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: true, force: force)
     }
 
     /// Loads a specific week's summary for browsing (Last/Next week), populating
@@ -107,27 +87,73 @@ final class WeekStore {
     /// read as "the active week." Callers (e.g. WeekTabView's browsing UI) own
     /// their own viewed-week state and pass it back in for mutations.
     func loadWeek(household: Household, weekStartDate: String) async {
-        guard !isLoading else { return }
-        isLoading = true
+        await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: false, force: false)
+    }
+
+    /// The shared engine behind both public loaders above. A cached copy of
+    /// `weekStartDate` (if any) is applied to the display immediately and
+    /// synchronously — before any `await` — so switching between weeks never
+    /// shows a flash of the wrong week's cards while a fetch is pending: the
+    /// correct week's last-known data (even if a little stale) is already on
+    /// screen the instant this function is called. A network refetch only
+    /// follows if that cached copy is missing, older than the freshness
+    /// window, or `force` is set, and it runs quietly (no loading state) if
+    /// something was already on screen to look at.
+    private func loadWeekData(household: Household, weekStartDate: String, isCurrentWeekSlot: Bool, force: Bool) async {
+        latestRequestedWeekStartDate = weekStartDate
+
+        let cached = weekCache[weekStartDate]
+        if let cached {
+            applyWeek(cached.summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: cached.fetchedAt)
+        }
+
+        let isFresh = cached.map { Date().timeIntervalSince($0.fetchedAt) <= 300 } == true
+        guard force || !isFresh else { return }
+        guard !inFlightWeekFetches.contains(weekStartDate) else { return }
+        inFlightWeekFetches.insert(weekStartDate)
+        defer { inFlightWeekFetches.remove(weekStartDate) }
+
+        if cached == nil { isLoading = true }
         errorMessage = nil
-        defer { isLoading = false }
+        defer { if cached == nil { isLoading = false } }
 
         do {
             let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
-            self.summary = summary
-            let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
-            dayRows = mapped.days
-            today = mapped.today
-            syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
-            reapplyPendingStateIfNeeded(for: weekStartDate)
+            // Only trust this response as "fresh for `weekStartDate`" if it
+            // actually says so itself — a response that doesn't match the
+            // week it was requested for (a backend anomaly) must not make a
+            // later call think this slot is already satisfied.
+            if summary.weekStartDate == weekStartDate {
+                weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date())
+            }
+            guard latestRequestedWeekStartDate == weekStartDate else { return }
+            applyWeek(summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
         } catch APIError.notFound {
+            weekCache.removeValue(forKey: weekStartDate)
+            guard latestRequestedWeekStartDate == weekStartDate else { return }
+            let rows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             summary = nil
-            dayRows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
-            today = dayRows.first(where: { $0.isToday }) ?? dayRows.first
-            syncedDayStates = Dictionary(uniqueKeysWithValues: dayRows.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+            dayRows = rows
+            if isCurrentWeekSlot { currentWeekDayRows = rows }
+            today = rows.first(where: { $0.isToday }) ?? rows.first
+            syncedDayStates = Dictionary(uniqueKeysWithValues: rows.map { ($0.weekday, WeekPendingDayState(row: $0)) })
         } catch {
+            guard latestRequestedWeekStartDate == weekStartDate, cached == nil else { return }
             errorMessage = L10n.string("error.week.load")
         }
+    }
+
+    private func applyWeek(_ summary: WeekSummary, weekStartDate: String, isCurrentWeekSlot: Bool, fetchedAt: Date) {
+        self.summary = summary
+        let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
+        dayRows = mapped.days
+        if isCurrentWeekSlot {
+            currentWeekDayRows = dayRows
+            lastFetchedAt = fetchedAt
+        }
+        today = mapped.today
+        syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+        reapplyPendingStateIfNeeded(for: weekStartDate)
     }
 
     /// Side-effect-free fetch used by the weekend nudge and the Sunday retro to
@@ -184,9 +210,9 @@ final class WeekStore {
 
         do {
             try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: targetWeekStartDate, regenerate: regenerate)
+            weekCache.removeValue(forKey: targetWeekStartDate)
             if targetWeekStartDate == weekStartDate {
-                lastFetchedAt = nil
-                await loadCurrentWeek(household: household)
+                await loadCurrentWeek(household: household, force: true)
             } else {
                 await loadWeek(household: household, weekStartDate: targetWeekStartDate)
             }
@@ -249,6 +275,11 @@ final class WeekStore {
                 userID: userID,
                 event: .mealAssigned(day: day.weekday, recipeID: recipe.id)
             )
+            // The cached `WeekSummary` for this week is now stale (it
+            // predates this mutation) — remove it so a later revisit
+            // refetches instead of silently reverting the optimistic change
+            // back to the pre-mutation state.
+            weekCache.removeValue(forKey: targetWeekStartDate)
             if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
@@ -292,6 +323,7 @@ final class WeekStore {
                 userID: userID,
                 event: .mealUnassigned(day: day.weekday)
             )
+            weekCache.removeValue(forKey: targetWeekStartDate)
             if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
@@ -323,6 +355,9 @@ final class WeekStore {
         pendingDesiredDayStates = [:]
         syncedDayStates = [:]
         isFlushingPendingChanges = false
+        weekCache = [:]
+        inFlightWeekFetches = []
+        latestRequestedWeekStartDate = nil
     }
 
     /// Fas 3 UI-test fixtures for the four hero states — `.legacyPartial` is
@@ -483,6 +518,7 @@ final class WeekStore {
                 try await syncDesiredState(desired, baseline: baseline, weekday: weekday, context: context)
                 syncedDayStates[weekday] = desired
                 pendingDesiredDayStates.removeValue(forKey: weekday)
+                weekCache.removeValue(forKey: context.weekStartDate)
                 if context.weekStartDate == weekStartDate { lastFetchedAt = Date() }
             } catch {
                 let latest = try? await apiClient.weekSummary(
@@ -490,6 +526,7 @@ final class WeekStore {
                     weekStartDate: context.weekStartDate
                 )
                 if let latest {
+                    weekCache[context.weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
                     let mapped = WeekViewModelMapper.map(summary: latest, today: Date())
                     syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
                     if summary?.weekStartDate == latest.weekStartDate {

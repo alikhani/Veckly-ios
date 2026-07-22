@@ -21,6 +21,21 @@ struct AppRefreshCoordinatorTests {
         #expect(await apiClient.listHouseholdRecipesCount == 1)
     }
 
+    /// "Suggestions for you" (`RecipeRecommendationStore`) is a ~10s AI call
+    /// — starting it only once the user opens a day's meal picker is why the
+    /// reason text used to pop in visibly late. It should instead be kicked
+    /// off as soon as core-reader data (household profile + recipes) is
+    /// ready, so it's usually done well before the picker ever opens.
+    @Test func coreReaderRefreshPrefetchesRecipeRecommendationsInTheBackground() async {
+        let apiClient = FakeAppRefreshAPIClient()
+        let coordinator = TestCoordinatorFactory.make(apiClient: apiClient)
+
+        await coordinator.refreshCoreReader(trigger: .coldLaunch)
+        await apiClient.waitUntilRecommendMealsCalled()
+
+        #expect(await apiClient.recommendMealsCount == 1)
+    }
+
     /// The exact Fas 7 bug: `RootView`'s cold-launch bootstrap and
     /// `WeekTabView`'s own `.task(id:)` load used to both fire moments
     /// apart, each triggering a real `weekSummary` fetch for the same
@@ -144,16 +159,15 @@ struct AppRefreshCoordinatorTests {
     /// `loadWeek` (Last/Next browsing) writes directly into `WeekStore`'s
     /// shared `summary`/`dayRows` slot — the same slot `refreshWeek` tracks
     /// freshness for — without going through this coordinator, so the
-    /// coordinator can't see it happen. Reproduces the full real sequence
-    /// (not just the coordinator in isolation): cold launch loads the
-    /// current week, browsing loads a *different* week directly on the
-    /// store (leaving `summary.weekStartDate` mismatched), then a
-    /// `sceneActive` return to the current week must actually refetch.
-    /// Without `invalidateWeek`, the coordinator's own freshness check
-    /// would short-circuit before `WeekStore.loadCurrentWeek` ever ran —
-    /// never giving its internal `summary.weekStartDate == weekStartDate`
-    /// self-heal a chance to notice the mismatch and correct it.
-    @Test func invalidateWeekForcesTheNextSceneActiveReturnToRefetch() async {
+    /// coordinator can't see it happen on its own. `invalidateWeek` still
+    /// makes sure the next `sceneActive` trigger actually *calls*
+    /// `WeekStore.loadCurrentWeek` again instead of trusting its own stale
+    /// "recently refreshed" stamp — but `WeekStore` now caches each week's
+    /// summary by `weekStartDate` (see `loadWeekData`), so that call finds a
+    /// still-fresh cached copy of the *current* week (from the cold launch)
+    /// and applies it immediately without a 3rd network round trip. Fewer
+    /// network calls than the original bug fix, same correct result.
+    @Test func invalidateWeekLetsTheCoordinatorReapplyTheCachedCurrentWeekWithoutARefetch() async {
         let apiClient = FakeAppRefreshAPIClient()
         let (coordinator, weekStore) = TestCoordinatorFactory.makeWithWeekStore(apiClient: apiClient)
 
@@ -162,18 +176,23 @@ struct AppRefreshCoordinatorTests {
         #expect(weekStore.summary?.weekStartDate == WeekCalendar.currentWeekStartDate())
 
         // Simulates `WeekTabView.reloadViewedWeek`'s browsing branch: calls
-        // `loadWeek` directly (bypassing the coordinator) for a different
-        // week, then invalidates — exactly what the fixed call site does.
-        // `loadWeek` always fetches (no freshness gate of its own), so this
-        // is itself the 2nd `weekSummary` call.
+        // `loadWeek` directly (bypassing the coordinator) for a different,
+        // not-yet-cached week, then invalidates — exactly what the real call
+        // site does. That week was never cached, so this is itself the 2nd
+        // `weekSummary` call.
         let lastWeekStart = WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1)
         await weekStore.loadWeek(household: TestAppRefreshFixtures.household, weekStartDate: lastWeekStart)
         #expect(await apiClient.weekSummaryCount == 2)
         #expect(weekStore.summary?.weekStartDate == lastWeekStart)
         coordinator.invalidateWeek(householdID: TestAppRefreshFixtures.household.id)
 
+        // The coordinator is forced to call `loadCurrentWeek` again (its own
+        // freshness stamp was invalidated), but `WeekStore`'s per-week cache
+        // still has a fresh entry for the current week from the cold launch
+        // — so the display corrects itself instantly and no 3rd network call
+        // happens.
         await coordinator.refreshWeek(household: TestAppRefreshFixtures.household, trigger: .sceneActive)
-        #expect(await apiClient.weekSummaryCount == 3)
+        #expect(await apiClient.weekSummaryCount == 2)
         #expect(weekStore.summary?.weekStartDate == WeekCalendar.currentWeekStartDate())
     }
 
@@ -209,6 +228,7 @@ private enum TestCoordinatorFactory {
         let feedbackStore = FeedbackStore(apiClient: apiClient)
         let householdMealSignalStore = HouseholdMealSignalStore(apiClient: apiClient)
         let recipeStore = RecipeStore(apiClient: apiClient, cacheStore: FakeAppRefreshRecipeCache())
+        let recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
 
         return AppRefreshCoordinator(
             usesSeededCoreReader: usesSeededCoreReader,
@@ -218,7 +238,8 @@ private enum TestCoordinatorFactory {
             prepBatchStore: prepBatchStore,
             feedbackStore: feedbackStore,
             householdMealSignalStore: householdMealSignalStore,
-            recipeStore: recipeStore
+            recipeStore: recipeStore,
+            recipeRecommendationStore: recipeRecommendationStore
         )
     }
 
@@ -288,7 +309,8 @@ private actor FakeAppRefreshAPIClient:
     PrepBatchStoreAPIClient,
     FeedbackStoreAPIClient,
     HouseholdMealSignalStoreAPIClient,
-    RecipeStoreAPIClient
+    RecipeStoreAPIClient,
+    RecipeRecommendationAPIClient
 {
     private(set) var bootstrapCount = 0
     private(set) var listHouseholdsCount = 0
@@ -336,7 +358,9 @@ private actor FakeAppRefreshAPIClient:
         return [HouseholdMember(userId: "11111111-1111-1111-1111-111111111111", role: .owner, givenName: nil, familyName: nil)]
     }
 
-    func getProfile(householdID: String) async throws -> HouseholdProfile? { nil }
+    func getProfile(householdID: String) async throws -> HouseholdProfile? {
+        HouseholdProfile(householdId: householdID, adults: 2, children: 1, priorities: [], avoidIngredients: [], selectedDays: [])
+    }
 
     func saveProfile(
         householdID: String,
@@ -444,7 +468,20 @@ private actor FakeAppRefreshAPIClient:
 
     func listHouseholdRecipes(householdID: String, includePublic: Bool) async throws -> [FullRecipe] {
         listHouseholdRecipesCount += 1
-        return []
+        return [
+            FullRecipe(
+                id: "recipe-1",
+                title: "Tacos",
+                description: "",
+                servings: 4,
+                prepTimeMinutes: 10,
+                cookTimeMinutes: 10,
+                tags: [],
+                ingredients: [],
+                steps: [],
+                userVote: nil
+            ),
+        ]
     }
 
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe { throw APIError.notFound }
@@ -454,4 +491,25 @@ private actor FakeAppRefreshAPIClient:
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft { throw APIError.notFound }
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft { throw APIError.notFound }
     func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft { throw APIError.notFound }
+
+    // MARK: RecipeRecommendationAPIClient
+
+    private(set) var recommendMealsCount = 0
+    private var recommendMealsContinuation: CheckedContinuation<Void, Never>?
+
+    func waitUntilRecommendMealsCalled() async {
+        if recommendMealsCount > 0 { return }
+        await withCheckedContinuation { recommendMealsContinuation = $0 }
+    }
+
+    func recommendMeals(
+        householdProfile: HouseholdProfile,
+        feedbackSummary: [MealRecommendationFeedbackItem],
+        candidateMeals: [MealRecommendationCandidate]
+    ) async throws -> [MealRecommendation] {
+        recommendMealsCount += 1
+        recommendMealsContinuation?.resume()
+        recommendMealsContinuation = nil
+        return []
+    }
 }
