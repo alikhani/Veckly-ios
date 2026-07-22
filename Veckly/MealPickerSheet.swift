@@ -132,6 +132,25 @@ struct MealPickerSheet: View {
                     recipeList
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                // Pinned above the search field rather than buried as the
+                // last row of a potentially long, scrollable recipe list —
+                // "add your own" should never require scrolling to find.
+                if confirmedRecipe == nil, !appModel.recipeStore.isLoading, appModel.recipeStore.errorMessage == nil, !filtered.isEmpty {
+                    Button { showAddRecipeSheet = true } label: {
+                        Label(L10n.string("recipe.add"), systemImage: "plus.circle")
+                            .font(.callout.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(VecklyDesign.Colors.inkMid)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+                    .background(.bar)
+                    .accessibilityIdentifier("mealPickerAddRecipeRow")
+                }
+            }
             .navigationTitle(day.weekdayLabel)
             .navigationBarTitleDisplayMode(.inline)
             .modifier(SearchableWhenPickingModifier(isPicking: confirmedRecipe == nil, searchText: $searchText))
@@ -268,25 +287,9 @@ struct MealPickerSheet: View {
                         }
                     }
                 }
-                addRecipeRow
             }
         }
         .listStyle(.insetGrouped)
-    }
-
-    /// Quiet entry point at the end of the picker's results — for when
-    /// nothing above is quite right, without competing with the prominent
-    /// empty-state CTA above (beslut 18: "utan att appen framstår som en
-    /// receptapp").
-    private var addRecipeRow: some View {
-        Section {
-            Button { showAddRecipeSheet = true } label: {
-                Label(L10n.string("recipe.add"), systemImage: "plus.circle")
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("mealPickerAddRecipeRow")
-        }
     }
 
     private var intentFallbackSection: some View {
