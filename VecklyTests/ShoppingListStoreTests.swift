@@ -195,6 +195,49 @@ struct ShoppingListStoreTests {
         #expect(store.groups.flatMap(\.items).contains(where: { $0.itemKey == "produce:new:" }))
     }
 
+    /// `.onAppear` and `.task(id: weekStartDate)` in `ShoppingListTabView` both
+    /// trigger a load on tab appearance, and `.task` is cancelled/restarted
+    /// whenever the view leaves and rejoins the visible hierarchy (switching
+    /// tabs, backgrounding). A cancelled in-flight request must not be treated
+    /// as a real failure — that used to wipe an already-loaded list and force
+    /// the user to tap "Try again" to see data that was already there.
+    @Test func cancellationDuringARefreshDoesNotClobberAlreadyLoadedData() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+        #expect(store.errorMessage == nil)
+        #expect(!store.groups.isEmpty)
+
+        apiClient.shouldThrowCancellation = true
+        store.invalidateCache()
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        #expect(store.errorMessage == nil)
+        #expect(!store.groups.isEmpty)
+    }
+
+    @Test func cancellationOnTheFirstLoadLeavesTheStoreWithoutAnErrorBanner() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        apiClient.shouldThrowCancellation = true
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        #expect(store.errorMessage == nil)
+        #expect(store.summary == nil)
+    }
+
     @Test func shareTextIsNilForEmptyShoppingList() {
         let text = ShoppingListShareText.make(
             title: "Shopping list",
@@ -463,16 +506,19 @@ private final class FakeShoppingListStoreAPIClient: ShoppingListStoreAPIClient {
     var state: ShoppingListSharedState?
     var refetchedState: ShoppingListSharedState?
     var updateResponses: [Result<String?, APIError>] = [.success("2026-06-22T09:05:00.000Z")]
+    var shouldThrowCancellation = false
     private(set) var summaryFetchCount = 0
     private(set) var updateRequests: [UpdateRequest] = []
     private var shoppingListStateCallCount = 0
 
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
+        if shouldThrowCancellation { throw CancellationError() }
         summaryFetchCount += 1
         return summary
     }
 
     func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?) {
+        if shouldThrowCancellation { throw CancellationError() }
         shoppingListStateCallCount += 1
         if shoppingListStateCallCount == 1 {
             return (state, summary.updatedAt)

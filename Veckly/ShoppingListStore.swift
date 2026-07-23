@@ -148,7 +148,19 @@ final class ShoppingListStore {
             customItems = []
             checkedItems = []
             pantryStock = [:]
+        } catch is CancellationError {
+            // `.onAppear` and `.task(id: weekStartDate)` both fire on tab
+            // appearance, and `.task` gets cancelled/restarted whenever this
+            // view leaves and rejoins the visible hierarchy (tab switches,
+            // scene backgrounding). A cancelled in-flight request is not a
+            // real failure — surfacing it as one wiped an already-loaded list
+            // and forced the user to tap "Try again" to get back what was
+            // already there a moment ago.
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // Same cancellation case, but thrown as URLError instead of
+            // CancellationError depending on which await point was cancelled.
         } catch {
+            guard summary == nil else { return }
             errorMessage = L10n.string("error.shopping.load")
         }
     }
