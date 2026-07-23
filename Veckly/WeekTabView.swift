@@ -502,7 +502,7 @@ struct WeekTabView: View {
         // stay pinned to the week it was actually generated for.
         let targetWeekStartDate = viewedWeekStartDate
         let preRegenerateSnapshot = regenerate
-            ? appModel.weekStore.dayRows.filter { !$0.isLocked && !$0.isSkipped }
+            ? appModel.weekStore.dayRows.filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }
             : []
         let wasEmptyBefore = hasOpenRelevantDays
         let hadWeekContentBefore = appModel.weekStore.hasWeekContent

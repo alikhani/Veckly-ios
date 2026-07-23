@@ -42,11 +42,13 @@ struct WeekPlanningScope: Equatable {
         days.filter(isRelevant)
     }
 
-    /// A relevant day is "open" unless it has a recipe, is skipped, or is
-    /// covered by prep/leftovers (`coveredDates`, keyed by `day.date`).
+    /// A relevant, non-past day is "open" unless it has a recipe, is skipped,
+    /// or is covered by prep/leftovers (`coveredDates`, keyed by `day.date`).
+    /// Past days are settled history: they must neither keep the current week
+    /// incomplete nor be included when the user asks to plan the rest.
     func openDays(in days: [WeekDayRowViewModel], coveredDates: Set<String>) -> [WeekDayRowViewModel] {
         relevantDays(in: days).filter { day in
-            !day.isSkipped && day.recipe == nil && !coveredDates.contains(day.date)
+            !day.isPast && !day.isSkipped && day.recipe == nil && !coveredDates.contains(day.date)
         }
     }
 

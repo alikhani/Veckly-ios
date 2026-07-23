@@ -8,9 +8,9 @@ enum WeekCalendar {
         return calendar
     }()
 
-    static func currentWeekStartDate(now: Date = Date(), calendar: Calendar = Self.calendar) -> String {
+    static func currentWeekStartDate(now: Date = Date(), calendar: Calendar = Self.localCalendar) -> String {
         let start = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-        return yyyyMmDdFormatter.string(from: start)
+        return localDateString(from: start, calendar: calendar)
     }
 
     static func addDays(to yyyyMmDd: String, offset: Int) -> String {
@@ -63,18 +63,12 @@ enum WeekCalendar {
         return "\(shortFormatter.string(from: start)) – \(shortFormatter.string(from: end))"
     }
 
-    static func isToday(yyyyMmDd: String, today: Date = Date()) -> Bool {
-        guard let date = date(from: yyyyMmDd) else { return false }
-        // Use the device's local calendar for the day comparison so midnight
-        // boundaries follow the user's timezone, not UTC.
-        return Calendar.current.isDate(date, inSameDayAs: today)
+    static func isToday(yyyyMmDd: String, today: Date = Date(), calendar: Calendar = Self.localCalendar) -> Bool {
+        isValidDateString(yyyyMmDd) && yyyyMmDd == localDateString(from: today, calendar: calendar)
     }
 
-    static func isPast(yyyyMmDd: String, today: Date = Date()) -> Bool {
-        guard let date = date(from: yyyyMmDd) else { return false }
-        let localCal = Calendar.current
-        return !localCal.isDate(date, inSameDayAs: today)
-            && date < localCal.startOfDay(for: today)
+    static func isPast(yyyyMmDd: String, today: Date = Date(), calendar: Calendar = Self.localCalendar) -> Bool {
+        isValidDateString(yyyyMmDd) && yyyyMmDd < localDateString(from: today, calendar: calendar)
     }
 
     static func date(from yyyyMmDd: String) -> Date? {
@@ -86,6 +80,29 @@ enum WeekCalendar {
     /// of UTC (a local-timezone formatter would parse/format inconsistently).
     static func string(from date: Date) -> String {
         yyyyMmDdFormatter.string(from: date)
+    }
+
+    static func localDateString(from date: Date, calendar: Calendar = Self.localCalendar) -> String {
+        var formatterCalendar = calendar
+        if formatterCalendar.timeZone == TimeZone(secondsFromGMT: 0)! {
+            formatterCalendar.timeZone = TimeZone.current
+        }
+        let formatter = DateFormatter()
+        formatter.calendar = formatterCalendar
+        formatter.timeZone = formatterCalendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+
+    private static func isValidDateString(_ yyyyMmDd: String) -> Bool {
+        date(from: yyyyMmDd).map { string(from: $0) == yyyyMmDd } ?? false
+    }
+
+    private static var localCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.firstWeekday = 2
+        calendar.timeZone = TimeZone.current
+        return calendar
     }
 
     private static let yyyyMmDdFormatter: DateFormatter = {

@@ -119,6 +119,21 @@ struct WeekPlanningScopeTests {
         #expect(scope.isComplete(days: days, coveredDates: ["2026-06-09"]))
     }
 
+    @Test func pastEmptyDaysDoNotCountAsOpenWhenPlanningMidweek() {
+        let scope = WeekPlanningScope(profile: monFriProfile())
+        let days = [
+            day(.monday, "2026-07-20", recipe: nil, isPast: true),
+            day(.tuesday, "2026-07-21", recipe: nil, isPast: true),
+            day(.wednesday, "2026-07-22", recipe: nil),
+            day(.thursday, "2026-07-23", recipe: recipe()),
+            day(.friday, "2026-07-24", recipe: nil),
+        ]
+
+        let open = scope.openDays(in: days, coveredDates: [])
+
+        #expect(open.map(\.weekday) == [.wednesday, .friday])
+    }
+
     // MARK: - Missing profile fallback
 
     @Test func missingProfileFallsBackToMonFri() {
@@ -165,7 +180,8 @@ struct WeekPlanningScopeTests {
         _ weekday: Weekday,
         _ date: String,
         recipe: WeekSummaryRecipe?,
-        isSkipped: Bool = false
+        isSkipped: Bool = false,
+        isPast: Bool = false
     ) -> WeekDayRowViewModel {
         WeekDayRowViewModel(
             id: date,
@@ -176,7 +192,7 @@ struct WeekPlanningScopeTests {
             mealTitle: recipe?.title ?? "",
             detail: "",
             isToday: false,
-            isPast: false,
+            isPast: isPast,
             isEmpty: recipe == nil && !isSkipped,
             isLocked: false,
             isSkipped: isSkipped,

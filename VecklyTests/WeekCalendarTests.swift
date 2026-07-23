@@ -27,6 +27,17 @@ struct WeekCalendarTests {
         #expect(WeekCalendar.addWeeks(to: "2026-06-08", offset: 0) == "2026-06-08")
     }
 
+    @Test func localDayComparisonsDoNotShiftDateStringsWestOfUTC() {
+        var losAngeles = Calendar(identifier: .gregorian)
+        losAngeles.firstWeekday = 2
+        losAngeles.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        let today = ISO8601DateFormatter().date(from: "2026-07-22T12:00:00Z")!
+
+        #expect(WeekCalendar.isToday(yyyyMmDd: "2026-07-22", today: today, calendar: losAngeles))
+        #expect(!WeekCalendar.isPast(yyyyMmDd: "2026-07-22", today: today, calendar: losAngeles))
+        #expect(WeekCalendar.isPast(yyyyMmDd: "2026-07-21", today: today, calendar: losAngeles))
+    }
+
     @Test func weekNumberMatchesISO8601Numbering() {
         // A well-known mid-year week with no ambiguity.
         #expect(WeekCalendar.weekNumber(for: "2026-06-08") == 24)

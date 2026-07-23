@@ -780,9 +780,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
 
 struct WeekViewModelMapper {
     static func map(summary: WeekSummary, today: Date, calendar: Calendar = WeekCalendar.calendar) -> (days: [WeekDayRowViewModel], today: WeekDayRowViewModel?) {
-        let localCal = Calendar.current
         let rows = summary.days.map { day in
-            row(from: day, today: today, utcCalendar: calendar, localCal: localCal)
+            row(from: day, today: today, utcCalendar: calendar)
         }
         return (rows, rows.first(where: { $0.isToday }))
     }
@@ -807,15 +806,9 @@ struct WeekViewModelMapper {
         }
     }
 
-    private static func row(from day: WeekSummaryDay, today: Date, utcCalendar: Calendar, localCal: Calendar) -> WeekDayRowViewModel {
-        let dayDate = WeekCalendar.date(from: day.date)
-        // Use the device's local calendar so midnight boundaries follow the
-        // user's timezone, not UTC.
-        let isToday = dayDate.map { localCal.isDate($0, inSameDayAs: today) } ?? false
-        let isPast = dayDate.map { date in
-            !localCal.isDate(date, inSameDayAs: today)
-                && date < localCal.startOfDay(for: today)
-        } ?? false
+    private static func row(from day: WeekSummaryDay, today: Date, utcCalendar: Calendar) -> WeekDayRowViewModel {
+        let isToday = WeekCalendar.isToday(yyyyMmDd: day.date, today: today)
+        let isPast = WeekCalendar.isPast(yyyyMmDd: day.date, today: today)
         let recipe = day.recipe
         let isSkipped = day.state == .skipped
         return WeekDayRowViewModel(
