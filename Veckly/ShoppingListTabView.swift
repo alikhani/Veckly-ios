@@ -116,7 +116,6 @@ struct ShoppingListTabView: View {
                                     .font(.callout.weight(.semibold))
                                     .frame(minWidth: 20, minHeight: 24, alignment: .center)
                             }
-                            .frame(minHeight: 44, alignment: .center)
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
