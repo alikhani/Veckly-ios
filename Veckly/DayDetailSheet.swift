@@ -264,9 +264,14 @@ struct DayDetailContent: View {
                 )
             }
         } label: {
-            Label(signal.labelKey, systemImage: signal.systemImage)
-                .font(.footnote.weight(.semibold))
-                .frame(maxWidth: .infinity)
+            HStack(alignment: .center, spacing: 8) {
+                Image(systemName: signal.systemImage)
+                    .frame(width: 20)
+                Text(signal.labelKey)
+                    .multilineTextAlignment(.center)
+            }
+            .font(.footnote.weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
         }
         .buttonStyle(.bordered)
         .tint(isSelected ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
