@@ -48,7 +48,17 @@ final class RecipeStore {
         defer { isLoading = false }
 
         do {
-            let fetched = try await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: true)
+            var fetched = try await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: true)
+            if fetched.needsIngredientCategoryRepair {
+                do {
+                    let repair = try await apiClient.repairIngredientCategories(householdID: householdID)
+                    if repair.recipesUpdated > 0 {
+                        fetched = try await apiClient.listHouseholdRecipes(householdID: householdID, includePublic: true)
+                    }
+                } catch {
+                    // Repair is a compatibility cleanup for legacy imports; recipe loading should still succeed.
+                }
+            }
             recipes = fetched
             fullRecipeCache = Dictionary(uniqueKeysWithValues: fetched.map { ($0.id, $0) })
             recipesHouseholdID = householdID
@@ -263,12 +273,29 @@ protocol RecipeStoreAPIClient {
     func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe
     func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe
     func archiveRecipe(householdID: String, recipeID: String) async throws -> FullRecipe
+    func repairIngredientCategories(householdID: String) async throws -> RecipeCategoryRepairResult
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft
     func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft
 }
 
 extension VecklyAPIClient: RecipeStoreAPIClient {}
+
+struct RecipeCategoryRepairResult: Equatable {
+    let recipesUpdated: Int
+    let ingredientsUpdated: Int
+}
+
+private extension Array where Element == FullRecipe {
+    var needsIngredientCategoryRepair: Bool {
+        contains { recipe in
+            recipe.ingredients.contains { ingredient in
+                let category = ingredient.category?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return category == nil || category?.isEmpty == true || category == "other"
+            }
+        }
+    }
+}
 
 extension PersistedRecipe {
     init(fullRecipe: FullRecipe) {

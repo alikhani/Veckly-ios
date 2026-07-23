@@ -2910,6 +2910,72 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// Repair missing or invalid ingredient categories in household-owned recipes
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/recipes/repair-ingredient-categories`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)`.
+    internal func repairIngredientCategories(_ input: Operations.repairIngredientCategories.Input) async throws -> Operations.repairIngredientCategories.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.repairIngredientCategories.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/recipes/repair-ingredient-categories",
+                    parameters: [
+                        input.path.householdId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.repairIngredientCategories.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.RepairIngredientCategoriesResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// Search public community recipes
     ///
     /// - Remark: HTTP `GET /recipes/public`.

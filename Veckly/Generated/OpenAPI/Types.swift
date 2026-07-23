@@ -216,6 +216,11 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /households/{householdId}/recipes/{recipeId}`.
     /// - Remark: Generated from `#/paths//households/{householdId}/recipes/{recipeId}/patch(updateRecipe)`.
     func updateRecipe(_ input: Operations.updateRecipe.Input) async throws -> Operations.updateRecipe.Output
+    /// Repair missing or invalid ingredient categories in household-owned recipes
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/recipes/repair-ingredient-categories`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)`.
+    func repairIngredientCategories(_ input: Operations.repairIngredientCategories.Input) async throws -> Operations.repairIngredientCategories.Output
     /// Search public community recipes
     ///
     /// - Remark: HTTP `GET /recipes/public`.
@@ -846,6 +851,19 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// Repair missing or invalid ingredient categories in household-owned recipes
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/recipes/repair-ingredient-categories`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)`.
+    internal func repairIngredientCategories(
+        path: Operations.repairIngredientCategories.Input.Path,
+        headers: Operations.repairIngredientCategories.Input.Headers = .init()
+    ) async throws -> Operations.repairIngredientCategories.Output {
+        try await repairIngredientCategories(Operations.repairIngredientCategories.Input(
+            path: path,
+            headers: headers
         ))
     }
     /// Search public community recipes
@@ -5262,6 +5280,29 @@ internal enum Components {
                 case sourceUrl
                 case isPublic
                 case isArchived
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RepairIngredientCategoriesResponse`.
+        internal struct RepairIngredientCategoriesResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RepairIngredientCategoriesResponse/recipesUpdated`.
+            internal var recipesUpdated: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/RepairIngredientCategoriesResponse/ingredientsUpdated`.
+            internal var ingredientsUpdated: Swift.Int
+            /// Creates a new `RepairIngredientCategoriesResponse`.
+            ///
+            /// - Parameters:
+            ///   - recipesUpdated:
+            ///   - ingredientsUpdated:
+            internal init(
+                recipesUpdated: Swift.Int,
+                ingredientsUpdated: Swift.Int
+            ) {
+                self.recipesUpdated = recipesUpdated
+                self.ingredientsUpdated = ingredientsUpdated
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case recipesUpdated
+                case ingredientsUpdated
             }
         }
         /// - Remark: Generated from `#/components/schemas/RecipesEnvelope`.
@@ -14776,6 +14817,204 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.updateRecipe.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Repair missing or invalid ingredient categories in household-owned recipes
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/recipes/repair-ingredient-categories`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)`.
+    internal enum repairIngredientCategories {
+        internal static let id: Swift.String = "repairIngredientCategories"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/recipes/repair-ingredient-categories/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/recipes/repair-ingredient-categories/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.repairIngredientCategories.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/recipes/repair-ingredient-categories/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.repairIngredientCategories.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.repairIngredientCategories.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.repairIngredientCategories.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.repairIngredientCategories.Input.Path,
+                headers: Operations.repairIngredientCategories.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/recipes/repair-ingredient-categories/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/recipes/repair-ingredient-categories/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RepairIngredientCategoriesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.RepairIngredientCategoriesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.repairIngredientCategories.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.repairIngredientCategories.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Ingredient categories repaired
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.repairIngredientCategories.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.repairIngredientCategories.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.repairIngredientCategories.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.repairIngredientCategories.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.repairIngredientCategories.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/repair-ingredient-categories/post(repairIngredientCategories)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.repairIngredientCategories.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):

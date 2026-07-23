@@ -425,6 +425,23 @@ struct VecklyAPIClient {
         }
     }
 
+    func repairIngredientCategories(householdID: String) async throws -> RecipeCategoryRepairResult {
+        let output = try await _client.repairIngredientCategories(
+            path: .init(householdId: householdID)
+        )
+        switch output {
+        case let .ok(response):
+            let body = try response.body.json
+            return RecipeCategoryRepairResult(
+                recipesUpdated: body.recipesUpdated,
+                ingredientsUpdated: body.ingredientsUpdated
+            )
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient] = [], existingSteps: [String] = []) async throws -> RecipeDraft {
         let apiIngredients: [Components.Schemas.RecipeFillInRequest.existingIngredientsPayloadPayload]? = existingIngredients.isEmpty ? nil :
             existingIngredients.map { .init(name: $0.item, amount: $0.amount.isEmpty ? nil : $0.amount, unit: $0.unit.isEmpty ? nil : $0.unit) }
@@ -929,10 +946,15 @@ enum RecipeImportFailure: Equatable {
     case captionRequired
 }
 
-private extension RecipeDraft {
+extension RecipeDraft {
     var apiIngredients: [Components.Schemas.RecipeIngredient] {
         ingredients.filter { !$0.item.isEmpty }.map {
-            .init(item: $0.item, amount: $0.amount.isEmpty ? nil : $0.amount, unit: $0.unit.isEmpty ? nil : $0.unit)
+            .init(
+                item: $0.item,
+                amount: $0.amount.isEmpty ? nil : $0.amount,
+                unit: $0.unit.isEmpty ? nil : $0.unit,
+                category: $0.category
+            )
         }
     }
     var apiSteps: [Components.Schemas.RecipeStep] { steps.filter { !$0.text.isEmpty }.map { .init(text: $0.text) } }
@@ -953,14 +975,21 @@ private extension RecipeDraft {
     }
 }
 
-private extension RecipeDraft {
+extension RecipeDraft {
     init(fillIn r: Components.Schemas.RecipeFillInResult, originalTitle: String) throws {
         self.init(
             title: r.title.isEmpty ? originalTitle : r.title,
             description: r.notes ?? "",
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
-            ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: formatAmount($0.amount), unit: $0.unit) },
+            ingredients: r.ingredients.map {
+                DraftIngredient(
+                    item: $0.name,
+                    amount: formatAmount($0.amount),
+                    unit: $0.unit,
+                    category: $0.category?.rawValue
+                )
+            },
             steps: r.steps.map { StepItem($0) }
         )
     }
@@ -969,7 +998,14 @@ private extension RecipeDraft {
             title: r.title,
             servings: 4,
             prepTimeMinutes: r.prepTimeMinutes,
-            ingredients: r.ingredients.map { DraftIngredient(item: $0.name, amount: $0.amount.map { formatAmount($0) } ?? "", unit: $0.unit ?? "") },
+            ingredients: r.ingredients.map {
+                DraftIngredient(
+                    item: $0.name,
+                    amount: $0.amount.map { formatAmount($0) } ?? "",
+                    unit: $0.unit ?? "",
+                    category: $0.category
+                )
+            },
             steps: (r.steps ?? []).map { StepItem($0) },
             sourceUrl: r.sourceUrl,
             source: source

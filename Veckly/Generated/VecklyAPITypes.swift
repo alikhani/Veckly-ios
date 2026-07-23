@@ -534,6 +534,7 @@ struct DraftIngredient: Identifiable, Equatable {
     var item: String = ""
     var amount: String = ""
     var unit: String = ""
+    var category: String? = nil
 }
 
 struct StepItem: Identifiable, Equatable {
@@ -568,7 +569,9 @@ struct RecipeDraft: Equatable {
         servings = recipe.servings
         prepTimeMinutes = recipe.prepTimeMinutes
         cookTimeMinutes = recipe.cookTimeMinutes
-        ingredients = recipe.ingredients.map { DraftIngredient(item: $0.item, amount: $0.amount ?? "", unit: $0.unit ?? "") }
+        ingredients = recipe.ingredients.map {
+            DraftIngredient(item: $0.item, amount: $0.amount ?? "", unit: $0.unit ?? "", category: $0.category)
+        }
         steps = recipe.steps.map { StepItem($0.text) }
         tags = recipe.tags
         sourceUrl = nil

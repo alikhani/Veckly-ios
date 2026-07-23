@@ -488,6 +488,9 @@ private actor FakeAppRefreshAPIClient:
     func createRecipe(householdID: String, draft: RecipeDraft) async throws -> FullRecipe { throw APIError.notFound }
     func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe { throw APIError.notFound }
     func archiveRecipe(householdID: String, recipeID: String) async throws -> FullRecipe { throw APIError.notFound }
+    func repairIngredientCategories(householdID: String) async throws -> RecipeCategoryRepairResult {
+        RecipeCategoryRepairResult(recipesUpdated: 0, ingredientsUpdated: 0)
+    }
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft { throw APIError.notFound }
     func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft { throw APIError.notFound }
     func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft { throw APIError.notFound }

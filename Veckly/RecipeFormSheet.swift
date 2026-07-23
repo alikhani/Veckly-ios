@@ -415,7 +415,8 @@ struct RecipeFormSheet: View {
                 DraftIngredient(
                     item: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
                     amount: $0.amount.trimmingCharacters(in: .whitespacesAndNewlines),
-                    unit: $0.unit.trimmingCharacters(in: .whitespacesAndNewlines)
+                    unit: $0.unit.trimmingCharacters(in: .whitespacesAndNewlines),
+                    category: nil
                 )
             }
         draftToSave.steps = draft.steps

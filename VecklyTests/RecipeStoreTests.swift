@@ -110,6 +110,77 @@ struct RecipeStoreTests {
 
         #expect(store.recipes.isEmpty)
     }
+
+    @Test func importedAndAIFilledIngredientCategoriesSurviveSavingPayloadMapping() throws {
+        let imported = Components.Schemas.ImportedRecipe(
+            ingredients: [
+                .init(amount: 2, category: "produce", name: "Carrots", unit: "pcs")
+            ],
+            tags: [],
+            title: "Soup"
+        )
+        let importedDraft = try RecipeDraft(imported: imported, source: .urlImport)
+
+        let filled = Components.Schemas.RecipeFillInResult(
+            title: "Pasta",
+            prepTimeMinutes: 20,
+            ingredients: [
+                .init(name: "Parmesan", amount: 100, unit: "g", category: .dairy)
+            ],
+            steps: ["Cook"]
+        )
+        let filledDraft = try RecipeDraft(fillIn: filled, originalTitle: "Pasta")
+
+        #expect(importedDraft.ingredients.first?.category == "produce")
+        #expect(importedDraft.apiIngredients.first?.category == "produce")
+        #expect(filledDraft.ingredients.first?.category == "dairy")
+        #expect(filledDraft.apiIngredients.first?.category == "dairy")
+    }
+
+    @Test func loadingRecipesRepairsLegacyIngredientCategoriesAndReloads() async {
+        let apiClient = FakeRecipeStoreAPIClient()
+        apiClient.recipesByHousehold[TestRecipeHouseholds.first] = [
+            TestRecipes.recipe(
+                id: "44444444-4444-4444-4444-444444444444",
+                title: "Carrots",
+                ingredients: [RecipeIngredient(item: "Carrot", amount: "2", unit: nil, category: "Other")]
+            )
+        ]
+        apiClient.repairResult = RecipeCategoryRepairResult(recipesUpdated: 1, ingredientsUpdated: 1)
+        apiClient.recipesAfterRepair[TestRecipeHouseholds.first] = [
+            TestRecipes.recipe(
+                id: "44444444-4444-4444-4444-444444444444",
+                title: "Carrots",
+                ingredients: [RecipeIngredient(item: "Carrot", amount: "2", unit: nil, category: "produce")]
+            )
+        ]
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
+
+        await store.loadRecipes(householdID: TestRecipeHouseholds.first, force: true)
+
+        #expect(apiClient.repairCount == 1)
+        #expect(apiClient.listFetchCount == 2)
+        #expect(store.recipes.first?.ingredients.first?.category == "produce")
+    }
+
+    @Test func repairFailureDoesNotBlockRecipeLoading() async {
+        let apiClient = FakeRecipeStoreAPIClient()
+        apiClient.shouldFailRepair = true
+        apiClient.recipesByHousehold[TestRecipeHouseholds.first] = [
+            TestRecipes.recipe(
+                id: "55555555-5555-5555-5555-555555555555",
+                title: "Legacy",
+                ingredients: [RecipeIngredient(item: "Carrot", amount: "2", unit: nil, category: "Other")]
+            )
+        ]
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
+
+        await store.loadRecipes(householdID: TestRecipeHouseholds.first, force: true)
+
+        #expect(apiClient.repairCount == 1)
+        #expect(store.errorMessage == nil)
+        #expect(store.recipes.first?.title == "Legacy")
+    }
 }
 
 private enum TestRecipeHouseholds {
@@ -130,7 +201,11 @@ private enum TestRecipes {
         steps: [StepItem("Boil pasta")]
     )
 
-    static func recipe(id: String, title: String) -> FullRecipe {
+    static func recipe(
+        id: String,
+        title: String,
+        ingredients: [RecipeIngredient] = [RecipeIngredient(item: "Carrot", amount: "2", unit: nil, category: nil)]
+    ) -> FullRecipe {
         FullRecipe(
             id: id,
             title: title,
@@ -139,7 +214,7 @@ private enum TestRecipes {
             prepTimeMinutes: 10,
             cookTimeMinutes: 20,
             tags: ["quick"],
-            ingredients: [RecipeIngredient(item: "Carrot", amount: "2", unit: nil, category: nil)],
+            ingredients: ingredients,
             steps: [RecipeStep(text: "Cook it")],
             userVote: nil
         )
@@ -177,7 +252,11 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
     var shouldFailArchive = false
     var listFetchCount = 0
     var recipeFetchCount = 0
-    private var recipesByHousehold = [
+    var shouldFailRepair = false
+    var repairCount = 0
+    var repairResult = RecipeCategoryRepairResult(recipesUpdated: 0, ingredientsUpdated: 0)
+    var recipesAfterRepair: [String: [FullRecipe]] = [:]
+    var recipesByHousehold = [
         TestRecipeHouseholds.first: [TestRecipes.firstRecipe],
         TestRecipeHouseholds.second: [TestRecipes.secondRecipe]
     ]
@@ -220,6 +299,15 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
         }
         recipesByHousehold[householdID]?.removeAll { $0.id == recipeID }
         return recipe
+    }
+
+    func repairIngredientCategories(householdID: String) async throws -> RecipeCategoryRepairResult {
+        repairCount += 1
+        if shouldFailRepair { throw TestRecipeError.failed }
+        if let repaired = recipesAfterRepair[householdID] {
+            recipesByHousehold[householdID] = repaired
+        }
+        return repairResult
     }
 
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
