@@ -71,6 +71,9 @@ struct ShoppingListTabView: View {
                             Text(contextLine)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .layoutPriority(-1)
                         }
                         Spacer()
                         if !shoppingReminderItems.isEmpty {
@@ -106,11 +109,18 @@ struct ShoppingListTabView: View {
                         Button {
                             showCustomItemSheet = true
                         } label: {
-                            Label(addOwnItemButtonLabel, systemImage: "plus")
-                                .font(.callout.weight(.semibold))
+                            ViewThatFits(in: .horizontal) {
+                                addOwnItemButtonContent(addOwnItemButtonLabel)
+                                addOwnItemButtonContent(L10n.string("shopping.customItem.add"))
+                                Image(systemName: "plus")
+                                    .font(.callout.weight(.semibold))
+                                    .frame(minWidth: 20, minHeight: 24, alignment: .center)
+                            }
+                            .frame(minHeight: 44, alignment: .center)
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+                        .layoutPriority(1)
                     }
 
                     Text(L10n.string("shopping.title"))
@@ -320,6 +330,16 @@ struct ShoppingListTabView: View {
 
     private var addOwnItemButtonLabel: String {
         L10n.string("shopping.customItem.addButton")
+    }
+
+    private func addOwnItemButtonContent(_ title: String) -> some View {
+        HStack(alignment: .center, spacing: 8) {
+            Image(systemName: "plus")
+            Text(title)
+                .lineLimit(1)
+        }
+        .font(.callout.weight(.semibold))
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private var pendingSyncMessage: String {
