@@ -419,40 +419,36 @@ private struct OnboardingAvoidIngredientsView: View {
         let orderedDays = Weekday.allCases
             .filter { selectedDays.contains($0) }
             .map { HouseholdDaySelection(day: $0) }
-        do {
-            try await appModel.householdStore.saveProfile(
-                householdID: household.id,
-                adults: adults,
-                children: children,
-                priorities: Array(selectedPriorities),
-                avoidIngredients: avoidIngredients.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty },
-                selectedDays: orderedDays
-            )
-            await saveGoToDishIfNeeded(householdID: household.id)
+
+        let outcome = await OnboardingCompletion.run(
+            recipeStore: appModel.recipeStore,
+            householdStore: appModel.householdStore,
+            householdID: household.id,
+            adults: adults,
+            children: children,
+            priorities: Array(selectedPriorities),
+            avoidIngredients: avoidIngredients.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty },
+            selectedDays: orderedDays,
+            goToDishTitle: goToDishTitle
+        )
+
+        switch outcome {
+        case .success(let goToDishSaved):
             appModel.recordProductEvent(.onboardingCompleted, properties: [
                 "adults": .int(adults),
                 "children": .int(children),
                 "selectedDays": .int(selectedDays.count),
                 "priorities": .int(selectedPriorities.count),
                 "avoidIngredients": .int(avoidIngredients.count),
-                "goToDishSaved": .bool(!goToDishTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                "goToDishSaved": .bool(goToDishSaved)
             ])
             // Profile is now non-nil → needsOnboarding becomes false → cover dismisses automatically
             // No week generation here — user will choose to generate or add meals manually
-        } catch {
+        case .goToDishSaveFailed:
+            errorMessage = L10n.string("onboarding.goToDishSaveError")
+        case .profileSaveFailed:
             errorMessage = L10n.string("onboarding.saveError")
         }
-    }
-
-    private func saveGoToDishIfNeeded(householdID: String) async {
-        let title = goToDishTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !title.isEmpty else { return }
-
-        var draft = RecipeDraft(title: title)
-        if let filled = try? await appModel.recipeStore.fillIn(draft: draft) {
-            draft = filled
-        }
-        _ = try? await appModel.recipeStore.createRecipe(householdID: householdID, draft: draft)
     }
 }
 
