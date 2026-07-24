@@ -209,6 +209,7 @@ final class AppModel {
     /// userVote field on each recipe — so the vote UI is consistent whether
     /// the user opens the Recipes tab before or after FeedbackStore is loaded.
     func loadRecipesAndSeedFeedback(householdID: String) async {
+        guard !usesSeededCoreReader else { return }
         await recipeStore.loadRecipes(householdID: householdID)
         for recipe in recipeStore.recipes {
             if let voteString = recipe.userVote, let vote = MealVote(rawValue: voteString) {
