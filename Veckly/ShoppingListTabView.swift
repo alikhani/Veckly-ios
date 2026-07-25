@@ -117,13 +117,17 @@ struct ShoppingListTabView: View {
                                     .frame(minWidth: 20, minHeight: 24, alignment: .center)
                             }
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+                        // Bordered, not `.borderedProminent` (Fas D): checking
+                        // items off is the screen's actual job, so adding a
+                        // new item shouldn't outweigh it visually — same
+                        // secondary vocabulary as the share button next to it.
+                        .buttonStyle(.bordered)
+                        .tint(VecklyDesign.Colors.inkMid)
                         .layoutPriority(1)
                     }
 
                     Text(L10n.string("shopping.title"))
-                        .font(VecklyDesign.Typography.displayHeading(size: 34))
+                        .font(VecklyDesign.Typography.displayHeading(size: 30))
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     if appModel.shoppingListStore.hasPendingSync {
@@ -190,7 +194,11 @@ struct ShoppingListTabView: View {
                         .accessibilityLabel(L10n.format("accessibility.itemsChecked", checkedItemCount, totalItemCount))
                     }
 
-                    if let shoppingHandoffState {
+                    // Fas D: the `.ready` card used to show permanently and
+                    // just repeat the progress row above in prose ("3 of 7
+                    // checked"). Only the `.completed` handoff moment earns
+                    // its own card now — the list itself is the workspace.
+                    if let shoppingHandoffState, shoppingHandoffState.isCompleted {
                         ShoppingHandoffStatusCard(state: shoppingHandoffState)
                     }
 
