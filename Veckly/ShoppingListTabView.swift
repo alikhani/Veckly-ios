@@ -4,6 +4,7 @@ struct ShoppingListTabView: View {
     var onGoToWeekTab: (() -> Void)? = nil
 
     @Environment(AppModel.self) private var appModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showCustomItemSheet = false
     @State private var clearedKeys: [String] = []
     @State private var undoTask: Task<Void, Never>?
@@ -39,6 +40,61 @@ struct ShoppingListTabView: View {
         return parts.joined(separator: " · ")
     }
 
+    @ViewBuilder
+    private var shareMenu: some View {
+        if !shoppingReminderItems.isEmpty {
+            Menu {
+                Button {
+                    Task { await exportShoppingListToReminders() }
+                } label: {
+                    Label(remindersExportButtonLabel, systemImage: "checklist")
+                }
+                .disabled(isExportingReminders)
+
+                if let shoppingShareText {
+                    ShareLink(item: shoppingShareText) {
+                        Label(L10n.string("shopping.share.textFallback"), systemImage: "square.and.arrow.up")
+                    }
+                }
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.callout.weight(.semibold))
+                    // No explicit frame here: sizing purely from
+                    // the font (matching "Lägg till vara"'s Label
+                    // font below) is what makes both buttons come
+                    // out the same height under the same button
+                    // style. A fixed frame on just this icon used
+                    // to override that and make the share button
+                    // visibly taller than its neighbor.
+                    .frame(minWidth: 20)
+            }
+            .buttonStyle(.bordered)
+            .tint(VecklyDesign.Colors.inkMid)
+            .accessibilityLabel(L10n.string("shopping.share.action"))
+        }
+    }
+
+    private var addItemButton: some View {
+        Button {
+            showCustomItemSheet = true
+        } label: {
+            ViewThatFits(in: .horizontal) {
+                addOwnItemButtonContent(addOwnItemButtonLabel)
+                addOwnItemButtonContent(L10n.string("shopping.customItem.add"))
+                Image(systemName: "plus")
+                    .font(.callout.weight(.semibold))
+                    .frame(minWidth: 20, minHeight: 24, alignment: .center)
+            }
+        }
+        // Bordered, not `.borderedProminent` (Fas D): checking
+        // items off is the screen's actual job, so adding a
+        // new item shouldn't outweigh it visually — same
+        // secondary vocabulary as the share button next to it.
+        .buttonStyle(.bordered)
+        .tint(VecklyDesign.Colors.inkMid)
+        .layoutPriority(1)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -66,64 +122,39 @@ struct ShoppingListTabView: View {
 
                 // Header block
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .center, spacing: 12) {
+                    // Fas F: at accessibility Dynamic Type sizes the share/add
+                    // buttons grow enough to squeeze `weekContextLine` down to
+                    // an unreadable sliver (`minimumScaleFactor` alone can't
+                    // save it) — verified with a screenshot at
+                    // `.accessibilityExtraExtraExtraLarge`. Giving the context
+                    // line its own row at those sizes, instead of fighting the
+                    // buttons for space in one line, fixes it without
+                    // affecting the normal-size layout at all.
+                    if dynamicTypeSize.isAccessibilitySize {
                         if let contextLine = weekContextLine {
                             Text(contextLine)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                                .layoutPriority(-1)
                         }
-                        Spacer()
-                        if !shoppingReminderItems.isEmpty {
-                            Menu {
-                                Button {
-                                    Task { await exportShoppingListToReminders() }
-                                } label: {
-                                    Label(remindersExportButtonLabel, systemImage: "checklist")
-                                }
-                                .disabled(isExportingReminders)
-
-                                if let shoppingShareText {
-                                    ShareLink(item: shoppingShareText) {
-                                        Label(L10n.string("shopping.share.textFallback"), systemImage: "square.and.arrow.up")
-                                    }
-                                }
-                            } label: {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.callout.weight(.semibold))
-                                    // No explicit frame here: sizing purely from
-                                    // the font (matching "Lägg till vara"'s Label
-                                    // font below) is what makes both buttons come
-                                    // out the same height under the same button
-                                    // style. A fixed frame on just this icon used
-                                    // to override that and make the share button
-                                    // visibly taller than its neighbor.
-                                    .frame(minWidth: 20)
+                        HStack(spacing: 12) {
+                            Spacer(minLength: 0)
+                            shareMenu
+                            addItemButton
+                        }
+                    } else {
+                        HStack(alignment: .center, spacing: 12) {
+                            if let contextLine = weekContextLine {
+                                Text(contextLine)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .layoutPriority(-1)
                             }
-                            .buttonStyle(.bordered)
-                            .tint(VecklyDesign.Colors.inkMid)
-                            .accessibilityLabel(L10n.string("shopping.share.action"))
+                            Spacer()
+                            shareMenu
+                            addItemButton
                         }
-                        Button {
-                            showCustomItemSheet = true
-                        } label: {
-                            ViewThatFits(in: .horizontal) {
-                                addOwnItemButtonContent(addOwnItemButtonLabel)
-                                addOwnItemButtonContent(L10n.string("shopping.customItem.add"))
-                                Image(systemName: "plus")
-                                    .font(.callout.weight(.semibold))
-                                    .frame(minWidth: 20, minHeight: 24, alignment: .center)
-                            }
-                        }
-                        // Bordered, not `.borderedProminent` (Fas D): checking
-                        // items off is the screen's actual job, so adding a
-                        // new item shouldn't outweigh it visually — same
-                        // secondary vocabulary as the share button next to it.
-                        .buttonStyle(.bordered)
-                        .tint(VecklyDesign.Colors.inkMid)
-                        .layoutPriority(1)
                     }
 
                     Text(L10n.string("shopping.title"))
