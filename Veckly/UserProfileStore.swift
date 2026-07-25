@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class UserProfileStore {
     private let apiClient: any UserProfileStoreAPIClient
+    private var hasLoaded = false
 
     private(set) var givenName: String?
     private(set) var familyName: String?
@@ -17,7 +18,18 @@ final class UserProfileStore {
         self.apiClient = apiClient
     }
 
+    /// Cheap, cache-once-per-session prefetch — used by the background
+    /// prefetch in `AppRefreshCoordinator` and as a fallback if the user
+    /// opens Household before that prefetch resolves. Screens that need a
+    /// guaranteed-fresh value (editing the display name) must call `load()`
+    /// directly instead.
+    func loadIfNeeded() async {
+        guard !hasLoaded else { return }
+        await load()
+    }
+
     func load() async {
+        hasLoaded = true
         isLoading = true
         defer { isLoading = false }
         do {
@@ -47,6 +59,7 @@ final class UserProfileStore {
         familyName = nil
         isLoading = false
         mutationError = nil
+        hasLoaded = false
     }
 }
 

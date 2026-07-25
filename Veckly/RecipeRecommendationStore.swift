@@ -22,15 +22,14 @@ extension VecklyAPIClient: RecipeRecommendationAPIClient {}
 @Observable
 final class RecipeRecommendationStore {
     private let apiClient: any RecipeRecommendationAPIClient
-    private var recommendationsByHousehold: [String: [MealRecommendation]] = [:]
-    private var loadingHouseholdIDs: Set<String> = []
+    private let cache = PerHouseholdCache<[MealRecommendation]>()
 
     init(apiClient: any RecipeRecommendationAPIClient) {
         self.apiClient = apiClient
     }
 
     func recommendations(for householdID: String) -> [MealRecommendation] {
-        recommendationsByHousehold[householdID] ?? []
+        cache.value(for: householdID) ?? []
     }
 
     /// Silent-fallback by design, per the plan doc ("Fallback: nuvarande
@@ -45,32 +44,33 @@ final class RecipeRecommendationStore {
         feedbackVotes: [String: MealVote],
         recipes: [FullRecipe]
     ) async {
-        guard recommendationsByHousehold[householdID] == nil, !loadingHouseholdIDs.contains(householdID) else { return }
+        // Not ready to attempt yet — checked before the cache's own
+        // de-dup guard, and deliberately not cached, so a later call once
+        // recipes have loaded can still try.
         guard !recipes.isEmpty else { return }
-        loadingHouseholdIDs.insert(householdID)
-        defer { loadingHouseholdIDs.remove(householdID) }
 
-        let titlesByID = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0.title) })
-        let feedbackSummary = feedbackVotes.compactMap { mealID, vote -> MealRecommendationFeedbackItem? in
-            guard let title = titlesByID[mealID] else { return nil }
-            return MealRecommendationFeedbackItem(mealID: mealID, mealTitle: title, vote: vote)
-        }
-        let candidates = recipes.map { MealRecommendationCandidate(id: $0.id, title: $0.title) }
+        await cache.loadIfNeeded(householdID: householdID) {
+            let titlesByID = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0.title) })
+            let feedbackSummary = feedbackVotes.compactMap { mealID, vote -> MealRecommendationFeedbackItem? in
+                guard let title = titlesByID[mealID] else { return nil }
+                return MealRecommendationFeedbackItem(mealID: mealID, mealTitle: title, vote: vote)
+            }
+            let candidates = recipes.map { MealRecommendationCandidate(id: $0.id, title: $0.title) }
 
-        do {
-            recommendationsByHousehold[householdID] = try await apiClient.recommendMeals(
-                householdID: householdID,
-                householdProfile: householdProfile,
-                feedbackSummary: feedbackSummary,
-                candidateMeals: candidates
-            )
-        } catch {
-            recommendationsByHousehold[householdID] = []
+            do {
+                return try await apiClient.recommendMeals(
+                    householdID: householdID,
+                    householdProfile: householdProfile,
+                    feedbackSummary: feedbackSummary,
+                    candidateMeals: candidates
+                )
+            } catch {
+                return []
+            }
         }
     }
 
     func reset() {
-        recommendationsByHousehold = [:]
-        loadingHouseholdIDs = []
+        cache.reset()
     }
 }

@@ -63,7 +63,9 @@ final class AppModel {
             feedbackStore: feedbackStore,
             householdMealSignalStore: householdMealSignalStore,
             recipeStore: recipeStore,
-            recipeRecommendationStore: recipeRecommendationStore
+            recipeRecommendationStore: recipeRecommendationStore,
+            familyCookbookStore: familyCookbookStore,
+            userProfileStore: userProfileStore
         )
 
         if usesSeededCoreReader {

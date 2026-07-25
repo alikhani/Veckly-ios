@@ -62,7 +62,7 @@ struct HouseholdTabView: View {
         // mode.
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard !appModel.usesSeededCoreReader else { return }
-            await appModel.userProfileStore.load()
+            await appModel.userProfileStore.loadIfNeeded()
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard !appModel.usesSeededCoreReader, let householdID = appModel.householdStore.activeHousehold?.id else { return }

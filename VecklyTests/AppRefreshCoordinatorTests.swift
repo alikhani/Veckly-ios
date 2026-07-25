@@ -36,6 +36,24 @@ struct AppRefreshCoordinatorTests {
         #expect(await apiClient.recommendMealsCount == 1)
     }
 
+    /// B2b: Household tab's own quiet, secondary data (profile name, family
+    /// cookbook) is prefetched the same fire-and-forget way as recipe
+    /// recommendations above, so it's usually already warm by the time the
+    /// user actually opens the Household tab.
+    @Test func coreReaderRefreshPrefetchesHouseholdSecondaryDataInTheBackground() async {
+        let apiClient = FakeAppRefreshAPIClient()
+        let (coordinator, familyCookbookStore, userProfileStore) = TestCoordinatorFactory.makeWithSecondaryStores(apiClient: apiClient)
+
+        await coordinator.refreshCoreReader(trigger: .coldLaunch)
+        await apiClient.waitUntilFamilyCookbookCalled()
+        await apiClient.waitUntilGetMyProfileCalled()
+
+        #expect(await apiClient.familyCookbookCount == 1)
+        #expect(await apiClient.getMyProfileCount == 1)
+        #expect(familyCookbookStore.cookbook(for: TestAppRefreshFixtures.household.id) != nil)
+        #expect(userProfileStore.givenName == nil)
+    }
+
     /// The exact Fas 7 bug: `RootView`'s cold-launch bootstrap and
     /// `WeekTabView`'s own `.task(id:)` load used to both fire moments
     /// apart, each triggering a real `weekSummary` fetch for the same
@@ -127,7 +145,7 @@ struct AppRefreshCoordinatorTests {
     /// no-op under seeded UI-test mode, regardless of trigger.
     @Test func seededCoreReaderModeMakesNoNetworkCalls() async {
         let apiClient = FakeAppRefreshAPIClient()
-        let coordinator = TestCoordinatorFactory.make(apiClient: apiClient, usesSeededCoreReader: true)
+        let (coordinator, _, _) = TestCoordinatorFactory.makeWithSecondaryStores(apiClient: apiClient, usesSeededCoreReader: true)
 
         await coordinator.refreshCoreReader(trigger: .coldLaunch)
         await coordinator.refreshActiveHouseholdData(household: TestAppRefreshFixtures.household, trigger: .householdChanged)
@@ -140,6 +158,8 @@ struct AppRefreshCoordinatorTests {
         #expect(await apiClient.mealFeedbackCount == 0)
         #expect(await apiClient.householdMealSignalsCount == 0)
         #expect(await apiClient.listHouseholdRecipesCount == 0)
+        #expect(await apiClient.familyCookbookCount == 0)
+        #expect(await apiClient.getMyProfileCount == 0)
     }
 
     /// `refreshWeek` shares its de-dup/freshness key with the `week`
@@ -243,6 +263,37 @@ private enum TestCoordinatorFactory {
         )
     }
 
+    /// Like `make`, but also wires in `FamilyCookbookStore`/`UserProfileStore`
+    /// (B2b's background prefetch) and hands both back for assertions.
+    static func makeWithSecondaryStores(
+        apiClient: FakeAppRefreshAPIClient,
+        usesSeededCoreReader: Bool = false
+    ) -> (AppRefreshCoordinator, FamilyCookbookStore, UserProfileStore) {
+        let householdStore = HouseholdStore(apiClient: apiClient, selectionStore: FakeAppRefreshSelectionStore())
+        let weekStore = WeekStore(apiClient: apiClient)
+        let shoppingListStore = ShoppingListStore(apiClient: apiClient)
+        let prepBatchStore = PrepBatchStore(apiClient: apiClient, cacheStore: FakeAppRefreshPrepBatchCache())
+        let feedbackStore = FeedbackStore(apiClient: apiClient)
+        let householdMealSignalStore = HouseholdMealSignalStore(apiClient: apiClient)
+        let recipeStore = RecipeStore(apiClient: apiClient, cacheStore: FakeAppRefreshRecipeCache())
+        let familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
+        let userProfileStore = UserProfileStore(apiClient: apiClient)
+
+        let coordinator = AppRefreshCoordinator(
+            usesSeededCoreReader: usesSeededCoreReader,
+            householdStore: householdStore,
+            weekStore: weekStore,
+            shoppingListStore: shoppingListStore,
+            prepBatchStore: prepBatchStore,
+            feedbackStore: feedbackStore,
+            householdMealSignalStore: householdMealSignalStore,
+            recipeStore: recipeStore,
+            familyCookbookStore: familyCookbookStore,
+            userProfileStore: userProfileStore
+        )
+        return (coordinator, familyCookbookStore, userProfileStore)
+    }
+
     /// Like `make`, but also hands back the `WeekStore` instance the
     /// coordinator was built with — needed by tests that (like
     /// `WeekTabView.reloadViewedWeek`'s browsing branch) call `loadWeek`
@@ -310,7 +361,9 @@ private actor FakeAppRefreshAPIClient:
     FeedbackStoreAPIClient,
     HouseholdMealSignalStoreAPIClient,
     RecipeStoreAPIClient,
-    RecipeRecommendationAPIClient
+    RecipeRecommendationAPIClient,
+    FamilyCookbookAPIClient,
+    UserProfileStoreAPIClient
 {
     private(set) var bootstrapCount = 0
     private(set) var listHouseholdsCount = 0
@@ -515,5 +568,43 @@ private actor FakeAppRefreshAPIClient:
         recommendMealsContinuation?.resume()
         recommendMealsContinuation = nil
         return []
+    }
+
+    // MARK: FamilyCookbookAPIClient
+
+    private(set) var familyCookbookCount = 0
+    private var familyCookbookContinuation: CheckedContinuation<Void, Never>?
+
+    func waitUntilFamilyCookbookCalled() async {
+        if familyCookbookCount > 0 { return }
+        await withCheckedContinuation { familyCookbookContinuation = $0 }
+    }
+
+    func familyCookbook(householdID: String, weekStartDate: String) async throws -> FamilyCookbook {
+        familyCookbookCount += 1
+        familyCookbookContinuation?.resume()
+        familyCookbookContinuation = nil
+        return FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: [])
+    }
+
+    // MARK: UserProfileStoreAPIClient
+
+    private(set) var getMyProfileCount = 0
+    private var getMyProfileContinuation: CheckedContinuation<Void, Never>?
+
+    func waitUntilGetMyProfileCalled() async {
+        if getMyProfileCount > 0 { return }
+        await withCheckedContinuation { getMyProfileContinuation = $0 }
+    }
+
+    func getMyProfile() async throws -> UserProfile? {
+        getMyProfileCount += 1
+        getMyProfileContinuation?.resume()
+        getMyProfileContinuation = nil
+        return nil
+    }
+
+    func setMyName(givenName: String, familyName: String?) async throws -> UserProfile {
+        throw APIError.notFound
     }
 }

@@ -78,6 +78,15 @@ final class AppRefreshCoordinator {
     private let householdMealSignalStore: HouseholdMealSignalStore
     private let recipeStore: RecipeStore
     private let recipeRecommendationStore: RecipeRecommendationStore?
+    /// Household tab's own quiet, secondary data (B2b) — prefetched here in
+    /// the background for the same reason as `recipeRecommendationStore`
+    /// below: cheap calls (a name, a cookbook summary), so by the time the
+    /// user actually taps into Household it's usually already warm, without
+    /// adding to the Week tab's cold-launch critical path. Each store's own
+    /// cache/`loadIfNeeded` is the de-dup guard, so firing this on every
+    /// trigger is harmless.
+    private let familyCookbookStore: FamilyCookbookStore?
+    private let userProfileStore: UserProfileStore?
 
     private let freshnessWindow: TimeInterval
     private var inFlight: [Resource: Task<Void, Never>] = [:]
@@ -93,6 +102,8 @@ final class AppRefreshCoordinator {
         householdMealSignalStore: HouseholdMealSignalStore,
         recipeStore: RecipeStore,
         recipeRecommendationStore: RecipeRecommendationStore? = nil,
+        familyCookbookStore: FamilyCookbookStore? = nil,
+        userProfileStore: UserProfileStore? = nil,
         freshnessWindow: TimeInterval = 300
     ) {
         self.usesSeededCoreReader = usesSeededCoreReader
@@ -104,6 +115,8 @@ final class AppRefreshCoordinator {
         self.householdMealSignalStore = householdMealSignalStore
         self.recipeStore = recipeStore
         self.recipeRecommendationStore = recipeRecommendationStore
+        self.familyCookbookStore = familyCookbookStore
+        self.userProfileStore = userProfileStore
         self.freshnessWindow = freshnessWindow
     }
 
@@ -176,6 +189,17 @@ final class AppRefreshCoordinator {
                     recipes: recipesSnapshot
                 )
             }
+        }
+
+        // Same fire-and-forget shape as the recommendation prefetch above,
+        // for Household tab's own quiet, secondary data (B2b) — cheap
+        // enough (a name, a cookbook summary) that there's no need to wait
+        // for anything else in the bundle first.
+        if let familyCookbookStore {
+            Task { await familyCookbookStore.loadIfNeeded(householdID: household.id) }
+        }
+        if let userProfileStore {
+            Task { await userProfileStore.loadIfNeeded() }
         }
     }
 

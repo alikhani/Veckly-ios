@@ -15,38 +15,34 @@ extension VecklyAPIClient: FamilyCookbookAPIClient {}
 @Observable
 final class FamilyCookbookStore {
     private let apiClient: any FamilyCookbookAPIClient
-    private var cookbookByHousehold: [String: FamilyCookbook] = [:]
-    private var loadingHouseholdIDs: Set<String> = []
+    private let cache = PerHouseholdCache<FamilyCookbook>()
 
     init(apiClient: any FamilyCookbookAPIClient) {
         self.apiClient = apiClient
     }
 
     func cookbook(for householdID: String) -> FamilyCookbook? {
-        cookbookByHousehold[householdID]
+        cache.value(for: householdID)
     }
 
     func loadIfNeeded(householdID: String) async {
-        guard cookbookByHousehold[householdID] == nil, !loadingHouseholdIDs.contains(householdID) else { return }
-        loadingHouseholdIDs.insert(householdID)
-        defer { loadingHouseholdIDs.remove(householdID) }
-
-        do {
-            cookbookByHousehold[householdID] = try await apiClient.familyCookbook(
-                householdID: householdID,
-                weekStartDate: WeekCalendar.currentWeekStartDate()
-            )
-        } catch {
-            // Silent fallback — cache an empty cookbook (the panel already
-            // hides itself when `totalFamilyLikedCount == 0`) rather than
-            // leaving the entry unset, which would make `loadIfNeeded` retry
-            // on every subsequent call instead of just once per session.
-            cookbookByHousehold[householdID] = FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: [])
+        await cache.loadIfNeeded(householdID: householdID) {
+            do {
+                return try await apiClient.familyCookbook(
+                    householdID: householdID,
+                    weekStartDate: WeekCalendar.currentWeekStartDate()
+                )
+            } catch {
+                // Silent fallback — cache an empty cookbook (the panel already
+                // hides itself when `totalFamilyLikedCount == 0`) rather than
+                // leaving the entry unset, which would make `loadIfNeeded` retry
+                // on every subsequent call instead of just once per session.
+                return FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: [])
+            }
         }
     }
 
     func reset() {
-        cookbookByHousehold = [:]
-        loadingHouseholdIDs = []
+        cache.reset()
     }
 }
