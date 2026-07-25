@@ -55,9 +55,17 @@ struct HouseholdTabView: View {
         .safeAreaPadding(.bottom, VecklyDesign.Spacing.large)
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
-        .task(id: appModel.householdStore.activeHousehold?.id) { await appModel.userProfileStore.load() }
+        // B2 (household-resource-loader follow-up): matches the seeded-mode
+        // guard every other core-reader-adjacent `.task` in the app already
+        // has (`WeekTabView`, `ShoppingListTabView`) — these two were the
+        // last ones still making real network calls under seeded UI-test
+        // mode.
         .task(id: appModel.householdStore.activeHousehold?.id) {
-            guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
+            guard !appModel.usesSeededCoreReader else { return }
+            await appModel.userProfileStore.load()
+        }
+        .task(id: appModel.householdStore.activeHousehold?.id) {
+            guard !appModel.usesSeededCoreReader, let householdID = appModel.householdStore.activeHousehold?.id else { return }
             await appModel.familyCookbookStore.loadIfNeeded(householdID: householdID)
         }
         .alert(
