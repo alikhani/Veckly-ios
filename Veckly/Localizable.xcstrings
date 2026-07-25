@@ -1691,18 +1691,17 @@
       }
     },
     "error.recipes.load" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "We could not load recipes."
+            "value" : "Check your connection and try again."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunde inte ladda recept."
+            "value" : "Kontrollera anslutningen och försök igen."
           }
         }
       }
@@ -6889,23 +6888,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hushåll"
-          }
-        }
-      }
-    },
-    "tabs.recipes" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recipes"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recept"
           }
         }
       }

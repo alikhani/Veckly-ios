@@ -946,14 +946,14 @@ struct WeekTabView: View {
     }
 
     private var quickDinnerCount: Int {
-        appModel.weekStore.dayRows.filter { day in
+        weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows).filter { day in
             guard !day.isSkipped, let recipe = day.recipe, let totalMinutes = totalMinutes(for: recipe) else { return false }
             return totalMinutes <= 30
         }.count
     }
 
     private var prepFriendlyDinnerCount: Int {
-        appModel.weekStore.dayRows.filter { day in
+        weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows).filter { day in
             guard !day.isSkipped else { return false }
             if coverage(for: day) != nil { return true }
             guard let recipe = day.recipe else { return false }

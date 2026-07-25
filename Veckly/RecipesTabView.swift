@@ -111,7 +111,10 @@ struct RecipesTabView: View {
                 }
             }
         }
-        .navigationTitle(L10n.string("tabs.recipes"))
+        // Reuses the household link's own label (Fas E) — the destination's
+        // title must match what the user just tapped, or the household →
+        // recipes context gets lost mid-navigation.
+        .navigationTitle(L10n.string("household.familyRecipesLink"))
         .modifier(SearchableWhenLibraryHasRecipesModifier(hasRecipes: !appModel.recipeStore.recipes.isEmpty, searchText: $searchText))
         .toolbar {
             if !appModel.recipeStore.recipes.isEmpty {
