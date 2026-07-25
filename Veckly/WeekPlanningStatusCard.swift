@@ -10,11 +10,6 @@ struct WeekPlanningStatusCard: View {
     let isComplete: Bool
     let onPlanRest: () -> Void
     let onOpenShoppingList: () -> Void
-    /// Full "redo the week" (beslut 6's third CTA copy) previously lived
-    /// only in `WeekTabView`'s toolbar — Fas 5 moves the toolbar down to
-    /// refresh-only, so the complete-week state needs a home for it here,
-    /// as a secondary action below the primary "Open the shopping list".
-    let onRegenerate: () -> Void
 
     var body: some View {
         VecklyCard {
@@ -29,14 +24,13 @@ struct WeekPlanningStatusCard: View {
                             .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
                     }
 
+                    // "Gör om veckan" (beslut 6's third CTA copy) moved out
+                    // to `WeekTabView`'s toolbar menu (Fas C) — this card's
+                    // one action, complete or not, is now always the page's
+                    // single primary CTA.
                     Button("week.status.complete.cta", action: onOpenShoppingList)
                         .buttonStyle(VecklyPrimaryButtonStyle())
                         .padding(.top, 4)
-
-                    Button("week.regenerate", action: onRegenerate)
-                        .buttonStyle(.bordered)
-                        .tint(VecklyDesign.Colors.inkMid)
-                        .accessibilityIdentifier("weekRegenerateButton")
                 } else {
                     Text(L10n.format(openDayCount == 1 ? "week.status.daysLeft.one" : "week.status.daysLeft.other", openDayCount))
                         .font(VecklyDesign.Typography.displayHeading(size: 20))

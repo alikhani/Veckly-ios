@@ -217,25 +217,51 @@ struct WeekTabView: View {
         .toolbarBackground(VecklyDesign.Colors.canvas, for: .navigationBar)
         .toolbarBackgroundVisibility(.visible, for: .navigationBar)
         .toolbar {
-            // Beslut: "Planera resten" (and, for a complete week, the full
-            // "Gör om veckan" redo) now live as CTAs inside
-            // `weekPlanningStatusCard`'s content card — the toolbar's only
-            // remaining job is refresh, which is why this is a single
-            // `ToolbarItem` rather than a `ToolbarItemGroup`: a group with
-            // exactly one control renders as an ambiguous empty-looking
-            // Liquid Glass pill on iOS 26.
+            // Beslut: "Planera resten" lives as the CTA inside
+            // `weekPlanningStatusCard`'s content card. "Gör om veckan"
+            // (Fas C) moved here, into a menu — it's a rare, destructive
+            // action that doesn't belong as a second always-visible CTA next
+            // to the status card's primary button. A lone `ToolbarItem`
+            // still covers the common case (refresh only) to avoid the
+            // ambiguous empty-looking Liquid Glass pill a single-control
+            // `ToolbarItemGroup` renders as on iOS 26.
             if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
                 ToolbarItem(placement: .topBarTrailing) {
                     ProgressView()
                 }
-            } else if !isViewingLastWeek {
-                ToolbarItem(placement: .topBarTrailing) {
+            } else if !isViewingLastWeek, appModel.weekStore.hasWeekContent, !hasOpenRelevantDays {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) {
+                            guard appModel.householdStore.activeHousehold != nil else { return }
+                            guard appModel.authSessionStore.userID != nil else {
+                                Task { await appModel.handleUnauthorized() }
+                                return
+                            }
+                            showRegenerateConfirmation = true
+                        } label: {
+                            Label("week.regenerate", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityIdentifier("weekRegenerateButton")
+
                     Button {
                         // An explicit tap always forces a real reload —
                         // this is the Week tab's pull-to-refresh equivalent
                         // (it has no `.refreshable`, since the whole
                         // ScrollView already scrolls the hero/status cards
                         // along with the list).
+                        Task { await reloadViewedWeek(trigger: .pullToRefresh) }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .accessibilityLabel(L10n.string("common.refresh"))
+                }
+            } else if !isViewingLastWeek {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         Task { await reloadViewedWeek(trigger: .pullToRefresh) }
                     } label: {
                         Image(systemName: "arrow.clockwise")
@@ -1048,14 +1074,6 @@ struct WeekTabView: View {
                 },
                 onOpenShoppingList: {
                     onGoToShoppingTab?()
-                },
-                onRegenerate: {
-                    guard appModel.householdStore.activeHousehold != nil else { return }
-                    guard appModel.authSessionStore.userID != nil else {
-                        Task { await appModel.handleUnauthorized() }
-                        return
-                    }
-                    showRegenerateConfirmation = true
                 }
             )
         }

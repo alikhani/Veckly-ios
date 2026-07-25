@@ -231,32 +231,35 @@ struct TonightMealCard: View {
 
     @ViewBuilder
     private func openTonightContent(day: WeekDayRowViewModel) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("meal.tonight")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
-                    .textCase(.uppercase)
-                Spacer()
-                todayBadge
-            }
+        // No visible button here (Fas C, beslut 16 tightened): the status
+        // card's "Plan the rest" is the screen's one explicit CTA. This
+        // whole card is still tappable as a quiet secondary path to plan
+        // just tonight — `.plain` style keeps it looking like a card, not a
+        // button, while `Button` still gives it correct tap/VoiceOver
+        // semantics. Verify in beta that this remains discoverable without
+        // visible chrome.
+        Button {
+            onPlanTonight(day)
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("meal.tonight")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                        .textCase(.uppercase)
+                    Spacer()
+                    todayBadge
+                }
 
-            Text("week.hero.open.title")
-                .font(VecklyDesign.Typography.displayHeading(size: 22))
-                .foregroundStyle(VecklyDesign.Colors.inkDeep)
-
-            // Bordered, not `VecklyPrimaryButtonStyle()` — the status card's
-            // "Plan the rest" is the page's one primary CTA (beslut 16, Fas 3
-            // acceptance: "only one primary CTA per state"). Same bordered
-            // vocabulary as the hero's other secondary actions below, just
-            // tinted orange so it still reads as the important one here.
-            Button("meal.planTonight") {
-                onPlanTonight(day)
+                Text("week.hero.open.title")
+                    .font(VecklyDesign.Typography.displayHeading(size: 22))
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
             }
-            .buttonStyle(.bordered)
-            .tint(VecklyDesign.Colors.hearthOrangeText)
-            .padding(.top, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text(L10n.string("meal.planTonight")))
     }
 
     // MARK: - Week done (mode 4)
