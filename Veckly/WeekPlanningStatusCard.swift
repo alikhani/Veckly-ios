@@ -17,7 +17,7 @@ struct WeekPlanningStatusCard: View {
                 if isComplete {
                     Label {
                         Text("week.status.complete.title")
-                            .font(VecklyDesign.Typography.displayHeading(size: 20))
+                            .font(VecklyDesign.Typography.cardTitle)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                     } icon: {
                         Image(systemName: "checkmark.circle.fill")
@@ -33,7 +33,7 @@ struct WeekPlanningStatusCard: View {
                         .padding(.top, 4)
                 } else {
                     Text(L10n.format(openDayCount == 1 ? "week.status.daysLeft.one" : "week.status.daysLeft.other", openDayCount))
-                        .font(VecklyDesign.Typography.displayHeading(size: 20))
+                        .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     Button("week.generateRest", action: onPlanRest)

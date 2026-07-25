@@ -192,7 +192,7 @@ struct RetroCard: View {
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     .textCase(.uppercase)
                 Text("retro.title")
-                    .font(VecklyDesign.Typography.displayHeading(size: 20))
+                    .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
             }
             Spacer()

@@ -133,7 +133,7 @@ struct TonightMealCard: View {
             }
 
             Text(dayCoverage?.recipeTitle ?? day.mealTitle)
-                .font(VecklyDesign.Typography.displayHeading(size: 24))
+                .font(VecklyDesign.Typography.heroTitle(for: dayCoverage?.recipeTitle ?? day.mealTitle))
                 .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
             if let dayCoverage {
@@ -252,7 +252,7 @@ struct TonightMealCard: View {
                 }
 
                 Text("week.hero.open.title")
-                    .font(VecklyDesign.Typography.displayHeading(size: 22))
+                    .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -268,7 +268,7 @@ struct TonightMealCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Label {
                 Text("week.hero.done.title")
-                    .font(VecklyDesign.Typography.displayHeading(size: 20))
+                    .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
             } icon: {
                 Image(systemName: "checkmark.circle")

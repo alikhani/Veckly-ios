@@ -148,7 +148,7 @@ struct RecipeDetailView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(recipe.title)
-                .font(VecklyDesign.Typography.displayHeading(size: 28))
+                .font(VecklyDesign.Typography.screenTitle)
 
             let totalMinutes = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
             HStack(spacing: 16) {

@@ -119,6 +119,40 @@ enum VecklyDesign {
         static func displayHeading(size: CGFloat) -> Font {
             .custom("Georgia-Bold", size: size, relativeTo: .largeTitle)
         }
+
+        /// Fas E2's three fixed display levels (P3, visual density audit
+        /// finding): every content-level Georgia headline in the app is
+        /// exactly one of these, not an ad hoc point size picked per screen.
+        /// Brand chrome — the sign-in wordmark, the small "Veckly" mark on
+        /// onboarding screens — is deliberately its own thing, outside this
+        /// scale entirely.
+        ///
+        /// One page-identifying heading per screen: "Den här veckan",
+        /// "Inköpslistan", a recipe's own title on its detail page.
+        static let screenTitle = displayHeading(size: 30)
+
+        /// A card's own heading inside a screen — status cards, empty
+        /// states, the retro card, a household's name. Deliberately one
+        /// fixed value, not a range: every other card-level heading in the
+        /// app already reads fine at this size, so there's no reason for
+        /// any one of them to be different.
+        static let cardTitle = displayHeading(size: 22)
+
+        /// The single true hero: today's dish name in the Week tab's daily
+        /// card — the one piece of text that's the actual point of opening
+        /// the app. Three tiers, not two: verified against an actual long
+        /// imported recipe title (57 characters) that wrapped to 4 lines
+        /// and pushed the card's own actions off-screen at the "medium"
+        /// size — real recipe titles (often pulled verbatim from a source
+        /// URL) can be much longer than a household-typed dish name, so the
+        /// long tier has to prioritize fitting over hero drama.
+        static func heroTitle(for text: String) -> Font {
+            switch text.count {
+            case ..<21: displayHeading(size: 38)
+            case 21..<36: displayHeading(size: 34)
+            default: displayHeading(size: 26)
+            }
+        }
     }
 }
 

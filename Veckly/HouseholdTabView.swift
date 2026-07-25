@@ -155,7 +155,7 @@ struct HouseholdTabView: View {
                         householdSwitcher
                     } else {
                         Text(household?.name ?? L10n.string("household.loading"))
-                            .font(VecklyDesign.Typography.displayHeading(size: 24))
+                            .font(VecklyDesign.Typography.cardTitle)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                     }
 
@@ -202,7 +202,7 @@ struct HouseholdTabView: View {
             VecklyCard {
                 VStack(alignment: .leading, spacing: VecklyDesign.Spacing.medium) {
                     Text(L10n.format("household.cookbook.title", cookbook.totalFamilyLikedCount))
-                        .font(VecklyDesign.Typography.displayHeading(size: 20))
+                        .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     ForEach(cookbook.favorites.prefix(5)) { recipe in
@@ -247,7 +247,7 @@ struct HouseholdTabView: View {
         } label: {
             HStack(spacing: 8) {
                 Text(household?.name ?? L10n.string("household.loading"))
-                    .font(VecklyDesign.Typography.displayHeading(size: 24))
+                    .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.caption.weight(.semibold))

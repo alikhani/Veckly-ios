@@ -741,7 +741,7 @@ struct WeekTabView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
                         Text("week.sessionEnd.title")
-                            .font(VecklyDesign.Typography.displayHeading(size: 20))
+                            .font(VecklyDesign.Typography.cardTitle)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                         Spacer()
                         Button {
@@ -814,7 +814,7 @@ struct WeekTabView: View {
                         .textCase(.uppercase)
 
                     Text("week.empty.title")
-                        .font(VecklyDesign.Typography.displayHeading(size: 22))
+                        .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     Text("week.empty.message")
@@ -1162,7 +1162,7 @@ struct WeekTabView: View {
                         .textCase(.uppercase)
 
                     Text("week.nextWeek.empty.title")
-                        .font(VecklyDesign.Typography.displayHeading(size: 22))
+                        .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     Text("week.nextWeek.empty.message")
@@ -1227,7 +1227,7 @@ struct WeekTabView: View {
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     .textCase(.uppercase)
                 Text(weekSummaryLine)
-                    .font(VecklyDesign.Typography.displayHeading(size: 20))
+                    .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1245,7 +1245,7 @@ struct WeekTabView: View {
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .textCase(.uppercase)
                 Text(weekSummaryLine)
-                    .font(VecklyDesign.Typography.displayHeading(size: 20))
+                    .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

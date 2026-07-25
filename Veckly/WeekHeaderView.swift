@@ -26,7 +26,7 @@ struct WeekHeaderView: View {
             } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(L10n.string(viewedWeekOffset.relativeLabelKey))
-                        .font(VecklyDesign.Typography.displayHeading(size: 34))
+                        .font(VecklyDesign.Typography.screenTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 16, weight: .semibold))

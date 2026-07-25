@@ -127,7 +127,7 @@ struct ShoppingListTabView: View {
                     }
 
                     Text(L10n.string("shopping.title"))
-                        .font(VecklyDesign.Typography.displayHeading(size: 30))
+                        .font(VecklyDesign.Typography.screenTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                     if appModel.shoppingListStore.hasPendingSync {

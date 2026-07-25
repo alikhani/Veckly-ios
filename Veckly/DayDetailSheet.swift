@@ -101,7 +101,7 @@ struct DayDetailContent: View {
 
                 // Recipe title
                 Text(recipe.title)
-                    .font(VecklyDesign.Typography.displayHeading(size: 22))
+                    .font(VecklyDesign.Typography.screenTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
                 // Time + servings
