@@ -245,6 +245,7 @@ struct WeekTabView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
+                    .accessibilityLabel(L10n.string("week.moreOptions"))
                     .accessibilityIdentifier("weekRegenerateButton")
 
                     Button {

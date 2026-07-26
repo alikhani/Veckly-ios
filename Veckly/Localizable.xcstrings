@@ -7222,6 +7222,22 @@
         }
       }
     },
+    "week.moreOptions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More options"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fler alternativ"
+          }
+        }
+      }
+    },
     "week.nextUp" : {
       "extractionState" : "stale",
       "localizations" : {

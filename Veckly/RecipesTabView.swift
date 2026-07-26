@@ -119,6 +119,7 @@ struct RecipesTabView: View {
         .toolbar {
             if !appModel.recipeStore.recipes.isEmpty {
                 Button { showAddSheet = true } label: { Image(systemName: "plus") }
+                    .accessibilityLabel(L10n.string("recipe.add"))
             }
         }
         .sheet(isPresented: $showAddSheet) {
