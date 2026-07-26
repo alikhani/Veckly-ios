@@ -1012,7 +1012,7 @@ struct WeekTabView: View {
     private var weekQualityWarnings: [WeekQualitySummary.Insight] {
         weekQualitySummary.insights.filter { insight in
             switch insight.kind {
-            case .heavyWeek, .lowConfidence: true
+            case .heavyWeek, .lowConfidence, .repeatedDish: true
             case .openDays, .quickRhythm, .prepFriendly, .goodVariation, .looksReasonable: false
             }
         }
@@ -1077,6 +1077,8 @@ struct WeekTabView: View {
             L10n.format(count == 1 ? "week.quality.prep.one" : "week.quality.prep.other", count)
         case .lowConfidence(let count):
             L10n.format(count == 1 ? "week.quality.lowConfidence.one" : "week.quality.lowConfidence.other", count)
+        case .repeatedDish(let count):
+            L10n.format(count == 1 ? "week.quality.repeated.one" : "week.quality.repeated.other", count)
         case .goodVariation:
             L10n.string("week.quality.variation")
         case .looksReasonable:

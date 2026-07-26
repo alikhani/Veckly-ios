@@ -53,6 +53,18 @@ struct WeekQualitySummaryTests {
         #expect(summary.insights.map(\.id) == ["looks-reasonable"])
     }
 
+    @Test func flagsDishesOnASatiationStreakAsAWarning() {
+        let repeated = recipe("Taco Tuesday", total: 25, tags: ["mexican"])
+        let days = [
+            day("2026-06-08", recipe: repeated, streakWeeks: 3),
+            day("2026-06-09", recipe: recipe("Soup", total: 35, tags: ["vegetarian"])),
+        ]
+
+        let summary = WeekQualitySummary.make(days: days)
+
+        #expect(summary.insights.map(\.id).contains("repeated-dish"))
+    }
+
     @Test func sessionEndInviteNudgeRequiresSoloOwnerWithLoadedDetails() {
         let household = Household(id: "household-1", name: "Home", role: .owner)
 
@@ -93,7 +105,8 @@ struct WeekQualitySummaryTests {
     private func day(
         _ date: String,
         recipe: WeekSummaryRecipe?,
-        confidence: AssignmentConfidence? = nil
+        confidence: AssignmentConfidence? = nil,
+        streakWeeks: Int? = nil
     ) -> WeekDayRowViewModel {
         WeekDayRowViewModel(
             id: date,
@@ -111,7 +124,7 @@ struct WeekQualitySummaryTests {
             recipe: recipe,
             reason: nil,
             confidence: confidence,
-            streakWeeks: nil
+            streakWeeks: streakWeeks
         )
     }
 }

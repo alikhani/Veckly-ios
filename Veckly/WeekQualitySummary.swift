@@ -8,6 +8,7 @@ struct WeekQualitySummary: Equatable {
             case heavyWeek(count: Int)
             case prepFriendly(count: Int)
             case lowConfidence(count: Int)
+            case repeatedDish(count: Int)
             case goodVariation(count: Int)
             case looksReasonable
         }
@@ -22,6 +23,7 @@ struct WeekQualitySummary: Equatable {
             case .heavyWeek: "heavy-week"
             case .prepFriendly: "prep-friendly"
             case .lowConfidence: "low-confidence"
+            case .repeatedDish: "repeated-dish"
             case .goodVariation: "good-variation"
             case .looksReasonable: "looks-reasonable"
             }
@@ -47,6 +49,7 @@ struct WeekQualitySummary: Equatable {
             prepCoveredDates.contains(day.date) || day.recipe.map(RecipeTimingSignals.isPrepFriendly) == true
         }.count
         let lowConfidenceCount = plannedDays.filter { $0.confidence == .low }.count
+        let repeatedDishCount = plannedDays.filter { $0.streakWeeks != nil }.count
         let varietyCount = Set(plannedDays.compactMap { $0.recipe }.flatMap(variationSignals(for:))).count
 
         var insights: [Insight] = []
@@ -55,6 +58,9 @@ struct WeekQualitySummary: Equatable {
         }
         if lowConfidenceCount > 0 {
             insights.append(Insight(kind: .lowConfidence(count: lowConfidenceCount), icon: "arrow.triangle.2.circlepath"))
+        }
+        if repeatedDishCount > 0 {
+            insights.append(Insight(kind: .repeatedDish(count: repeatedDishCount), icon: "arrow.2.squarepath"))
         }
         if quickDinnerCount >= 3 {
             insights.append(Insight(kind: .quickRhythm(count: quickDinnerCount), icon: "clock"))
