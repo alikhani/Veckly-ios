@@ -26,6 +26,47 @@ struct OnboardingCompletionTests {
         #expect(recipeAPI.createdDraftTitles == ["Filled: Taco Tuesday"])
         #expect(householdStore.profile?.adults == 2)
         #expect(householdStore.profile?.children == 1)
+        #expect(householdStore.profile?.priorities == [.quick])
+        #expect(householdStore.profile?.avoidIngredients == ["nuts"])
+        #expect(householdStore.profile?.selectedDays.map(\.day) == [.monday, .wednesday])
+    }
+
+    @Test func daySignalsSetInOnboardingSurviveTheRoundTripToTheSavedProfile() async {
+        // Onboarding only sends plain day identity today (no dedicated
+        // day-rhythm question, per Fas 1's decision — see
+        // PLAN-ios-familjeupplevelse-2026-07.md). This test guards the
+        // adjacent contract: if a day *does* carry non-default signals
+        // (e.g. set later in Household preferences and passed through the
+        // same save path), they must not be dropped or reordered.
+        let recipeAPI = FakeOnboardingRecipeAPIClient()
+        let householdAPI = FakeOnboardingHouseholdAPIClient()
+        let recipeStore = RecipeStore(apiClient: recipeAPI, cacheStore: NoOpRecipeCache())
+        let householdStore = HouseholdStore(apiClient: householdAPI)
+
+        let fridayWithSignals = HouseholdDaySelection(
+            day: .friday,
+            servingsOverride: 6,
+            occasion: .guests,
+            effortLevel: .busy,
+            leftoversIntent: true,
+            lateEvening: true,
+            cookingTolerance: .relaxed
+        )
+
+        let outcome = await OnboardingCompletion.run(
+            recipeStore: recipeStore,
+            householdStore: householdStore,
+            householdID: TestOnboardingHousehold.id,
+            adults: 2,
+            children: 0,
+            priorities: [],
+            avoidIngredients: [],
+            selectedDays: [HouseholdDaySelection(day: .monday), fridayWithSignals],
+            goToDishTitle: ""
+        )
+
+        #expect(outcome == .success(goToDishSaved: false))
+        #expect(householdStore.profile?.selectedDays.first(where: { $0.day == .friday }) == fridayWithSignals)
     }
 
     @Test func emptyGoToDishTitleSkipsRecipeCreationButStillSavesProfile() async {
