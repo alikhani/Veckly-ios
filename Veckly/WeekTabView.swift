@@ -564,12 +564,18 @@ struct WeekTabView: View {
     /// last gap call this, each with `hasOpenRelevantDays` captured just
     /// before they ran).
     private func checkForSessionEnd(wasEmptyBefore: Bool) {
-        guard isViewingCurrentWeek, wasEmptyBefore, !hasOpenRelevantDays, plannedDinnerCount > 0 else { return }
+        guard isViewingCurrentWeek else { return }
+        let summary = weekSessionSummary
+        guard SessionEndTrigger.shouldShow(
+            wasEmptyBeforeMutation: wasEmptyBefore,
+            isCompleteNow: !hasOpenRelevantDays,
+            plannedDinnerCount: summary.plannedDinnerCount
+        ) else { return }
         showSessionEndBeat = true
         appModel.recordProductEvent(.weekCompleted, weekStartDate: viewedWeekStartDate, properties: [
-            "plannedDinners": .int(plannedDinnerCount),
-            "quickDinners": .int(quickDinnerCount),
-            "prepFriendlyDinners": .int(prepFriendlyDinnerCount)
+            "plannedDinners": .int(summary.plannedDinnerCount),
+            "quickDinners": .int(summary.quickDinnerCount),
+            "prepFriendlyDinners": .int(summary.prepFriendlyDinnerCount)
         ])
     }
 
@@ -940,47 +946,31 @@ struct WeekTabView: View {
         }
     }
 
-    private var plannedDinnerCount: Int {
-        weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows)
-            .filter { !$0.isSkipped && ($0.recipe != nil || coverage(for: $0) != nil) }
-            .count
+    /// Single source for the "veckan är klar" counts — shared with
+    /// `WeekQualitySummary` via `RecipeTimingSignals` so "quick" and
+    /// "prep-friendly" mean the same thing on both surfaces.
+    private var weekSessionSummary: WeekSessionSummary {
+        WeekSessionSummary.make(
+            relevantDays: weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows),
+            prepCoveredDates: prepCoveredDates
+        )
     }
 
-    private var quickDinnerCount: Int {
-        weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows).filter { day in
-            guard !day.isSkipped, let recipe = day.recipe, let totalMinutes = totalMinutes(for: recipe) else { return false }
-            return totalMinutes <= 30
-        }.count
-    }
-
-    private var prepFriendlyDinnerCount: Int {
-        weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows).filter { day in
-            guard !day.isSkipped else { return false }
-            if coverage(for: day) != nil { return true }
-            guard let recipe = day.recipe else { return false }
-            return recipe.tags.contains { tag in
-                let normalized = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                return normalized.contains("leftover")
-                    || normalized.contains("rester")
-                    || normalized.contains("meal prep")
-                    || normalized.contains("batch")
-                    || normalized.contains("storkok")
-            }
-        }.count
-    }
+    private var plannedDinnerCount: Int { weekSessionSummary.plannedDinnerCount }
 
     private var sessionEndSummaryRows: [(icon: String, text: String)] {
+        let summary = weekSessionSummary
         var rows: [(icon: String, text: String)] = []
-        if quickDinnerCount > 0 {
+        if summary.quickDinnerCount > 0 {
             rows.append((
                 icon: "clock",
-                text: L10n.format(quickDinnerCount == 1 ? "week.sessionEnd.quick.one" : "week.sessionEnd.quick.other", quickDinnerCount)
+                text: L10n.format(summary.quickDinnerCount == 1 ? "week.sessionEnd.quick.one" : "week.sessionEnd.quick.other", summary.quickDinnerCount)
             ))
         }
-        if prepFriendlyDinnerCount > 0 {
+        if summary.prepFriendlyDinnerCount > 0 {
             rows.append((
                 icon: "takeoutbag.and.cup.and.straw",
-                text: L10n.format(prepFriendlyDinnerCount == 1 ? "week.sessionEnd.prep.one" : "week.sessionEnd.prep.other", prepFriendlyDinnerCount)
+                text: L10n.format(summary.prepFriendlyDinnerCount == 1 ? "week.sessionEnd.prep.one" : "week.sessionEnd.prep.other", summary.prepFriendlyDinnerCount)
             ))
         }
         rows.append((icon: "cart", text: L10n.string("week.sessionEnd.shoppingReady")))
@@ -993,11 +983,6 @@ struct WeekTabView: View {
             detailsHouseholdID: appModel.householdStore.detailsHouseholdID,
             memberCount: appModel.householdStore.members.count
         )
-    }
-
-    private func totalMinutes(for recipe: WeekSummaryRecipe) -> Int? {
-        let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
-        return total > 0 ? total : nil
     }
 
     private var openDayCount: Int {

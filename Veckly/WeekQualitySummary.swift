@@ -37,15 +37,14 @@ struct WeekQualitySummary: Equatable {
 
         let openDayCount = activeDays.filter { $0.recipe == nil && !prepCoveredDates.contains($0.date) }.count
         let quickDinnerCount = plannedDays.filter { day in
-            guard let recipe = day.recipe, let total = totalMinutes(for: recipe) else { return false }
-            return total <= 30
+            day.recipe.map(RecipeTimingSignals.isQuick) == true
         }.count
         let heavyDinnerCount = plannedDays.filter { day in
-            guard let recipe = day.recipe, let total = totalMinutes(for: recipe) else { return false }
+            guard let recipe = day.recipe, let total = RecipeTimingSignals.totalMinutes(for: recipe) else { return false }
             return total >= 45
         }.count
         let prepFriendlyCount = plannedDays.filter { day in
-            prepCoveredDates.contains(day.date) || day.recipe.map(isPrepFriendlyRecipe) == true
+            prepCoveredDates.contains(day.date) || day.recipe.map(RecipeTimingSignals.isPrepFriendly) == true
         }.count
         let lowConfidenceCount = plannedDays.filter { $0.confidence == .low }.count
         let varietyCount = Set(plannedDays.compactMap { $0.recipe }.flatMap(variationSignals(for:))).count
@@ -73,22 +72,6 @@ struct WeekQualitySummary: Equatable {
         }
 
         return WeekQualitySummary(insights: Array(insights.prefix(3)))
-    }
-
-    private static func totalMinutes(for recipe: WeekSummaryRecipe) -> Int? {
-        let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
-        return total > 0 ? total : nil
-    }
-
-    private static func isPrepFriendlyRecipe(_ recipe: WeekSummaryRecipe) -> Bool {
-        recipe.tags.contains { tag in
-            let normalized = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            return normalized.contains("leftover")
-                || normalized.contains("rester")
-                || normalized.contains("meal prep")
-                || normalized.contains("batch")
-                || normalized.contains("storkok")
-        }
     }
 
     private static func variationSignals(for recipe: WeekSummaryRecipe) -> [String] {
