@@ -1691,6 +1691,7 @@
       }
     },
     "error.recipes.load" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2779,6 +2780,7 @@
       }
     },
     "meal.planTonight" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3888,6 +3890,7 @@
       }
     },
     "onboarding.goToDishSaveError" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7223,6 +7226,7 @@
       }
     },
     "week.moreOptions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7489,40 +7493,6 @@
         }
       }
     },
-    "week.quality.repeated.one" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One dish is a repeat from recent weeks"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En rätt är en repris från senaste veckorna"
-          }
-        }
-      }
-    },
-    "week.quality.repeated.other" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d dishes are repeats from recent weeks"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d rätter är repriser från senaste veckorna"
-          }
-        }
-      }
-    },
     "week.quality.quick.one" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7570,6 +7540,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veckan ser praktisk nog ut att börja från"
+          }
+        }
+      }
+    },
+    "week.quality.repeated.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One dish is a repeat from recent weeks"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En rätt är en repris från senaste veckorna"
+          }
+        }
+      }
+    },
+    "week.quality.repeated.other" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dishes are repeats from recent weeks"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d rätter är repriser från senaste veckorna"
           }
         }
       }
