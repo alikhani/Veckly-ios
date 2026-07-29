@@ -93,6 +93,7 @@ struct ShoppingListTabView: View {
         .buttonStyle(.bordered)
         .tint(VecklyDesign.Colors.inkMid)
         .layoutPriority(1)
+        .accessibilityLabel(L10n.string("shopping.customItem.add"))
     }
 
     var body: some View {

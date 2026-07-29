@@ -113,6 +113,7 @@ struct RecipeDetailView: View {
                     } label: {
                         Image(systemName: "pencil")
                     }
+                    .accessibilityLabel(L10n.string("recipeForm.editTitle"))
                 }
             }
         }
