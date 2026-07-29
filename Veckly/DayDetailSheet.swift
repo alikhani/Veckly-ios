@@ -25,7 +25,14 @@ struct DayDetailSheet: View {
                 householdID: householdID,
                 onViewRecipe: onViewRecipe,
                 onSwap: onSwap,
-                onSkip: { showSkipConfirmation = true },
+                onSkip: {
+                    if day.isSkipped {
+                        onSkip()
+                        onDismiss()
+                    } else {
+                        showSkipConfirmation = true
+                    }
+                },
                 onClear: onClear,
                 onMarkAsLeftover: onMarkAsLeftover,
                 isLocked: isLocked,
@@ -46,10 +53,14 @@ struct DayDetailSheet: View {
             .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
                 Button("meal.clear", role: .destructive) { onClear() }
                 Button("common.cancel", role: .cancel) {}
+            } message: {
+                Text("meal.removeExplanation")
             }
             .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
                 Button("meal.skip", role: .destructive) { onSkip(); onDismiss() }
                 Button("common.cancel", role: .cancel) {}
+            } message: {
+                Text("meal.skipExplanation")
             }
         }
     }

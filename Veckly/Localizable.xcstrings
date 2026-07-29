@@ -201,13 +201,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock %@"
+            "value" : "Lock the dish for %@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lås %@"
+            "value" : "Lås rätten för %@"
           }
         }
       }
@@ -405,13 +405,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unlock %@"
+            "value" : "Unlock the dish for %@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lås upp %@"
+            "value" : "Lås upp rätten för %@"
           }
         }
       }
@@ -2829,13 +2829,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear meal"
+            "value" : "Remove dish"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ta bort middag"
+            "value" : "Ta bort rätten"
           }
         }
       }
@@ -2910,13 +2910,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock day"
+            "value" : "Lock dish"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lås dagen"
+            "value" : "Lås rätten"
           }
         }
       }
@@ -3026,13 +3026,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove this meal?"
+            "value" : "Remove the dish from this day?"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ta bort den här middagen?"
+            "value" : "Ta bort rätten från den här dagen?"
+          }
+        }
+      }
+    },
+    "meal.removeExplanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dish will be removed from this day, which stays open for another dinner."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rätten tas bort från den här dagen, som lämnas öppen för en annan middag."
           }
         }
       }
@@ -3066,6 +3082,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoppa över den här dagen?"
+          }
+        }
+      }
+    },
+    "meal.skipExplanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No dinner will be planned for this day. If a dish is already assigned, it will be kept and return when you plan the day again."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen middag planeras den här dagen. Om en rätt redan är vald behålls den och kommer tillbaka när du planerar dagen igen."
           }
         }
       }
@@ -3392,13 +3424,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unlock day"
+            "value" : "Unlock dish"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lås upp dagen"
+            "value" : "Lås upp rätten"
           }
         }
       }
@@ -7453,13 +7485,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Locked meals won't be replaced when you regenerate your week."
+            "value" : "The dish stays on this day when you replan or regenerate the week."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Låsta middagar ersätts inte när du genererar om veckan."
+            "value" : "Rätten ligger kvar den här dagen när du planerar om eller genererar om veckan."
           }
         }
       }
@@ -7470,13 +7502,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock"
+            "value" : "Lock dish"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lås"
+            "value" : "Lås rätten"
           }
         }
       }

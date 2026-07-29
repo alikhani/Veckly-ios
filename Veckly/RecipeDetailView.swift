@@ -17,6 +17,7 @@ struct RecipeDetailView: View {
     @State private var isLoadingFull = false
     @State private var loadFailed = false
     @State private var editingRecipe: FullRecipe?
+    @State private var showSkipConfirmation = false
 
     // MARK: - Scaling
 
@@ -47,7 +48,13 @@ struct RecipeDetailView: View {
                 // Day-level action — surfaced before recipe content so it is
                 // reachable without scrolling.
                 if let isSkipped, let onSkip {
-                    skipDayRow(isSkipped: isSkipped, onSkip: onSkip)
+                    skipDayRow(isSkipped: isSkipped) {
+                        if isSkipped {
+                            onSkip()
+                        } else {
+                            showSkipConfirmation = true
+                        }
+                    }
                 }
 
                 headerSection
@@ -125,6 +132,12 @@ struct RecipeDetailView: View {
                     draft: draft
                 )
             }
+        }
+        .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
+            Button("meal.skip", role: .destructive) { onSkip?() }
+            Button("common.cancel", role: .cancel) {}
+        } message: {
+            Text("meal.skipExplanation")
         }
         .task { await loadFull() }
     }

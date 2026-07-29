@@ -4,6 +4,24 @@ import Testing
 
 @MainActor
 struct AppLanguageTests {
+    @Test func dayActionCopyExplainsSkipClearAndLockInEnglish() {
+        let locale = Locale(identifier: "en")
+
+        #expect(localized("meal.clear", locale: locale) == "Remove dish")
+        #expect(localized("meal.removeExplanation", locale: locale) == "The dish will be removed from this day, which stays open for another dinner.")
+        #expect(localized("meal.skipExplanation", locale: locale) == "No dinner will be planned for this day. If a dish is already assigned, it will be kept and return when you plan the day again.")
+        #expect(localized("week.lock.explainMessage", locale: locale) == "The dish stays on this day when you replan or regenerate the week.")
+    }
+
+    @Test func dayActionCopyExplainsSkipClearAndLockInSwedish() {
+        let locale = Locale(identifier: "sv")
+
+        #expect(localized("meal.clear", locale: locale) == "Ta bort rätten")
+        #expect(localized("meal.removeExplanation", locale: locale) == "Rätten tas bort från den här dagen, som lämnas öppen för en annan middag.")
+        #expect(localized("meal.skipExplanation", locale: locale) == "Ingen middag planeras den här dagen. Om en rätt redan är vald behålls den och kommer tillbaka när du planerar dagen igen.")
+        #expect(localized("week.lock.explainMessage", locale: locale) == "Rätten ligger kvar den här dagen när du planerar om eller genererar om veckan.")
+    }
+
     @Test func missingPreferenceUsesSystem() {
         let defaults = makeDefaults()
         let store = AppLanguageStore(userDefaults: defaults)
@@ -52,5 +70,14 @@ struct AppLanguageTests {
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
         return defaults
+    }
+
+    private func localized(_ key: String, locale: Locale) -> String {
+        let language = locale.language.languageCode?.identifier ?? "en"
+        guard let path = Bundle.main.path(forResource: language, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return key
+        }
+        return bundle.localizedString(forKey: key, value: nil, table: nil)
     }
 }

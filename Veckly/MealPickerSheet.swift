@@ -96,7 +96,7 @@ struct MealPickerSheet: View {
                         householdID: householdID,
                         onViewRecipe: { previewRecipeID = confirmedRecipe.id },
                         onSwap: { self.confirmedRecipe = nil },
-                        onSkip: { onSkip(); onDismiss() },
+                        onSkip: { showSkipConfirmation = true },
                         onClear: onClear,
                         onMarkAsLeftover: { onMarkAsLeftover(confirmedRecipe.id) }
                     )
@@ -196,10 +196,14 @@ struct MealPickerSheet: View {
             .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
                 Button("meal.clear", role: .destructive) { onClear() }
                 Button("common.cancel", role: .cancel) {}
+            } message: {
+                Text("meal.removeExplanation")
             }
             .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
                 Button("meal.skip", role: .destructive) { onSkip(); onDismiss() }
                 Button("common.cancel", role: .cancel) {}
+            } message: {
+                Text("meal.skipExplanation")
             }
         }
         .task { await loadRecipes() }
