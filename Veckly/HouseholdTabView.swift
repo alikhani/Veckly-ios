@@ -205,29 +205,72 @@ struct HouseholdTabView: View {
                         .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    ForEach(cookbook.favorites.prefix(5)) { recipe in
-                        cookbookRow(title: recipe.title, detail: L10n.format("household.cookbook.timesCooked", recipe.timesCooked))
+                    let previewFavorites = Array(cookbook.uniqueFavorites.prefix(5))
+                    let previewDueAgain = Array(cookbook.uniqueDueAgain.prefix(3))
+
+                    ForEach(previewFavorites) { recipe in
+                        cookbookRow(
+                            recipe: recipe,
+                            detail: recipe.timesCooked == 0
+                                ? L10n.string("household.cookbook.notCookedYet")
+                                : L10n.format("household.cookbook.timesCooked", recipe.timesCooked),
+                            householdID: household.id
+                        )
                     }
 
-                    ForEach(cookbook.dueAgain.prefix(3)) { recipe in
-                        cookbookRow(title: recipe.title, detail: L10n.string("household.cookbook.dueAgain"))
+                    ForEach(previewDueAgain) { recipe in
+                        cookbookRow(
+                            recipe: recipe,
+                            detail: L10n.string("household.cookbook.dueAgain"),
+                            householdID: household.id
+                        )
+                    }
+
+                    if cookbook.uniqueRecipes.count > previewFavorites.count + previewDueAgain.count {
+                        Divider()
+                        NavigationLink {
+                            CookbookView(householdID: household.id)
+                        } label: {
+                            HStack {
+                                Text(L10n.format("household.cookbook.showAll", cookbook.uniqueRecipes.count))
+                                    .font(.subheadline.weight(.medium))
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                            .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel(L10n.format("household.cookbook.showAll", cookbook.uniqueRecipes.count))
                     }
                 }
             }
         }
     }
 
-    private func cookbookRow(title: String, detail: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.body)
-                .foregroundStyle(VecklyDesign.Colors.inkDeep)
-                .lineLimit(1)
-            Spacer()
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
+    private func cookbookRow(recipe: FamilyCookbook.Recipe, detail: String, householdID: String) -> some View {
+        NavigationLink {
+            CookbookRecipeDetailView(recipeID: recipe.recipeID, householdID: householdID)
+        } label: {
+            HStack(spacing: 8) {
+                Text(recipe.title)
+                    .font(.body)
+                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    .lineLimit(1)
+                Spacer()
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(recipe.title), \(detail)")
+        .accessibilityHint(L10n.string("household.cookbook.openRecipeHint"))
     }
 
     private var householdSwitcher: some View {

@@ -45,24 +45,28 @@ final class FeedbackStore {
         }
     }
 
-    func setVote(householdID: String, recipeID: String, vote: MealVote?) async {
+    @discardableResult
+    func setVote(householdID: String, recipeID: String, vote: MealVote?) async -> Bool {
         let previous = votes[recipeID]
         // Optimistic update
         votes[recipeID] = vote
         guard let vote else {
             do {
                 try await apiClient.removeMealFeedback(householdID: householdID, mealID: recipeID)
+                return true
             } catch {
                 // Roll back on failure
                 votes[recipeID] = previous
+                return false
             }
-            return
         }
         do {
             try await apiClient.submitMealFeedback(householdID: householdID, mealID: recipeID, vote: vote)
+            return true
         } catch {
             // Roll back on failure
             votes[recipeID] = previous
+            return false
         }
     }
 

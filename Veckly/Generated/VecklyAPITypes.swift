@@ -484,7 +484,7 @@ struct FamilyCookbook: Equatable {
         let recipeID: String
         let title: String
         let timesCooked: Int
-        let weeksSinceCooked: Int
+        let weeksSinceCooked: Int?
         var id: String { recipeID }
     }
 }

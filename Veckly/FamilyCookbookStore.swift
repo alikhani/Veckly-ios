@@ -25,6 +25,21 @@ final class FamilyCookbookStore {
         cache.value(for: householdID)
     }
 
+    func removeRecipe(_ recipeID: String, householdID: String) {
+        guard let current = cache.value(for: householdID) else { return }
+        guard current.uniqueRecipes.contains(where: { $0.recipeID == recipeID }) else { return }
+        let favorites = current.favorites.filter { $0.recipeID != recipeID }
+        let dueAgain = current.dueAgain.filter { $0.recipeID != recipeID }
+        cache.setValue(
+            FamilyCookbook(
+                totalFamilyLikedCount: max(0, current.totalFamilyLikedCount - 1),
+                favorites: favorites,
+                dueAgain: dueAgain
+            ),
+            for: householdID
+        )
+    }
+
     func loadIfNeeded(householdID: String) async {
         await cache.loadIfNeeded(householdID: householdID) {
             do {
@@ -44,5 +59,25 @@ final class FamilyCookbookStore {
 
     func reset() {
         cache.reset()
+    }
+}
+
+extension FamilyCookbook {
+    var uniqueFavorites: [Recipe] {
+        unique(favorites)
+    }
+
+    var uniqueDueAgain: [Recipe] {
+        let favoriteIDs = Set(uniqueFavorites.map(\.recipeID))
+        return unique(dueAgain).filter { !favoriteIDs.contains($0.recipeID) }
+    }
+
+    var uniqueRecipes: [Recipe] {
+        uniqueFavorites + uniqueDueAgain
+    }
+
+    private func unique(_ recipes: [Recipe]) -> [Recipe] {
+        var seen = Set<String>()
+        return recipes.filter { seen.insert($0.recipeID).inserted }
     }
 }

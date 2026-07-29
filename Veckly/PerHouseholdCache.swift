@@ -20,6 +20,10 @@ final class PerHouseholdCache<Value> {
         valuesByHousehold[householdID]
     }
 
+    func setValue(_ value: Value, for householdID: String) {
+        valuesByHousehold[householdID] = value
+    }
+
     func loadIfNeeded(householdID: String, load: () async -> Value) async {
         guard valuesByHousehold[householdID] == nil, !loadingHouseholdIDs.contains(householdID) else { return }
         loadingHouseholdIDs.insert(householdID)

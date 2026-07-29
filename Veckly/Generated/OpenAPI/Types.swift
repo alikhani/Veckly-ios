@@ -1261,7 +1261,7 @@ internal enum Components {
             /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/timesCooked`.
             internal var timesCooked: Swift.Int
             /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/weeksSinceCooked`.
-            internal var weeksSinceCooked: Swift.Int
+            internal var weeksSinceCooked: Swift.Int?
             /// Creates a new `FamilyCookbookRecipe`.
             ///
             /// - Parameters:
@@ -1273,7 +1273,7 @@ internal enum Components {
                 recipeId: Swift.String,
                 title: Swift.String,
                 timesCooked: Swift.Int,
-                weeksSinceCooked: Swift.Int
+                weeksSinceCooked: Swift.Int? = nil
             ) {
                 self.recipeId = recipeId
                 self.title = title

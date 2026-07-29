@@ -2098,6 +2098,182 @@
         }
       }
     },
+    "household.cookbook.dueAgainSection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time for again"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dags igen"
+          }
+        }
+      }
+    },
+    "household.cookbook.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your cookbook is empty"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er kokbok är tom"
+          }
+        }
+      }
+    },
+    "household.cookbook.favorites" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoriter"
+          }
+        }
+      }
+    },
+    "household.cookbook.loading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading cookbook"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laddar kokbok"
+          }
+        }
+      }
+    },
+    "household.cookbook.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your cookbook"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er kokbok"
+          }
+        }
+      }
+    },
+    "household.cookbook.notCookedYet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not cooked yet"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inte lagad än"
+          }
+        }
+      }
+    },
+    "household.cookbook.openRecipeHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the recipe"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppnar receptet"
+          }
+        }
+      }
+    },
+    "household.cookbook.remove" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from cookbook"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort från kokboken"
+          }
+        }
+      }
+    },
+    "household.cookbook.removeConfirmation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove this dish from your cookbook?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta bort rätten från er kokbok?"
+          }
+        }
+      }
+    },
+    "household.cookbook.removeFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dish could not be removed. Try again."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rätten kunde inte tas bort. Försök igen."
+          }
+        }
+      }
+    },
+    "household.cookbook.showAll" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show all %d"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa alla %d"
+          }
+        }
+      }
+    },
     "household.cookbook.timesCooked" : {
       "extractionState" : "stale",
       "localizations" : {
