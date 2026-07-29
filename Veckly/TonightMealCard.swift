@@ -265,13 +265,10 @@ struct TonightMealCard: View {
 
     @ViewBuilder
     private func openTonightContent(day: WeekDayRowViewModel) -> some View {
-        // No visible button here (Fas C, beslut 16 tightened): the status
-        // card's "Plan the rest" is the screen's one explicit CTA. This
-        // whole card is still tappable as a quiet secondary path to plan
-        // just tonight — `.plain` style keeps it looking like a card, not a
-        // button, while `Button` still gives it correct tap/VoiceOver
-        // semantics. Verify in beta that this remains discoverable without
-        // visible chrome.
+        // The whole card remains one button. Keeping the visible affordance
+        // inside that same label avoids a nested child button (and therefore
+        // avoids double-triggering `onPlanTonight`) while still making the
+        // quiet secondary path discoverable next to "Plan the rest".
         Button {
             onPlanTonight(day)
         } label: {
@@ -288,12 +285,17 @@ struct TonightMealCard: View {
                 Text("week.hero.open.title")
                     .font(VecklyDesign.Typography.cardTitle)
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+                Label("meal.planTonight", systemImage: "plus.circle")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                    .frame(minHeight: 44, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityHint(Text(L10n.string("meal.planTonight")))
+        .accessibilityLabel(L10n.string("meal.planTonight"))
     }
 
     // MARK: - Week done (mode 4)
