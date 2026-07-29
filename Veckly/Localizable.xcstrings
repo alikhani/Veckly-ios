@@ -2119,13 +2119,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your cookbook is empty"
+            "value" : "You have no favorites yet"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er kokbok är tom"
+            "value" : "Du har inga favoriter än"
           }
         }
       }
@@ -2151,13 +2151,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading cookbook"
+            "value" : "Loading favorites"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Laddar kokbok"
+            "value" : "Laddar favoriter"
           }
         }
       }
@@ -2167,13 +2167,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your cookbook"
+            "value" : "My favorites"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er kokbok"
+            "value" : "Mina favoriter"
           }
         }
       }
@@ -2215,13 +2215,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove from cookbook"
+            "value" : "Remove from favorites"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ta bort från kokboken"
+            "value" : "Ta bort från favoriter"
           }
         }
       }
@@ -2231,13 +2231,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove this dish from your cookbook?"
+            "value" : "Remove this dish from your favorites?"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ta bort rätten från er kokbok?"
+            "value" : "Ta bort rätten från dina favoriter?"
           }
         }
       }
@@ -2254,6 +2254,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rätten kunde inte tas bort. Försök igen."
+          }
+        }
+      }
+    },
+    "household.cookbook.sharingExplanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your favorites are personal. The week, shopping list, and recipes under “Family recipes” are shared with your household."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dina favoriter är personliga. Veckan, inköpslistan och recepten under ”Familjens recept” delas med hushållet."
           }
         }
       }
@@ -2291,19 +2307,35 @@
         }
       }
     },
-    "household.cookbook.title" : {
+    "household.cookbook.title.one" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your cookbook: %d dishes you love"
+            "value" : "My favorites: %d dish"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er kokbok: %d rätter ni gillar"
+            "value" : "Mina favoriter: %d rätt"
+          }
+        }
+      }
+    },
+    "household.cookbook.title.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My favorites: %d dishes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mina favoriter: %d rätter"
           }
         }
       }
@@ -7898,7 +7930,7 @@
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En favorit hos er"
+            "value" : "En av dina favoriter"
           }
         }
       }

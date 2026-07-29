@@ -21,6 +21,12 @@ struct FamilyCookbookStoreTests {
         #expect(store.cookbook(for: "household-1") == cookbook())
     }
 
+    @Test func personalFavoritesTitleUsesSingularOnlyForOneDish() {
+        #expect(PersonalFavoritesPresentation.titleKey(forCount: 0) == "household.cookbook.title.other")
+        #expect(PersonalFavoritesPresentation.titleKey(forCount: 1) == "household.cookbook.title.one")
+        #expect(PersonalFavoritesPresentation.titleKey(forCount: 2) == "household.cookbook.title.other")
+    }
+
     @Test func cachesAnEmptyCookbookOnFailureInsteadOfThrowing() async {
         let client = StubFamilyCookbookAPIClient(result: .failure(APIError.server(statusCode: 500)))
         let store = FamilyCookbookStore(apiClient: client)

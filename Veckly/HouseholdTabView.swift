@@ -1,5 +1,11 @@
 import SwiftUI
 
+enum PersonalFavoritesPresentation {
+    static func titleKey(forCount count: Int) -> String {
+        count == 1 ? "household.cookbook.title.one" : "household.cookbook.title.other"
+    }
+}
+
 struct HouseholdTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(AppLanguageStore.self) private var languageStore
@@ -201,9 +207,16 @@ struct HouseholdTabView: View {
         if let household, let cookbook = appModel.familyCookbookStore.cookbook(for: household.id), cookbook.totalFamilyLikedCount > 0 {
             VecklyCard {
                 VStack(alignment: .leading, spacing: VecklyDesign.Spacing.medium) {
-                    Text(L10n.format("household.cookbook.title", cookbook.totalFamilyLikedCount))
+                    Text(L10n.format(
+                        PersonalFavoritesPresentation.titleKey(forCount: cookbook.totalFamilyLikedCount),
+                        cookbook.totalFamilyLikedCount
+                    ))
                         .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+                    Text("household.cookbook.sharingExplanation")
+                        .font(.footnote)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
 
                     let previewFavorites = Array(cookbook.uniqueFavorites.prefix(5))
                     let previewDueAgain = Array(cookbook.uniqueDueAgain.prefix(3))
