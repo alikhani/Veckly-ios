@@ -974,7 +974,7 @@
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bra för rester"
+            "value" : "Bra till matlådor"
           }
         }
       }
@@ -1424,13 +1424,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not create prep batch. Try again."
+            "value" : "Could not save leftovers. Try again."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunde inte skapa prep-sats. Försök igen."
+            "value" : "Kunde inte spara matlådor. Försök igen."
           }
         }
       }
@@ -1441,13 +1441,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not load meal prep."
+            "value" : "Could not load leftovers."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunde inte ladda meal prep."
+            "value" : "Kunde inte ladda matlådor."
           }
         }
       }
@@ -4250,13 +4250,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cover these dinners"
+            "value" : "Use leftovers for these dinners"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Täck de här middagarna"
+            "value" : "Använd matlådor till dessa middagar"
           }
         }
       }
@@ -4266,13 +4266,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The batch will be used for dinner on the selected days."
+            "value" : "The leftovers will be used for dinner on the selected days."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Satsen används till middag på de valda dagarna."
+            "value" : "Matlådorna används till middag de valda dagarna."
           }
         }
       }
@@ -4289,7 +4289,7 @@
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Täcks av rester från %@, tillagad %@"
+            "value" : "Täcks av matlådor från %@, lagade %@"
           }
         }
       }
@@ -4365,13 +4365,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No prep batches this week."
+            "value" : "No leftovers planned this week."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingen meal prep den här veckan."
+            "value" : "Inga matlådor planerade den här veckan."
           }
         }
       }
@@ -4388,7 +4388,7 @@
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Matlåda"
+            "value" : "Matlådor"
           }
         }
       }
@@ -4399,13 +4399,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leftovers from %@"
+            "value" : "Covered by leftovers from %@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Matlådor sedan %@"
+            "value" : "Täcks av matlådor från %@"
           }
         }
       }
@@ -4416,13 +4416,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading prep batches"
+            "value" : "Loading leftovers"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Laddar prep-satser"
+            "value" : "Laddar matlådor"
           }
         }
       }
@@ -4432,13 +4432,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mark as leftovers"
+            "value" : "Use leftovers"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Markera som rester"
+            "value" : "Använd matlådor"
           }
         }
       }
@@ -4465,13 +4465,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New Prep Batch"
+            "value" : "Cook extra"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ny prep-sats"
+            "value" : "Laga extra"
           }
         }
       }
@@ -4515,13 +4515,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove"
+            "value" : "Stop using leftovers"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ta bort"
+            "value" : "Sluta använda matlådor"
           }
         }
       }
@@ -4549,13 +4549,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meal prep"
+            "value" : "Leftovers"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meal prep"
+            "value" : "Matlådor"
           }
         }
       }
@@ -4616,13 +4616,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meal prep"
+            "value" : "Cook extra"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meal prep"
+            "value" : "Laga extra"
           }
         }
       }
@@ -7537,13 +7537,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Get it done while it's fresh in mind — perfect if you meal-prep. We'll suggest 5 dinners that fit the week."
+            "value" : "Get it done while it's fresh in mind — perfect if you cook extra. We'll suggest 5 dinners that fit the week."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planera klart redan i helgen – perfekt om ni meal-preppar. Vi föreslår 5 middagar som passar veckan."
+            "value" : "Planera klart redan i helgen – perfekt om ni brukar laga extra. Vi föreslår 5 middagar som passar veckan."
           }
         }
       }
@@ -8124,13 +8124,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d prep-friendly dinner"
+            "value" : "%d dinner good for leftovers"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d prepvänlig middag"
+            "value" : "%d middag bra till matlådor"
           }
         }
       }
@@ -8141,13 +8141,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d prep-friendly dinners"
+            "value" : "%d dinners good for leftovers"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d prepvänliga middagar"
+            "value" : "%d middagar bra till matlådor"
           }
         }
       }
