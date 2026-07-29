@@ -121,47 +121,27 @@ struct TonightMealCard: View {
         let dayCoverage = day.recipe == nil ? coverage(day) : nil
 
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: eyebrowText)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
-                    .textCase(.uppercase)
-                Spacer()
-                if showTodayBadge {
-                    todayBadge
+            if dayCoverage == nil, day.recipe != nil {
+                Button {
+                    onViewRecipe(day)
+                } label: {
+                    mealSummary(
+                        day: day,
+                        coverage: nil,
+                        eyebrowText: eyebrowText,
+                        showTodayBadge: showTodayBadge
+                    )
+                    .contentShape(Rectangle())
                 }
-            }
-
-            Text(dayCoverage?.recipeTitle ?? day.mealTitle)
-                .font(VecklyDesign.Typography.heroTitle(for: dayCoverage?.recipeTitle ?? day.mealTitle))
-                .foregroundStyle(VecklyDesign.Colors.inkDeep)
-
-            if let dayCoverage {
-                Text(L10n.format("prep.leftoversFrom", WeekCalendar.shortDateLabel(yyyyMmDd: dayCoverage.cookDate)))
-                    .font(.body)
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-            } else if !day.detail.isEmpty {
-                Text(day.detail)
-                    .font(.body)
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-            }
-
-            if dayCoverage == nil, let reason = day.reason {
-                Text(reason.label)
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
-            }
-
-            if dayCoverage == nil, day.confidence == .low {
-                Label("week.confidence.low", systemImage: "arrow.triangle.2.circlepath")
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
-            }
-
-            if dayCoverage == nil, let streakWeeks = day.streakWeeks {
-                Label(L10n.format("week.satiation.hint", streakWeeks), systemImage: "arrow.2.squarepath")
-                    .font(.caption)
-                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.format("accessibility.viewRecipeFor", day.mealTitle))
+            } else {
+                mealSummary(
+                    day: day,
+                    coverage: dayCoverage,
+                    eyebrowText: eyebrowText,
+                    showTodayBadge: showTodayBadge
+                )
             }
 
             if let dayCoverage {
@@ -179,6 +159,60 @@ struct TonightMealCard: View {
                 actionRow(day: day)
             }
         }
+    }
+
+    @ViewBuilder
+    private func mealSummary(
+        day: WeekDayRowViewModel,
+        coverage: PrepBatchCoverage?,
+        eyebrowText: String,
+        showTodayBadge: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(verbatim: eyebrowText)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                    .textCase(.uppercase)
+                Spacer()
+                if showTodayBadge {
+                    todayBadge
+                }
+            }
+
+            Text(coverage?.recipeTitle ?? day.mealTitle)
+                .font(VecklyDesign.Typography.heroTitle(for: coverage?.recipeTitle ?? day.mealTitle))
+                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+            if let coverage {
+                Text(L10n.format("prep.leftoversFrom", WeekCalendar.shortDateLabel(yyyyMmDd: coverage.cookDate)))
+                    .font(.body)
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+            } else if !day.detail.isEmpty {
+                Text(day.detail)
+                    .font(.body)
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+            }
+
+            if coverage == nil, let reason = day.reason {
+                Text(reason.label)
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+            }
+
+            if coverage == nil, day.confidence == .low {
+                Label("week.confidence.low", systemImage: "arrow.triangle.2.circlepath")
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+            }
+
+            if coverage == nil, let streakWeeks = day.streakWeeks {
+                Label(L10n.format("week.satiation.hint", streakWeeks), systemImage: "arrow.2.squarepath")
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The two visible primary actions plus the low-priority "Laga extra" —

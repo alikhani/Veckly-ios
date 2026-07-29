@@ -91,7 +91,8 @@ final class RecipeStore {
         return created
     }
 
-    func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws {
+    @discardableResult
+    func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe {
         let updated = try await apiClient.updateRecipe(householdID: householdID, recipeID: recipeID, draft: draft)
         if let idx = recipes.firstIndex(where: { $0.id == recipeID }) {
             recipes[idx] = updated
@@ -99,6 +100,7 @@ final class RecipeStore {
         fullRecipeCache[recipeID] = updated
         lastFetchedAt = Date()
         persistCurrentCache(householdID: householdID)
+        return updated
     }
 
     func archiveRecipe(householdID: String, recipeID: String) async throws {

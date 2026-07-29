@@ -118,7 +118,11 @@ struct RecipeDetailView: View {
         }
         .sheet(item: $editingRecipe) { recipe in
             RecipeFormSheet(mode: .edit(recipe)) { draft in
-                try await appModel.recipeStore.updateRecipe(householdID: householdID, recipeID: recipe.id, draft: draft)
+                fullRecipe = try await appModel.recipeStore.updateRecipe(
+                    householdID: householdID,
+                    recipeID: recipe.id,
+                    draft: draft
+                )
             }
         }
         .task { await loadFull() }

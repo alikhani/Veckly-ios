@@ -69,11 +69,20 @@ struct RecipeStoreTests {
 
         var updatedDraft = TestRecipes.newDraft
         updatedDraft.title = "Updated pasta"
-        try await store.updateRecipe(householdID: TestRecipeHouseholds.first, recipeID: created.id, draft: updatedDraft)
+        updatedDraft.ingredients = [
+            DraftIngredient(item: "Tomatoes", amount: "400", unit: "g")
+        ]
+        let updateResponse = try await store.updateRecipe(
+            householdID: TestRecipeHouseholds.first,
+            recipeID: created.id,
+            draft: updatedDraft
+        )
 
         let cachedUpdated = try await store.getOrFetchFull(householdID: TestRecipeHouseholds.first, recipeID: created.id)
 
         #expect(cachedUpdated.title == "Updated pasta")
+        #expect(cachedUpdated.ingredients.map(\.item) == ["Tomatoes"])
+        #expect(updateResponse == cachedUpdated)
         #expect(store.recipes.first?.title == "Updated pasta")
         #expect(apiClient.recipeFetchCount == 0)
     }
