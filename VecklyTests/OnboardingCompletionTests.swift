@@ -23,7 +23,9 @@ struct OnboardingCompletionTests {
         )
 
         #expect(outcome == .success(goToDishSaved: true))
+        #expect(recipeAPI.fillInTitles == ["Taco Tuesday"])
         #expect(recipeAPI.createdDraftTitles == ["Filled: Taco Tuesday"])
+        #expect(householdAPI.saveProfileCallCount == 1)
         #expect(householdStore.profile?.adults == 2)
         #expect(householdStore.profile?.children == 1)
         #expect(householdStore.profile?.priorities == [.quick])
@@ -69,7 +71,7 @@ struct OnboardingCompletionTests {
         #expect(householdStore.profile?.selectedDays.first(where: { $0.day == .friday }) == fridayWithSignals)
     }
 
-    @Test func emptyGoToDishTitleSkipsRecipeCreationButStillSavesProfile() async {
+    @Test func skippedGoToDishCreatesNoRecipeButStillSavesProfile() async {
         let recipeAPI = FakeOnboardingRecipeAPIClient()
         let householdAPI = FakeOnboardingHouseholdAPIClient()
         let recipeStore = RecipeStore(apiClient: recipeAPI, cacheStore: NoOpRecipeCache())
@@ -88,8 +90,10 @@ struct OnboardingCompletionTests {
         )
 
         #expect(outcome == .success(goToDishSaved: false))
+        #expect(recipeAPI.fillInTitles.isEmpty)
         #expect(recipeAPI.createdDraftTitles.isEmpty)
         #expect(householdStore.profile != nil)
+        #expect(householdAPI.saveProfileCallCount == 1)
     }
 
     @Test func goToDishCreateFailureStopsBeforeProfileIsSaved() async {
@@ -183,6 +187,7 @@ private final class NoOpRecipeCache: RecipeStoreCachePersisting {
 private final class FakeOnboardingRecipeAPIClient: RecipeStoreAPIClient {
     var shouldFailFillIn = false
     var shouldFailCreate = false
+    private(set) var fillInTitles: [String] = []
     private(set) var createdDraftTitles: [String] = []
 
     func listHouseholdRecipes(householdID: String, includePublic: Bool) async throws -> [FullRecipe] { [] }
@@ -221,6 +226,7 @@ private final class FakeOnboardingRecipeAPIClient: RecipeStoreAPIClient {
     }
 
     func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
+        fillInTitles.append(title)
         if shouldFailFillIn { throw TestOnboardingError.failed }
         return RecipeDraft(title: "Filled: \(title)")
     }

@@ -4033,6 +4033,22 @@
         }
       }
     },
+    "onboarding.goToDish.skip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip for now"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoppa över"
+          }
+        }
+      }
+    },
     "onboarding.goToDish.subtitle" : {
       "localizations" : {
         "en" : {

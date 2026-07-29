@@ -220,12 +220,26 @@ private struct OnboardingGoToDishView: View {
         .background(VecklyDesign.Colors.canvas)
         .navigationBarHidden(true)
         .safeAreaInset(edge: .bottom) {
-            Button("onboarding.continue", action: onContinue)
-                .buttonStyle(VecklyPrimaryButtonStyle())
-                .disabled(goToDishTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 16)
-                .background(VecklyDesign.Colors.canvas)
+            VStack(spacing: 10) {
+                Button("onboarding.continue", action: onContinue)
+                    .buttonStyle(VecklyPrimaryButtonStyle())
+                    .disabled(goToDishTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityIdentifier("goToDishContinueButton")
+
+                Button("onboarding.goToDish.skip") {
+                    goToDishTitle = ""
+                    onContinue()
+                }
+                .buttonStyle(.plain)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                .frame(minHeight: 44)
+                .accessibilityLabel(L10n.string("onboarding.goToDish.skip"))
+                .accessibilityIdentifier("goToDishSkipButton")
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+            .background(VecklyDesign.Colors.canvas)
         }
     }
 }
