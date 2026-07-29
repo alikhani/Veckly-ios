@@ -1,4 +1,120 @@
 import SwiftUI
+import Observation
+
+@MainActor
+@Observable
+final class LeftoversWithoutRecipeFormModel {
+    var totalPortions: Int
+    private(set) var isSaving = false
+    private(set) var saveFailed = false
+
+    init(totalPortions: Int) {
+        self.totalPortions = min(20, max(1, totalPortions))
+    }
+
+    static func defaultPortions(profile: HouseholdProfile?) -> Int {
+        min(20, max(1, (profile?.adults ?? 0) + (profile?.children ?? 0)))
+    }
+
+    func save(operation: (Int) async throws -> Void) async -> Bool {
+        guard !isSaving else { return false }
+        isSaving = true
+        saveFailed = false
+        defer { isSaving = false }
+
+        do {
+            try await operation(totalPortions)
+            return true
+        } catch {
+            saveFailed = true
+            return false
+        }
+    }
+
+    func clearError() {
+        saveFailed = false
+    }
+}
+
+struct LeftoversWithoutRecipeSheet: View {
+    let day: WeekDayRowViewModel
+    let weekStartDate: String
+
+    @Environment(AppModel.self) private var appModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var model: LeftoversWithoutRecipeFormModel
+
+    init(day: WeekDayRowViewModel, initialPortions: Int, weekStartDate: String) {
+        self.day = day
+        self.weekStartDate = weekStartDate
+        _model = State(initialValue: LeftoversWithoutRecipeFormModel(totalPortions: initialPortions))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("prep.details") {
+                    LabeledContent("prep.cookDate", value: day.dateLabel)
+                    LabeledContent("prep.meal", value: L10n.string("prep.dinner"))
+                    Stepper(
+                        L10n.format("prep.portionsCount", model.totalPortions),
+                        value: $model.totalPortions,
+                        in: 1...20
+                    )
+                    .accessibilityIdentifier("leftoversPortionsStepper")
+                }
+            }
+            .navigationTitle(L10n.string("prep.markAsLeftovers"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.cancel") { dismiss() }
+                        .disabled(model.isSaving)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if model.isSaving {
+                        ProgressView()
+                            .accessibilityLabel(L10n.string("common.save"))
+                    } else {
+                        Button("common.save") {
+                            Task { await save() }
+                        }
+                        .accessibilityIdentifier("saveLeftoversButton")
+                    }
+                }
+            }
+            .interactiveDismissDisabled(model.isSaving)
+            .alert(
+                L10n.string("common.error"),
+                isPresented: Binding(
+                    get: { model.saveFailed },
+                    set: { if !$0 { model.clearError() } }
+                )
+            ) {
+                Button("common.ok") { model.clearError() }
+            } message: {
+                Text("error.prep.create")
+            }
+        }
+    }
+
+    private func save() async {
+        guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
+        let succeeded = await model.save { totalPortions in
+            try await appModel.prepBatchStore.create(
+                householdID: householdID,
+                weekStartDate: weekStartDate,
+                recipeId: nil,
+                cookDate: day.date,
+                totalPortions: totalPortions,
+                assignments: [(date: day.date, mealType: .dinner)]
+            )
+        }
+        if succeeded {
+            dismiss()
+        }
+    }
+}
 
 // MARK: - "Eat this again" sheet
 

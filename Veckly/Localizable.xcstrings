@@ -4327,6 +4327,22 @@
         }
       }
     },
+    "prep.dinner" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Middag"
+          }
+        }
+      }
+    },
     "prep.eatAgain" : {
       "localizations" : {
         "en" : {
@@ -4423,6 +4439,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Markera som rester"
+          }
+        }
+      }
+    },
+    "prep.meal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meal"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Måltid"
           }
         }
       }

@@ -17,6 +17,12 @@ private struct PrepBatchSeed: Identifiable {
     var id: String { recipeID + cookDate }
 }
 
+private struct LeftoversWithoutRecipeSeed: Identifiable {
+    let day: WeekDayRowViewModel
+    let defaultPortions: Int
+    var id: String { day.id }
+}
+
 /// Snapshot of the days a "Regenerate" run is about to overwrite, captured
 /// just before the API call — restoring from it is how the undo banner puts
 /// the previous plan back without the backend needing an undo endpoint.
@@ -72,6 +78,7 @@ struct WeekTabView: View {
     @State private var mealPickerDay: WeekDayRowViewModel?
     @State private var selectedDayForDetail: WeekDayRowViewModel?
     @State private var prepBatchSeed: PrepBatchSeed?
+    @State private var leftoversWithoutRecipeSeed: LeftoversWithoutRecipeSeed?
     @State private var viewedWeekOffset: ViewedWeekOffset = .current
     @State private var isWeekPickerPresented = false
     @State private var weekendNudgeDismissedToday = false
@@ -339,16 +346,13 @@ struct WeekTabView: View {
                     presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date) }
                 },
                 onMarkAsLeftoverNoRecipe: {
-                    guard let hid = appModel.householdStore.activeHousehold?.id else { return }
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let profile = appModel.householdStore.cachedProfile(for: household.id)
                     mealPickerDay = nil
-                    Task {
-                        try? await appModel.prepBatchStore.create(
-                            householdID: hid,
-                            weekStartDate: appModel.weekStore.weekStartDate,
-                            recipeId: nil,
-                            cookDate: day.date,
-                            totalPortions: 4,
-                            assignments: [(date: day.date, mealType: .dinner)]
+                    presentAfterDismiss {
+                        leftoversWithoutRecipeSeed = LeftoversWithoutRecipeSeed(
+                            day: day,
+                            defaultPortions: LeftoversWithoutRecipeFormModel.defaultPortions(profile: profile)
                         )
                     }
                 },
@@ -429,6 +433,13 @@ struct WeekTabView: View {
         }
         .sheet(item: $prepBatchSeed) { seed in
             PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date())
+        }
+        .sheet(item: $leftoversWithoutRecipeSeed) { seed in
+            LeftoversWithoutRecipeSheet(
+                day: seed.day,
+                initialPortions: seed.defaultPortions,
+                weekStartDate: viewedWeekStartDate
+            )
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             // Week/prep/household-details are core-reader resources —
