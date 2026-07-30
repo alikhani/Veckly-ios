@@ -1,22 +1,5 @@
 import SwiftUI
 
-/// The conversion `WeekTabView` already needed to call `assignMeal` — shared
-/// here since the preview step (below) needs the same shape to hand off to
-/// `RecipeDetailView`.
-extension FullRecipe {
-    var asWeekSummaryRecipe: WeekSummaryRecipe {
-        WeekSummaryRecipe(
-            id: id,
-            title: title,
-            description: description,
-            servings: servings,
-            prepTimeMinutes: prepTimeMinutes,
-            cookTimeMinutes: cookTimeMinutes,
-            tags: tags
-        )
-    }
-}
-
 struct MealPickerSheet: View {
     let day: WeekDayRowViewModel
     let isSkipped: Bool
@@ -157,12 +140,12 @@ struct MealPickerSheet: View {
             .navigationDestination(item: $previewRecipeID) { recipeID in
                 if let recipe = recipes.first(where: { $0.id == recipeID }) {
                     RecipeDetailView(
-                        recipe: recipe.asWeekSummaryRecipe,
+                        recipe: WeekSummaryRecipe(fullRecipe: recipe),
                         householdID: householdID,
                         confirmButtonTitle: confirmedRecipe == nil ? L10n.format("meal.chooseForDay", day.weekdayLabel) : nil,
                         onConfirm: confirmedRecipe == nil ? {
                             onSelect(recipe)
-                            confirmedRecipe = recipe.asWeekSummaryRecipe
+                            confirmedRecipe = WeekSummaryRecipe(fullRecipe: recipe)
                             previewRecipeID = nil
                         } : nil
                     )
@@ -217,7 +200,7 @@ struct MealPickerSheet: View {
                 // identical onSelect → confirmedRecipe hand-off (beslut 18).
                 let recipe = try await appModel.recipeStore.createRecipe(householdID: household.id, draft: draft)
                 onSelect(recipe)
-                confirmedRecipe = recipe.asWeekSummaryRecipe
+                confirmedRecipe = WeekSummaryRecipe(fullRecipe: recipe)
             }
         }
     }

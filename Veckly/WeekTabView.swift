@@ -315,7 +315,7 @@ struct WeekTabView: View {
                         let wasEmptyBefore = hasOpenRelevantDays
                         Task {
                             appModel.shoppingListStore.invalidateCache()
-                            await appModel.weekStore.assignMeal(day: day, recipe: recipe.asWeekSummaryRecipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
+                            await appModel.weekStore.assignMeal(day: day, recipe: WeekSummaryRecipe(fullRecipe: recipe), household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
                             await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
                             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
                         }
