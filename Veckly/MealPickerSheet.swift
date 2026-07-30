@@ -176,17 +176,12 @@ struct MealPickerSheet: View {
                     }
                 }
             }
-            .confirmationDialog(L10n.string("meal.removeConfirmation"), isPresented: $showClearConfirmation, titleVisibility: .visible) {
-                Button("meal.clear", role: .destructive) { onClear() }
-                Button("common.cancel", role: .cancel) {}
-            } message: {
-                Text("meal.removeExplanation")
+            .removeDishConfirmation(isPresented: $showClearConfirmation) {
+                onClear()
             }
-            .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
-                Button("meal.skip", role: .destructive) { onSkip(); onDismiss() }
-                Button("common.cancel", role: .cancel) {}
-            } message: {
-                Text("meal.skipExplanation")
+            .skipDayConfirmation(isPresented: $showSkipConfirmation) {
+                onSkip()
+                onDismiss()
             }
         }
         .task { await loadRecipes() }

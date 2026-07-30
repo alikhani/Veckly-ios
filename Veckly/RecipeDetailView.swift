@@ -138,11 +138,8 @@ struct RecipeDetailView: View {
                 )
             }
         }
-        .confirmationDialog(L10n.string("meal.skipConfirmation"), isPresented: $showSkipConfirmation, titleVisibility: .visible) {
-            Button("meal.skip", role: .destructive) { onSkip?() }
-            Button("common.cancel", role: .cancel) {}
-        } message: {
-            Text("meal.skipExplanation")
+        .skipDayConfirmation(isPresented: $showSkipConfirmation) {
+            onSkip?()
         }
         .task { await loadFull() }
     }
