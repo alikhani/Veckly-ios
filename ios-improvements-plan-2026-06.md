@@ -706,7 +706,15 @@ Veckly-backend (Vercel)
 `WeekCalendar.swift` och `WeekStore.swift` använde UTC-kalender för dagjämförelser. I Stockholm (UTC+2) innebär det att kl 00:55 onsdag fortfarande räknas som tisdag. Bytt till `Calendar.current` (enhetens lokaltid) genomgående i `isToday` och `isPast`.
 
 **Passerade dagar tonas ner**
-`WeekDayRowViewModel` har ett nytt fält `isPast: Bool`. `CompactDayRow` applicerar `opacity(0.45)` på hela raden när `isPast` är sant. Det orangea "Plan"-alternativet döljs för passerade dagar. Swipe-action är borttagen för passerade dagar via `SwipeSkipModifier` (ViewModifier som branchar på modifier-nivå snarare än inuti `swipeActions { }` — undviker ghost-hitregioner i UIKit).
+`WeekDayRowViewModel` har ett nytt fält `isPast: Bool`. `CompactDayRow` applicerar reducerad opacity på hela raden när `isPast` är sant. Det orangea "Plan"-alternativet döljs för passerade dagar.
+
+**Uppföljning 2026-07-30 — stabil veckostruktur**
+Tom och påbörjad vecka använder nu samma veckolista: aktuell vecka visas alltid från
+måndag, med passerade dagar nedtonade i stället för bortfiltrerade. Tomma passerade
+dagar är statiska; planerade passerade dagar kan öppnas read-only för receptläsning.
+Nästa vecka är fortsatt fullt redigerbar och förra veckan fullt read-only. Samma
+presentationsregel styr även helgkollapsen, så den skiljer sig inte mellan tom och
+påbörjad vecka.
 
 **"Skip this day" tillgänglig utan scroll**
 `RecipeDetailView` renderar nu ett skip/plan-alternativ allra överst i sheeten, ovanför receptets titel och innehåll. Tidigare krävdes scroll hela vägen ned. Parametrarna `isSkipped: Bool?` och `onSkip: (() -> Void)?` är optional med nil-default, så call sites som inte skickar in dag-kontext (t.ex. receptfliken) påverkas inte.

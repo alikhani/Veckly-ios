@@ -195,6 +195,10 @@ struct WeekTabView: View {
                         emptyWeekView
                     } else {
                         tonightHeroCard
+                        if isViewingLastWeek {
+                            weekList
+                            collapsedWeekendSection
+                        }
                     }
                 } else {
                     tonightHeroCard
@@ -202,10 +206,8 @@ struct WeekTabView: View {
                         weekPlanningStatusCard
                     }
                     weekQualityCard
-                    if !isViewingLastWeek || appModel.weekStore.hasPlannedMeals {
-                        weekList
-                        collapsedWeekendSection
-                    }
+                    weekList
+                    collapsedWeekendSection
                 }
             }
             .padding(18)
@@ -279,12 +281,15 @@ struct WeekTabView: View {
             }
         }
         .sheet(item: $selectedDayRecipe) { pair in
+            let interaction = weekListPresentation.interaction(for: pair.day)
+            let allowsDayMutation = interaction == .editDay
             NavigationStack {
                 RecipeDetailView(
                     recipe: pair.recipe,
                     householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                    isSkipped: pair.day.isSkipped,
-                    onSkip: {
+                    isSkipped: allowsDayMutation ? pair.day.isSkipped : nil,
+                    onSkip: allowsDayMutation ? {
+                        guard canEditDay(pair.day) else { return }
                         guard let household = appModel.householdStore.activeHousehold else { return }
                         if let userID = appModel.authSessionStore.userID {
                             selectedDayRecipe = nil
@@ -292,7 +297,8 @@ struct WeekTabView: View {
                         } else {
                             Task { await appModel.handleUnauthorized() }
                         }
-                    }
+                    } : nil,
+                    isReadOnly: !allowsDayMutation
                 )
             }
         }
@@ -303,6 +309,7 @@ struct WeekTabView: View {
                 coverage: coverage(for: day),
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
                 onSelect: { recipe in
+                    guard canMutateDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
                         let wasEmptyBefore = hasOpenRelevantDays
@@ -317,6 +324,7 @@ struct WeekTabView: View {
                     }
                 },
                 onClear: {
+                    guard canMutateDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
                         mealPickerDay = nil
@@ -330,6 +338,7 @@ struct WeekTabView: View {
                     }
                 },
                 onSkip: {
+                    guard canMutateDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
                         let wasEmptyBefore = hasOpenRelevantDays
@@ -342,10 +351,12 @@ struct WeekTabView: View {
                     }
                 },
                 onMarkAsLeftover: { recipeID in
+                    guard canMutateDay(day) else { return }
                     mealPickerDay = nil
                     presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date) }
                 },
                 onMarkAsLeftoverNoRecipe: {
+                    guard canMutateDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     let profile = appModel.householdStore.cachedProfile(for: household.id)
                     mealPickerDay = nil
@@ -357,6 +368,7 @@ struct WeekTabView: View {
                     }
                 },
                 onRemoveCoverage: {
+                    guard canMutateDay(day) else { return }
                     guard let hid = appModel.householdStore.activeHousehold?.id,
                           let dayCoverage = coverage(for: day) else { return }
                     mealPickerDay = nil
@@ -385,10 +397,12 @@ struct WeekTabView: View {
                     }
                 },
                 onSwap: {
+                    guard canEditDay(day) else { return }
                     selectedDayForDetail = nil
                     presentAfterDismiss { mealPickerDay = day }
                 },
                 onSkip: {
+                    guard canEditDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
                         Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
@@ -397,6 +411,7 @@ struct WeekTabView: View {
                     }
                 },
                 onClear: {
+                    guard canEditDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     if let userID = appModel.authSessionStore.userID {
                         selectedDayForDetail = nil
@@ -410,6 +425,7 @@ struct WeekTabView: View {
                     }
                 },
                 onMarkAsLeftover: {
+                    guard canEditDay(day) else { return }
                     selectedDayForDetail = nil
                     if let recipe = day.recipe {
                         presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date) }
@@ -417,6 +433,7 @@ struct WeekTabView: View {
                 },
                 isLocked: day.isLocked,
                 onToggleLock: {
+                    guard canEditDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }
                     guard let userID = appModel.authSessionStore.userID else {
                         Task { await appModel.handleUnauthorized() }
@@ -858,34 +875,8 @@ struct WeekTabView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            Text("week.section")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                .padding(.top, 4)
-
-            ForEach(appModel.weekStore.dayRows) { day in
-                if !day.isPast {
-                    Button { mealPickerDay = day } label: {
-                        HStack(spacing: 12) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(day.weekdayLabel)
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(day.isToday ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
-                                Text(day.dateLabel)
-                                    .font(.caption)
-                                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                            }
-                            .frame(width: 72, alignment: .leading)
-
-                            Rectangle()
-                                .fill(VecklyDesign.Colors.edgeLight)
-                                .frame(height: 1)
-                        }
-                        .frame(height: 36)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+            weekList
+            collapsedWeekendSection
         }
     }
 
@@ -1126,14 +1117,22 @@ struct WeekTabView: View {
                     selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
                 }
             },
-            onSwap: { day in mealPickerDay = day },
-            onPlanTonight: { day in mealPickerDay = day },
+            onSwap: { day in
+                guard canMutateDay(day) else { return }
+                mealPickerDay = day
+            },
+            onPlanTonight: { day in
+                guard canMutateDay(day) else { return }
+                mealPickerDay = day
+            },
             onEatExtra: { day in
+                guard canMutateDay(day) else { return }
                 if let recipe = day.recipe {
                     prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
                 }
             },
             onRemoveCoverage: { day, dayCoverage in
+                guard canMutateDay(day) else { return }
                 guard let household = appModel.householdStore.activeHousehold else { return }
                 Task {
                     try? await appModel.prepBatchStore.removeAssignment(
@@ -1186,32 +1185,8 @@ struct WeekTabView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            Text("week.section")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                .padding(.top, 4)
-
-            ForEach(appModel.weekStore.dayRows) { day in
-                Button { mealPickerDay = day } label: {
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(day.weekdayLabel)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(VecklyDesign.Colors.inkMid)
-                            Text(day.dateLabel)
-                                .font(.caption)
-                                .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                        }
-                        .frame(width: 72, alignment: .leading)
-
-                        Rectangle()
-                            .fill(VecklyDesign.Colors.edgeLight)
-                            .frame(height: 1)
-                    }
-                    .frame(height: 36)
-                }
-                .buttonStyle(.plain)
-            }
+            weekList
+            collapsedWeekendSection
         }
     }
 
@@ -1254,22 +1229,42 @@ struct WeekTabView: View {
     /// Saturday/Sunday rows — only relevant when deciding whether to collapse
     /// them (beslut 8); a household that plans the weekend never collapses it.
     private var weekendDays: [WeekDayRowViewModel] {
-        appModel.weekStore.dayRows.filter { $0.weekday == .saturday || $0.weekday == .sunday }
+        weekListPresentation.weekendDays
     }
 
     /// Beslut 8: only households that never plan Sat/Sun get a collapsed
     /// weekend section. A household with the weekend in `selectedDays` sees
     /// it as regular rows in `listDays`, counted in scope like any other day.
     private var shouldCollapseWeekend: Bool {
-        !weekPlanningScope.includesWeekend && !weekendDays.isEmpty
+        weekListPresentation.shouldCollapseWeekend
     }
 
     /// The week list always shows every relevant day, in order, with no
     /// holes (beslut 3) — weekend days are the one exception, moved to
     /// `collapsedWeekendSection` when the household doesn't plan them.
     private var listDays: [WeekDayRowViewModel] {
-        guard shouldCollapseWeekend else { return appModel.weekStore.dayRows }
-        return appModel.weekStore.dayRows.filter { $0.weekday != .saturday && $0.weekday != .sunday }
+        weekListPresentation.mainDays
+    }
+
+    private var weekListPresentation: WeekListPresentation {
+        WeekListPresentation(
+            days: appModel.weekStore.dayRows,
+            viewedWeekOffset: viewedWeekOffset,
+            includesWeekend: weekPlanningScope.includesWeekend
+        )
+    }
+
+    private func canEditDay(_ day: WeekDayRowViewModel) -> Bool {
+        weekListPresentation.interaction(for: day) == .editDay
+    }
+
+    private func canMutateDay(_ day: WeekDayRowViewModel) -> Bool {
+        switch weekListPresentation.interaction(for: day) {
+        case .editDay, .planDay:
+            true
+        case .none, .viewRecipe:
+            false
+        }
     }
 
     /// Shared tap handling for both the main list and the collapsed weekend
@@ -1277,13 +1272,19 @@ struct WeekTabView: View {
     /// showing today) has no tap target of its own (beslut 3); the hero
     /// itself carries the actions.
     private func handleDayTap(_ day: WeekDayRowViewModel) {
-        if isViewingLastWeek {
-            if let recipe = day.recipe { selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe) }
-            return
-        }
         if isViewingCurrentWeek, day.isToday, todayRowIsHeroOwned { return }
-        if day.recipe != nil { selectedDayForDetail = day }
-        else if !day.isPast { mealPickerDay = day }
+        switch weekListPresentation.interaction(for: day) {
+        case .none:
+            break
+        case .viewRecipe:
+            if let recipe = day.recipe {
+                selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+            }
+        case .editDay:
+            selectedDayForDetail = day
+        case .planDay:
+            mealPickerDay = day
+        }
     }
 
     private func dayRow(_ day: WeekDayRowViewModel) -> some View {
@@ -1292,7 +1293,7 @@ struct WeekTabView: View {
             coverage: coverage(for: day),
             isTodayBadge: day.isToday,
             isHeroOwned: isViewingCurrentWeek && day.isToday && todayRowIsHeroOwned,
-            isViewOnly: isViewingLastWeek,
+            interaction: weekListPresentation.interaction(for: day),
             onTap: { handleDayTap(day) }
         )
     }
@@ -1370,12 +1371,12 @@ struct CompactDayRow: View {
     /// only then does the row give up its tap target and trailing "Plan"
     /// hint, so the hero's actions are never duplicated (beslut 3).
     var isHeroOwned: Bool = false
-    var isViewOnly: Bool = false
+    var interaction: WeekDayRowInteraction = .editDay
     let onTap: () -> Void
 
     var body: some View {
         Group {
-            if isHeroOwned {
+            if isHeroOwned || interaction == .none {
                 rowContent
                     .accessibilityElement(children: .combine)
             } else {
@@ -1479,7 +1480,7 @@ struct CompactDayRow: View {
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
             }
             Spacer()
-            if !day.isPast && !isViewOnly && !isHeroOwned {
+            if interaction == .planDay && !isHeroOwned {
                 Text("meal.plan")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
@@ -1507,7 +1508,7 @@ struct CompactDayRow: View {
                 .background(VecklyDesign.Colors.surfaceStrong)
                 .clipShape(Capsule())
             Spacer()
-            if !day.isPast && !isViewOnly && !isHeroOwned {
+            if interaction == .editDay && !isHeroOwned {
                 Text("meal.plan")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)

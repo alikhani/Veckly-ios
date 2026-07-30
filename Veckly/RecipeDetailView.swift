@@ -11,6 +11,9 @@ struct RecipeDetailView: View {
     /// when this view is just being read (already chosen, or viewed read-only).
     var confirmButtonTitle: String? = nil
     var onConfirm: (() -> Void)? = nil
+    /// Historical week rows are reference material: no recipe edit, feedback,
+    /// household bookmark, or day mutation is exposed from this presentation.
+    var isReadOnly: Bool = false
 
     @Environment(AppModel.self) private var appModel
     @State private var fullRecipe: FullRecipe?
@@ -63,10 +66,12 @@ struct RecipeDetailView: View {
                     FlowTags(tags: recipe.tags)
                 }
 
-                voteRow
+                if !isReadOnly {
+                    voteRow
 
-                if let fullRecipe, isCommunityRecipe(fullRecipe) {
-                    householdBookmarkRow(recipeID: fullRecipe.id)
+                    if let fullRecipe, isCommunityRecipe(fullRecipe) {
+                        householdBookmarkRow(recipeID: fullRecipe.id)
+                    }
                 }
 
                 if isLoadingFull {
@@ -113,7 +118,7 @@ struct RecipeDetailView: View {
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if let full = fullRecipe {
+            if !isReadOnly, let full = fullRecipe {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         editingRecipe = full
