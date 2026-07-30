@@ -1419,7 +1419,6 @@
       }
     },
     "error.prep.create" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2115,6 +2114,7 @@
       }
     },
     "household.cookbook.empty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2147,6 +2147,7 @@
       }
     },
     "household.cookbook.loading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2163,6 +2164,7 @@
       }
     },
     "household.cookbook.navigationTitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2179,6 +2181,7 @@
       }
     },
     "household.cookbook.notCookedYet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2195,6 +2198,7 @@
       }
     },
     "household.cookbook.openRecipeHint" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2227,6 +2231,7 @@
       }
     },
     "household.cookbook.removeConfirmation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2243,6 +2248,7 @@
       }
     },
     "household.cookbook.removeFailed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2275,6 +2281,7 @@
       }
     },
     "household.cookbook.showAll" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2325,6 +2332,7 @@
       }
     },
     "household.cookbook.title.other" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2988,7 +2996,6 @@
       }
     },
     "meal.planTonight" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3086,22 +3093,6 @@
         }
       }
     },
-    "meal.skipExplanation" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No dinner will be planned for this day. If a dish is already assigned, it will be kept and return when you plan the day again."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ingen middag planeras den här dagen. Om en rätt redan är vald behålls den och kommer tillbaka när du planerar dagen igen."
-          }
-        }
-      }
-    },
     "meal.skipDay" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3115,6 +3106,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoppa över den här dagen"
+          }
+        }
+      }
+    },
+    "meal.skipExplanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No dinner will be planned for this day. If a dish is already assigned, it will be kept and return when you plan the day again."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen middag planeras den här dagen. Om en rätt redan är vald behålls den och kommer tillbaka när du planerar dagen igen."
           }
         }
       }
@@ -4392,6 +4399,7 @@
       }
     },
     "prep.dinner" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5419,7 +5427,6 @@
       }
     },
     "recipes.detailLoadFailed" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5819,7 +5826,6 @@
       }
     },
     "recipes.tryDifferentSearch" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
