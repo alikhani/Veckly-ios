@@ -36,18 +36,11 @@ struct RecipesTabView: View {
                 LoadingPanel(title: L10n.string("recipes.loading"))
                     .padding()
             } else if let errorMessage = appModel.recipeStore.errorMessage, appModel.recipeStore.recipes.isEmpty {
-                ContentUnavailableView {
-                    Label("recipes.loadFailed", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(errorMessage)
-                } actions: {
-                    Button("common.tryAgain") {
-                        guard let household = appModel.householdStore.activeHousehold else { return }
-                        Task { await appModel.recipeStore.loadRecipes(householdID: household.id) }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+                ErrorPanel(message: errorMessage) {
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    Task { await appModel.recipeStore.loadRecipes(householdID: household.id) }
                 }
+                .padding()
             } else if filtered.isEmpty {
                 ContentUnavailableView {
                     Label(searchQuery.isEmpty ? L10n.string("recipes.empty.title") : L10n.string("recipes.noResults"), systemImage: "fork.knife")
