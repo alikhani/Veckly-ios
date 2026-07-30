@@ -235,37 +235,21 @@ protocol RecipeStoreCachePersisting {
 }
 
 struct RecipeStoreDiskCache: RecipeStoreCachePersisting {
-    private let fileManager: FileManager = .default
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
-
     func loadRecipes(householdID: String) -> PersistedRecipeCache? {
-        let url = cacheURL(for: householdID)
-        guard let data = try? Data(contentsOf: url),
-              let cache = try? decoder.decode(PersistedRecipeCache.self, from: data) else {
-            return nil
-        }
+        guard let cache = diskCache(for: householdID).load() else { return nil }
         return cache.householdID == householdID ? cache : nil
     }
 
     func saveRecipes(_ cache: PersistedRecipeCache) {
-        let url = cacheURL(for: cache.householdID)
-        let directory = url.deletingLastPathComponent()
-        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-        guard let data = try? encoder.encode(cache) else { return }
-        try? data.write(to: url, options: [.atomic])
+        diskCache(for: cache.householdID).save(cache)
     }
 
     func deleteRecipes(householdID: String) {
-        try? fileManager.removeItem(at: cacheURL(for: householdID))
+        diskCache(for: householdID).delete()
     }
 
-    private func cacheURL(for householdID: String) -> URL {
-        let baseDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
-            ?? fileManager.temporaryDirectory
-        return baseDirectory
-            .appendingPathComponent("Veckly", isDirectory: true)
-            .appendingPathComponent("recipes-\(householdID).json")
+    private func diskCache(for householdID: String) -> JSONDiskCache<PersistedRecipeCache> {
+        JSONDiskCache(fileName: "recipes-\(householdID).json")
     }
 }
 

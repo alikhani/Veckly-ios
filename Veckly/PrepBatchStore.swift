@@ -244,36 +244,20 @@ protocol PrepBatchStoreCachePersisting {
 }
 
 struct PrepBatchStoreDiskCache: PrepBatchStoreCachePersisting {
-    private let fileManager: FileManager = .default
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
-
     func loadBatches(householdID: String, weekStartDate: String) -> PersistedPrepBatchCache? {
-        let url = cacheURL(householdID: householdID, weekStartDate: weekStartDate)
-        guard let data = try? Data(contentsOf: url),
-              let cache = try? decoder.decode(PersistedPrepBatchCache.self, from: data) else {
-            return nil
-        }
+        guard let cache = diskCache(householdID: householdID, weekStartDate: weekStartDate).load() else { return nil }
         return cache.householdID == householdID && cache.weekStartDate == weekStartDate ? cache : nil
     }
 
     func saveBatches(_ cache: PersistedPrepBatchCache) {
-        let url = cacheURL(householdID: cache.householdID, weekStartDate: cache.weekStartDate)
-        let directory = url.deletingLastPathComponent()
-        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-        guard let data = try? encoder.encode(cache) else { return }
-        try? data.write(to: url, options: [.atomic])
+        diskCache(householdID: cache.householdID, weekStartDate: cache.weekStartDate).save(cache)
     }
 
     func deleteBatches(householdID: String, weekStartDate: String) {
-        try? fileManager.removeItem(at: cacheURL(householdID: householdID, weekStartDate: weekStartDate))
+        diskCache(householdID: householdID, weekStartDate: weekStartDate).delete()
     }
 
-    private func cacheURL(householdID: String, weekStartDate: String) -> URL {
-        let baseDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
-            ?? fileManager.temporaryDirectory
-        return baseDirectory
-            .appendingPathComponent("Veckly", isDirectory: true)
-            .appendingPathComponent("prep-batches-\(householdID)-\(weekStartDate).json")
+    private func diskCache(householdID: String, weekStartDate: String) -> JSONDiskCache<PersistedPrepBatchCache> {
+        JSONDiskCache(fileName: "prep-batches-\(householdID)-\(weekStartDate).json")
     }
 }
