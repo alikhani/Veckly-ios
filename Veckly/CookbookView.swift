@@ -89,14 +89,7 @@ struct CookbookView: View {
                 removalCandidate = nil
             }
         }
-        .alert(L10n.string("common.error"), isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button("common.ok") { errorMessage = nil }
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .standardErrorAlert(message: $errorMessage)
     }
 
     private func filtered(_ recipes: [FamilyCookbook.Recipe]) -> [FamilyCookbook.Recipe] {

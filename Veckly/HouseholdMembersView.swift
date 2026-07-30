@@ -34,11 +34,7 @@ struct HouseholdMembersView: View {
             joinSection
         }
         .navigationTitle(L10n.string("members.title"))
-        .alert(L10n.string("common.error"),
-            isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
-            actions: { Button("common.ok") { errorMessage = nil } },
-            message: { Text(errorMessage ?? "") }
-        )
+        .standardErrorAlert(message: $errorMessage)
         .confirmationDialog(leaveConfirmationTitle, isPresented: $showLeaveConfirmation, titleVisibility: .visible) {
             Button("members.leave", role: .destructive) {
                 Task { await leaveCurrentHousehold() }

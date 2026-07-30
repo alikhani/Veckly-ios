@@ -159,14 +159,7 @@ struct RecipesTabView: View {
             }
             Button("common.cancel", role: .cancel) { archiveCandidate = nil }
         }
-        .alert(L10n.string("common.error"), isPresented: Binding(
-            get: { transientErrorMessage != nil },
-            set: { if !$0 { transientErrorMessage = nil } }
-        )) {
-            Button("common.ok") { transientErrorMessage = nil }
-        } message: {
-            Text(transientErrorMessage ?? "")
-        }
+        .standardErrorAlert(message: $transientErrorMessage)
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard let household = appModel.householdStore.activeHousehold else { return }
             await appModel.loadRecipesAndSeedFeedback(householdID: household.id)

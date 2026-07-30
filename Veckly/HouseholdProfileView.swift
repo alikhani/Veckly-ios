@@ -51,11 +51,7 @@ struct HouseholdProfileView: View {
                 }
             }
         }
-        .alert(L10n.string("common.error"),
-            isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
-            actions: { Button("common.ok") { errorMessage = nil } },
-            message: { Text(errorMessage ?? "") }
-        )
+        .standardErrorAlert(message: $errorMessage)
         .task(id: household?.id) { await loadExisting() }
     }
 
