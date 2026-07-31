@@ -81,6 +81,23 @@ struct WeekQualitySummaryTests {
         #expect(count == 1)
     }
 
+    @Test func countsTwoDifferentStreakDishesSeparately() {
+        // Distinguishes the same-recipe dedupe above from a naive
+        // implementation that always collapses to 1 regardless of identity.
+        let days = [
+            day("2026-06-08", recipe: recipe("Taco Tuesday", total: 25, tags: ["mexican"]), streakWeeks: 3),
+            day("2026-06-09", recipe: recipe("Soup", total: 25, tags: ["vegetarian"]), streakWeeks: 4),
+        ]
+
+        let summary = WeekQualitySummary.make(days: days)
+
+        guard case .repeatedDish(let count) = summary.insights.first(where: { $0.id == "repeated-dish" })?.kind else {
+            Issue.record("Expected a repeatedDish insight")
+            return
+        }
+        #expect(count == 2)
+    }
+
     @Test func heavyWeekWarningTakesPriorityOverRepeatedDishInTopThree() {
         let days = [
             day("2026-06-08", recipe: recipe("Lasagna", total: 50, tags: ["weekday"]), confidence: .low),
