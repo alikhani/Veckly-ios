@@ -49,7 +49,9 @@ struct WeekQualitySummary: Equatable {
             prepCoveredDates.contains(day.date) || day.recipe.map(RecipeTimingSignals.isPrepFriendly) == true
         }.count
         let lowConfidenceCount = plannedDays.filter { $0.confidence == .low }.count
-        let repeatedDishCount = plannedDays.filter { $0.streakWeeks != nil }.count
+        let repeatedDishCount = Set(
+            plannedDays.compactMap { $0.streakWeeks != nil ? $0.recipe?.id : nil }
+        ).count
         let varietyCount = Set(plannedDays.compactMap { $0.recipe }.flatMap(variationSignals(for:))).count
 
         var insights: [Insight] = []
@@ -59,13 +61,13 @@ struct WeekQualitySummary: Equatable {
         if lowConfidenceCount > 0 {
             insights.append(Insight(kind: .lowConfidence(count: lowConfidenceCount), icon: "arrow.triangle.2.circlepath"))
         }
-        if repeatedDishCount > 0 {
-            insights.append(Insight(kind: .repeatedDish(count: repeatedDishCount), icon: "arrow.2.squarepath"))
-        }
         if quickDinnerCount >= 3 {
             insights.append(Insight(kind: .quickRhythm(count: quickDinnerCount), icon: "clock"))
         } else if heavyDinnerCount >= 3 {
             insights.append(Insight(kind: .heavyWeek(count: heavyDinnerCount), icon: "flame"))
+        }
+        if repeatedDishCount > 0 {
+            insights.append(Insight(kind: .repeatedDish(count: repeatedDishCount), icon: "arrow.2.squarepath"))
         }
         if prepFriendlyCount > 0 {
             insights.append(Insight(kind: .prepFriendly(count: prepFriendlyCount), icon: "takeoutbag.and.cup.and.straw"))

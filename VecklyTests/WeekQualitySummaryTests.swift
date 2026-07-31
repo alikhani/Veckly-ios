@@ -65,6 +65,38 @@ struct WeekQualitySummaryTests {
         #expect(summary.insights.map(\.id).contains("repeated-dish"))
     }
 
+    @Test func countsUniqueDishesNotDaysForRepeatedDishInsight() {
+        let repeated = recipe("Taco Tuesday", total: 25, tags: ["mexican"])
+        let days = [
+            day("2026-06-08", recipe: repeated, streakWeeks: 3),
+            day("2026-06-09", recipe: repeated, streakWeeks: 4),
+        ]
+
+        let summary = WeekQualitySummary.make(days: days)
+
+        guard case .repeatedDish(let count) = summary.insights.first(where: { $0.id == "repeated-dish" })?.kind else {
+            Issue.record("Expected a repeatedDish insight")
+            return
+        }
+        #expect(count == 1)
+    }
+
+    @Test func heavyWeekWarningTakesPriorityOverRepeatedDishInTopThree() {
+        let days = [
+            day("2026-06-08", recipe: recipe("Lasagna", total: 50, tags: ["weekday"]), confidence: .low),
+            day("2026-06-09", recipe: recipe("Stew", total: 50, tags: ["weekday"])),
+            day("2026-06-10", recipe: recipe("Roast", total: 50, tags: ["weekday"]), streakWeeks: 3),
+            day("2026-06-11", recipe: nil),
+        ]
+
+        let summary = WeekQualitySummary.make(days: days)
+        let ids = summary.insights.map(\.id)
+
+        #expect(ids.count == 3)
+        #expect(ids.contains("heavy-week"))
+        #expect(!ids.contains("repeated-dish"))
+    }
+
     @Test func sessionEndInviteNudgeRequiresSoloOwnerWithLoadedDetails() {
         let household = Household(id: "household-1", name: "Home", role: .owner)
 
