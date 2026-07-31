@@ -663,6 +663,28 @@ struct VecklyAPIClient {
         )
     }
 
+    /// Builds the full `saveProfile` request body. Extracted for the same
+    /// reason as `daySelectionPayload`: a test against the real generated
+    /// type catches a field silently dropped from this construction (e.g.
+    /// `selectedDays` omitted from the initializer call), which a fake API
+    /// client that only echoes its arguments back never would.
+    static func upsertProfilePayload(
+        adults: Int,
+        children: Int,
+        priorities: [HouseholdPriority],
+        avoidIngredients: [String],
+        selectedDays: [HouseholdDaySelection]
+    ) -> Components.Schemas.UpsertHouseholdProfile {
+        typealias PrioPayload = Components.Schemas.UpsertHouseholdProfile.prioritiesPayloadPayload
+        return Components.Schemas.UpsertHouseholdProfile(
+            adults: adults,
+            children: children,
+            priorities: priorities.compactMap { PrioPayload(rawValue: $0.rawValue) },
+            avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
+            selectedDays: selectedDays.compactMap(Self.daySelectionPayload(for:))
+        )
+    }
+
     func saveProfile(
         householdID: String,
         adults: Int, children: Int,
@@ -670,13 +692,12 @@ struct VecklyAPIClient {
         avoidIngredients: [String],
         selectedDays: [HouseholdDaySelection]
     ) async throws -> HouseholdProfile {
-        typealias PrioPayload = Components.Schemas.UpsertHouseholdProfile.prioritiesPayloadPayload
-        let payload = Components.Schemas.UpsertHouseholdProfile(
+        let payload = Self.upsertProfilePayload(
             adults: adults,
             children: children,
-            priorities: priorities.compactMap { PrioPayload(rawValue: $0.rawValue) },
-            avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
-            selectedDays: selectedDays.compactMap(Self.daySelectionPayload(for:))
+            priorities: priorities,
+            avoidIngredients: avoidIngredients,
+            selectedDays: selectedDays
         )
         let output = try await _client.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
         switch output {

@@ -177,6 +177,45 @@ struct OnboardingCompletionTests {
         #expect(decoded.cookingTolerance == .relaxed)
     }
 
+    @Test func upsertProfilePayloadSurvivesEncodeDecodeRoundTripWithEveryFieldSet() throws {
+        // Regression coverage for the outer payload, not just a single day:
+        // catches `saveProfile` silently dropping `selectedDays` (or any
+        // other field) from the `UpsertHouseholdProfile` initializer, which
+        // the day-only round-trip test above cannot see.
+        let selectedDays = [
+            HouseholdDaySelection(day: .monday),
+            HouseholdDaySelection(
+                day: .friday,
+                servingsOverride: 6,
+                occasion: .guests,
+                effortLevel: .busy,
+                leftoversIntent: true,
+                lateEvening: true,
+                cookingTolerance: .relaxed
+            ),
+        ]
+
+        let payload = VecklyAPIClient.upsertProfilePayload(
+            adults: 2,
+            children: 1,
+            priorities: [.quick, .childFriendly],
+            avoidIngredients: ["nuts", ""],
+            selectedDays: selectedDays
+        )
+        let data = try JSONEncoder().encode(payload)
+        let decoded = try JSONDecoder().decode(Components.Schemas.UpsertHouseholdProfile.self, from: data)
+
+        #expect(decoded == payload)
+        #expect(decoded.adults == 2)
+        #expect(decoded.children == 1)
+        #expect(decoded.priorities == [.quick, .child_hyphen_friendly])
+        #expect(decoded.avoidIngredients == ["nuts"])
+        #expect(decoded.selectedDays.map(\.day) == [.monday, .friday])
+        #expect(decoded.selectedDays.last?.servingsOverride == 6)
+        #expect(decoded.selectedDays.last?.occasion == .guests)
+        #expect(decoded.selectedDays.last?.cookingTolerance == .relaxed)
+    }
+
     @Test func daySelectionPayloadOmitsFalseFlagsAndDefaultsMatchingTheOnboardingSendPath() throws {
         // Onboarding sends plain day identity (see the day-signals test
         // above) — this pins that the default `HouseholdDaySelection` still
