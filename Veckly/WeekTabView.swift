@@ -255,7 +255,7 @@ struct WeekTabView: View {
                         Image(systemName: "ellipsis.circle")
                     }
                     .accessibilityLabel(L10n.string("week.moreOptions"))
-                    .accessibilityIdentifier("weekRegenerateButton")
+                    .accessibilityIdentifier("weekMoreOptionsMenu")
 
                     Button {
                         // An explicit tap always forces a real reload —
