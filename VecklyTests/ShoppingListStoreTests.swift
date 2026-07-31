@@ -129,6 +129,39 @@ struct ShoppingListStoreTests {
         #expect(renderedKeys == ["custom:duplicate-servetter"])
     }
 
+    @Test func ingredientAndCustomOtherCategoriesMergeIntoOneCanonicalGroup() {
+        let groups = [
+            ShoppingListGroup(
+                category: "other",
+                items: [ShoppingListItem(itemKey: "other:foil:", label: "Foil", amount: nil, unit: nil, checked: false)]
+            ),
+        ]
+        let customItems = [
+            ShoppingCustomItem(itemKey: "custom:napkins", label: "Napkins", category: "Other"),
+        ]
+
+        let result = ShoppingListViewModelMapper.inject(customItems: customItems, into: groups, checkedItems: [])
+
+        #expect(result.count == 1)
+        #expect(result[0].category == ShoppingCategory.other.backendValue)
+        #expect(result[0].items.map(\.itemKey) == ["custom:napkins", "other:foil:"])
+    }
+
+    @Test func categoryAliasesAndCasingMergeWhileKeepingAisleOrderAndDedupe() {
+        let duplicate = ShoppingListItem(itemKey: "protein:tofu:g", label: "Tofu", amount: "400", unit: "g", checked: false)
+        let groups = [
+            ShoppingListGroup(category: " pantry ", items: [ShoppingListItem(itemKey: "pantry:rice:g", label: "Rice", amount: nil, unit: nil, checked: false)]),
+            ShoppingListGroup(category: "protein", items: [duplicate]),
+            ShoppingListGroup(category: "MEAT", items: [duplicate, ShoppingListItem(itemKey: "protein:beans:g", label: "Beans", amount: nil, unit: nil, checked: false)]),
+            ShoppingListGroup(category: "PRODUCE", items: [ShoppingListItem(itemKey: "produce:apple:", label: "Apple", amount: nil, unit: nil, checked: false)]),
+        ]
+
+        let result = ShoppingListViewModelMapper.regularGroups(from: groups)
+
+        #expect(result.map(\.category) == ["Produce", "Protein", "Pantry"])
+        #expect(result[1].items.map(\.itemKey) == ["protein:tofu:g", "protein:beans:g"])
+    }
+
     @Test func toggleFailureKeepsLocalStateAndMarksPendingSync() async {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])

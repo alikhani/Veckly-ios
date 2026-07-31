@@ -13,9 +13,9 @@ enum ShoppingCategory: String, CaseIterable {
     case other
 
     static func from(_ raw: String) -> ShoppingCategory {
-        switch raw.lowercased() {
+        switch raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "produce": return .produce
-        case "protein": return .meat
+        case "meat", "protein": return .meat
         case "dairy": return .dairy
         case "pantry": return .pantry
         case "frozen": return .frozen
@@ -649,12 +649,7 @@ struct ShoppingListViewModelMapper {
     }
 
     static func regularGroups(from groups: [ShoppingListGroup]) -> [ShoppingListGroup] {
-        groups
-            .map { group in
-                ShoppingListGroup(category: group.category, items: group.items.filter { !$0.isCustom })
-            }
-            .filter { !$0.items.isEmpty }
-            .sorted { ShoppingCategory.from($0.category).sortIndex < ShoppingCategory.from($1.category).sortIndex }
+        canonicalNonCustomGroups(from: groups)
     }
 
     static func inject(
@@ -662,11 +657,7 @@ struct ShoppingListViewModelMapper {
         into groups: [ShoppingListGroup],
         checkedItems: Set<String>
     ) -> [ShoppingListGroup] {
-        let nonCustomGroups = groups
-            .map { group in
-                ShoppingListGroup(category: group.category, items: group.items.filter { !$0.isCustom })
-            }
-            .filter { !$0.items.isEmpty }
+        let nonCustomGroups = canonicalNonCustomGroups(from: groups)
 
         guard !customItems.isEmpty else {
             return nonCustomGroups.sorted { ShoppingCategory.from($0.category).sortIndex < ShoppingCategory.from($1.category).sortIndex }
@@ -674,8 +665,9 @@ struct ShoppingListViewModelMapper {
 
         var merged = Dictionary(uniqueKeysWithValues: nonCustomGroups.map { ($0.category, $0.items) })
         for item in customItems {
-            let current = merged[item.category] ?? []
-            merged[item.category] = current + [
+            let category = ShoppingCategory.from(item.category).backendValue
+            let current = merged[category] ?? []
+            merged[category] = current + [
                 ShoppingListItem(
                     itemKey: item.itemKey,
                     label: item.label,
@@ -696,6 +688,21 @@ struct ShoppingListViewModelMapper {
                         return left.label.localizedCaseInsensitiveCompare(right.label) == .orderedAscending
                     }
                 )
+            }
+            .sorted { ShoppingCategory.from($0.category).sortIndex < ShoppingCategory.from($1.category).sortIndex }
+    }
+
+    private static func canonicalNonCustomGroups(from groups: [ShoppingListGroup]) -> [ShoppingListGroup] {
+        var itemsByCategory: [String: [ShoppingListItem]] = [:]
+        for group in groups {
+            let category = ShoppingCategory.from(group.category).backendValue
+            itemsByCategory[category, default: []].append(contentsOf: group.items.filter { !$0.isCustom })
+        }
+
+        return itemsByCategory
+            .compactMap { category, items in
+                let deduplicated = deduplicatedShoppingItems(items)
+                return deduplicated.isEmpty ? nil : ShoppingListGroup(category: category, items: deduplicated)
             }
             .sorted { ShoppingCategory.from($0.category).sortIndex < ShoppingCategory.from($1.category).sortIndex }
     }
