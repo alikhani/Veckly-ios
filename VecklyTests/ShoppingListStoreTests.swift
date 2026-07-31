@@ -26,6 +26,29 @@ struct ShoppingListStoreTests {
         #expect(apiClient.updateRequests[0].checkedItems == ["produce:apples:"])
     }
 
+    @Test func addingCustomItemKeepsAllRecipeItemsVisible() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.summary = TestShoppingListFixtures.summaryWithTwoItems
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 0,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+        let recipeItemKeys = Set(store.groups.flatMap(\.items).map(\.itemKey))
+
+        store.addCustomItem(label: "Fruit yoghurt", category: .dairy)
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        let renderedItemKeys = Set(store.groups.flatMap(\.items).map(\.itemKey))
+        #expect(recipeItemKeys == ["produce:apples:", "produce:bananas:"])
+        #expect(recipeItemKeys.isSubset(of: renderedItemKeys))
+        #expect(store.groups.flatMap(\.items).contains { $0.label == "Fruit yoghurt" })
+        #expect(apiClient.updateRequests.count == 1)
+    }
+
     @Test func staleRetryMergesLatestServerCustomItems() async throws {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
