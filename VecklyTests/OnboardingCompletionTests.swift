@@ -146,6 +146,55 @@ struct OnboardingCompletionTests {
         #expect(recipeAPI.createdDraftTitles == ["Taco Tuesday"])
     }
 
+    @Test func daySelectionPayloadSurvivesEncodeDecodeRoundTripWithAllFieldsSet() throws {
+        // Regression coverage: the fake API client in this file only echoes
+        // back its arguments, so it can't catch the real client's mapping
+        // from `HouseholdDaySelection` to the generated OpenAPI payload
+        // silently dropping a field (or the whole day, via a nil rawValue
+        // lookup). This exercises the actual mapping function plus a real
+        // JSONEncoder/JSONDecoder round trip through the generated type.
+        let original = HouseholdDaySelection(
+            day: .friday,
+            servingsOverride: 6,
+            occasion: .guests,
+            effortLevel: .busy,
+            leftoversIntent: true,
+            lateEvening: true,
+            cookingTolerance: .relaxed
+        )
+
+        let payload = try #require(VecklyAPIClient.daySelectionPayload(for: original))
+        let data = try JSONEncoder().encode(payload)
+        let decoded = try JSONDecoder().decode(VecklyAPIClient.DaySelectionPayload.self, from: data)
+
+        #expect(decoded == payload)
+        #expect(decoded.day == .friday)
+        #expect(decoded.servingsOverride == 6)
+        #expect(decoded.occasion == .guests)
+        #expect(decoded.effortLevel == .busy)
+        #expect(decoded.leftoversIntent == true)
+        #expect(decoded.lateEvening == true)
+        #expect(decoded.cookingTolerance == .relaxed)
+    }
+
+    @Test func daySelectionPayloadOmitsFalseFlagsAndDefaultsMatchingTheOnboardingSendPath() throws {
+        // Onboarding sends plain day identity (see the day-signals test
+        // above) — this pins that the default `HouseholdDaySelection` still
+        // maps and round-trips cleanly, with the boolean flags sent as `nil`
+        // rather than `false` (matching `saveProfile`'s `? true : nil`).
+        let original = HouseholdDaySelection(day: .monday)
+
+        let payload = try #require(VecklyAPIClient.daySelectionPayload(for: original))
+        let data = try JSONEncoder().encode(payload)
+        let decoded = try JSONDecoder().decode(VecklyAPIClient.DaySelectionPayload.self, from: data)
+
+        #expect(decoded == payload)
+        #expect(decoded.day == .monday)
+        #expect(decoded.servingsOverride == nil)
+        #expect(decoded.leftoversIntent == nil)
+        #expect(decoded.lateEvening == nil)
+    }
+
     @Test func profileSaveFailureIsReportedSeparately() async {
         let recipeAPI = FakeOnboardingRecipeAPIClient()
         let householdAPI = FakeOnboardingHouseholdAPIClient()

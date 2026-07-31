@@ -642,6 +642,27 @@ struct VecklyAPIClient {
         }
     }
 
+    typealias DaySelectionPayload = Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload
+
+    /// Maps a domain `HouseholdDaySelection` to its wire payload. Extracted so
+    /// tests can encode/decode the exact payload `saveProfile` sends, instead
+    /// of only exercising a fake API client that echoes its arguments back —
+    /// a silently-nil `rawValue` lookup here drops the day, and a stale
+    /// generated schema drops a field, neither of which a fake client would
+    /// ever catch.
+    static func daySelectionPayload(for item: HouseholdDaySelection) -> DaySelectionPayload? {
+        guard let day = DaySelectionPayload.dayPayload(rawValue: item.day.rawValue) else { return nil }
+        return DaySelectionPayload(
+            day: day,
+            servingsOverride: item.servingsOverride,
+            occasion: DaySelectionPayload.occasionPayload(rawValue: item.occasion.rawValue),
+            effortLevel: DaySelectionPayload.effortLevelPayload(rawValue: item.effortLevel.rawValue),
+            leftoversIntent: item.leftoversIntent ? true : nil,
+            lateEvening: item.lateEvening ? true : nil,
+            cookingTolerance: DaySelectionPayload.cookingTolerancePayload(rawValue: item.cookingTolerance.rawValue)
+        )
+    }
+
     func saveProfile(
         householdID: String,
         adults: Int, children: Int,
@@ -649,25 +670,13 @@ struct VecklyAPIClient {
         avoidIngredients: [String],
         selectedDays: [HouseholdDaySelection]
     ) async throws -> HouseholdProfile {
-        typealias DayPayload = Components.Schemas.UpsertHouseholdProfile.selectedDaysPayloadPayload
         typealias PrioPayload = Components.Schemas.UpsertHouseholdProfile.prioritiesPayloadPayload
         let payload = Components.Schemas.UpsertHouseholdProfile(
             adults: adults,
             children: children,
             priorities: priorities.compactMap { PrioPayload(rawValue: $0.rawValue) },
             avoidIngredients: avoidIngredients.filter { !$0.isEmpty },
-            selectedDays: selectedDays.compactMap { item in
-                guard let day = DayPayload.dayPayload(rawValue: item.day.rawValue) else { return nil }
-                return DayPayload(
-                    day: day,
-                    servingsOverride: item.servingsOverride,
-                    occasion: DayPayload.occasionPayload(rawValue: item.occasion.rawValue),
-                    effortLevel: DayPayload.effortLevelPayload(rawValue: item.effortLevel.rawValue),
-                    leftoversIntent: item.leftoversIntent ? true : nil,
-                    lateEvening: item.lateEvening ? true : nil,
-                    cookingTolerance: DayPayload.cookingTolerancePayload(rawValue: item.cookingTolerance.rawValue)
-                )
-            }
+            selectedDays: selectedDays.compactMap(Self.daySelectionPayload(for:))
         )
         let output = try await _client.upsertHouseholdProfile(path: .init(householdId: householdID), body: .json(payload))
         switch output {
