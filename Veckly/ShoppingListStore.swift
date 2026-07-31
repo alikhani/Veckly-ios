@@ -84,9 +84,13 @@ final class ShoppingListStore {
     private(set) var hasPendingSync = false
     private var regularGroups: [ShoppingListGroup] = []
     private var pendingMutations: [ShoppingListMutation] = []
+    private var inFlightMutations: [ShoppingListMutation] = []
+    private var mutationContext: ShoppingListSyncContext?
     private var flushTask: Task<Void, Never>?
     private var isFlushingChanges = false
     private var needsFlushWhenSummaryLoads = false
+    private var loadGeneration = 0
+    private var stateRevision = 0
 
     init(
         apiClient: any ShoppingListStoreAPIClient,
@@ -109,6 +113,8 @@ final class ShoppingListStore {
     /// parameter on `WeekStore.loadCurrentWeek` for why `AppRefreshCoordinator`
     /// needs it for forcing triggers (pull-to-refresh, household switch).
     func loadCurrentWeek(household: Household, weekStartDate: String, force: Bool = false) async {
+        let requestedContext = ShoppingListSyncContext(householdID: household.id, weekStartDate: weekStartDate)
+        guard await prepareForLoad(context: requestedContext) else { return }
         guard !isLoading else { return }
         let hasFreshRequestedWeek = !force
             && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
@@ -116,6 +122,9 @@ final class ShoppingListStore {
         guard !hasFreshRequestedWeek else { return }
         isLoading = summary == nil
         errorMessage = nil
+        loadGeneration += 1
+        let generation = loadGeneration
+        let revision = stateRevision
         defer { isLoading = false }
 
         do {
@@ -124,30 +133,51 @@ final class ShoppingListStore {
 
             let summary = try await summaryResult
             let state = try await stateResult
+            guard generation == loadGeneration else { return }
             self.summary = summary
             lastFetchedAt = Date()
             let mapped = ShoppingListViewModelMapper.map(from: summary)
             regularGroups = ShoppingListViewModelMapper.regularGroups(from: mapped.groups)
             stapledItems = mapped.stapledItems
             let fallbackCheckedItems = Set((mapped.groups.flatMap(\.items) + mapped.stapledItems).filter(\.checked).map(\.itemKey))
-            applySharedState(
-                checkedItems: state.state.map { Set($0.checkedItems) } ?? fallbackCheckedItems,
-                pantryStock: state.state?.pantryStock ?? [:],
-                customItems: state.state?.customItems ?? mapped.customItems
-            )
-            stateUpdatedAt = state.updatedAt ?? summary.updatedAt
+            if revision == stateRevision {
+                var desired = MutableShoppingListState(
+                    checkedItems: state.state.map { Set($0.checkedItems) } ?? fallbackCheckedItems,
+                    pantryStock: state.state?.pantryStock ?? [:],
+                    customItems: state.state?.customItems ?? mapped.customItems
+                )
+                for mutation in mutations(for: requestedContext) {
+                    mutation.apply(to: &desired)
+                }
+                applySharedState(desired)
+                stateUpdatedAt = state.updatedAt ?? summary.updatedAt
+            } else {
+                // A local edit or completed write won the race with this GET.
+                // Keep that newer shared state while still accepting the
+                // refreshed shopping-list structure above.
+                applySharedState(currentState())
+            }
             if needsFlushWhenSummaryLoads {
                 needsFlushWhenSummaryLoads = false
                 scheduleFlush(immediate: true)
             }
         } catch APIError.notFound {
+            guard generation == loadGeneration else { return }
             summary = nil
             groups = []
             regularGroups = []
             stapledItems = []
-            customItems = []
-            checkedItems = []
-            pantryStock = [:]
+            if mutationContext == requestedContext {
+                var desired = MutableShoppingListState(checkedItems: [], pantryStock: [:], customItems: [])
+                for mutation in mutations(for: requestedContext) {
+                    mutation.apply(to: &desired)
+                }
+                applySharedState(desired)
+            } else {
+                customItems = []
+                checkedItems = []
+                pantryStock = [:]
+            }
         } catch is CancellationError {
             // `.onAppear` and `.task(id: weekStartDate)` both fire on tab
             // appearance, and `.task` gets cancelled/restarted whenever this
@@ -166,8 +196,12 @@ final class ShoppingListStore {
     }
 
     func toggleItem(key: String) async {
+        setItemChecked(key: key, isChecked: !checkedItems.contains(key))
+    }
+
+    func setItemChecked(key: String, isChecked: Bool) {
         mutationError = nil
-        applyLocalMutation(.toggleChecked(key))
+        applyLocalMutation(.setChecked(key: key, isChecked: isChecked))
         scheduleFlush()
     }
 
@@ -194,7 +228,7 @@ final class ShoppingListStore {
         guard !cleared.isEmpty else { return [] }
         mutationError = nil
         for key in cleared {
-            applyLocalMutation(.toggleChecked(key))
+            applyLocalMutation(.setChecked(key: key, isChecked: false))
         }
         scheduleFlush()
         return cleared
@@ -207,12 +241,29 @@ final class ShoppingListStore {
         scheduleFlush()
     }
 
-    func reset() {
+    func reset(discardPendingMutations: Bool = false) {
+        loadGeneration += 1
         flushTask?.cancel()
         flushTask = nil
-        pendingMutations = []
-        hasPendingSync = false
-        isFlushingChanges = false
+        if discardPendingMutations {
+            pendingMutations = []
+            inFlightMutations = []
+            mutationContext = nil
+            hasPendingSync = false
+            isFlushingChanges = false
+        } else if !pendingMutations.isEmpty, !isFlushingChanges {
+            scheduleFlush(immediate: true)
+        }
+        if !discardPendingMutations, hasPendingSync {
+            // Keep the optimistic snapshot alive until the explicitly-scoped
+            // write finishes. The following load waits for that write before
+            // publishing another household/week.
+            errorMessage = nil
+            mutationError = nil
+            isLoading = false
+            lastFetchedAt = nil
+            return
+        }
         summary = nil
         groups = []
         regularGroups = []
@@ -225,7 +276,7 @@ final class ShoppingListStore {
         mutationError = nil
         isLoading = false
         lastFetchedAt = nil
-        needsFlushWhenSummaryLoads = false
+        needsFlushWhenSummaryLoads = !pendingMutations.isEmpty
     }
 
     func seedForUITests() {
@@ -255,6 +306,14 @@ final class ShoppingListStore {
         )
     }
 
+    private func applySharedState(_ state: MutableShoppingListState) {
+        applySharedState(
+            checkedItems: state.checkedItems,
+            pantryStock: state.pantryStock,
+            customItems: state.customItems
+        )
+    }
+
     private func deduplicatedCustomItems(_ items: [ShoppingCustomItem]) -> [ShoppingCustomItem] {
         var seen: Set<String> = []
         return items.filter { item in
@@ -276,19 +335,22 @@ final class ShoppingListStore {
     }
 
     private func applyLocalMutation(_ mutation: ShoppingListMutation) {
+        guard let context = currentContext else { return }
+        guard mutationContext == nil || mutationContext == context else {
+            mutationError = L10n.string("error.shopping.pendingSync")
+            return
+        }
+        mutationContext = context
         var desired = currentState()
         mutation.apply(to: &desired)
-        applySharedState(
-            checkedItems: desired.checkedItems,
-            pantryStock: desired.pantryStock,
-            customItems: desired.customItems
-        )
-        pendingMutations.append(mutation)
-        hasPendingSync = true
+        applySharedState(desired)
+        enqueue(mutation)
+        stateRevision += 1
+        updatePendingSyncState()
     }
 
     private func scheduleFlush(immediate: Bool = false) {
-        guard summary != nil else {
+        guard mutationContext != nil else {
             needsFlushWhenSummaryLoads = true
             return
         }
@@ -306,47 +368,58 @@ final class ShoppingListStore {
     }
 
     private func flushPendingMutations() async {
-        guard let summary, !pendingMutations.isEmpty, !isFlushingChanges else { return }
+        guard let context = mutationContext, !pendingMutations.isEmpty, !isFlushingChanges else { return }
 
         isFlushingChanges = true
         let outgoingMutations = pendingMutations
         pendingMutations.removeAll()
         let desired = currentState()
+        inFlightMutations = outgoingMutations
+        updatePendingSyncState()
 
         do {
             stateUpdatedAt = try await persistSharedState(
-                householdID: summary.household.id,
-                weekStartDate: summary.weekStartDate,
+                householdID: context.householdID,
+                weekStartDate: context.weekStartDate,
                 state: desired,
                 expectedUpdatedAt: stateUpdatedAt
             )
+            guard mutationContext == context else {
+                finishFlush()
+                return
+            }
+            inFlightMutations = []
+            stateRevision += 1
             mutationError = nil
-            hasPendingSync = !pendingMutations.isEmpty
+            updatePendingSyncState()
         } catch APIError.stale {
             let latest = try? await fetchLatestSharedState(
-                householdID: summary.household.id,
-                weekStartDate: summary.weekStartDate
+                householdID: context.householdID,
+                weekStartDate: context.weekStartDate
             )
+            guard mutationContext == context else {
+                finishFlush()
+                return
+            }
             if let latest {
                 stateUpdatedAt = latest.updatedAt
-                let mergedQueue = outgoingMutations + pendingMutations
-                pendingMutations = mergedQueue
+                pendingMutations = coalesced(outgoingMutations + pendingMutations)
+                inFlightMutations = []
                 reapplyPendingMutations(on: latest.state)
-                hasPendingSync = !pendingMutations.isEmpty
+                stateRevision += 1
+                updatePendingSyncState()
                 isFlushingChanges = false
                 scheduleFlush(immediate: true)
                 return
             } else {
-                pendingMutations = outgoingMutations + pendingMutations
-                hasPendingSync = true
+                restoreOutgoingMutations(outgoingMutations)
                 mutationError = L10n.string("error.shopping.pendingSync")
                 isFlushingChanges = false
                 scheduleFlushAfterRetryDelay()
                 return
             }
         } catch {
-            pendingMutations = outgoingMutations + pendingMutations
-            hasPendingSync = true
+            restoreOutgoingMutations(outgoingMutations)
             mutationError = L10n.string("error.shopping.pendingSync")
             scheduleFlushAfterRetryDelay()
             isFlushingChanges = false
@@ -355,8 +428,11 @@ final class ShoppingListStore {
 
         isFlushingChanges = false
         if !pendingMutations.isEmpty {
-            hasPendingSync = true
+            updatePendingSyncState()
             scheduleFlush(immediate: true)
+        } else {
+            mutationContext = nil
+            updatePendingSyncState()
         }
     }
 
@@ -375,11 +451,70 @@ final class ShoppingListStore {
         for mutation in pendingMutations {
             mutation.apply(to: &desired)
         }
-        applySharedState(
-            checkedItems: desired.checkedItems,
-            pantryStock: desired.pantryStock,
-            customItems: desired.customItems
+        applySharedState(desired)
+    }
+
+    private var currentContext: ShoppingListSyncContext? {
+        guard let summary else { return nil }
+        return ShoppingListSyncContext(
+            householdID: summary.household.id,
+            weekStartDate: summary.weekStartDate
         )
+    }
+
+    private func prepareForLoad(context: ShoppingListSyncContext) async -> Bool {
+        guard let mutationContext, mutationContext != context else { return true }
+
+        while isFlushingChanges {
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        if !pendingMutations.isEmpty {
+            await flushPendingMutations()
+        }
+        guard self.mutationContext == nil else {
+            mutationError = L10n.string("error.shopping.pendingSync")
+            return false
+        }
+        return true
+    }
+
+    private func mutations(for context: ShoppingListSyncContext) -> [ShoppingListMutation] {
+        guard mutationContext == context else { return [] }
+        return inFlightMutations + pendingMutations
+    }
+
+    private func enqueue(_ mutation: ShoppingListMutation) {
+        if case .setChecked(let key, _) = mutation {
+            pendingMutations.removeAll { $0.checkedItemKey == key }
+        }
+        pendingMutations.append(mutation)
+    }
+
+    private func coalesced(_ mutations: [ShoppingListMutation]) -> [ShoppingListMutation] {
+        var result: [ShoppingListMutation] = []
+        for mutation in mutations {
+            if case .setChecked(let key, _) = mutation {
+                result.removeAll { $0.checkedItemKey == key }
+            }
+            result.append(mutation)
+        }
+        return result
+    }
+
+    private func restoreOutgoingMutations(_ outgoing: [ShoppingListMutation]) {
+        pendingMutations = coalesced(outgoing + pendingMutations)
+        inFlightMutations = []
+        updatePendingSyncState()
+    }
+
+    private func finishFlush() {
+        inFlightMutations = []
+        isFlushingChanges = false
+        updatePendingSyncState()
+    }
+
+    private func updatePendingSyncState() {
+        hasPendingSync = !pendingMutations.isEmpty || !inFlightMutations.isEmpty
     }
 
     private func persistSharedState(
@@ -423,6 +558,11 @@ private struct MutableShoppingListState {
     var customItems: [ShoppingCustomItem]
 }
 
+private struct ShoppingListSyncContext: Equatable {
+    let householdID: String
+    let weekStartDate: String
+}
+
 private func shoppingCustomItemIdentity(_ item: ShoppingCustomItem) -> String {
     shoppingCustomItemIdentity(label: item.label, category: item.category)
 }
@@ -434,18 +574,15 @@ private func shoppingCustomItemIdentity(label: String, category: String) -> Stri
 }
 
 private enum ShoppingListMutation {
-    case toggleChecked(String)
+    case setChecked(key: String, isChecked: Bool)
     case addCustomItem(ShoppingCustomItem)
     case removeCustomItem(String)
 
     func apply(to state: inout MutableShoppingListState) {
         switch self {
-        case .toggleChecked(let key):
-            if state.checkedItems.contains(key) {
-                state.checkedItems.remove(key)
-            } else {
-                state.checkedItems.insert(key)
-            }
+        case .setChecked(let key, let isChecked):
+            if isChecked { state.checkedItems.insert(key) }
+            else { state.checkedItems.remove(key) }
         case .addCustomItem(let item):
             state.customItems.removeAll { existing in
                 existing.itemKey == item.itemKey || shoppingCustomItemIdentity(existing) == shoppingCustomItemIdentity(item)
@@ -455,6 +592,11 @@ private enum ShoppingListMutation {
             state.customItems.removeAll { $0.itemKey == itemKey }
             state.checkedItems.remove(itemKey)
         }
+    }
+
+    var checkedItemKey: String? {
+        guard case .setChecked(let key, _) = self else { return nil }
+        return key
     }
 }
 

@@ -5155,22 +5155,6 @@
         }
       }
     },
-    "recipes.loadFailed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not load recipes"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kunde inte ladda recept"
-          }
-        }
-      }
-    },
     "recipes.loading" : {
       "localizations" : {
         "en" : {

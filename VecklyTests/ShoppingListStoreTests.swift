@@ -173,6 +173,140 @@ struct ShoppingListStoreTests {
         #expect(!store.hasPendingSync)
     }
 
+    @Test func reloadDuringDebounceKeepsOptimisticCheckAndPersistsIt() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 80_000_000,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        await store.toggleItem(key: "produce:apples:")
+        await store.loadCurrentWeek(
+            household: TestShoppingListFixtures.household,
+            weekStartDate: TestShoppingListFixtures.weekStartDate,
+            force: true
+        )
+
+        #expect(store.checkedItems == ["produce:apples:"])
+        try await Task.sleep(nanoseconds: 120_000_000)
+        #expect(apiClient.updateRequests.count == 1)
+        #expect(apiClient.updateRequests[0].checkedItems == ["produce:apples:"])
+    }
+
+    @Test func lateReloadCannotOverwriteAnEditMadeWhileItWasInFlight() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 60_000_000_000,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+        apiClient.stateDelayNanoseconds = 60_000_000
+
+        let reload = Task {
+            await store.loadCurrentWeek(
+                household: TestShoppingListFixtures.household,
+                weekStartDate: TestShoppingListFixtures.weekStartDate,
+                force: true
+            )
+        }
+        try await Task.sleep(nanoseconds: 10_000_000)
+        await store.toggleItem(key: "produce:apples:")
+        await reload.value
+
+        #expect(store.checkedItems == ["produce:apples:"])
+    }
+
+    @Test func staleRetryIsIdempotentWhenServerAlreadyHasDesiredCheck() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        apiClient.refetchedState = ShoppingListSharedState(checkedItems: ["produce:apples:"], pantryStock: [:], customItems: [])
+        apiClient.updateResponses = [
+            .failure(.stale(latestUpdatedAt: "2026-06-22T10:00:00.000Z")),
+            .success("2026-06-22T10:00:01.000Z"),
+        ]
+        let store = ShoppingListStore(apiClient: apiClient, syncDebounceNanoseconds: 0, retryDelayNanoseconds: 0)
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        await store.toggleItem(key: "produce:apples:")
+        try await Task.sleep(nanoseconds: 30_000_000)
+
+        #expect(apiClient.updateRequests.count == 2)
+        #expect(apiClient.updateRequests[1].checkedItems == ["produce:apples:"])
+        #expect(store.checkedItems == ["produce:apples:"])
+    }
+
+    @Test func ambiguousCommittedWriteRetriesWithoutReversingDesiredCheck() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        apiClient.updateResponses = [
+            .failure(.server(statusCode: 500)),
+            .failure(.stale(latestUpdatedAt: "2026-06-22T10:00:00.000Z")),
+            .success("2026-06-22T10:00:01.000Z"),
+        ]
+        apiClient.commitFailedUpdateCount = 1
+        let store = ShoppingListStore(apiClient: apiClient, syncDebounceNanoseconds: 0, retryDelayNanoseconds: 0)
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        await store.toggleItem(key: "produce:apples:")
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(apiClient.updateRequests.count == 3)
+        #expect(apiClient.updateRequests.last?.checkedItems == ["produce:apples:"])
+        #expect(store.checkedItems == ["produce:apples:"])
+        #expect(!store.hasPendingSync)
+    }
+
+    @Test func rapidRepeatedEditsOfOneItemPersistOnlyTheFinalState() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 50_000_000,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: TestShoppingListFixtures.weekStartDate)
+
+        await store.toggleItem(key: "produce:apples:")
+        await store.toggleItem(key: "produce:apples:")
+        await store.toggleItem(key: "produce:apples:")
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(apiClient.updateRequests.count == 1)
+        #expect(apiClient.updateRequests[0].checkedItems == ["produce:apples:"])
+    }
+
+    @Test func pendingMutationIsFlushedOnlyToItsOriginalWeekBeforeContextSwitch() async throws {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.state = ShoppingListSharedState(checkedItems: [], pantryStock: [:], customItems: [])
+        let store = ShoppingListStore(
+            apiClient: apiClient,
+            syncDebounceNanoseconds: 60_000_000_000,
+            retryDelayNanoseconds: 60_000_000_000
+        )
+        let originalWeek = TestShoppingListFixtures.weekStartDate
+        let nextWeek = "2026-06-29"
+        await store.loadCurrentWeek(household: TestShoppingListFixtures.household, weekStartDate: originalWeek)
+        await store.toggleItem(key: "produce:apples:")
+        apiClient.summary = TestShoppingListFixtures.summaryForWeek(nextWeek, itemKey: "produce:bananas:")
+
+        await store.loadCurrentWeek(
+            household: TestShoppingListFixtures.household,
+            weekStartDate: nextWeek,
+            force: true
+        )
+
+        #expect(apiClient.updateRequests.count == 1)
+        #expect(apiClient.updateRequests[0].householdID == TestShoppingListFixtures.household.id)
+        #expect(apiClient.updateRequests[0].weekStartDate == originalWeek)
+        #expect(apiClient.updateRequests[0].checkedItems == ["produce:apples:"])
+        #expect(store.summary?.weekStartDate == nextWeek)
+    }
+
     @Test func freshCacheIsIgnoredWhenItBelongsToAnotherWeek() async {
         let requestedWeek = TestShoppingListFixtures.weekStartDate
         let staleWeek = "2026-06-15"
@@ -507,6 +641,8 @@ private final class FakeShoppingListStoreAPIClient: ShoppingListStoreAPIClient {
     var refetchedState: ShoppingListSharedState?
     var updateResponses: [Result<String?, APIError>] = [.success("2026-06-22T09:05:00.000Z")]
     var shouldThrowCancellation = false
+    var stateDelayNanoseconds: UInt64 = 0
+    var commitFailedUpdateCount = 0
     private(set) var summaryFetchCount = 0
     private(set) var updateRequests: [UpdateRequest] = []
     private var shoppingListStateCallCount = 0
@@ -520,10 +656,13 @@ private final class FakeShoppingListStoreAPIClient: ShoppingListStoreAPIClient {
     func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?) {
         if shouldThrowCancellation { throw CancellationError() }
         shoppingListStateCallCount += 1
-        if shoppingListStateCallCount == 1 {
-            return (state, summary.updatedAt)
+        let response = shoppingListStateCallCount == 1
+            ? (state, summary.updatedAt)
+            : (refetchedState ?? state, "2026-06-22T10:00:00.000Z")
+        if stateDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: stateDelayNanoseconds)
         }
-        return (refetchedState ?? state, "2026-06-22T10:00:00.000Z")
+        return response
     }
 
     func updateShoppingListState(
@@ -555,6 +694,14 @@ private final class FakeShoppingListStoreAPIClient: ShoppingListStoreAPIClient {
             )
             return updatedAt
         case .failure(let error):
+            if commitFailedUpdateCount > 0 {
+                commitFailedUpdateCount -= 1
+                state = ShoppingListSharedState(
+                    checkedItems: checkedItems.sorted(),
+                    pantryStock: pantryStock,
+                    customItems: customItems
+                )
+            }
             throw error
         }
     }

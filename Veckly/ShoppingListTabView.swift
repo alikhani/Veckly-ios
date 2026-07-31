@@ -12,6 +12,7 @@ struct ShoppingListTabView: View {
     @State private var reminderExporter = ShoppingListReminderExporter()
     @State private var reminderExportNotice: ShoppingReminderExportNotice?
     @State private var isExportingReminders = false
+    @State private var showPendingSyncIndicator = false
 
     private var totalItemCount: Int {
         appModel.shoppingListStore.groups.flatMap { $0.items }.count
@@ -162,15 +163,6 @@ struct ShoppingListTabView: View {
                         .font(VecklyDesign.Typography.screenTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    if appModel.shoppingListStore.hasPendingSync {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .controlSize(.small)
-                            Text(pendingSyncMessage)
-                                .font(.caption)
-                                .foregroundStyle(VecklyDesign.Colors.inkMid)
-                        }
-                    }
                 }
 
                 if appModel.shoppingListStore.isLoading {
@@ -221,9 +213,16 @@ struct ShoppingListTabView: View {
                                 .font(.caption)
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
                                 .monospacedDigit()
+                            ProgressView()
+                                .controlSize(.small)
+                                .frame(width: 18, height: 18)
+                                .opacity(showPendingSyncIndicator ? 1 : 0)
+                                .accessibilityHidden(!showPendingSyncIndicator)
+                                .accessibilityLabel(pendingSyncMessage)
                         }
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(L10n.format("accessibility.itemsChecked", checkedItemCount, totalItemCount))
+                        .accessibilityValue(showPendingSyncIndicator ? pendingSyncMessage : "")
                     }
 
                     // Fas D: the `.ready` card used to show permanently and
@@ -302,7 +301,7 @@ struct ShoppingListTabView: View {
                         clearedKeys = []
                         Task {
                             for key in keys {
-                                await appModel.shoppingListStore.toggleItem(key: key)
+                                appModel.shoppingListStore.setItemChecked(key: key, isChecked: true)
                             }
                         }
                     }
@@ -347,8 +346,16 @@ struct ShoppingListTabView: View {
             guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
             let weekStartDate = appModel.weekStore.weekStartDate
-            appModel.shoppingListStore.invalidateCache()
             await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        }
+        .task(id: appModel.shoppingListStore.hasPendingSync) {
+            if appModel.shoppingListStore.hasPendingSync {
+                try? await Task.sleep(for: .milliseconds(800))
+                guard !Task.isCancelled, appModel.shoppingListStore.hasPendingSync else { return }
+                showPendingSyncIndicator = true
+            } else {
+                showPendingSyncIndicator = false
+            }
         }
         .onChange(of: shoppingHandoffState?.isCompleted) { _, isCompleted in
             guard isCompleted == true else { return }
@@ -580,6 +587,8 @@ private struct ShoppingCustomItemSheet: View {
 // MARK: - Shopping group
 
 struct ShoppingGroupView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let group: ShoppingListGroup
     let checkedItems: Set<String>
     let onToggle: (String) -> Void
@@ -604,6 +613,8 @@ struct ShoppingGroupView: View {
                                 HStack {
                                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(isChecked ? VecklyDesign.Colors.hearthOrangeFill : VecklyDesign.Colors.inkFaint)
+                                    .contentTransition(.symbolEffect(.replace))
+                                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.16), value: isChecked)
                                 Text(item.label)
                                     .strikethrough(isChecked)
                                     .foregroundStyle(isChecked ? VecklyDesign.Colors.inkFaint : VecklyDesign.Colors.inkDeep)
@@ -632,7 +643,6 @@ struct ShoppingGroupView: View {
                         }
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: checkedItems)
             }
         }
     }

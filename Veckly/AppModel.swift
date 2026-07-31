@@ -196,7 +196,7 @@ final class AppModel {
     private func resetAllStores() {
         householdStore.reset()
         weekStore.reset()
-        shoppingListStore.reset()
+        shoppingListStore.reset(discardPendingMutations: true)
         recipeStore.reset()
         prepBatchStore.reset()
         feedbackStore.reset()
