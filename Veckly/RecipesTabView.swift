@@ -30,6 +30,12 @@ struct RecipesTabView: View {
         filtered.filter(\.isBuiltIn)
     }
 
+    // Matches the planned free-tier recipe limit. Built-ins are not owned by
+    // the household and must never consume the household's cookbook quota.
+    private var canAddRecipe: Bool {
+        appModel.recipeStore.recipes.filter { !$0.isBuiltIn }.count < 10
+    }
+
     var body: some View {
         Group {
             if appModel.recipeStore.isLoading {
@@ -51,6 +57,7 @@ struct RecipesTabView: View {
                         Button("recipe.add") { showAddSheet = true }
                             .buttonStyle(.borderedProminent)
                             .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+                            .disabled(!canAddRecipe)
                     }
                 }
             } else {
@@ -113,6 +120,7 @@ struct RecipesTabView: View {
             if !appModel.recipeStore.recipes.isEmpty {
                 Button { showAddSheet = true } label: { Image(systemName: "plus") }
                     .accessibilityLabel(L10n.string("recipe.add"))
+                    .disabled(!canAddRecipe)
             }
         }
         .sheet(isPresented: $showAddSheet) {
