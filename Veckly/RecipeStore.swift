@@ -122,20 +122,21 @@ final class RecipeStore {
         }
     }
 
-    func fillIn(draft: RecipeDraft) async throws -> RecipeDraft {
+    func fillIn(householdID: String, draft: RecipeDraft) async throws -> RecipeDraft {
         try await apiClient.fillInRecipe(
+            householdID: householdID,
             title: draft.title,
             existingIngredients: draft.ingredients.filter { !$0.item.isEmpty },
             existingSteps: draft.steps.map(\.text).filter { !$0.isEmpty }
         )
     }
 
-    func importFromURL(_ urlString: String) async throws -> RecipeDraft {
-        try await apiClient.importRecipeFromURL(urlString)
+    func importFromURL(householdID: String, _ urlString: String) async throws -> RecipeDraft {
+        try await apiClient.importRecipeFromURL(householdID: householdID, urlString)
     }
 
-    func importFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
-        try await apiClient.importRecipeFromText(text, sourceURL: sourceURL)
+    func importFromText(householdID: String, _ text: String, sourceURL: String?) async throws -> RecipeDraft {
+        try await apiClient.importRecipeFromText(householdID: householdID, text, sourceURL: sourceURL)
     }
 
     func invalidateCache() {
@@ -260,9 +261,9 @@ protocol RecipeStoreAPIClient {
     func updateRecipe(householdID: String, recipeID: String, draft: RecipeDraft) async throws -> FullRecipe
     func archiveRecipe(householdID: String, recipeID: String) async throws -> FullRecipe
     func repairIngredientCategories(householdID: String) async throws -> RecipeCategoryRepairResult
-    func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft
-    func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft
-    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft
+    func fillInRecipe(householdID: String, title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft
+    func importRecipeFromURL(householdID: String, _ urlString: String) async throws -> RecipeDraft
+    func importRecipeFromText(householdID: String, _ text: String, sourceURL: String?) async throws -> RecipeDraft
 }
 
 extension VecklyAPIClient: RecipeStoreAPIClient {}

@@ -313,17 +313,17 @@ private final class FakeOnboardingRecipeAPIClient: RecipeStoreAPIClient {
         RecipeCategoryRepairResult(recipesUpdated: 0, ingredientsUpdated: 0)
     }
 
-    func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
+    func fillInRecipe(householdID: String, title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
         fillInTitles.append(title)
         if shouldFailFillIn { throw TestOnboardingError.failed }
         return RecipeDraft(title: "Filled: \(title)")
     }
 
-    func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
+    func importRecipeFromURL(householdID: String, _ urlString: String) async throws -> RecipeDraft {
         RecipeDraft(title: "Imported", sourceUrl: urlString)
     }
 
-    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
+    func importRecipeFromText(householdID: String, _ text: String, sourceURL: String?) async throws -> RecipeDraft {
         RecipeDraft(title: "Imported from text", sourceUrl: sourceURL)
     }
 }

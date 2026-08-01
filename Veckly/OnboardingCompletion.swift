@@ -32,7 +32,7 @@ enum OnboardingCompletion {
 
         if !trimmedTitle.isEmpty {
             var draft = RecipeDraft(title: trimmedTitle)
-            if let filled = try? await recipeStore.fillIn(draft: draft) {
+            if let filled = try? await recipeStore.fillIn(householdID: householdID, draft: draft) {
                 draft = filled
             }
             guard (try? await recipeStore.createRecipe(householdID: householdID, draft: draft)) != nil else {

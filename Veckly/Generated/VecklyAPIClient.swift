@@ -395,6 +395,7 @@ struct VecklyAPIClient {
         switch output {
         case let .created(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
@@ -407,6 +408,7 @@ struct VecklyAPIClient {
         switch output {
         case let .ok(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case .notFound: throw APIError.notFound
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
@@ -420,6 +422,7 @@ struct VecklyAPIClient {
         switch output {
         case let .ok(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case .notFound: throw APIError.notFound
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
@@ -442,16 +445,17 @@ struct VecklyAPIClient {
         }
     }
 
-    func fillInRecipe(title: String, existingIngredients: [DraftIngredient] = [], existingSteps: [String] = []) async throws -> RecipeDraft {
-        let apiIngredients: [Components.Schemas.RecipeFillInRequest.existingIngredientsPayloadPayload]? = existingIngredients.isEmpty ? nil :
+    func fillInRecipe(householdID: String, title: String, existingIngredients: [DraftIngredient] = [], existingSteps: [String] = []) async throws -> RecipeDraft {
+        let apiIngredients: [Components.Schemas.PublicRecipeFillInRequest.existingIngredientsPayloadPayload]? = existingIngredients.isEmpty ? nil :
             existingIngredients.map { .init(name: $0.item, amount: $0.amount.isEmpty ? nil : $0.amount, unit: $0.unit.isEmpty ? nil : $0.unit) }
         let apiSteps: [String]? = existingSteps.isEmpty ? nil : existingSteps
         let output = try await _client.fillInRecipe(
-            body: .json(.init(title: title, existingIngredients: apiIngredients, existingSteps: apiSteps))
+            body: .json(.init(householdId: householdID, title: title, existingIngredients: apiIngredients, existingSteps: apiSteps))
         )
         switch output {
         case let .ok(r): return try RecipeDraft(fillIn: r.body.json.recipe, originalTitle: title)
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case .badRequest: throw APIError.server(statusCode: 400)
         case .unprocessableContent: throw APIError.server(statusCode: 422)
         case .tooManyRequests: throw APIError.server(statusCode: 429)
@@ -460,13 +464,14 @@ struct VecklyAPIClient {
         }
     }
 
-    func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
+    func importRecipeFromURL(householdID: String, _ urlString: String) async throws -> RecipeDraft {
         let output = try await _client.importRecipeFromUrl(
-            body: .json(.init(url: urlString))
+            body: .json(.init(householdId: householdID, url: urlString))
         )
         switch output {
         case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe, source: .urlImport)
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
@@ -476,13 +481,14 @@ struct VecklyAPIClient {
         }
     }
 
-    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
+    func importRecipeFromText(householdID: String, _ text: String, sourceURL: String?) async throws -> RecipeDraft {
         let output = try await _client.importRecipeFromText(
-            body: .json(.init(text: text, sourceUrl: sourceURL))
+            body: .json(.init(householdId: householdID, text: text, sourceUrl: sourceURL))
         )
         switch output {
         case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe, source: .aiGenerated)
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
@@ -535,6 +541,7 @@ struct VecklyAPIClient {
         case let .ok(r):
             return try r.body.json.recommendations.map { MealRecommendation(mealID: $0.mealId, reason: $0.reason) }
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case .badRequest: throw APIError.server(statusCode: 400)
         case .unprocessableContent: throw APIError.server(statusCode: 422)
         case .tooManyRequests: throw APIError.server(statusCode: 429)
@@ -560,6 +567,8 @@ struct VecklyAPIClient {
             }
         case .unauthorized:
             throw APIError.unauthorized
+        case let .forbidden(r):
+            throw try APIError.premiumRequired(r.body.json)
         case let .undocumented(statusCode, _):
             throw APIError.server(statusCode: statusCode)
         }
@@ -712,6 +721,7 @@ struct VecklyAPIClient {
         switch output {
         case let .created(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
+        case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
@@ -959,10 +969,17 @@ enum APIError: Error, Equatable {
     case notFound
     case invalidResponse
     case server(statusCode: Int)
+    case premiumRequired(reason: String, limit: Int?, current: Int?)
     case stale(latestUpdatedAt: String?)
     case recipeImport(RecipeImportFailure)
     case noRecipesForGeneration
     case allRecipesExcludedForGeneration
+}
+
+private extension APIError {
+    static func premiumRequired(_ response: Components.Schemas.PremiumRequiredResponse) -> Self {
+        .premiumRequired(reason: response.reason.rawValue, limit: response.limit, current: response.current)
+    }
 }
 
 enum RecipeImportFailure: Equatable {

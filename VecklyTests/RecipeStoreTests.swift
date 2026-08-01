@@ -99,6 +99,21 @@ struct RecipeStoreTests {
         #expect(persisted?.householdID == TestRecipeHouseholds.first)
     }
 
+    @Test func recipeAIRequestsAreScopedToTheSelectedHousehold() async throws {
+        let apiClient = FakeRecipeStoreAPIClient()
+        let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
+
+        _ = try await store.fillIn(householdID: TestRecipeHouseholds.second, draft: RecipeDraft(title: "Pasta"))
+        _ = try await store.importFromURL(householdID: TestRecipeHouseholds.second, "https://example.com/recipe")
+        _ = try await store.importFromText(householdID: TestRecipeHouseholds.second, "Recipe text", sourceURL: nil)
+
+        #expect(apiClient.recipeAIHouseholdIDs == [
+            TestRecipeHouseholds.second,
+            TestRecipeHouseholds.second,
+            TestRecipeHouseholds.second,
+        ])
+    }
+
     @Test func archiveRemovesRecipeAndRollbackRestoresOnFailure() async throws {
         let apiClient = FakeRecipeStoreAPIClient()
         let store = RecipeStore(apiClient: apiClient, cacheStore: FakeRecipeStoreCache())
@@ -264,6 +279,7 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
     var shouldFailRepair = false
     var repairCount = 0
     var repairResult = RecipeCategoryRepairResult(recipesUpdated: 0, ingredientsUpdated: 0)
+    var recipeAIHouseholdIDs: [String] = []
     var recipesAfterRepair: [String: [FullRecipe]] = [:]
     var recipesByHousehold = [
         TestRecipeHouseholds.first: [TestRecipes.firstRecipe],
@@ -319,16 +335,19 @@ private final class FakeRecipeStoreAPIClient: RecipeStoreAPIClient {
         return repairResult
     }
 
-    func fillInRecipe(title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
-        RecipeDraft(title: title, description: "Filled")
+    func fillInRecipe(householdID: String, title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft {
+        recipeAIHouseholdIDs.append(householdID)
+        return RecipeDraft(title: title, description: "Filled")
     }
 
-    func importRecipeFromURL(_ urlString: String) async throws -> RecipeDraft {
-        RecipeDraft(title: "Imported", sourceUrl: urlString)
+    func importRecipeFromURL(householdID: String, _ urlString: String) async throws -> RecipeDraft {
+        recipeAIHouseholdIDs.append(householdID)
+        return RecipeDraft(title: "Imported", sourceUrl: urlString)
     }
 
-    func importRecipeFromText(_ text: String, sourceURL: String?) async throws -> RecipeDraft {
-        RecipeDraft(title: "Imported from text", sourceUrl: sourceURL)
+    func importRecipeFromText(householdID: String, _ text: String, sourceURL: String?) async throws -> RecipeDraft {
+        recipeAIHouseholdIDs.append(householdID)
+        return RecipeDraft(title: "Imported from text", sourceUrl: sourceURL)
     }
 }
 

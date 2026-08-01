@@ -337,13 +337,14 @@ struct RecipeFormSheet: View {
     }
 
     private func importFromURL() async {
+        guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
         let url = normalizedURL
         guard !url.isEmpty else { return }
         isImporting = true
         errorMessage = nil
         defer { isImporting = false }
         do {
-            draft = try await appModel.recipeStore.importFromURL(url)
+            draft = try await appModel.recipeStore.importFromURL(householdID: householdID, url)
             tagsText = draft.tags.joined(separator: ", ")
             urlText = url
             selectedTab = .write
@@ -355,13 +356,14 @@ struct RecipeFormSheet: View {
     }
 
     private func importFromText() async {
+        guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
         let text = normalizedImportText
         guard !text.isEmpty else { return }
         isImporting = true
         errorMessage = nil
         defer { isImporting = false }
         do {
-            draft = try await appModel.recipeStore.importFromText(text, sourceURL: normalizedImportSourceURL)
+            draft = try await appModel.recipeStore.importFromText(householdID: householdID, text, sourceURL: normalizedImportSourceURL)
             tagsText = draft.tags.joined(separator: ", ")
             importText = text
             selectedTab = .write
@@ -375,13 +377,14 @@ struct RecipeFormSheet: View {
     private func fillWithAI() async {
         let title = normalizedTitle
         guard !title.isEmpty else { return }
+        guard let householdID = appModel.householdStore.activeHousehold?.id else { return }
         isFilling = true
         errorMessage = nil
         defer { isFilling = false }
         do {
             var context = draft
             context.title = title
-            let filled = try await appModel.recipeStore.fillIn(draft: context)
+            let filled = try await appModel.recipeStore.fillIn(householdID: householdID, draft: context)
             if draft.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft.description = filled.description }
             if draft.prepTimeMinutes == nil { draft.prepTimeMinutes = filled.prepTimeMinutes }
             if draft.cookTimeMinutes == nil { draft.cookTimeMinutes = filled.cookTimeMinutes }

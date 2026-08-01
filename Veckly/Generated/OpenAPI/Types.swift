@@ -320,6 +320,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /households/{householdId}/product-events`.
     /// - Remark: Generated from `#/paths//households/{householdId}/product-events/post(createProductEvent)`.
     func createProductEvent(_ input: Operations.createProductEvent.Input) async throws -> Operations.createProductEvent.Output
+    /// Resolve the authenticated user’s current household entitlement
+    ///
+    /// - Remark: HTTP `GET /users/me/entitlement`.
+    /// - Remark: Generated from `#/paths//users/me/entitlement/get(getMyEntitlement)`.
+    func getMyEntitlement(_ input: Operations.getMyEntitlement.Input) async throws -> Operations.getMyEntitlement.Output
+    /// Resolve entitlement for one active household membership
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/entitlement`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)`.
+    func getHouseholdEntitlement(_ input: Operations.getHouseholdEntitlement.Input) async throws -> Operations.getHouseholdEntitlement.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -1125,6 +1135,26 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// Resolve the authenticated user’s current household entitlement
+    ///
+    /// - Remark: HTTP `GET /users/me/entitlement`.
+    /// - Remark: Generated from `#/paths//users/me/entitlement/get(getMyEntitlement)`.
+    internal func getMyEntitlement(headers: Operations.getMyEntitlement.Input.Headers = .init()) async throws -> Operations.getMyEntitlement.Output {
+        try await getMyEntitlement(Operations.getMyEntitlement.Input(headers: headers))
+    }
+    /// Resolve entitlement for one active household membership
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/entitlement`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)`.
+    internal func getHouseholdEntitlement(
+        path: Operations.getHouseholdEntitlement.Input.Path,
+        headers: Operations.getHouseholdEntitlement.Input.Headers = .init()
+    ) async throws -> Operations.getHouseholdEntitlement.Output {
+        try await getHouseholdEntitlement(Operations.getHouseholdEntitlement.Input(
+            path: path,
+            headers: headers
         ))
     }
 }
@@ -2168,6 +2198,56 @@ internal enum Components {
                 case status
                 case expiresAt
                 case createdAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse`.
+        internal struct PremiumRequiredResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse/error`.
+            internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case PREMIUM_REQUIRED = "PREMIUM_REQUIRED"
+            }
+            /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse/error`.
+            internal var error: Components.Schemas.PremiumRequiredResponse.errorPayload
+            /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse/reason`.
+            internal enum reasonPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case household_invite = "household_invite"
+                case week_generation_limit = "week_generation_limit"
+                case recipe_ai_fill_in = "recipe_ai_fill_in"
+                case ai_recommendations = "ai_recommendations"
+                case custom_recipes_limit = "custom_recipes_limit"
+                case week_history = "week_history"
+                case saved_plans_limit = "saved_plans_limit"
+                case community_share = "community_share"
+            }
+            /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse/reason`.
+            internal var reason: Components.Schemas.PremiumRequiredResponse.reasonPayload
+            /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse/limit`.
+            internal var limit: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/PremiumRequiredResponse/current`.
+            internal var current: Swift.Int?
+            /// Creates a new `PremiumRequiredResponse`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            ///   - reason:
+            ///   - limit:
+            ///   - current:
+            internal init(
+                error: Components.Schemas.PremiumRequiredResponse.errorPayload,
+                reason: Components.Schemas.PremiumRequiredResponse.reasonPayload,
+                limit: Swift.Int? = nil,
+                current: Swift.Int? = nil
+            ) {
+                self.error = error
+                self.reason = reason
+                self.limit = limit
+                self.current = current
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+                case reason
+                case limit
+                case current
             }
         }
         /// - Remark: Generated from `#/components/schemas/CreateHouseholdInviteRequest`.
@@ -5483,15 +5563,17 @@ internal enum Components {
                 case recipe
             }
         }
-        /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest`.
-        internal struct RecipeFillInRequest: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/title`.
+        /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest`.
+        internal struct PublicRecipeFillInRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/title`.
             internal var title: Swift.String
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/householdProfile`.
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/householdProfile`.
             internal struct householdProfilePayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/householdProfile/adults`.
+                /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/householdProfile/adults`.
                 internal var adults: Swift.Double
-                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/householdProfile/children`.
+                /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/householdProfile/children`.
                 internal var children: Swift.Double
                 /// Creates a new `householdProfilePayload`.
                 ///
@@ -5510,15 +5592,15 @@ internal enum Components {
                     case children
                 }
             }
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/householdProfile`.
-            internal var householdProfile: Components.Schemas.RecipeFillInRequest.householdProfilePayload?
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload`.
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/householdProfile`.
+            internal var householdProfile: Components.Schemas.PublicRecipeFillInRequest.householdProfilePayload?
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingIngredientsPayload`.
             internal struct existingIngredientsPayloadPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload/name`.
+                /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingIngredientsPayload/name`.
                 internal var name: Swift.String
-                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload/amount`.
+                /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingIngredientsPayload/amount`.
                 internal var amount: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredientsPayload/unit`.
+                /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingIngredientsPayload/unit`.
                 internal var unit: Swift.String?
                 /// Creates a new `existingIngredientsPayloadPayload`.
                 ///
@@ -5541,31 +5623,35 @@ internal enum Components {
                     case unit
                 }
             }
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredients`.
-            internal typealias existingIngredientsPayload = [Components.Schemas.RecipeFillInRequest.existingIngredientsPayloadPayload]
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingIngredients`.
-            internal var existingIngredients: Components.Schemas.RecipeFillInRequest.existingIngredientsPayload?
-            /// - Remark: Generated from `#/components/schemas/RecipeFillInRequest/existingSteps`.
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingIngredients`.
+            internal typealias existingIngredientsPayload = [Components.Schemas.PublicRecipeFillInRequest.existingIngredientsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingIngredients`.
+            internal var existingIngredients: Components.Schemas.PublicRecipeFillInRequest.existingIngredientsPayload?
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeFillInRequest/existingSteps`.
             internal var existingSteps: [Swift.String]?
-            /// Creates a new `RecipeFillInRequest`.
+            /// Creates a new `PublicRecipeFillInRequest`.
             ///
             /// - Parameters:
+            ///   - householdId:
             ///   - title:
             ///   - householdProfile:
             ///   - existingIngredients:
             ///   - existingSteps:
             internal init(
+                householdId: Swift.String,
                 title: Swift.String,
-                householdProfile: Components.Schemas.RecipeFillInRequest.householdProfilePayload? = nil,
-                existingIngredients: Components.Schemas.RecipeFillInRequest.existingIngredientsPayload? = nil,
+                householdProfile: Components.Schemas.PublicRecipeFillInRequest.householdProfilePayload? = nil,
+                existingIngredients: Components.Schemas.PublicRecipeFillInRequest.existingIngredientsPayload? = nil,
                 existingSteps: [Swift.String]? = nil
             ) {
+                self.householdId = householdId
                 self.title = title
                 self.householdProfile = householdProfile
                 self.existingIngredients = existingIngredients
                 self.existingSteps = existingSteps
             }
             internal enum CodingKeys: String, CodingKey {
+                case householdId
                 case title
                 case householdProfile
                 case existingIngredients
@@ -5786,40 +5872,54 @@ internal enum Components {
                 case error
             }
         }
-        /// - Remark: Generated from `#/components/schemas/RecipeImportRequest`.
-        internal struct RecipeImportRequest: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/RecipeImportRequest/url`.
+        /// - Remark: Generated from `#/components/schemas/PublicRecipeImportRequest`.
+        internal struct PublicRecipeImportRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeImportRequest/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeImportRequest/url`.
             internal var url: Swift.String
-            /// Creates a new `RecipeImportRequest`.
+            /// Creates a new `PublicRecipeImportRequest`.
             ///
             /// - Parameters:
+            ///   - householdId:
             ///   - url:
-            internal init(url: Swift.String) {
+            internal init(
+                householdId: Swift.String,
+                url: Swift.String
+            ) {
+                self.householdId = householdId
                 self.url = url
             }
             internal enum CodingKeys: String, CodingKey {
+                case householdId
                 case url
             }
         }
-        /// - Remark: Generated from `#/components/schemas/RecipeTextImportRequest`.
-        internal struct RecipeTextImportRequest: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/RecipeTextImportRequest/text`.
+        /// - Remark: Generated from `#/components/schemas/PublicRecipeTextImportRequest`.
+        internal struct PublicRecipeTextImportRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeTextImportRequest/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeTextImportRequest/text`.
             internal var text: Swift.String
-            /// - Remark: Generated from `#/components/schemas/RecipeTextImportRequest/sourceUrl`.
+            /// - Remark: Generated from `#/components/schemas/PublicRecipeTextImportRequest/sourceUrl`.
             internal var sourceUrl: Swift.String?
-            /// Creates a new `RecipeTextImportRequest`.
+            /// Creates a new `PublicRecipeTextImportRequest`.
             ///
             /// - Parameters:
+            ///   - householdId:
             ///   - text:
             ///   - sourceUrl:
             internal init(
+                householdId: Swift.String,
                 text: Swift.String,
                 sourceUrl: Swift.String? = nil
             ) {
+                self.householdId = householdId
                 self.text = text
                 self.sourceUrl = sourceUrl
             }
             internal enum CodingKeys: String, CodingKey {
+                case householdId
                 case text
                 case sourceUrl
             }
@@ -5865,7 +5965,7 @@ internal enum Components {
         /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest`.
         internal struct MealRecommendationsRequest: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/householdId`.
-            internal var householdId: Swift.String?
+            internal var householdId: Swift.String
             /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/householdProfile`.
             internal struct householdProfilePayload: Codable, Hashable, Sendable {
                 /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/householdProfile/adults`.
@@ -6026,7 +6126,7 @@ internal enum Components {
             ///   - recentMealIds:
             ///   - prepContext:
             internal init(
-                householdId: Swift.String? = nil,
+                householdId: Swift.String,
                 householdProfile: Components.Schemas.MealRecommendationsRequest.householdProfilePayload,
                 feedbackSummary: Components.Schemas.MealRecommendationsRequest.feedbackSummaryPayload,
                 candidateMeals: Components.Schemas.MealRecommendationsRequest.candidateMealsPayload,
@@ -6689,6 +6789,67 @@ internal enum Components {
                 case eventName
                 case weekStartDate
                 case properties
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/Entitlement`.
+        internal struct Entitlement: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/Entitlement/tier`.
+            internal enum tierPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case free = "free"
+                case premium = "premium"
+            }
+            /// - Remark: Generated from `#/components/schemas/Entitlement/tier`.
+            internal var tier: Components.Schemas.Entitlement.tierPayload
+            /// - Remark: Generated from `#/components/schemas/Entitlement/householdId`.
+            internal var householdId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Entitlement/source`.
+            internal enum sourcePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case subscription = "subscription"
+                case manual = "manual"
+                case beta = "beta"
+            }
+            /// - Remark: Generated from `#/components/schemas/Entitlement/source`.
+            internal var source: Components.Schemas.Entitlement.sourcePayload?
+            /// - Remark: Generated from `#/components/schemas/Entitlement/gatesEnabled`.
+            internal var gatesEnabled: Swift.Bool
+            /// Creates a new `Entitlement`.
+            ///
+            /// - Parameters:
+            ///   - tier:
+            ///   - householdId:
+            ///   - source:
+            ///   - gatesEnabled:
+            internal init(
+                tier: Components.Schemas.Entitlement.tierPayload,
+                householdId: Swift.String? = nil,
+                source: Components.Schemas.Entitlement.sourcePayload? = nil,
+                gatesEnabled: Swift.Bool
+            ) {
+                self.tier = tier
+                self.householdId = householdId
+                self.source = source
+                self.gatesEnabled = gatesEnabled
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case tier
+                case householdId
+                case source
+                case gatesEnabled
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/EntitlementResponse`.
+        internal struct EntitlementResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/EntitlementResponse/entitlement`.
+            internal var entitlement: Components.Schemas.Entitlement
+            /// Creates a new `EntitlementResponse`.
+            ///
+            /// - Parameters:
+            ///   - entitlement:
+            internal init(entitlement: Components.Schemas.Entitlement) {
+                self.entitlement = entitlement
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case entitlement
             }
         }
     }
@@ -10710,6 +10871,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/invites/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/invites/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.createHouseholdInvite.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.createHouseholdInvite.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/invites/post(createHouseholdInvite)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.createHouseholdInvite.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.createHouseholdInvite.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -11442,6 +11654,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.generateWeekPlan.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.generateWeekPlan.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium generation quota reached
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/generate/post(generateWeekPlan)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.generateWeekPlan.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.generateWeekPlan.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -12303,6 +12566,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/GET/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listWeekHistoryPlans.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listWeekHistoryPlans.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required for older history
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/get(listWeekHistoryPlans)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.listWeekHistoryPlans.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.listWeekHistoryPlans.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -14410,6 +14724,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/recipes/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/recipes/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.createRecipe.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.createRecipe.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/post(createRecipe)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.createRecipe.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.createRecipe.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -14789,6 +15154,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/recipes/{recipeId}/PATCH/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/recipes/{recipeId}/PATCH/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updateRecipe.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updateRecipe.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/recipes/{recipeId}/patch(updateRecipe)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.updateRecipe.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.updateRecipe.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -15749,7 +16165,7 @@ internal enum Operations {
             /// - Remark: Generated from `#/paths/recipes/fill-in/POST/requestBody`.
             internal enum Body: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/recipes/fill-in/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.RecipeFillInRequest)
+                case json(Components.Schemas.PublicRecipeFillInRequest)
             }
             internal var body: Operations.fillInRecipe.Input.Body?
             /// Creates a new `Input`.
@@ -15882,6 +16298,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/fill-in/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/fill-in/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.fillInRecipe.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.fillInRecipe.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//recipes/fill-in/post(fillInRecipe)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.fillInRecipe.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.fillInRecipe.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -16045,7 +16512,7 @@ internal enum Operations {
             /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/requestBody`.
             internal enum Body: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.RecipeImportRequest)
+                case json(Components.Schemas.PublicRecipeImportRequest)
             }
             internal var body: Operations.importRecipeFromUrl.Input.Body?
             /// Creates a new `Input`.
@@ -16194,6 +16661,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-url/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromUrl.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromUrl.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//recipes/import-from-url/post(importRecipeFromUrl)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.importRecipeFromUrl.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.importRecipeFromUrl.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -16456,7 +16974,7 @@ internal enum Operations {
             /// - Remark: Generated from `#/paths/recipes/import-from-text/POST/requestBody`.
             internal enum Body: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/recipes/import-from-text/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.RecipeTextImportRequest)
+                case json(Components.Schemas.PublicRecipeTextImportRequest)
             }
             internal var body: Operations.importRecipeFromText.Input.Body?
             /// Creates a new `Input`.
@@ -16605,6 +17123,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/import-from-text/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/import-from-text/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.importRecipeFromText.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.importRecipeFromText.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//recipes/import-from-text/post(importRecipeFromText)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.importRecipeFromText.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.importRecipeFromText.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -16949,6 +17518,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/recipes/recommend/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/recipes/recommend/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.recommendMeals.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.recommendMeals.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.recommendMeals.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.recommendMeals.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -17690,6 +18310,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/saved-plans/POST/responses/403/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/saved-plans/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.PremiumRequiredResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PremiumRequiredResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertSavedPlan.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertSavedPlan.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Premium is required
+            ///
+            /// - Remark: Generated from `#/paths//saved-plans/post(upsertSavedPlan)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.upsertSavedPlan.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            internal var forbidden: Operations.upsertSavedPlan.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
                             response: self
                         )
                     }
@@ -19829,6 +20500,349 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.createProductEvent.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Resolve the authenticated user’s current household entitlement
+    ///
+    /// - Remark: HTTP `GET /users/me/entitlement`.
+    /// - Remark: Generated from `#/paths//users/me/entitlement/get(getMyEntitlement)`.
+    internal enum getMyEntitlement {
+        internal static let id: Swift.String = "getMyEntitlement"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/users/me/entitlement/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getMyEntitlement.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getMyEntitlement.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getMyEntitlement.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            internal init(headers: Operations.getMyEntitlement.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/users/me/entitlement/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/users/me/entitlement/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.EntitlementResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.EntitlementResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getMyEntitlement.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getMyEntitlement.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Safe entitlement state
+            ///
+            /// - Remark: Generated from `#/paths//users/me/entitlement/get(getMyEntitlement)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getMyEntitlement.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getMyEntitlement.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//users/me/entitlement/get(getMyEntitlement)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getMyEntitlement.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//users/me/entitlement/get(getMyEntitlement)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getMyEntitlement.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Resolve entitlement for one active household membership
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/entitlement`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)`.
+    internal enum getHouseholdEntitlement {
+        internal static let id: Swift.String = "getHouseholdEntitlement"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/entitlement/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/entitlement/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.getHouseholdEntitlement.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/entitlement/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getHouseholdEntitlement.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getHouseholdEntitlement.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getHouseholdEntitlement.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getHouseholdEntitlement.Input.Path,
+                headers: Operations.getHouseholdEntitlement.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/entitlement/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/entitlement/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.EntitlementResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.EntitlementResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getHouseholdEntitlement.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getHouseholdEntitlement.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Safe household entitlement state
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getHouseholdEntitlement.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getHouseholdEntitlement.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getHouseholdEntitlement.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getHouseholdEntitlement.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getHouseholdEntitlement.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getHouseholdEntitlement.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
