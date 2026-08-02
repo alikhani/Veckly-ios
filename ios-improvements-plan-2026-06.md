@@ -1,6 +1,6 @@
 # iOS App Improvements — Implementation Plan (2026-06)
 
-## Status: In progress
+## Status: Complete for the first TestFlight beta loop
 
 Recommended execution order, from highest daily-use value to lowest friction:
 
@@ -18,10 +18,10 @@ Recommended execution order, from highest daily-use value to lowest friction:
 | 10 | Onboarding-flöde (hushållsstorlek + planeringsdagar) | ✅ Klart (2026-06-16) |
 | 11 | Shopping list redesign (kategorigruppering, progress, staples) | ✅ Klart (2026-06-17) |
 | 12 | Systemspråk: engelska/svenska lokalisering | ✅ Klart (2026-06-18) |
-| 13 | Onboarding cold-start upgrade (go-to dish, prioriteringar, undvik) | 🟡 Pågår (första slice 2026-07-13) |
-| 14 | Veckan är klar-handoff | 🟡 Pågår (första slice 2026-07-13) |
-| 15 | Veckokvalitet och synlig realism | 🟡 Pågår (första slice 2026-07-13) |
-| 16 | Avsiktsstyrda swappar | 🟡 Pågår (första slice 2026-07-14) |
+| 13 | Onboarding cold-start upgrade (go-to dish, prioriteringar, undvik) | ✅ Klart för v1 (2026-07-26; testuppföljning 2026-07-24/29) |
+| 14 | Veckan är klar-handoff | ✅ Klart för v1 (2026-07-26) |
+| 15 | Veckokvalitet och synlig realism | ✅ Klart för v1 (2026-07-26) |
+| 16 | Avsiktsstyrda swappar | ✅ Klart för v1 (2026-07-14) |
 | 17 | Hushållskompromiss v1 | ✅ Klart (2026-07-14) |
 | 18 | Shopping-handoff och partnerdelning | ✅ Klart (2026-07-14) |
 
@@ -46,8 +46,8 @@ Göra övergången från färdig veckoplan till faktisk handling tydligare: shop
 - Svenska iOS-klienter får nu en v1-lokalisering av vanliga builtin-råvaror och enheter i shopping-summaryn via `Accept-Language`, utan att skriva om användarens receptdata eller ändra item keys.
 - Shoppinglistan markerar cache som stale direkt när week-planen börjar ändras, så borttagna/ändrade rätter inte kan lämna kvar gamla varor om användaren snabbt går till shoppingfliken.
 - Efter en lyckad week-plan-mutation hämtar iOS om shoppinglistan direkt, så lägg till/ta bort middag uppdaterar korgen utan att vänta på nästa tab-refresh.
-- Backendens shopping-summary exkluderar nu middagar vars datum redan passerat, så gårdagens middag inte fortsätter bidra med varor till dagens inköpslista.
-- iOS skickar nu `X-Veckly-Today` med enhetens lokala datum på API-anrop, och backend använder det för shopping-summary. Det gör att gårdagens middag kan filtreras bort utan att en ny framtida rätt, t.ex. onsdagens carbonara, tappas på grund av serverns klocka.
+- Sedan uppföljningen 2026-07-31 innehåller backendens shopping-summary stabilt alla planerade middagar i den valda veckan, även passerade dagar. Det hindrar att receptvaror försvinner under en pågående veckohandling.
+- iOS skickar fortfarande `X-Veckly-Today` för datumkänsliga kontrakt, men shopping-summary använder inte längre signalen för att rulla bort tidigare middagar ur samma vecka.
 - Shopping-summary får inte längre HTTP-cacheas: backend svarar `Cache-Control: no-store` och iOS skickar `Cache-Control: no-cache`, så pull-to-refresh kan inte återanvända en gammal lista i upp till fem minuter.
 - Custom items från backend-summary filtreras bort från regularGroups innan state-baserade custom items injiceras, så samma manuella vara inte visas dubbelt efter refresh.
 - Custom items dedupliceras på label + kategori både i iOS write-state och backend read/write-state, så samma manuella vara (till exempel "Toapapper" eller "Servetter") inte visas eller sparas flera gånger även om gamla server-state redan har dubletter.
@@ -106,7 +106,7 @@ Retro-prompten ingår inte i v1. DayDetail är vald som första yta eftersom den
 
 ## Fas 16 — Avsiktsstyrda swappar
 
-**Status:** 🟡 Pågår — första slice klar 2026-07-14
+**Status:** ✅ Klart för v1 2026-07-14
 
 ### Mål
 
@@ -121,15 +121,15 @@ Göra byten lugnare genom att låta familjen säga varför de byter, utan att g�
 - AI-förslag behålls som separat sektion; intent v1 är lokal och gör inte `/recipes/recommend` till hårt beroende.
 - Unit tests täcker snabbare, barnvänligt, enklare inköp, variation/samma känsla och tom fallback.
 
-### Kvar i fasen
+### Evidensstyrd uppföljning efter beta
 
-- Fast follow: skicka `swapContext` till `/recipes/recommend` om lokal scoring inte räcker i beta.
+- Skicka `swapContext` till `/recipes/recommend` endast om beta visar att lokal scoring inte räcker.
 
 ---
 
 ## Fas 15 — Veckokvalitet och synlig realism
 
-**Status:** 🟡 Pågår — första slice klar 2026-07-13
+**Status:** ✅ Klart för v1 2026-07-26
 
 ### Mål
 
@@ -143,7 +143,7 @@ Göra planeringsmotorns praktiska kvalitet begriplig utan att införa poäng, da
 - Positiva signaler täcker snabb vardagsrytm, prep-/restvänliga middagar, variation och en neutral fallback: veckan ser praktisk nog ut att börja från.
 - Ny unit-testfil täcker quick/variation, open/low-confidence-prioritet, prep coverage utan recipe och fallback.
 
-### Kvar i fasen
+### Evidensstyrd uppföljning efter beta
 
 - Finjustera copy efter verklig beta-feedback: särskilt om “kompromiss” känns för tekniskt eller negativt.
 - Besluta om variation ska bygga på backendens cuisine/protein-signaler om sådana exponeras senare.
@@ -152,7 +152,7 @@ Göra planeringsmotorns praktiska kvalitet begriplig utan att införa poäng, da
 
 ## Fas 14 — Veckan är klar-handoff
 
-**Status:** 🟡 Pågår — första slice klar 2026-07-13
+**Status:** ✅ Klart för v1 2026-07-26
 
 ### Mål
 
@@ -166,16 +166,16 @@ Ge planeringssessionen en tydlig och lugn slutpunkt: när sista luckan i nuvaran
 - Om hushållet är owner-styrt och bara har en medlem visas en lugn invite-nudge med CTA till hushållsfliken.
 - Week-tabben laddar hushållsdetaljer tillsammans med veckan så invite-nudgen baseras på aktuell medlemslista.
 
-### Kvar i fasen
+### Avslutade beslut och framtida tröskel
 
-- Ren view model/test för completion summary om kortet växer mer.
-- Beslut om kortet även ska visas när användaren återvänder till en redan komplett vecka, eller bara direkt efter att veckan blev komplett.
+- Extrahera en separat view model endast om completion summary växer mer.
+- Completion-beaten visas endast när veckan blir komplett i sessionen; en redan komplett vecka använder det beständiga statuskortet. Beslutet är kodifierat i `SessionEndTrigger` och testat.
 
 ---
 
 ## Fas 13 — Onboarding cold-start upgrade
 
-**Status:** 🟡 Pågår — första slice klar 2026-07-13
+**Status:** ✅ Klart för v1 2026-07-26
 
 ### Mål
 
@@ -203,10 +203,10 @@ Första veckan autogenereras inte efter onboarding. iOS fortsätter följa den e
 - Nya semantiska nycklar lades till i `Localizable.xcstrings` för go-to dish, prioriteringar, undvik-ingredienser och `common.remove`.
 - Copy följer Veckly-rösten: praktisk och lugn, ingen AI-exponering i onboarding.
 
-### Kvar i fasen
+### Avslutade beslut och framtida tröskel
 
-- Dedikerad onboarding-testtäckning för att verifiera att profile + go-to dish sparas rätt.
-- Beslut om en lätt dagrytm-fråga hör hemma i onboarding eller om dagrytm ska förbli en Household preferences-yta tills betan visar behov.
+- Dedikerad onboarding-testtäckning för profil + go-to dish är tillagd i den efterföljande UX-auditens Fas A och utökad i review-fixarna 2026-07-31.
+- Dagrytm ligger kvar i Household preferences tills betan visar att frågan behövs redan i onboarding.
 
 ### Test/Verifiering
 
