@@ -396,6 +396,7 @@ struct VecklyAPIClient {
         case let .created(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
         case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
+        case .notFound: throw APIError.notFound
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
@@ -456,6 +457,7 @@ struct VecklyAPIClient {
         case let .ok(r): return try RecipeDraft(fillIn: r.body.json.recipe, originalTitle: title)
         case .unauthorized: throw APIError.unauthorized
         case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
+        case .notFound: throw APIError.notFound
         case .badRequest: throw APIError.server(statusCode: 400)
         case .unprocessableContent: throw APIError.server(statusCode: 422)
         case .tooManyRequests: throw APIError.server(statusCode: 429)
@@ -472,6 +474,7 @@ struct VecklyAPIClient {
         case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe, source: .urlImport)
         case .unauthorized: throw APIError.unauthorized
         case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
+        case .notFound: throw APIError.notFound
         case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
@@ -489,6 +492,7 @@ struct VecklyAPIClient {
         case let .ok(r): return try RecipeDraft(imported: r.body.json.recipe, source: .aiGenerated)
         case .unauthorized: throw APIError.unauthorized
         case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
+        case .notFound: throw APIError.notFound
         case let .badRequest(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .unprocessableContent(r): throw APIError.recipeImport(try r.body.json.error.appModel)
         case let .tooManyRequests(r): throw APIError.recipeImport(try r.body.json.error.appModel)
@@ -542,6 +546,7 @@ struct VecklyAPIClient {
             return try r.body.json.recommendations.map { MealRecommendation(mealID: $0.mealId, reason: $0.reason) }
         case .unauthorized: throw APIError.unauthorized
         case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
+        case .notFound: throw APIError.notFound
         case .badRequest: throw APIError.server(statusCode: 400)
         case .unprocessableContent: throw APIError.server(statusCode: 422)
         case .tooManyRequests: throw APIError.server(statusCode: 429)
@@ -569,6 +574,8 @@ struct VecklyAPIClient {
             throw APIError.unauthorized
         case let .forbidden(r):
             throw try APIError.premiumRequired(r.body.json)
+        case .notFound:
+            throw APIError.notFound
         case let .undocumented(statusCode, _):
             throw APIError.server(statusCode: statusCode)
         }
@@ -722,6 +729,7 @@ struct VecklyAPIClient {
         case let .created(r): return try r.body.json.appModel
         case .unauthorized: throw APIError.unauthorized
         case let .forbidden(r): throw try APIError.premiumRequired(r.body.json)
+        case .notFound: throw APIError.notFound
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }

@@ -4790,6 +4790,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Household not found or caller is not a member"
           }
         }
       },
@@ -5019,6 +5022,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Household not found or caller is not a member"
           },
           "422": {
             "description": "No recipes available to plan with",
@@ -5253,6 +5259,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Household not found or caller is not a member"
           }
         }
       }
@@ -5803,6 +5812,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Household not found or caller is not a member"
           }
         }
       }
@@ -6146,6 +6158,9 @@
               }
             }
           },
+          "404": {
+            "description": "Household not found or caller is not a member"
+          },
           "422": {
             "description": "AI response did not match the recipe schema"
           },
@@ -6209,6 +6224,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Household not found or caller is not a member"
           },
           "422": {
             "description": "Could not parse recipe from fetched page",
@@ -6305,6 +6323,9 @@
               }
             }
           },
+          "404": {
+            "description": "Household not found or caller is not a member"
+          },
           "422": {
             "description": "Could not parse recipe from pasted text",
             "content": {
@@ -6382,6 +6403,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Household not found or caller is not a member"
           },
           "422": {
             "description": "AI response did not match schema"
