@@ -24,6 +24,7 @@ struct RootView: View {
         .task {
             await appModel.restoreSession()
             await appModel.refreshSundayReminderIfNeeded()
+            await appModel.subscriptionStore.prepare()
         }
         .onChange(of: scenePhase) { _, newPhase in
             // The actual scene-active refresh logic — de-duping concurrent
@@ -36,6 +37,7 @@ struct RootView: View {
             Task {
                 await appModel.refreshCoordinator.refreshCoreReader(trigger: .sceneActive)
                 await appModel.refreshSundayReminderIfNeeded()
+                await appModel.subscriptionStore.refreshEntitlements()
             }
         }
     }

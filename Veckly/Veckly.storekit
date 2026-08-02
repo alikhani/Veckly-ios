@@ -1,0 +1,114 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "sv_SE",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "0B143303-78EA-4F0D-A4EC-BE05CB6B1931",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "sv_SE",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "SWE",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "1D69AE98-246B-48E1-A83B-E18326C69E40",
+      "localizations" : [
+
+      ],
+      "name" : "Veckly Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "69",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "B355216E-2AD1-46EB-8440-C8B96E1B5256",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Obegränsad AI-hjälp, familjesamarbete och hela historiken.",
+              "displayName" : "Veckly Premium månadsvis",
+              "locale" : "sv_SE"
+            },
+            {
+              "description" : "Unlimited AI help, household collaboration, and full history.",
+              "displayName" : "Veckly Premium monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.nimaalikhani.Veckly.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Veckly Premium Monthly",
+          "subscriptionGroupID" : "1D69AE98-246B-48E1-A83B-E18326C69E40",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "549",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "20A2657C-B767-4195-A537-AB52CFB72974",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Obegränsad AI-hjälp, familjesamarbete och hela historiken.",
+              "displayName" : "Veckly Premium årsvis",
+              "locale" : "sv_SE"
+            },
+            {
+              "description" : "Unlimited AI help, household collaboration, and full history.",
+              "displayName" : "Veckly Premium yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.nimaalikhani.Veckly.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Veckly Premium Yearly",
+          "subscriptionGroupID" : "1D69AE98-246B-48E1-A83B-E18326C69E40",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

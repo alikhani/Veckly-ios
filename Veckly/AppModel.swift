@@ -19,6 +19,7 @@ final class AppModel {
     let householdSavedRecipesStore: HouseholdSavedRecipesStore
     let userProfileStore: UserProfileStore
     let productEventStore: ProductEventStore
+    let subscriptionStore: SubscriptionStore
     let sundayReminderScheduler = SundayReminderScheduler()
     /// Not `private` — a handful of call sites outside `AppRefreshCoordinator`
     /// still need it directly: UI-test seeding at init (below),
@@ -54,6 +55,7 @@ final class AppModel {
         self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)
         self.productEventStore = ProductEventStore(apiClient: apiClient)
+        self.subscriptionStore = SubscriptionStore()
         self.refreshCoordinator = AppRefreshCoordinator(
             usesSeededCoreReader: usesSeededCoreReader,
             householdStore: householdStore,
