@@ -2,20 +2,19 @@ import Foundation
 import Testing
 @testable import Veckly
 
-/// Regression coverage for the 2026-08-03 cold-launch loading-flash bug, as
-/// exercised through `WeekTabView`'s call site of the shared
-/// `CoreLoadingGate.shouldShowLoadingPanel` (see its doc comment in
-/// `StatePanels.swift` for the full mechanism): `HouseholdStore.isLoading`
-/// only flips `true` inside the unstructured `Task`
-/// `AppRefreshCoordinator.run` spawns for the household bootstrap, so
-/// there's a real window on cold launch where `WeekTabView` is mounted with
-/// `isLoading == false` on both stores and no active household yet. Without
-/// the gate treating "no active household, no error" as loading too, that
-/// window rendered the empty-week/hero content for a frame before the
-/// bootstrap `Task` started and flipped `isLoading` back — the "loads,
-/// something appears briefly, then loads again" flash.
-struct WeekTabViewTests {
-    @Test func showsLoadingWhileHouseholdOrWeekStoreIsLoading() {
+/// Regression coverage for `ShoppingListTabView`'s cold-launch loading-flash
+/// bug, found 2026-08-03 as the same underlying gap already fixed in
+/// `WeekTabView` (see `WeekTabViewTests.swift` and `CoreLoadingGate`'s doc
+/// comment in `StatePanels.swift`): `ShoppingListTabView`'s loading gate
+/// used to check only `shoppingListStore.isLoading`, not
+/// `householdStore.isLoading` or whether a household was active yet, so on
+/// cold launch it fell through both the loading and error branches straight
+/// into the "No week plan at all" empty-state card — a third visible state,
+/// not just the loading/content flash `WeekTabView` had — before flipping to
+/// the loading panel and then to real content once the bootstrap `Task`
+/// actually ran.
+struct ShoppingListTabViewTests {
+    @Test func showsLoadingWhileHouseholdOrShoppingListStoreIsLoading() {
         #expect(CoreLoadingGate.shouldShowLoadingPanel(
             isLoadingHouseholds: true,
             isLoadingContent: false,
@@ -33,7 +32,7 @@ struct WeekTabViewTests {
     /// The exact cold-launch gap: neither store has started loading yet
     /// (the bootstrap `Task` hasn't run its first line), but there's also no
     /// active household to show real content for. Must still read as
-    /// loading, not as an empty-week/hero state.
+    /// loading, not fall through to the empty-state card.
     @Test func showsLoadingWhenNoActiveHouseholdYetEvenIfNeitherStoreHasStartedLoading() {
         #expect(CoreLoadingGate.shouldShowLoadingPanel(
             isLoadingHouseholds: false,
@@ -44,10 +43,7 @@ struct WeekTabViewTests {
     }
 
     /// A genuine bootstrap failure must fall through to the `ErrorPanel`
-    /// branch instead of spinning forever — `bootstrapAndLoadHouseholds`
-    /// always ends with either an active household or `errorMessage` set,
-    /// so this is the one legitimate case where "no active household" isn't
-    /// "still loading."
+    /// branch instead of spinning forever or showing the empty-state card.
     @Test func doesNotShowLoadingWhenHouseholdBootstrapFailed() {
         #expect(!CoreLoadingGate.shouldShowLoadingPanel(
             isLoadingHouseholds: false,

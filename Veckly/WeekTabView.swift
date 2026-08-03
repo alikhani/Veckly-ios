@@ -100,45 +100,6 @@ struct WeekTabView: View {
     private var isViewingLastWeek: Bool { viewedWeekOffset == .last }
     private var weekPendingSyncMessage: String { L10n.string("week.sync.pending") }
 
-    /// Whether the loading panel should cover the week content, rather than
-    /// letting `hasWeekContent`'s empty/hero branches render underneath it.
-    ///
-    /// `HouseholdStore.isLoading` only flips to `true` *inside* the
-    /// unstructured `Task` that `AppRefreshCoordinator.run` spawns for the
-    /// household bootstrap — it's `false` both before that `Task` has had a
-    /// chance to run its first line and, obviously, before it's even been
-    /// created. On cold launch, `RootView` flips `isRestoring` to `false`
-    /// (mounting `WeekTabView` for the first time) moments *before*
-    /// `AppModel.restoreSession()` goes on to call `loadCoreReader()`, so
-    /// there is a real — if usually brief — window where SwiftUI evaluates
-    /// this view's body with `householdStore.isLoading == false`,
-    /// `weekStore.isLoading == false`, and `weekStore.summary == nil`, all
-    /// at once, purely because the bootstrap `Task` hasn't been scheduled
-    /// yet. Without this extra check, that window renders `emptyWeekView`
-    /// (or `tonightHeroCard`) for a frame before the bootstrap `Task` starts
-    /// and flips `isLoading` back to `true` — the "loads, something appears
-    /// briefly, then it starts loading again" flash reported 2026-08-03.
-    ///
-    /// Gating on `activeHousehold == nil` instead of on `isLoading`'s timing
-    /// closes that window regardless of scheduling order, since it's `nil`
-    /// both before and during the fetch. It's safe to treat "no active
-    /// household yet" as "still loading" here: `bootstrapAndLoadHouseholds`
-    /// always ends with either an active household or `errorMessage` set
-    /// (see its `catch`), so `activeHousehold == nil` with no error is only
-    /// ever a transient state for a signed-in user, never a legitimate
-    /// steady state to render content — hence the `householdErrorMessage ==
-    /// nil` guard, so a real bootstrap failure still falls through to the
-    /// `ErrorPanel` branch below instead of spinning forever.
-    static func shouldShowLoadingPanel(
-        isLoadingHouseholds: Bool,
-        isLoadingWeek: Bool,
-        hasActiveHousehold: Bool,
-        householdErrorMessage: String?
-    ) -> Bool {
-        if isLoadingHouseholds || isLoadingWeek { return true }
-        return !hasActiveHousehold && householdErrorMessage == nil
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -221,9 +182,9 @@ struct WeekTabView: View {
                     weekendNudgeBanner
                 }
 
-                if Self.shouldShowLoadingPanel(
+                if CoreLoadingGate.shouldShowLoadingPanel(
                     isLoadingHouseholds: appModel.householdStore.isLoading,
-                    isLoadingWeek: appModel.weekStore.isLoading,
+                    isLoadingContent: appModel.weekStore.isLoading,
                     hasActiveHousehold: appModel.householdStore.activeHousehold != nil,
                     householdErrorMessage: appModel.householdStore.errorMessage
                 ) {
