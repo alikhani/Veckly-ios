@@ -848,6 +848,29 @@ struct VecklyAPIClient {
         }
     }
 
+    func submitAppStoreTransaction(householdID: String, signedTransaction: String) async throws {
+        let output = try await _client.submitAppStoreTransaction(
+            path: .init(householdId: householdID),
+            body: .json(.init(signedTransaction: signedTransaction))
+        )
+        switch output {
+        case .ok:
+            return
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case .conflict:
+            throw APIError.server(statusCode: 409)
+        case .serviceUnavailable:
+            throw APIError.server(statusCode: 503)
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func updateShoppingListState(
         householdID: String,
         weekStartDate: String,

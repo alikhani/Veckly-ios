@@ -47,10 +47,11 @@ final class AppModel {
             accessToken: { await authSessionStore.currentValidToken() },
             refreshToken: { await authSessionStore.refreshSession() }
         )
+        let householdStore = HouseholdStore(apiClient: apiClient)
 
         self.authSessionStore = authSessionStore
         self.apiClient = apiClient
-        self.householdStore = HouseholdStore(apiClient: apiClient)
+        self.householdStore = householdStore
         self.weekStore = WeekStore(apiClient: apiClient)
         self.shoppingListStore = ShoppingListStore(apiClient: apiClient)
         self.recipeStore = RecipeStore(apiClient: apiClient)
@@ -62,7 +63,11 @@ final class AppModel {
         self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)
         self.productEventStore = ProductEventStore(apiClient: apiClient)
-        self.subscriptionStore = SubscriptionStore()
+        self.subscriptionStore = SubscriptionStore(
+            transactionSubmitter: apiClient,
+            currentUserID: { authSessionStore.userID },
+            currentHouseholdID: { householdStore.activeHousehold?.id }
+        )
         self.refreshCoordinator = AppRefreshCoordinator(
             usesSeededCoreReader: usesSeededCoreReader,
             householdStore: householdStore,

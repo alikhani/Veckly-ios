@@ -330,6 +330,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /households/{householdId}/entitlement`.
     /// - Remark: Generated from `#/paths//households/{householdId}/entitlement/get(getHouseholdEntitlement)`.
     func getHouseholdEntitlement(_ input: Operations.getHouseholdEntitlement.Input) async throws -> Operations.getHouseholdEntitlement.Output
+    /// Verify and attach an App Store sandbox transaction to a household
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/billing/app-store/transactions`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)`.
+    func submitAppStoreTransaction(_ input: Operations.submitAppStoreTransaction.Input) async throws -> Operations.submitAppStoreTransaction.Output
+    /// Receive a signed App Store Server Notification V2 in sandbox mode
+    ///
+    /// - Remark: HTTP `POST /billing/app-store/notifications`.
+    /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)`.
+    func receiveAppStoreServerNotification(_ input: Operations.receiveAppStoreServerNotification.Input) async throws -> Operations.receiveAppStoreServerNotification.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -1155,6 +1165,34 @@ extension APIProtocol {
         try await getHouseholdEntitlement(Operations.getHouseholdEntitlement.Input(
             path: path,
             headers: headers
+        ))
+    }
+    /// Verify and attach an App Store sandbox transaction to a household
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/billing/app-store/transactions`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)`.
+    internal func submitAppStoreTransaction(
+        path: Operations.submitAppStoreTransaction.Input.Path,
+        headers: Operations.submitAppStoreTransaction.Input.Headers = .init(),
+        body: Operations.submitAppStoreTransaction.Input.Body
+    ) async throws -> Operations.submitAppStoreTransaction.Output {
+        try await submitAppStoreTransaction(Operations.submitAppStoreTransaction.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Receive a signed App Store Server Notification V2 in sandbox mode
+    ///
+    /// - Remark: HTTP `POST /billing/app-store/notifications`.
+    /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)`.
+    internal func receiveAppStoreServerNotification(
+        headers: Operations.receiveAppStoreServerNotification.Input.Headers = .init(),
+        body: Operations.receiveAppStoreServerNotification.Input.Body
+    ) async throws -> Operations.receiveAppStoreServerNotification.Output {
+        try await receiveAppStoreServerNotification(Operations.receiveAppStoreServerNotification.Input(
+            headers: headers,
+            body: body
         ))
     }
 }
@@ -6850,6 +6888,121 @@ internal enum Components {
             }
             internal enum CodingKeys: String, CodingKey {
                 case entitlement
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse`.
+        internal struct AppStoreTransactionSubmitResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/accepted`.
+            internal var accepted: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/duplicate`.
+            internal var duplicate: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/environment`.
+            internal enum environmentPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case sandbox = "sandbox"
+            }
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/environment`.
+            internal var environment: Components.Schemas.AppStoreTransactionSubmitResponse.environmentPayload
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement`.
+            internal struct entitlementPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement/tier`.
+                internal enum tierPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case free = "free"
+                    case premium = "premium"
+                }
+                /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement/tier`.
+                internal var tier: Components.Schemas.AppStoreTransactionSubmitResponse.entitlementPayload.tierPayload
+                /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement/householdId`.
+                internal var householdId: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement/source`.
+                internal enum sourcePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscription = "subscription"
+                    case manual = "manual"
+                    case beta = "beta"
+                }
+                /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement/source`.
+                internal var source: Components.Schemas.AppStoreTransactionSubmitResponse.entitlementPayload.sourcePayload?
+                /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement/gatesEnabled`.
+                internal var gatesEnabled: Swift.Bool
+                /// Creates a new `entitlementPayload`.
+                ///
+                /// - Parameters:
+                ///   - tier:
+                ///   - householdId:
+                ///   - source:
+                ///   - gatesEnabled:
+                internal init(
+                    tier: Components.Schemas.AppStoreTransactionSubmitResponse.entitlementPayload.tierPayload,
+                    householdId: Swift.String? = nil,
+                    source: Components.Schemas.AppStoreTransactionSubmitResponse.entitlementPayload.sourcePayload? = nil,
+                    gatesEnabled: Swift.Bool
+                ) {
+                    self.tier = tier
+                    self.householdId = householdId
+                    self.source = source
+                    self.gatesEnabled = gatesEnabled
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case tier
+                    case householdId
+                    case source
+                    case gatesEnabled
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmitResponse/entitlement`.
+            internal var entitlement: Components.Schemas.AppStoreTransactionSubmitResponse.entitlementPayload
+            /// Creates a new `AppStoreTransactionSubmitResponse`.
+            ///
+            /// - Parameters:
+            ///   - accepted:
+            ///   - duplicate:
+            ///   - environment:
+            ///   - entitlement:
+            internal init(
+                accepted: Swift.Bool,
+                duplicate: Swift.Bool,
+                environment: Components.Schemas.AppStoreTransactionSubmitResponse.environmentPayload,
+                entitlement: Components.Schemas.AppStoreTransactionSubmitResponse.entitlementPayload
+            ) {
+                self.accepted = accepted
+                self.duplicate = duplicate
+                self.environment = environment
+                self.entitlement = entitlement
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case accepted
+                case duplicate
+                case environment
+                case entitlement
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmit`.
+        internal struct AppStoreTransactionSubmit: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppStoreTransactionSubmit/signedTransaction`.
+            internal var signedTransaction: Swift.String
+            /// Creates a new `AppStoreTransactionSubmit`.
+            ///
+            /// - Parameters:
+            ///   - signedTransaction:
+            internal init(signedTransaction: Swift.String) {
+                self.signedTransaction = signedTransaction
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case signedTransaction
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppStoreServerNotification`.
+        internal struct AppStoreServerNotification: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppStoreServerNotification/signedPayload`.
+            internal var signedPayload: Swift.String
+            /// Creates a new `AppStoreServerNotification`.
+            ///
+            /// - Parameters:
+            ///   - signedPayload:
+            internal init(signedPayload: Swift.String) {
+                self.signedPayload = signedPayload
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case signedPayload
             }
         }
     }
@@ -21130,6 +21283,688 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Verify and attach an App Store sandbox transaction to a household
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/billing/app-store/transactions`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)`.
+    internal enum submitAppStoreTransaction {
+        internal static let id: Swift.String = "submitAppStoreTransaction"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.submitAppStoreTransaction.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.submitAppStoreTransaction.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.submitAppStoreTransaction.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.submitAppStoreTransaction.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppStoreTransactionSubmit)
+            }
+            internal var body: Operations.submitAppStoreTransaction.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.submitAppStoreTransaction.Input.Path,
+                headers: Operations.submitAppStoreTransaction.Input.Headers = .init(),
+                body: Operations.submitAppStoreTransaction.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppStoreTransactionSubmitResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.AppStoreTransactionSubmitResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.submitAppStoreTransaction.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.submitAppStoreTransaction.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Verified sandbox transaction accepted idempotently
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.submitAppStoreTransaction.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.submitAppStoreTransaction.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/400/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/400/content/json/error`.
+                        internal var error: Swift.String
+                        /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/400/content/json/code`.
+                        internal var code: Swift.String?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        ///   - code:
+                        internal init(
+                            error: Swift.String,
+                            code: Swift.String? = nil
+                        ) {
+                            self.error = error
+                            self.code = code
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                            case code
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/400/content/application\/json`.
+                    case json(Operations.submitAppStoreTransaction.Output.BadRequest.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.submitAppStoreTransaction.Output.BadRequest.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.submitAppStoreTransaction.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.submitAppStoreTransaction.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Malformed or unverified App Store transaction
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.submitAppStoreTransaction.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.submitAppStoreTransaction.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.submitAppStoreTransaction.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.submitAppStoreTransaction.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.submitAppStoreTransaction.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.submitAppStoreTransaction.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/409/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/409/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/409/content/json/error`.
+                        internal var error: Swift.String
+                        /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/409/content/json/code`.
+                        internal var code: Swift.String?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        ///   - code:
+                        internal init(
+                            error: Swift.String,
+                            code: Swift.String? = nil
+                        ) {
+                            self.error = error
+                            self.code = code
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                            case code
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/409/content/application\/json`.
+                    case json(Operations.submitAppStoreTransaction.Output.Conflict.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.submitAppStoreTransaction.Output.Conflict.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.submitAppStoreTransaction.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.submitAppStoreTransaction.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Transaction ownership or household sponsorship conflict
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.submitAppStoreTransaction.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.submitAppStoreTransaction.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct ServiceUnavailable: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/503/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/503/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/503/content/json/error`.
+                        internal var error: Swift.String
+                        /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/503/content/json/code`.
+                        internal var code: Swift.String?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        ///   - code:
+                        internal init(
+                            error: Swift.String,
+                            code: Swift.String? = nil
+                        ) {
+                            self.error = error
+                            self.code = code
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                            case code
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/billing/app-store/transactions/POST/responses/503/content/application\/json`.
+                    case json(Operations.submitAppStoreTransaction.Output.ServiceUnavailable.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.submitAppStoreTransaction.Output.ServiceUnavailable.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.submitAppStoreTransaction.Output.ServiceUnavailable.Body
+                /// Creates a new `ServiceUnavailable`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.submitAppStoreTransaction.Output.ServiceUnavailable.Body) {
+                    self.body = body
+                }
+            }
+            /// App Store sandbox verification is not configured
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/billing/app-store/transactions/post(submitAppStoreTransaction)/responses/503`.
+            ///
+            /// HTTP response code: `503 serviceUnavailable`.
+            case serviceUnavailable(Operations.submitAppStoreTransaction.Output.ServiceUnavailable)
+            /// The associated value of the enum case if `self` is `.serviceUnavailable`.
+            ///
+            /// - Throws: An error if `self` is not `.serviceUnavailable`.
+            /// - SeeAlso: `.serviceUnavailable`.
+            internal var serviceUnavailable: Operations.submitAppStoreTransaction.Output.ServiceUnavailable {
+                get throws {
+                    switch self {
+                    case let .serviceUnavailable(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "serviceUnavailable",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Receive a signed App Store Server Notification V2 in sandbox mode
+    ///
+    /// - Remark: HTTP `POST /billing/app-store/notifications`.
+    /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)`.
+    internal enum receiveAppStoreServerNotification {
+        internal static let id: Swift.String = "receiveAppStoreServerNotification"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.receiveAppStoreServerNotification.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.receiveAppStoreServerNotification.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.receiveAppStoreServerNotification.Input.Headers
+            /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppStoreServerNotification)
+            }
+            internal var body: Operations.receiveAppStoreServerNotification.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                headers: Operations.receiveAppStoreServerNotification.Input.Headers = .init(),
+                body: Operations.receiveAppStoreServerNotification.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// Creates a new `Ok`.
+                internal init() {}
+            }
+            /// Verified notification accepted idempotently
+            ///
+            /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.receiveAppStoreServerNotification.Output.Ok)
+            /// Verified notification accepted idempotently
+            ///
+            /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            internal static var ok: Self {
+                .ok(.init())
+            }
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.receiveAppStoreServerNotification.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/400/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/400/content/json/error`.
+                        internal var error: Swift.String
+                        /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/400/content/json/code`.
+                        internal var code: Swift.String?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        ///   - code:
+                        internal init(
+                            error: Swift.String,
+                            code: Swift.String? = nil
+                        ) {
+                            self.error = error
+                            self.code = code
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                            case code
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/400/content/application\/json`.
+                    case json(Operations.receiveAppStoreServerNotification.Output.BadRequest.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.receiveAppStoreServerNotification.Output.BadRequest.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.receiveAppStoreServerNotification.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.receiveAppStoreServerNotification.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Malformed or unverified App Store notification
+            ///
+            /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.receiveAppStoreServerNotification.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.receiveAppStoreServerNotification.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct ServiceUnavailable: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/503/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/503/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/503/content/json/error`.
+                        internal var error: Swift.String
+                        /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/503/content/json/code`.
+                        internal var code: Swift.String?
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        ///   - code:
+                        internal init(
+                            error: Swift.String,
+                            code: Swift.String? = nil
+                        ) {
+                            self.error = error
+                            self.code = code
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                            case code
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/billing/app-store/notifications/POST/responses/503/content/application\/json`.
+                    case json(Operations.receiveAppStoreServerNotification.Output.ServiceUnavailable.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.receiveAppStoreServerNotification.Output.ServiceUnavailable.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.receiveAppStoreServerNotification.Output.ServiceUnavailable.Body
+                /// Creates a new `ServiceUnavailable`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.receiveAppStoreServerNotification.Output.ServiceUnavailable.Body) {
+                    self.body = body
+                }
+            }
+            /// App Store sandbox verification is not configured
+            ///
+            /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)/responses/503`.
+            ///
+            /// HTTP response code: `503 serviceUnavailable`.
+            case serviceUnavailable(Operations.receiveAppStoreServerNotification.Output.ServiceUnavailable)
+            /// The associated value of the enum case if `self` is `.serviceUnavailable`.
+            ///
+            /// - Throws: An error if `self` is not `.serviceUnavailable`.
+            /// - SeeAlso: `.serviceUnavailable`.
+            internal var serviceUnavailable: Operations.receiveAppStoreServerNotification.Output.ServiceUnavailable {
+                get throws {
+                    switch self {
+                    case let .serviceUnavailable(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "serviceUnavailable",
                             response: self
                         )
                     }

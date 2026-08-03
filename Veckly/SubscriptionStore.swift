@@ -25,11 +25,19 @@ enum SubscriptionPurchaseOutcome: Equatable, Sendable {
 enum SubscriptionStoreFailure: Error, Equatable, Sendable {
     case verificationFailed
     case unknownProduct
+    case missingPurchaseContext
 }
 
-/// StoreKit is an immediate, device-local view of Premium. The backend remains
-/// authoritative for household access and will ingest the verified transaction
-/// in the next slice; no product gate reads this store directly yet.
+protocol SubscriptionTransactionSubmitting {
+    func submitAppStoreTransaction(householdID: String, signedTransaction: String) async throws
+}
+
+extension VecklyAPIClient: SubscriptionTransactionSubmitting {}
+
+/// StoreKit is an immediate, device-local view of Premium. Verified sandbox
+/// transactions are submitted to the backend before they are finished, while
+/// the backend remains authoritative for household access. No product gate
+/// reads this store directly yet.
 @MainActor
 @Observable
 final class SubscriptionStore {
@@ -40,12 +48,23 @@ final class SubscriptionStore {
     private(set) var lastError: Error?
 
     @ObservationIgnored private var transactionUpdatesTask: Task<Void, Never>?
+    @ObservationIgnored private let transactionSubmitter: (any SubscriptionTransactionSubmitting)?
+    @ObservationIgnored private let currentUserID: () -> String?
+    @ObservationIgnored private let currentHouseholdID: () -> String?
+    @ObservationIgnored private var submittedTransactionIDs: Set<UInt64> = []
 
     var hasActivePremiumSubscription: Bool {
         !activeProductIDs.isDisjoint(with: PremiumProductID.all)
     }
 
-    init() {
+    init(
+        transactionSubmitter: (any SubscriptionTransactionSubmitting)? = nil,
+        currentUserID: @escaping () -> String? = { nil },
+        currentHouseholdID: @escaping () -> String? = { nil }
+    ) {
+        self.transactionSubmitter = transactionSubmitter
+        self.currentUserID = currentUserID
+        self.currentHouseholdID = currentHouseholdID
         transactionUpdatesTask = Task { [weak self] in
             await self?.observeTransactionUpdates()
         }
@@ -77,9 +96,13 @@ final class SubscriptionStore {
         }
     }
 
-    func purchase(_ product: Product, userID: String?) async throws -> SubscriptionPurchaseOutcome {
+    func purchase(_ product: Product, userID: String?, householdID: String?) async throws -> SubscriptionPurchaseOutcome {
         guard PremiumProductID(rawValue: product.id) != nil else {
             throw SubscriptionStoreFailure.unknownProduct
+        }
+        guard let appAccountToken = Self.appAccountToken(userID: userID),
+              let householdID, !householdID.isEmpty else {
+            throw SubscriptionStoreFailure.missingPurchaseContext
         }
 
         isPurchasing = true
@@ -87,14 +110,12 @@ final class SubscriptionStore {
         defer { isPurchasing = false }
 
         do {
-            let options = Self.appAccountToken(userID: userID)
-                .map { Set([Product.PurchaseOption.appAccountToken($0)]) } ?? []
+            let options = Set([Product.PurchaseOption.appAccountToken(appAccountToken)])
             let result = try await product.purchase(options: options)
 
             switch result {
             case .success(let verification):
-                let transaction = try Self.verified(verification)
-                await transaction.finish()
+                try await synchronize(verification, userID: userID, householdID: householdID)
                 await refreshEntitlements()
                 return .purchased
             case .pending:
@@ -129,6 +150,7 @@ final class SubscriptionStore {
                 let transaction = try Self.verified(verification)
                 if PremiumProductID(rawValue: transaction.productID) != nil {
                     currentProductIDs.insert(transaction.productID)
+                    try await synchronize(verification)
                 }
             } catch {
                 lastError = error
@@ -148,13 +170,45 @@ final class SubscriptionStore {
             guard !Task.isCancelled else { return }
 
             do {
-                let transaction = try Self.verified(verification)
-                await transaction.finish()
+                try await synchronize(verification)
                 await refreshEntitlements()
             } catch {
                 lastError = error
             }
         }
+    }
+
+    private func synchronize(
+        _ verification: VerificationResult<Transaction>,
+        userID: String? = nil,
+        householdID: String? = nil
+    ) async throws {
+        let transaction = try Self.verified(verification)
+        guard PremiumProductID(rawValue: transaction.productID) != nil else {
+            await transaction.finish()
+            return
+        }
+        guard !submittedTransactionIDs.contains(transaction.id) else {
+            await transaction.finish()
+            return
+        }
+
+        if let transactionSubmitter {
+            guard let ownerUserID = userID ?? currentUserID(),
+                  Self.appAccountToken(userID: ownerUserID) != nil,
+                  let sponsoredHouseholdID = householdID ?? currentHouseholdID() else {
+                // Keep the transaction unfinished so Transaction.updates can
+                // retry after session/household restoration completes.
+                return
+            }
+            try await transactionSubmitter.submitAppStoreTransaction(
+                householdID: sponsoredHouseholdID,
+                signedTransaction: verification.jwsRepresentation
+            )
+        }
+
+        submittedTransactionIDs.insert(transaction.id)
+        await transaction.finish()
     }
 
     nonisolated private static func verified<T>(_ verification: VerificationResult<T>) throws -> T {
