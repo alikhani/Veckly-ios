@@ -92,12 +92,40 @@ struct RecipeRecommendationStoreTests {
         #expect(sentFeedback.first?.mealTitle == "Pasta")
         #expect(sentFeedback.first?.vote == .up)
     }
+
+    @Test func passesTagsAndIngredientNamesForServerSideAvoidFiltering() async {
+        let client = StubRecipeRecommendationAPIClient(result: .success([]))
+        let store = RecipeRecommendationStore(apiClient: client)
+        let recipe = FullRecipe(
+            id: "pasta",
+            title: "Pasta",
+            description: "",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 15,
+            tags: ["weekday"],
+            ingredients: [RecipeIngredient(item: "peanut butter", amount: nil, unit: nil, category: nil)],
+            steps: [],
+            userVote: nil
+        )
+
+        await store.loadIfNeeded(
+            householdID: "household-1",
+            householdProfile: profile(),
+            feedbackVotes: [:],
+            recipes: [recipe]
+        )
+
+        #expect(client.lastCandidateMeals?.first?.tags == ["weekday"])
+        #expect(client.lastCandidateMeals?.first?.ingredients == ["peanut butter"])
+    }
 }
 
 private final class StubRecipeRecommendationAPIClient: RecipeRecommendationAPIClient {
     let result: Result<[MealRecommendation], Error>
     private(set) var callCount = 0
     private(set) var lastFeedbackSummary: [MealRecommendationFeedbackItem]?
+    private(set) var lastCandidateMeals: [MealRecommendationCandidate]?
 
     init(result: Result<[MealRecommendation], Error>) {
         self.result = result
@@ -114,6 +142,7 @@ private final class StubRecipeRecommendationAPIClient: RecipeRecommendationAPICl
         callCount += 1
         lastHouseholdID = householdID
         lastFeedbackSummary = feedbackSummary
+        lastCandidateMeals = candidateMeals
         return try result.get()
     }
 }

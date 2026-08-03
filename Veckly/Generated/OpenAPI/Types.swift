@@ -6091,21 +6091,33 @@ internal enum Components {
                 internal var id: Swift.String
                 /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/title`.
                 internal var title: Swift.String
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/tags`.
+                internal var tags: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/ingredients`.
+                internal var ingredients: [Swift.String]?
                 /// Creates a new `candidateMealsPayloadPayload`.
                 ///
                 /// - Parameters:
                 ///   - id:
                 ///   - title:
+                ///   - tags:
+                ///   - ingredients:
                 internal init(
                     id: Swift.String,
-                    title: Swift.String
+                    title: Swift.String,
+                    tags: [Swift.String]? = nil,
+                    ingredients: [Swift.String]? = nil
                 ) {
                     self.id = id
                     self.title = title
+                    self.tags = tags
+                    self.ingredients = ingredients
                 }
                 internal enum CodingKeys: String, CodingKey {
                     case id
                     case title
+                    case tags
+                    case ingredients
                 }
             }
             /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMeals`.

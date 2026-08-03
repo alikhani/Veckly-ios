@@ -450,6 +450,8 @@ struct MealRecommendationFeedbackItem {
 struct MealRecommendationCandidate {
     let id: String
     let title: String
+    let tags: [String]
+    let ingredients: [String]
 }
 
 /// One AI-ranked suggestion — `reason` is a short, already-localized-to-the-

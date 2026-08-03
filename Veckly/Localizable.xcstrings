@@ -3720,13 +3720,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Veckly avoids recipes that include these ingredients."
+            "value" : "Veckly filters recipes using the information available. For allergies, always check the recipe and packaging."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Veckly undviker recept som innehåller de här ingredienserna."
+            "value" : "Veckly filtrerar recept utifrån informationen som finns. Vid allergi, kontrollera alltid recept och förpackning."
           }
         }
       }
@@ -5624,13 +5624,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recipes containing these won't be suggested."
+            "value" : "Veckly filters recipes using the information available. For allergies, always check the recipe and packaging."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recept med dessa ingredienser föreslås inte."
+            "value" : "Veckly filtrerar recept utifrån informationen som finns. Vid allergi, kontrollera alltid recept och förpackning."
           }
         }
       }

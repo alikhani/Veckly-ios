@@ -536,7 +536,12 @@ struct VecklyAPIClient {
             )
         }
         let candidates = candidateMeals.map {
-            Components.Schemas.MealRecommendationsRequest.candidateMealsPayloadPayload(id: $0.id, title: $0.title)
+            Components.Schemas.MealRecommendationsRequest.candidateMealsPayloadPayload(
+                id: $0.id,
+                title: $0.title,
+                tags: $0.tags,
+                ingredients: $0.ingredients
+            )
         }
         let output = try await _client.recommendMeals(
             body: .json(.init(householdId: householdID, householdProfile: profile, feedbackSummary: feedback, candidateMeals: candidates))

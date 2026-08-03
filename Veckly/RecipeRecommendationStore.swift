@@ -55,7 +55,14 @@ final class RecipeRecommendationStore {
                 guard let title = titlesByID[mealID] else { return nil }
                 return MealRecommendationFeedbackItem(mealID: mealID, mealTitle: title, vote: vote)
             }
-            let candidates = recipes.map { MealRecommendationCandidate(id: $0.id, title: $0.title) }
+            let candidates = recipes.map {
+                MealRecommendationCandidate(
+                    id: $0.id,
+                    title: $0.title,
+                    tags: $0.tags,
+                    ingredients: $0.ingredients.map(\.item)
+                )
+            }
 
             do {
                 return try await apiClient.recommendMeals(
