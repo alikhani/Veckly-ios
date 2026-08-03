@@ -169,7 +169,9 @@ struct ShoppingListTabView: View {
                     isLoadingHouseholds: appModel.householdStore.isLoading,
                     isLoadingContent: appModel.shoppingListStore.isLoading,
                     hasActiveHousehold: appModel.householdStore.activeHousehold != nil,
-                    householdErrorMessage: appModel.householdStore.errorMessage
+                    householdErrorMessage: appModel.householdStore.errorMessage,
+                    hasLoadedContentOnce: appModel.shoppingListStore.hasLoadedOnce,
+                    contentErrorMessage: appModel.shoppingListStore.errorMessage
                 ) {
                     LoadingPanel(title: L10n.string("shopping.loading"))
                 } else if let errorMessage = appModel.shoppingListStore.errorMessage ?? appModel.householdStore.errorMessage {

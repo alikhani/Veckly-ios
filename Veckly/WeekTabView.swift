@@ -186,7 +186,9 @@ struct WeekTabView: View {
                     isLoadingHouseholds: appModel.householdStore.isLoading,
                     isLoadingContent: appModel.weekStore.isLoading,
                     hasActiveHousehold: appModel.householdStore.activeHousehold != nil,
-                    householdErrorMessage: appModel.householdStore.errorMessage
+                    householdErrorMessage: appModel.householdStore.errorMessage,
+                    hasLoadedContentOnce: appModel.weekStore.hasLoadedOnce,
+                    contentErrorMessage: appModel.weekStore.errorMessage
                 ) {
                     LoadingPanel(title: L10n.string("week.loading"))
                 } else if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {

@@ -32,15 +32,46 @@ import SwiftUI
 /// hence the `householdErrorMessage == nil` guard, so a real bootstrap
 /// failure still falls through to the caller's `ErrorPanel` branch instead
 /// of spinning forever.
+///
+/// The same gap exists one level down, and closing only the household half
+/// of it wasn't enough (2026-08-03 follow-up report: the flash kept
+/// happening after the `activeHousehold == nil` fix landed). Once the
+/// household *is* known, `AppRefreshCoordinator.refreshActiveHouseholdData`
+/// still fetches the week/shopping content itself through its own
+/// unstructured `Task` (inside `run(_:trigger:_:)`), and that `Task` doesn't
+/// necessarily start executing the instant it's created — there's a real,
+/// observed (not just theoretical) window where `hasActiveHousehold` is
+/// `true` but `isLoadingContent` is still `false` because the content
+/// store's fetch hasn't had a chance to run its first line yet, exactly
+/// mirroring the original household-level bug one layer down. Without a
+/// second signal, that window rendered the tab's empty-state card — the
+/// "flashes with some box" the report described — before `isLoadingContent`
+/// caught up and the loading panel reappeared.
+///
+/// `hasLoadedContentOnce` closes this the same way `hasActiveHousehold`
+/// closes the household case: it's an external, store-owned flag (see
+/// `WeekStore.hasLoadedOnce` / `ShoppingListStore.hasLoadedOnce`) that stays
+/// `false` for that entire gap — including before the fetch's `Task` has
+/// even been created — and only flips `true` once a fetch has actually
+/// resolved (success, a handled "not found", or an error), so it can't be
+/// fooled by scheduling order the way `isLoadingContent` alone can.
+/// `contentErrorMessage` mirrors `householdErrorMessage`'s job: without it,
+/// a genuine content-load failure on the very first attempt (content never
+/// loaded, so `hasLoadedContentOnce` stays `false`) would spin the loading
+/// panel forever instead of falling through to the caller's `ErrorPanel`.
 enum CoreLoadingGate {
     static func shouldShowLoadingPanel(
         isLoadingHouseholds: Bool,
         isLoadingContent: Bool,
         hasActiveHousehold: Bool,
-        householdErrorMessage: String?
+        householdErrorMessage: String?,
+        hasLoadedContentOnce: Bool,
+        contentErrorMessage: String?
     ) -> Bool {
         if isLoadingHouseholds || isLoadingContent { return true }
-        return !hasActiveHousehold && householdErrorMessage == nil
+        guard hasActiveHousehold else { return householdErrorMessage == nil }
+        guard householdErrorMessage == nil else { return false }
+        return !hasLoadedContentOnce && contentErrorMessage == nil
     }
 }
 

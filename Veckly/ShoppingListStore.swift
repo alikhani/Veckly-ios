@@ -81,6 +81,12 @@ final class ShoppingListStore {
     private(set) var errorMessage: String?
     private(set) var mutationError: String?
     private(set) var lastFetchedAt: Date?
+    /// True once a load has actually resolved (success, a handled "not
+    /// found", or an error) at least once this session — see
+    /// `CoreLoadingGate` and the identical field on `WeekStore` for why this
+    /// can't just be inferred from `isLoading` or the emptiness of
+    /// `groups`/`summary`.
+    private(set) var hasLoadedOnce = false
     private(set) var hasPendingSync = false
     private var regularGroups: [ShoppingListGroup] = []
     private var pendingMutations: [ShoppingListMutation] = []
@@ -125,7 +131,10 @@ final class ShoppingListStore {
         loadGeneration += 1
         let generation = loadGeneration
         let revision = stateRevision
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            hasLoadedOnce = true
+        }
 
         do {
             async let summaryResult = apiClient.shoppingListSummary(householdID: household.id, weekStartDate: weekStartDate)
@@ -276,6 +285,7 @@ final class ShoppingListStore {
         mutationError = nil
         isLoading = false
         lastFetchedAt = nil
+        hasLoadedOnce = false
         needsFlushWhenSummaryLoads = !pendingMutations.isEmpty
     }
 
@@ -289,6 +299,7 @@ final class ShoppingListStore {
         stapledItems = []
         customItems = []
         checkedItems = []
+        hasLoadedOnce = true
     }
 
     private func applySharedState(

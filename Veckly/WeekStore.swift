@@ -33,6 +33,18 @@ final class WeekStore {
     private(set) var errorMessage: String?
     private(set) var mutationError: String?
     private(set) var lastFetchedAt: Date?
+    /// True once a week fetch has actually resolved (success, a handled
+    /// "not found", or an error) at least once this session — see
+    /// `CoreLoadingGate`. Unlike `isLoading`, this can't be used on its own
+    /// to close the cold-launch flash gate: the gap that flash comes from is
+    /// between the active household becoming known and this store's fetch
+    /// `Task` actually starting, i.e. before `isLoading` (or anything else
+    /// inside `loadWeekData`) has had a chance to run at all. `hasLoadedOnce`
+    /// starts `false` and only a completed attempt flips it — so during that
+    /// gap it correctly still reads `false`, telling the gate "there's
+    /// nothing real to show yet" instead of momentarily falling through to
+    /// the empty-week card.
+    private(set) var hasLoadedOnce = false
     private(set) var hasPendingSync = false
     private var pendingSyncContext: WeekPendingSyncContext?
     private var pendingDesiredDayStates: [Weekday: WeekPendingDayState] = [:]
@@ -115,7 +127,10 @@ final class WeekStore {
 
         if cached == nil { isLoading = true }
         errorMessage = nil
-        defer { if cached == nil { isLoading = false } }
+        defer {
+            if cached == nil { isLoading = false }
+            hasLoadedOnce = true
+        }
 
         do {
             let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
@@ -350,6 +365,7 @@ final class WeekStore {
         isLoading = false
         generatingWeekStartDate = nil
         lastFetchedAt = nil
+        hasLoadedOnce = false
         hasPendingSync = false
         pendingSyncContext = nil
         pendingDesiredDayStates = [:]
@@ -468,6 +484,7 @@ final class WeekStore {
         today = mapped.today ?? mapped.days.first
         syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
         lastFetchedAt = Date()
+        hasLoadedOnce = true
     }
 
     private func preparePendingSyncContext(
