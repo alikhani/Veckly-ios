@@ -100,6 +100,45 @@ struct WeekTabView: View {
     private var isViewingLastWeek: Bool { viewedWeekOffset == .last }
     private var weekPendingSyncMessage: String { L10n.string("week.sync.pending") }
 
+    /// Whether the loading panel should cover the week content, rather than
+    /// letting `hasWeekContent`'s empty/hero branches render underneath it.
+    ///
+    /// `HouseholdStore.isLoading` only flips to `true` *inside* the
+    /// unstructured `Task` that `AppRefreshCoordinator.run` spawns for the
+    /// household bootstrap — it's `false` both before that `Task` has had a
+    /// chance to run its first line and, obviously, before it's even been
+    /// created. On cold launch, `RootView` flips `isRestoring` to `false`
+    /// (mounting `WeekTabView` for the first time) moments *before*
+    /// `AppModel.restoreSession()` goes on to call `loadCoreReader()`, so
+    /// there is a real — if usually brief — window where SwiftUI evaluates
+    /// this view's body with `householdStore.isLoading == false`,
+    /// `weekStore.isLoading == false`, and `weekStore.summary == nil`, all
+    /// at once, purely because the bootstrap `Task` hasn't been scheduled
+    /// yet. Without this extra check, that window renders `emptyWeekView`
+    /// (or `tonightHeroCard`) for a frame before the bootstrap `Task` starts
+    /// and flips `isLoading` back to `true` — the "loads, something appears
+    /// briefly, then it starts loading again" flash reported 2026-08-03.
+    ///
+    /// Gating on `activeHousehold == nil` instead of on `isLoading`'s timing
+    /// closes that window regardless of scheduling order, since it's `nil`
+    /// both before and during the fetch. It's safe to treat "no active
+    /// household yet" as "still loading" here: `bootstrapAndLoadHouseholds`
+    /// always ends with either an active household or `errorMessage` set
+    /// (see its `catch`), so `activeHousehold == nil` with no error is only
+    /// ever a transient state for a signed-in user, never a legitimate
+    /// steady state to render content — hence the `householdErrorMessage ==
+    /// nil` guard, so a real bootstrap failure still falls through to the
+    /// `ErrorPanel` branch below instead of spinning forever.
+    static func shouldShowLoadingPanel(
+        isLoadingHouseholds: Bool,
+        isLoadingWeek: Bool,
+        hasActiveHousehold: Bool,
+        householdErrorMessage: String?
+    ) -> Bool {
+        if isLoadingHouseholds || isLoadingWeek { return true }
+        return !hasActiveHousehold && householdErrorMessage == nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -182,7 +221,12 @@ struct WeekTabView: View {
                     weekendNudgeBanner
                 }
 
-                if appModel.householdStore.isLoading || appModel.weekStore.isLoading {
+                if Self.shouldShowLoadingPanel(
+                    isLoadingHouseholds: appModel.householdStore.isLoading,
+                    isLoadingWeek: appModel.weekStore.isLoading,
+                    hasActiveHousehold: appModel.householdStore.activeHousehold != nil,
+                    householdErrorMessage: appModel.householdStore.errorMessage
+                ) {
                     LoadingPanel(title: L10n.string("week.loading"))
                 } else if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
                     LoadingPanel(title: L10n.string("week.generating"))
@@ -465,11 +509,28 @@ struct WeekTabView: View {
             // (household switch/join/leave) already guarantee them fresh by
             // the time this fires. Re-fetching them here too was Fas 7's
             // core bug: a genuine second network call for the same data,
-            // not just a redundant guard. Retro isn't a coordinator-owned
-            // resource (it's this view's own `RetroCardViewModel`, reading
-            // *last* week, not the current one), so it stays here.
+            // not just a redundant guard. Retro and the next-week-empty peek
+            // aren't coordinator-owned resources (Retro is this view's own
+            // `RetroCardViewModel`, reading *last* week; the peek is a
+            // cheap, weekend-only check — see `refreshNextWeekEmptyState`),
+            // so they stay here.
+            //
+            // This `.task(id:)` re-running whenever `activeHousehold?.id`
+            // actually changes (nil → set, or a household switch) is also
+            // what `onAppear`'s own calls to these two can't reliably cover
+            // on cold launch: `onAppear` fires once, as soon as the tab
+            // mounts, which on cold launch can be *before*
+            // `householdStore.activeHousehold` is known — its own guards
+            // below then silently no-op, and nothing re-tries until the next
+            // unrelated `scenePhase` change or tab reappearance. On a
+            // weekend day that left the "Plan next week" CTA (see
+            // `shouldOfferPlanNextWeekFromWeekDone`) waiting far longer than
+            // the actual network call took (2026-08-03 bug report) — this
+            // task reliably firing the moment the household *is* known
+            // closes that gap.
             guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
+            await refreshNextWeekEmptyState()
             await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
         }
         .onAppear {
