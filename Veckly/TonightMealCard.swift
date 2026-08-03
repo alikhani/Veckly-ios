@@ -18,8 +18,11 @@ enum TonightMealCardMode: Equatable {
     /// framing.
     case upcomingMeal(day: WeekDayRowViewModel)
     /// No planned dinner remains anywhere ahead in the active week — a
-    /// quiet, closed state. No new week-navigation affordance is introduced
-    /// here; the existing week picker already covers moving to next week.
+    /// quiet, closed state. Near the week boundary (see
+    /// `WeekTabView.shouldOfferPlanNextWeekFromWeekDone`) the card itself
+    /// offers a "Plan next week" CTA rather than relying on the header's
+    /// week picker alone — that picker turned out not to be a discoverable
+    /// enough affordance from this dead-end state in practice.
     case weekDone
 
     /// The day this mode is centered on, if any — `nil` only for `.weekDone`.
@@ -87,6 +90,10 @@ struct TonightMealCard: View {
     let onPlanTonight: (WeekDayRowViewModel) -> Void
     let onEatExtra: (WeekDayRowViewModel) -> Void
     let onRemoveCoverage: (WeekDayRowViewModel, PrepBatchCoverage) -> Void
+    /// Non-nil only when `.weekDone` is showing near the week boundary (see
+    /// `WeekTabView.shouldOfferPlanNextWeekFromWeekDone`) — governs whether
+    /// `weekDoneContent` renders the "Plan next week" CTA at all.
+    let onPlanNextWeek: (() -> Void)?
 
     var body: some View {
         VecklyCard {
@@ -315,6 +322,12 @@ struct TonightMealCard: View {
             Text("week.hero.done.message")
                 .font(.body)
                 .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+            if let onPlanNextWeek {
+                Button("week.weekendNudge.cta", action: onPlanNextWeek)
+                    .buttonStyle(VecklyPrimaryButtonStyle())
+                    .padding(.top, 4)
+            }
         }
     }
 

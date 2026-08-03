@@ -33,6 +33,11 @@ extension UNUserNotificationCenter: SundayReminderNotifying {
 ///   reschedules it.
 @MainActor
 final class SundayReminderScheduler {
+    /// Exposed so `AppNotificationDelegate` can recognize a tap on this
+    /// specific reminder (vs. some other future notification) without a
+    /// second copy of the raw identifier string.
+    static let notificationIdentifier = sundayReminderIdentifier
+
     private let notificationCenter: any SundayReminderNotifying
     private let defaults: UserDefaults
     private let calendar: Calendar

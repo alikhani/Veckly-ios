@@ -474,12 +474,25 @@ struct WeekTabView: View {
         }
         .onAppear {
             // Browsing is a transient peek, not a persisted location — always
-            // land back on the current week when the tab reappears.
-            viewedWeekOffset = .current
+            // land back on the current week when the tab reappears, unless a
+            // just-tapped "plan next week" notification (see
+            // `AppNotificationDelegate`) asked for next week specifically.
+            if !consumePendingWeekPlanDeepLink() {
+                viewedWeekOffset = .current
+            }
             isWeekendExpanded = false
             refreshWeekendNudgeDismissalState()
             Task { await reloadViewedWeek() }
             Task { await refreshNextWeekEmptyState() }
+        }
+        .onChange(of: appModel.pendingWeekPlanDeepLink) { _, isPending in
+            // Covers the case where the notification tap is delivered to
+            // `AppNotificationDelegate` *after* this view already appeared
+            // (e.g. the app was merely backgrounded, not relaunched, so
+            // `.onAppear` doesn't fire again) — the async delegate callback
+            // has no fixed ordering relative to SwiftUI's view lifecycle.
+            guard isPending, consumePendingWeekPlanDeepLink() else { return }
+            Task { await reloadViewedWeek() }
         }
         .onChange(of: viewedWeekOffset) { _, _ in
             // The undo banner replays writes against `context.weekStartDate`
@@ -706,6 +719,23 @@ struct WeekTabView: View {
         return isWeekend
     }
 
+    /// Gate for the "Plan next week" CTA inside the hero's `.weekDone`
+    /// state: only worth surfacing once the household is actually near the
+    /// week boundary (Sat/Sun) or already knows next week is unplanned —
+    /// not on an ordinary Tuesday when "the week is done" just means
+    /// today's the last relevant planning day for a household that doesn't
+    /// cook every night. Unlike `weekendNudgeBanner`, this isn't
+    /// per-day-dismissible: it's the one durable exit from an otherwise
+    /// dead-end completion state (see the 2026-08-02 TestFlight bug report
+    /// — a household landed here from the Sunday reminder notification
+    /// with no visible way to start planning next week).
+    private var shouldOfferPlanNextWeekFromWeekDone: Bool {
+        guard isViewingCurrentWeek, heroMode == .weekDone else { return false }
+        let weekday = Calendar.current.component(.weekday, from: Date())
+        let isLateInWeek = weekday == 1 || weekday == 7 // Sunday = 1, Saturday = 7
+        return isLateInWeek || nextWeekIsEmpty == true
+    }
+
     /// nil until checked. Populated by a lightweight prefetch (see
     /// `refreshNextWeekEmptyState`) only on weekend days while viewing the
     /// current week — it's not needed otherwise.
@@ -749,6 +779,18 @@ struct WeekTabView: View {
             .background(VecklyDesign.Colors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
+    }
+
+    /// One-shot consumption of the "plan next week" deep link set by
+    /// `AppNotificationDelegate` when the user tapped the Sunday planning
+    /// reminder. Returns whether it actually fired, so callers can decide
+    /// whether to fall back to their own default week selection.
+    @discardableResult
+    private func consumePendingWeekPlanDeepLink() -> Bool {
+        guard appModel.pendingWeekPlanDeepLink else { return false }
+        appModel.pendingWeekPlanDeepLink = false
+        viewedWeekOffset = .next
+        return true
     }
 
     private func refreshWeekendNudgeDismissalState() {
@@ -1142,7 +1184,11 @@ struct WeekTabView: View {
                         mealType: dayCoverage.mealType
                     )
                 }
-            }
+            },
+            onPlanNextWeek: shouldOfferPlanNextWeekFromWeekDone ? {
+                viewedWeekOffset = .next
+                Task { await reloadViewedWeek() }
+            } : nil
         )
     }
 

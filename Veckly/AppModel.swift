@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UserNotifications
 
 @MainActor
 @Observable
@@ -21,6 +22,12 @@ final class AppModel {
     let productEventStore: ProductEventStore
     let subscriptionStore: SubscriptionStore
     let sundayReminderScheduler = SundayReminderScheduler()
+    private let notificationDelegate = AppNotificationDelegate()
+    /// Set by `AppNotificationDelegate` when the user taps the Sunday "plan
+    /// next week" reminder — on cold launch or while resuming from the
+    /// background. Consumed exactly once by `WeekTabView`, which lands on
+    /// next week instead of its usual current-week default.
+    var pendingWeekPlanDeepLink = false
     /// Not `private` — a handful of call sites outside `AppRefreshCoordinator`
     /// still need it directly: UI-test seeding at init (below),
     /// `recordProductEvent`, and `refreshSundayReminderIfNeeded`. Every
@@ -78,6 +85,11 @@ final class AppModel {
             weekStore.seedForUITests(scenario: scenario)
             shoppingListStore.seedForUITests()
         }
+
+        notificationDelegate.onSundayReminderTapped = { [weak self] in
+            self?.pendingWeekPlanDeepLink = true
+        }
+        UNUserNotificationCenter.current().delegate = notificationDelegate
     }
 
     func restoreSession() async {
