@@ -26,6 +26,16 @@ struct RootView: View {
             await appModel.refreshSundayReminderIfNeeded()
             await appModel.subscriptionStore.prepare()
         }
+        .onOpenURL { url in
+            Task { await appModel.handleAuthCallback(url) }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { appModel.authSessionStore.isPasswordRecoveryActive },
+            set: { if !$0 { appModel.authSessionStore.cancelPasswordRecovery() } }
+        )) {
+            PasswordRecoveryView()
+                .environment(appModel)
+        }
         .onChange(of: scenePhase) { _, newPhase in
             // The actual scene-active refresh logic — de-duping concurrent
             // callers, skipping the reload entirely when data is still

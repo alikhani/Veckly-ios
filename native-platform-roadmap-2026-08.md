@@ -19,7 +19,7 @@ Göra Vecklys identitet enkel och trygg för vanliga hushåll på iOS, använda 
 
 ## Fas 1 — Email som komplett flöde
 
-**Status:** 🔲 Ej påbörjad
+**Status:** 🟡 Implementerad lokalt 2026-08-10; väntar på Supabase-konfiguration och enhetstest
 
 - Lägg “Fortsätt med email” under Apple-knappen, visuellt sekundär.
 - Separera registrering och inloggning utan att skapa en tung authportal.
@@ -28,6 +28,22 @@ Göra Vecklys identitet enkel och trygg för vanliga hushåll på iOS, använda 
 - Mappa verkliga authfel till sv/en-copy: fel lösenord, redan registrerad email, svagt lösenord, utgången länk, rate limit och nätverksfel.
 - Behåll session persistence, token refresh och kontoborttagning som gemensamma flöden oavsett provider.
 - Testa cold launch med sparad session, utgången access token, giltig refresh token och återkallad session.
+
+### Implementerat 2026-08-10
+
+- Native sekundärknapp för email med separata, lokaliserade lägen för inloggning och registrering.
+- Emailverifiering med “kolla inkorgen”, återskick och callback till `veckly://auth-callback`.
+- Glömt lösenord, återställningsmail, deep-linkcallback och native formulär för nytt lösenord.
+- Lokaliserad felhantering för credentials, redan registrerat konto, email ej bekräftad, svagt lösenord, rate limit, nätverk samt ogiltig/utgången länk.
+- Samma Keychain-session, refresh och user-id används för Apple och email.
+- Sex regressionstester täcker verifieringscallback, recovery, cold launch, tokenrotation och återkallad refresh-token.
+
+### Kvar före färdig Fas 1
+
+- Lägg exakt `veckly://auth-callback` i Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
+- Kontrollera att **Confirm email** är aktiverat och att confirmation-/recovery-mallarna använder Supabases confirmation URL.
+- Konfigurera egen SMTP innan extern beta; Supabases standardutskick är endast lämpligt för tidig test och har begränsad leverans/rate limit.
+- Kör riktiga flöden på båda testtelefonerna: ny email, befintlig email, resend, utgången länk, recovery samt appen helt avslutad när länken öppnas.
 
 ## Fas 2 — Google-inloggning
 

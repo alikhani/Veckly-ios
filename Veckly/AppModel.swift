@@ -143,6 +143,18 @@ final class AppModel {
         await loadCoreReader()
     }
 
+    func handleAuthCallback(_ url: URL) async {
+        guard authSessionStore.handleAuthCallback(url),
+              authSessionStore.isSignedIn,
+              !authSessionStore.isPasswordRecoveryActive else { return }
+        await loadCoreReader()
+    }
+
+    func updateRecoveredPassword(_ password: String) async {
+        guard await authSessionStore.updateRecoveredPassword(password) else { return }
+        await loadCoreReader()
+    }
+
     // `detailsHouseholdID == household.id` matters as much as `!isLoadingDetails`:
     // right after bootstrap finishes, the active household is set but details haven't
     // started loading yet, so `cachedProfile` is nil for a household we simply haven't

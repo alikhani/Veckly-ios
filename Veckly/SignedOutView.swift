@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SignedOutView: View {
     @Environment(AppModel.self) private var appModel
+    @State private var showsEmailAuth = false
 
     private let weekDays = Weekday.allCases.prefix(5)
     private let accentDay = Weekday.tuesday
@@ -81,6 +82,19 @@ struct SignedOutView: View {
                         }
                     )
 
+                    Button {
+                        appModel.authSessionStore.clearNotices()
+                        showsEmailAuth = true
+                    } label: {
+                        Label("auth.continueWithEmail", systemImage: "envelope")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 50)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Color("textPrimary"))
+                    .disabled(appModel.authSessionStore.isSigningIn)
+
                     if appModel.authSessionStore.isSigningIn {
                         HStack(spacing: 8) {
                             ProgressView()
@@ -130,6 +144,10 @@ struct SignedOutView: View {
                 .padding(.bottom, 8)
             }
             .padding(.horizontal, 24)
+        }
+        .sheet(isPresented: $showsEmailAuth) {
+            EmailAuthView()
+                .environment(appModel)
         }
     }
 }

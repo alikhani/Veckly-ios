@@ -420,7 +420,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = TCAU729S7P;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Veckly-Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Veckly behöver åtkomst för att kunna lägga inköpsvaror som separata påminnelser.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "Veckly behöver åtkomst för att kunna lägga inköpsvaror som separata påminnelser.";
@@ -455,7 +456,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = TCAU729S7P;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Veckly-Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Veckly behöver åtkomst för att kunna lägga inköpsvaror som separata påminnelser.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "Veckly behöver åtkomst för att kunna lägga inköpsvaror som separata påminnelser.";
