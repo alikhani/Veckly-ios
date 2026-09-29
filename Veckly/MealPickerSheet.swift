@@ -8,6 +8,7 @@ struct MealPickerSheet: View {
     /// usual blank-picker look.
     var coverage: PrepBatchCoverage? = nil
     let householdID: String
+    let weekStartDate: String
     let onSelect: (FullRecipe) -> Void
     let onClear: () -> Void
     let onSkip: () -> Void
@@ -33,6 +34,31 @@ struct MealPickerSheet: View {
     @State private var selectedIntent: MealSwapIntent = .any
 
     private var recipes: [FullRecipe] { appModel.recipeStore.recipes }
+
+    private var recommendationContext: MealRecommendationRequestContext {
+        let selectedDay = appModel.householdStore.cachedProfile(for: householdID)?
+            .selectedDays.first { $0.day == day.weekday }
+        let prep = MealRecommendationPrepContext(
+            isCookDay: appModel.prepBatchStore.batches.contains { $0.cookDate == day.date },
+            leftoversDesired: selectedDay?.leftoversIntent == true
+        )
+        let swap = selectedIntent == .any && day.recipe == nil
+            ? nil
+            : MealRecommendationSwapContext(intent: selectedIntent, currentMealID: day.recipe?.id)
+        return MealRecommendationRequestContext(
+            referenceWeekStartDate: weekStartDate,
+            prep: prep.isCookDay || prep.leftoversDesired ? prep : nil,
+            swap: swap
+        )
+    }
+
+    private var recommendationTaskID: RecommendationTaskID {
+        RecommendationTaskID(
+            context: recommendationContext,
+            candidateFingerprint: RecipeRecommendationStore.candidateFingerprint(recipes),
+            cacheGeneration: appModel.recipeRecommendationStore.cacheGeneration(for: householdID)
+        )
+    }
 
     private var rankedResult: MealSwapIntentRanker.Result {
         let matchesSearch = searchText.isEmpty
@@ -63,8 +89,11 @@ struct MealPickerSheet: View {
     /// not "find this specific dish."
     private var suggestedRecipes: [(recipe: FullRecipe, reason: String)] {
         guard searchText.isEmpty else { return [] }
-        let recipesByID = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0) })
-        return appModel.recipeRecommendationStore.recommendations(for: householdID).compactMap { recommendation in
+        let recipesByID = Dictionary(uniqueKeysWithValues: filtered.map { ($0.id, $0) })
+        return appModel.recipeRecommendationStore.recommendations(
+            for: householdID,
+            context: recommendationContext
+        ).compactMap { recommendation in
             guard let recipe = recipesByID[recommendation.mealID] else { return nil }
             return (recipe, recommendation.reason)
         }
@@ -185,6 +214,7 @@ struct MealPickerSheet: View {
             }
         }
         .task { await loadRecipes() }
+        .task(id: recommendationTaskID) { await loadRecommendations() }
         .sheet(isPresented: $showAddRecipeSheet) {
             RecipeFormSheet(mode: .create) { draft in
                 guard let household = appModel.householdStore.activeHousehold else { return }
@@ -235,6 +265,17 @@ struct MealPickerSheet: View {
                         }
                         .buttonStyle(.plain)
                     }
+                }
+            }
+
+            if appModel.recipeRecommendationStore.state(
+                for: householdID,
+                context: recommendationContext
+            ) == .fallback {
+                Section {
+                    Label("recipes.suggestionsFallback", systemImage: "fork.knife")
+                        .font(.footnote)
+                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
                 }
             }
 
@@ -337,14 +378,25 @@ struct MealPickerSheet: View {
 
     private func loadRecipes() async {
         await appModel.loadRecipesAndSeedFeedback(householdID: householdID)
+    }
+
+    private func loadRecommendations() async {
+        guard !recipes.isEmpty else { return }
         guard let profile = appModel.householdStore.cachedProfile(for: householdID) else { return }
         await appModel.recipeRecommendationStore.loadIfNeeded(
             householdID: householdID,
             householdProfile: profile,
             feedbackVotes: appModel.feedbackStore.allVotes,
-            recipes: appModel.recipeStore.recipes
+            recipes: recipes,
+            context: recommendationContext
         )
     }
+}
+
+private struct RecommendationTaskID: Hashable {
+    let context: MealRecommendationRequestContext
+    let candidateFingerprint: Int
+    let cacheGeneration: Int
 }
 
 /// `.searchable` only while actively picking — once a recipe is confirmed the

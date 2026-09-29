@@ -186,7 +186,8 @@ final class AppRefreshCoordinator {
                     householdID: household.id,
                     householdProfile: profile,
                     feedbackVotes: feedbackVotes,
-                    recipes: recipesSnapshot
+                    recipes: recipesSnapshot,
+                    context: .general(referenceWeekStartDate: weekStartDate)
                 )
             }
         }

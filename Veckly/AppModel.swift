@@ -50,6 +50,7 @@ final class AppModel {
         )
         let householdStore = HouseholdStore(apiClient: apiClient)
         let familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
+        let recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
 
         self.authSessionStore = authSessionStore
         self.apiClient = apiClient
@@ -58,15 +59,22 @@ final class AppModel {
         self.shoppingListStore = ShoppingListStore(apiClient: apiClient)
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
-        self.feedbackStore = FeedbackStore(apiClient: apiClient)
+        self.feedbackStore = FeedbackStore(
+            apiClient: apiClient,
+            didChangeFeedback: { recipeRecommendationStore.invalidate(householdID: $0) }
+        )
         self.mealOutcomeStore = MealOutcomeStore(
             apiClient: apiClient,
             didSyncOutcome: { householdID in
+                recipeRecommendationStore.invalidate(householdID: householdID)
                 Task { await familyCookbookStore.refresh(householdID: householdID) }
             }
         )
-        self.householdMealSignalStore = HouseholdMealSignalStore(apiClient: apiClient)
-        self.recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
+        self.householdMealSignalStore = HouseholdMealSignalStore(
+            apiClient: apiClient,
+            didChangeSignal: { recipeRecommendationStore.invalidate(householdID: $0) }
+        )
+        self.recipeRecommendationStore = recipeRecommendationStore
         self.familyCookbookStore = familyCookbookStore
         self.householdSavedRecipesStore = HouseholdSavedRecipesStore(apiClient: apiClient)
         self.userProfileStore = UserProfileStore(apiClient: apiClient)

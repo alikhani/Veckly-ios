@@ -51,6 +51,23 @@ struct HouseholdMealSignalStoreTests {
 
         #expect(store.signal(for: "pasta") == .worksForFamily)
     }
+
+    @Test func invalidatesRecommendationsOnlyAfterSignalPersists() async {
+        let successfulClient = StubHouseholdMealSignalAPIClient()
+        var invalidatedHouseholds: [String] = []
+        let successfulStore = HouseholdMealSignalStore(apiClient: successfulClient) {
+            invalidatedHouseholds.append($0)
+        }
+        await successfulStore.setSignal(householdID: "household-1", recipeID: "pasta", signal: .notForUs)
+        #expect(invalidatedHouseholds == ["household-1"])
+
+        let failingStore = HouseholdMealSignalStore(
+            apiClient: StubHouseholdMealSignalAPIClient(setError: APIError.server(statusCode: 500)),
+            didChangeSignal: { invalidatedHouseholds.append($0) }
+        )
+        await failingStore.setSignal(householdID: "household-2", recipeID: "pasta", signal: .notForUs)
+        #expect(invalidatedHouseholds == ["household-1"])
+    }
 }
 
 private struct SetCall: Equatable {

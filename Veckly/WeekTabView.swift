@@ -316,6 +316,7 @@ struct WeekTabView: View {
                 isSkipped: day.isSkipped,
                 coverage: coverage(for: day),
                 householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                weekStartDate: viewedWeekStartDate,
                 onSelect: { recipe in
                     guard canMutateDay(day) else { return }
                     guard let household = appModel.householdStore.activeHousehold else { return }

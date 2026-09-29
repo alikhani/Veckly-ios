@@ -562,7 +562,8 @@ private actor FakeAppRefreshAPIClient:
         householdID: String,
         householdProfile: HouseholdProfile,
         feedbackSummary: [MealRecommendationFeedbackItem],
-        candidateMeals: [MealRecommendationCandidate]
+        candidateMeals: [MealRecommendationCandidate],
+        context: MealRecommendationRequestContext
     ) async throws -> [MealRecommendation] {
         recommendMealsCount += 1
         recommendMealsContinuation?.resume()

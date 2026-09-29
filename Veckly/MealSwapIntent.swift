@@ -1,6 +1,6 @@
 import Foundation
 
-enum MealSwapIntent: String, CaseIterable, Identifiable {
+enum MealSwapIntent: String, CaseIterable, Identifiable, Hashable {
     case any
     case quicker
     case childFriendly

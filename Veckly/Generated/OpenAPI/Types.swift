@@ -6348,6 +6348,16 @@ internal enum Components {
                 internal var tags: [Swift.String]?
                 /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/ingredients`.
                 internal var ingredients: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/prepTimeMinutes`.
+                internal var prepTimeMinutes: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/cookTimeMinutes`.
+                internal var cookTimeMinutes: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/cuisine`.
+                internal var cuisine: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/proteinSource`.
+                internal var proteinSource: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMealsPayload/mealWeight`.
+                internal var mealWeight: Swift.String?
                 /// Creates a new `candidateMealsPayloadPayload`.
                 ///
                 /// - Parameters:
@@ -6355,22 +6365,42 @@ internal enum Components {
                 ///   - title:
                 ///   - tags:
                 ///   - ingredients:
+                ///   - prepTimeMinutes:
+                ///   - cookTimeMinutes:
+                ///   - cuisine:
+                ///   - proteinSource:
+                ///   - mealWeight:
                 internal init(
                     id: Swift.String,
                     title: Swift.String,
                     tags: [Swift.String]? = nil,
-                    ingredients: [Swift.String]? = nil
+                    ingredients: [Swift.String]? = nil,
+                    prepTimeMinutes: Swift.Int? = nil,
+                    cookTimeMinutes: Swift.Int? = nil,
+                    cuisine: Swift.String? = nil,
+                    proteinSource: Swift.String? = nil,
+                    mealWeight: Swift.String? = nil
                 ) {
                     self.id = id
                     self.title = title
                     self.tags = tags
                     self.ingredients = ingredients
+                    self.prepTimeMinutes = prepTimeMinutes
+                    self.cookTimeMinutes = cookTimeMinutes
+                    self.cuisine = cuisine
+                    self.proteinSource = proteinSource
+                    self.mealWeight = mealWeight
                 }
                 internal enum CodingKeys: String, CodingKey {
                     case id
                     case title
                     case tags
                     case ingredients
+                    case prepTimeMinutes
+                    case cookTimeMinutes
+                    case cuisine
+                    case proteinSource
+                    case mealWeight
                 }
             }
             /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/candidateMeals`.
@@ -6406,19 +6436,63 @@ internal enum Components {
             internal struct prepContextPayload: Codable, Hashable, Sendable {
                 /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/prepContext/isCookDay`.
                 internal var isCookDay: Swift.Bool
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/prepContext/leftoversDesired`.
+                internal var leftoversDesired: Swift.Bool?
                 /// Creates a new `prepContextPayload`.
                 ///
                 /// - Parameters:
                 ///   - isCookDay:
-                internal init(isCookDay: Swift.Bool) {
+                ///   - leftoversDesired:
+                internal init(
+                    isCookDay: Swift.Bool,
+                    leftoversDesired: Swift.Bool? = nil
+                ) {
                     self.isCookDay = isCookDay
+                    self.leftoversDesired = leftoversDesired
                 }
                 internal enum CodingKeys: String, CodingKey {
                     case isCookDay
+                    case leftoversDesired
                 }
             }
             /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/prepContext`.
             internal var prepContext: Components.Schemas.MealRecommendationsRequest.prepContextPayload?
+            /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/swapContext`.
+            internal struct swapContextPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/swapContext/intent`.
+                internal enum intentPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case any = "any"
+                    case quicker = "quicker"
+                    case childFriendly = "childFriendly"
+                    case simplerShopping = "simplerShopping"
+                    case moreVariation = "moreVariation"
+                    case sameFeel = "sameFeel"
+                }
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/swapContext/intent`.
+                internal var intent: Components.Schemas.MealRecommendationsRequest.swapContextPayload.intentPayload
+                /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/swapContext/currentMealId`.
+                internal var currentMealId: Swift.String?
+                /// Creates a new `swapContextPayload`.
+                ///
+                /// - Parameters:
+                ///   - intent:
+                ///   - currentMealId:
+                internal init(
+                    intent: Components.Schemas.MealRecommendationsRequest.swapContextPayload.intentPayload,
+                    currentMealId: Swift.String? = nil
+                ) {
+                    self.intent = intent
+                    self.currentMealId = currentMealId
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case intent
+                    case currentMealId
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/swapContext`.
+            internal var swapContext: Components.Schemas.MealRecommendationsRequest.swapContextPayload?
+            /// - Remark: Generated from `#/components/schemas/MealRecommendationsRequest/referenceWeekStartDate`.
+            internal var referenceWeekStartDate: Swift.String?
             /// Creates a new `MealRecommendationsRequest`.
             ///
             /// - Parameters:
@@ -6428,13 +6502,17 @@ internal enum Components {
             ///   - candidateMeals:
             ///   - recentMealIds:
             ///   - prepContext:
+            ///   - swapContext:
+            ///   - referenceWeekStartDate:
             internal init(
                 householdId: Swift.String,
                 householdProfile: Components.Schemas.MealRecommendationsRequest.householdProfilePayload,
                 feedbackSummary: Components.Schemas.MealRecommendationsRequest.feedbackSummaryPayload,
                 candidateMeals: Components.Schemas.MealRecommendationsRequest.candidateMealsPayload,
                 recentMealIds: Components.Schemas.MealRecommendationsRequest.recentMealIdsPayload? = nil,
-                prepContext: Components.Schemas.MealRecommendationsRequest.prepContextPayload? = nil
+                prepContext: Components.Schemas.MealRecommendationsRequest.prepContextPayload? = nil,
+                swapContext: Components.Schemas.MealRecommendationsRequest.swapContextPayload? = nil,
+                referenceWeekStartDate: Swift.String? = nil
             ) {
                 self.householdId = householdId
                 self.householdProfile = householdProfile
@@ -6442,6 +6520,8 @@ internal enum Components {
                 self.candidateMeals = candidateMeals
                 self.recentMealIds = recentMealIds
                 self.prepContext = prepContext
+                self.swapContext = swapContext
+                self.referenceWeekStartDate = referenceWeekStartDate
             }
             internal enum CodingKeys: String, CodingKey {
                 case householdId
@@ -6450,6 +6530,8 @@ internal enum Components {
                 case candidateMeals
                 case recentMealIds
                 case prepContext
+                case swapContext
+                case referenceWeekStartDate
             }
         }
         /// - Remark: Generated from `#/components/schemas/MealFeedbackVote`.
@@ -18977,13 +19059,13 @@ internal enum Operations {
                 /// Creates a new `UnprocessableContent`.
                 internal init() {}
             }
-            /// AI response did not match schema
+            /// Reserved for request-compatible validation errors; AI validation failures use deterministic fallback
             ///
             /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/422`.
             ///
             /// HTTP response code: `422 unprocessableContent`.
             case unprocessableContent(Operations.recommendMeals.Output.UnprocessableContent)
-            /// AI response did not match schema
+            /// Reserved for request-compatible validation errors; AI validation failures use deterministic fallback
             ///
             /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/422`.
             ///
@@ -19047,13 +19129,13 @@ internal enum Operations {
                 /// Creates a new `InternalServerError`.
                 internal init() {}
             }
-            /// AI provider unavailable
+            /// Unexpected server error; AI provider failures use deterministic fallback
             ///
             /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/500`.
             ///
             /// HTTP response code: `500 internalServerError`.
             case internalServerError(Operations.recommendMeals.Output.InternalServerError)
-            /// AI provider unavailable
+            /// Unexpected server error; AI provider failures use deterministic fallback
             ///
             /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/500`.
             ///

@@ -268,6 +268,7 @@ private enum LocalizationExtractionManifest {
         _ = String(localized: "recipes.scaledFrom")
         _ = String(localized: "recipes.search")
         _ = String(localized: "recipes.suggestions")
+        _ = String(localized: "recipes.suggestionsFallback")
         _ = String(localized: "recipes.tryDifferentSearch")
         _ = String(localized: "recipes.tryDifferentSearchTerm")
         _ = String(localized: "recipes.yourRecipes")

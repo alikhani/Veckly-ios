@@ -267,6 +267,8 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
     let steps: [RecipeStep]
     let userVote: String? // "up" | "down" | nil
     let cuisine: String?
+    let proteinSource: String?
+    let mealWeight: String?
     let householdId: String?
     let source: RecipeSource
 
@@ -285,6 +287,8 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
         steps: [RecipeStep],
         userVote: String?,
         cuisine: String? = nil,
+        proteinSource: String? = nil,
+        mealWeight: String? = nil,
         householdId: String? = nil,
         source: RecipeSource = .builtin
     ) {
@@ -299,6 +303,8 @@ struct FullRecipe: Decodable, Equatable, Identifiable {
         self.steps = steps
         self.userVote = userVote
         self.cuisine = cuisine
+        self.proteinSource = proteinSource
+        self.mealWeight = mealWeight
         self.householdId = householdId
         self.source = source
     }
@@ -597,6 +603,11 @@ struct MealRecommendationCandidate {
     let title: String
     let tags: [String]
     let ingredients: [String]
+    let prepTimeMinutes: Int?
+    let cookTimeMinutes: Int?
+    let cuisine: String?
+    let proteinSource: String?
+    let mealWeight: String?
 }
 
 /// One AI-ranked suggestion — `reason` is a short, already-localized-to-the-

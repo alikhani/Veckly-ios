@@ -578,7 +578,8 @@ struct VecklyAPIClient {
         householdID: String,
         householdProfile: HouseholdProfile,
         feedbackSummary: [MealRecommendationFeedbackItem],
-        candidateMeals: [MealRecommendationCandidate]
+        candidateMeals: [MealRecommendationCandidate],
+        context: MealRecommendationRequestContext
     ) async throws -> [MealRecommendation] {
         let profile = Components.Schemas.MealRecommendationsRequest.householdProfilePayload(
             adults: Double(householdProfile.adults),
@@ -598,11 +599,36 @@ struct VecklyAPIClient {
                 id: $0.id,
                 title: $0.title,
                 tags: $0.tags,
-                ingredients: $0.ingredients
+                ingredients: $0.ingredients,
+                prepTimeMinutes: $0.prepTimeMinutes,
+                cookTimeMinutes: $0.cookTimeMinutes,
+                cuisine: $0.cuisine,
+                proteinSource: $0.proteinSource,
+                mealWeight: $0.mealWeight
+            )
+        }
+        let prepContext = context.prep.map {
+            Components.Schemas.MealRecommendationsRequest.prepContextPayload(
+                isCookDay: $0.isCookDay,
+                leftoversDesired: $0.leftoversDesired
+            )
+        }
+        let swapContext = context.swap.map {
+            Components.Schemas.MealRecommendationsRequest.swapContextPayload(
+                intent: .init(rawValue: $0.intent.rawValue)!,
+                currentMealId: $0.currentMealID
             )
         }
         let output = try await _client.recommendMeals(
-            body: .json(.init(householdId: householdID, householdProfile: profile, feedbackSummary: feedback, candidateMeals: candidates))
+            body: .json(.init(
+                householdId: householdID,
+                householdProfile: profile,
+                feedbackSummary: feedback,
+                candidateMeals: candidates,
+                prepContext: prepContext,
+                swapContext: swapContext,
+                referenceWeekStartDate: context.referenceWeekStartDate
+            ))
         )
         switch output {
         case let .ok(r):
@@ -1369,6 +1395,8 @@ private extension Components.Schemas.Recipe {
             steps: steps.map(\.appModel),
             userVote: userVote?.rawValue,
             cuisine: cuisine,
+            proteinSource: proteinSource,
+            mealWeight: mealWeight,
             householdId: householdId,
             source: RecipeSource(rawValue: source.rawValue) ?? .builtin
         )

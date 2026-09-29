@@ -5827,6 +5827,22 @@
         }
       }
     },
+    "recipes.suggestionsFallback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal suggestions are unavailable right now. All recipes are still available below."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personliga förslag är inte tillgängliga just nu. Alla recept finns fortfarande nedan."
+          }
+        }
+      }
+    },
     "recipes.thumbsDown" : {
       "localizations" : {
         "en" : {

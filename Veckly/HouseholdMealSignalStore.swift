@@ -16,11 +16,16 @@ protocol HouseholdMealSignalStoreAPIClient {
 @Observable
 final class HouseholdMealSignalStore {
     private let apiClient: any HouseholdMealSignalStoreAPIClient
+    private let didChangeSignal: (String) -> Void
     // recipeID -> shared household signal
     private var signals: [String: HouseholdMealSignal] = [:]
 
-    init(apiClient: any HouseholdMealSignalStoreAPIClient) {
+    init(
+        apiClient: any HouseholdMealSignalStoreAPIClient,
+        didChangeSignal: @escaping (String) -> Void = { _ in }
+    ) {
         self.apiClient = apiClient
+        self.didChangeSignal = didChangeSignal
     }
 
     func signal(for recipeID: String) -> HouseholdMealSignal? {
@@ -47,6 +52,7 @@ final class HouseholdMealSignalStore {
             } else {
                 try await apiClient.removeHouseholdMealSignal(householdID: householdID, mealID: recipeID)
             }
+            didChangeSignal(householdID)
         } catch {
             signals[recipeID] = previous
         }

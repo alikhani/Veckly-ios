@@ -11,12 +11,17 @@ protocol FeedbackStoreAPIClient {
 @Observable
 final class FeedbackStore {
     private let apiClient: any FeedbackStoreAPIClient
+    private let didChangeFeedback: (String) -> Void
     // recipeID → vote
     private var votes: [String: MealVote] = [:]
     private(set) var errorMessage: String?
 
-    init(apiClient: any FeedbackStoreAPIClient) {
+    init(
+        apiClient: any FeedbackStoreAPIClient,
+        didChangeFeedback: @escaping (String) -> Void = { _ in }
+    ) {
         self.apiClient = apiClient
+        self.didChangeFeedback = didChangeFeedback
     }
 
     func vote(for recipeID: String) -> MealVote? {
@@ -53,6 +58,7 @@ final class FeedbackStore {
         guard let vote else {
             do {
                 try await apiClient.removeMealFeedback(householdID: householdID, mealID: recipeID)
+                didChangeFeedback(householdID)
                 return true
             } catch {
                 // Roll back on failure
@@ -62,6 +68,7 @@ final class FeedbackStore {
         }
         do {
             try await apiClient.submitMealFeedback(householdID: householdID, mealID: recipeID, vote: vote)
+            didChangeFeedback(householdID)
             return true
         } catch {
             // Roll back on failure

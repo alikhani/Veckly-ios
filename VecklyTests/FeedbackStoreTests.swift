@@ -36,6 +36,19 @@ struct FeedbackStoreTests {
         #expect(store.vote(for: "recipe-1") == .up)
         #expect(client.removedMealIDs == ["recipe-1"])
     }
+
+    @Test func invalidatesRecommendationsOnlyAfterFeedbackPersists() async {
+        let client = StubFeedbackStoreAPIClient()
+        var invalidatedHouseholds: [String] = []
+        let store = FeedbackStore(apiClient: client) { invalidatedHouseholds.append($0) }
+
+        _ = await store.setVote(householdID: "household-1", recipeID: "recipe-1", vote: .down)
+        #expect(invalidatedHouseholds == ["household-1"])
+
+        client.removeError = APIError.server(statusCode: 500)
+        _ = await store.setVote(householdID: "household-1", recipeID: "recipe-1", vote: nil)
+        #expect(invalidatedHouseholds == ["household-1"])
+    }
 }
 
 private final class StubFeedbackStoreAPIClient: FeedbackStoreAPIClient {
