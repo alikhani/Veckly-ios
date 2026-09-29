@@ -16,13 +16,15 @@ extension VecklyAPIClient: FamilyCookbookAPIClient {}
 final class FamilyCookbookStore {
     private let apiClient: any FamilyCookbookAPIClient
     private let cache = PerHouseholdCache<FamilyCookbook>()
+    private var cacheRevision = 0
 
     init(apiClient: any FamilyCookbookAPIClient) {
         self.apiClient = apiClient
     }
 
     func cookbook(for householdID: String) -> FamilyCookbook? {
-        cache.value(for: householdID)
+        _ = cacheRevision
+        return cache.value(for: householdID)
     }
 
     func removeRecipe(_ recipeID: String, householdID: String) {
@@ -38,6 +40,7 @@ final class FamilyCookbookStore {
             ),
             for: householdID
         )
+        cacheRevision += 1
     }
 
     func loadIfNeeded(householdID: String) async {
@@ -55,10 +58,29 @@ final class FamilyCookbookStore {
                 return FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: [])
             }
         }
+        cacheRevision += 1
+    }
+
+    /// Replaces a cached cookbook after a confirmed meal outcome without
+    /// hiding the existing panel while the best-effort refresh is in flight.
+    func refresh(householdID: String) async {
+        do {
+            let cookbook = try await apiClient.familyCookbook(
+                householdID: householdID,
+                weekStartDate: WeekCalendar.currentWeekStartDate()
+            )
+            cache.setValue(cookbook, for: householdID)
+            cacheRevision += 1
+        } catch {
+            // Keep the last known cookbook. A later confirmed outcome or a
+            // fresh session will try again without turning a quiet panel into
+            // an error surface.
+        }
     }
 
     func reset() {
         cache.reset()
+        cacheRevision += 1
     }
 }
 
@@ -79,5 +101,17 @@ extension FamilyCookbook {
     private func unique(_ recipes: [Recipe]) -> [Recipe] {
         var seen = Set<String>()
         return recipes.filter { seen.insert($0.recipeID).inserted }
+    }
+}
+
+extension FamilyCookbook.Recipe {
+    var historyDetail: String {
+        if timesCooked > 0 {
+            return L10n.format("household.cookbook.timesCooked", timesCooked)
+        }
+        if historyBasis == .legacyPlans || legacyTimesPlanned > 0 {
+            return L10n.string("household.cookbook.legacyPlanned")
+        }
+        return L10n.string("household.cookbook.notCookedYet")
     }
 }

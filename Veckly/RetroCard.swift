@@ -88,9 +88,17 @@ final class RetroCardViewModel {
         guard let recap, recap.plannedWeekCount > 0 else {
             return L10n.string("retro.done")
         }
-        let weekLine = L10n.format("retro.done.weekCount", recap.plannedWeekCount)
-        guard let topRecipe = recap.topRecipeThisMonth else { return weekLine }
-        return "\(weekLine) \(L10n.format("retro.done.topRecipe", monthName, topRecipe.title))"
+        var details = [L10n.format("retro.done.weekCount", recap.plannedWeekCount)]
+        if let cookedCount = recap.cookedDinnerCountThisMonth, cookedCount > 0 {
+            details.append(L10n.format("retro.done.cookedDinnerCount", cookedCount, monthName))
+        }
+        if let legacyCount = recap.legacyPlannedDinnerCountThisMonth, legacyCount > 0 {
+            details.append(L10n.format("retro.done.legacyPlanCount", legacyCount, monthName))
+        }
+        if let topRecipe = recap.topRecipeThisMonth {
+            details.append(L10n.format("retro.done.topRecipe", monthName, topRecipe.title))
+        }
+        return details.joined(separator: " ")
     }
 
     static func betaFeedbackMailURL(weekStartDate: String?) -> URL? {

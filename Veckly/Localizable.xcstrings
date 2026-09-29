@@ -2463,18 +2463,34 @@
         }
       }
     },
-    "household.cookbook.notCookedYet" : {
+    "household.cookbook.legacyPlanned" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not cooked yet"
+            "value" : "Appeared in earlier weekly plans"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inte lagad än"
+            "value" : "Fanns i tidigare veckoplaner"
+          }
+        }
+      }
+    },
+    "household.cookbook.notCookedYet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not registered as cooked yet"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inte registrerad som lagad än"
           }
         }
       }
@@ -2580,13 +2596,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cooked %d times"
+            "value" : "Recorded as cooked %d times"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lagad %d gånger"
+            "value" : "Registrerad som lagad %d gånger"
           }
         }
       }
@@ -6083,6 +6099,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sparat. Veckly planerar bättre nästa vecka."
+          }
+        }
+      }
+    },
+    "retro.done.cookedDinnerCount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners registered as cooked in %@."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar registrerade som lagade i %@."
+          }
+        }
+      }
+    },
+    "retro.done.legacyPlanCount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dinners appear in earlier plans for %@."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d middagar finns i äldre planer för %@."
           }
         }
       }

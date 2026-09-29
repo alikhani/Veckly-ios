@@ -71,7 +71,9 @@ struct VecklyAPIClient {
             let body = try response.body.json
             return FamilyRecap(
                 plannedWeekCount: body.plannedWeekCount,
-                topRecipeThisMonth: body.topRecipeThisMonth.map { FamilyRecap.TopRecipe(title: $0.title, count: $0.count) }
+                topRecipeThisMonth: body.topRecipeThisMonth.map { FamilyRecap.TopRecipe(title: $0.title, count: $0.count) },
+                cookedDinnerCountThisMonth: body.cookedDinnerCountThisMonth,
+                legacyPlannedDinnerCountThisMonth: body.legacyPlannedDinnerCountThisMonth
             )
         case .unauthorized:
             throw APIError.unauthorized
@@ -136,7 +138,15 @@ struct VecklyAPIClient {
         case let .ok(response):
             let body = try response.body.json
             func mapRecipe(_ recipe: Components.Schemas.FamilyCookbookRecipe) -> FamilyCookbook.Recipe {
-                FamilyCookbook.Recipe(recipeID: recipe.recipeId, title: recipe.title, timesCooked: recipe.timesCooked, weeksSinceCooked: recipe.weeksSinceCooked)
+                FamilyCookbook.Recipe(
+                    recipeID: recipe.recipeId,
+                    title: recipe.title,
+                    timesCooked: recipe.timesCooked,
+                    weeksSinceCooked: recipe.weeksSinceCooked,
+                    legacyTimesPlanned: recipe.legacyTimesPlanned ?? 0,
+                    weeksSinceLegacyPlanned: recipe.weeksSinceLegacyPlanned,
+                    historyBasis: recipe.historyBasis.flatMap { FamilyCookbook.Recipe.HistoryBasis(rawValue: $0.rawValue) }
+                )
             }
             return FamilyCookbook(
                 totalFamilyLikedCount: body.totalFamilyLikedCount,

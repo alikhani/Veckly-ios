@@ -224,9 +224,7 @@ struct HouseholdTabView: View {
                     ForEach(previewFavorites) { recipe in
                         cookbookRow(
                             recipe: recipe,
-                            detail: recipe.timesCooked == 0
-                                ? L10n.string("household.cookbook.notCookedYet")
-                                : L10n.format("household.cookbook.timesCooked", recipe.timesCooked),
+                            detail: recipe.historyDetail,
                             householdID: household.id
                         )
                     }

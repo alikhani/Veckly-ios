@@ -1347,21 +1347,33 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/FamilyRecap/topRecipeThisMonth`.
             internal var topRecipeThisMonth: Components.Schemas.FamilyRecap.topRecipeThisMonthPayload?
+            /// - Remark: Generated from `#/components/schemas/FamilyRecap/cookedDinnerCountThisMonth`.
+            internal var cookedDinnerCountThisMonth: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/FamilyRecap/legacyPlannedDinnerCountThisMonth`.
+            internal var legacyPlannedDinnerCountThisMonth: Swift.Int?
             /// Creates a new `FamilyRecap`.
             ///
             /// - Parameters:
             ///   - plannedWeekCount:
             ///   - topRecipeThisMonth:
+            ///   - cookedDinnerCountThisMonth:
+            ///   - legacyPlannedDinnerCountThisMonth:
             internal init(
                 plannedWeekCount: Swift.Int,
-                topRecipeThisMonth: Components.Schemas.FamilyRecap.topRecipeThisMonthPayload? = nil
+                topRecipeThisMonth: Components.Schemas.FamilyRecap.topRecipeThisMonthPayload? = nil,
+                cookedDinnerCountThisMonth: Swift.Int? = nil,
+                legacyPlannedDinnerCountThisMonth: Swift.Int? = nil
             ) {
                 self.plannedWeekCount = plannedWeekCount
                 self.topRecipeThisMonth = topRecipeThisMonth
+                self.cookedDinnerCountThisMonth = cookedDinnerCountThisMonth
+                self.legacyPlannedDinnerCountThisMonth = legacyPlannedDinnerCountThisMonth
             }
             internal enum CodingKeys: String, CodingKey {
                 case plannedWeekCount
                 case topRecipeThisMonth
+                case cookedDinnerCountThisMonth
+                case legacyPlannedDinnerCountThisMonth
             }
         }
         /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe`.
@@ -1374,6 +1386,19 @@ internal enum Components {
             internal var timesCooked: Swift.Int
             /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/weeksSinceCooked`.
             internal var weeksSinceCooked: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/legacyTimesPlanned`.
+            internal var legacyTimesPlanned: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/weeksSinceLegacyPlanned`.
+            internal var weeksSinceLegacyPlanned: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/historyBasis`.
+            internal enum historyBasisPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case confirmed_outcomes = "confirmed_outcomes"
+                case mixed = "mixed"
+                case legacy_plans = "legacy_plans"
+                case none = "none"
+            }
+            /// - Remark: Generated from `#/components/schemas/FamilyCookbookRecipe/historyBasis`.
+            internal var historyBasis: Components.Schemas.FamilyCookbookRecipe.historyBasisPayload?
             /// Creates a new `FamilyCookbookRecipe`.
             ///
             /// - Parameters:
@@ -1381,22 +1406,34 @@ internal enum Components {
             ///   - title:
             ///   - timesCooked:
             ///   - weeksSinceCooked:
+            ///   - legacyTimesPlanned:
+            ///   - weeksSinceLegacyPlanned:
+            ///   - historyBasis:
             internal init(
                 recipeId: Swift.String,
                 title: Swift.String,
                 timesCooked: Swift.Int,
-                weeksSinceCooked: Swift.Int? = nil
+                weeksSinceCooked: Swift.Int? = nil,
+                legacyTimesPlanned: Swift.Int? = nil,
+                weeksSinceLegacyPlanned: Swift.Int? = nil,
+                historyBasis: Components.Schemas.FamilyCookbookRecipe.historyBasisPayload? = nil
             ) {
                 self.recipeId = recipeId
                 self.title = title
                 self.timesCooked = timesCooked
                 self.weeksSinceCooked = weeksSinceCooked
+                self.legacyTimesPlanned = legacyTimesPlanned
+                self.weeksSinceLegacyPlanned = weeksSinceLegacyPlanned
+                self.historyBasis = historyBasis
             }
             internal enum CodingKeys: String, CodingKey {
                 case recipeId
                 case title
                 case timesCooked
                 case weeksSinceCooked
+                case legacyTimesPlanned
+                case weeksSinceLegacyPlanned
+                case historyBasis
             }
         }
         /// - Remark: Generated from `#/components/schemas/FamilyCookbook`.

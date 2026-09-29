@@ -52,6 +52,26 @@ struct MealOutcomeStoreTests {
         #expect(persistence.drafts.isEmpty)
     }
 
+    @Test func notifiesCookbookOnlyAfterAnOutcomeIsConfirmedByTheServer() async {
+        let client = StubMealOutcomeAPIClient()
+        client.upsertError = APIError.server(statusCode: 500)
+        var syncedHouseholdIDs: [String] = []
+        let store = MealOutcomeStore(
+            apiClient: client,
+            pendingStore: InMemoryMealOutcomePendingStore(),
+            retryDelayNanoseconds: 60_000_000_000,
+            didSyncOutcome: { syncedHouseholdIDs.append($0) }
+        )
+        await store.load(householdID: householdID, weekStartDate: weekStartDate)
+
+        await store.setOutcome(draft(status: .cooked))
+        #expect(syncedHouseholdIDs.isEmpty)
+
+        client.upsertError = nil
+        await store.retryPending()
+        #expect(syncedHouseholdIDs == [householdID])
+    }
+
     @Test func pendingChoiceSurvivesANewStoreInstanceAndWinsOverServerState() async {
         let persistence = InMemoryMealOutcomePendingStore()
         let offlineClient = StubMealOutcomeAPIClient()

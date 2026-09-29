@@ -63,6 +63,25 @@ struct RetroCardViewModelTests {
         #expect(RetroCardViewModel.doneCopy(recap: recap, monthName: "June") == "\(L10n.format("retro.done.weekCount", 8)) \(L10n.format("retro.done.topRecipe", "June", "Korvstroganoff"))")
     }
 
+    @Test func doneCopySeparatesConfirmedDinnersFromLegacyPlans() {
+        let recap = FamilyRecap(
+            plannedWeekCount: 8,
+            topRecipeThisMonth: .init(title: "Korvstroganoff", count: 3),
+            cookedDinnerCountThisMonth: 5,
+            legacyPlannedDinnerCountThisMonth: 4
+        )
+
+        #expect(
+            RetroCardViewModel.doneCopy(recap: recap, monthName: "June")
+                == [
+                    L10n.format("retro.done.weekCount", 8),
+                    L10n.format("retro.done.cookedDinnerCount", 5, "June"),
+                    L10n.format("retro.done.legacyPlanCount", 4, "June"),
+                    L10n.format("retro.done.topRecipe", "June", "Korvstroganoff"),
+                ].joined(separator: " ")
+        )
+    }
+
     @Test func betaFeedbackMailURLIncludesSubjectAndWeekContext() {
         let url = RetroCardViewModel.betaFeedbackMailURL(weekStartDate: "2026-07-06")
 

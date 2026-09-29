@@ -49,9 +49,7 @@ struct CookbookView: View {
                             ForEach(favorites) { recipe in
                                 recipeRow(
                                     recipe,
-                                    detail: recipe.timesCooked == 0
-                                        ? L10n.string("household.cookbook.notCookedYet")
-                                        : L10n.format("household.cookbook.timesCooked", recipe.timesCooked)
+                                    detail: recipe.historyDetail
                                 )
                             }
                         }

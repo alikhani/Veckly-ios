@@ -67,6 +67,32 @@ struct FamilyCookbookStoreTests {
         #expect(client.callCount == 2)
     }
 
+    @Test func refreshReplacesTheCachedCookbook() async {
+        let initial = cookbook()
+        let updated = FamilyCookbook(totalFamilyLikedCount: 0, favorites: [], dueAgain: [])
+        let client = SequencedFamilyCookbookAPIClient(results: [.success(initial), .success(updated)])
+        let store = FamilyCookbookStore(apiClient: client)
+        await store.loadIfNeeded(householdID: "household-1")
+
+        await store.refresh(householdID: "household-1")
+
+        #expect(store.cookbook(for: "household-1") == updated)
+        #expect(client.callCount == 2)
+    }
+
+    @Test func failedRefreshKeepsTheLastKnownCookbook() async {
+        let initial = cookbook()
+        let client = SequencedFamilyCookbookAPIClient(
+            results: [.success(initial), .failure(APIError.server(statusCode: 500))]
+        )
+        let store = FamilyCookbookStore(apiClient: client)
+        await store.loadIfNeeded(householdID: "household-1")
+
+        await store.refresh(householdID: "household-1")
+
+        #expect(store.cookbook(for: "household-1") == initial)
+    }
+
     @Test func uniqueRecipesKeepStableGroupOrderAndRemoveCrossGroupDuplicates() {
         let duplicate = FamilyCookbook.Recipe(recipeID: "pasta", title: "Pasta", timesCooked: 3, weeksSinceCooked: 8)
         let soup = FamilyCookbook.Recipe(recipeID: "soup", title: "Soup", timesCooked: 1, weeksSinceCooked: 7)
@@ -92,6 +118,35 @@ struct FamilyCookbookStoreTests {
 
         #expect(cookbook.uniqueFavorites == [neverCooked])
         #expect(cookbook.uniqueFavorites.first?.weeksSinceCooked == nil)
+    }
+
+    @Test func historyDetailUsesExactCopyOnlyForConfirmedOutcomes() {
+        let confirmed = FamilyCookbook.Recipe(
+            recipeID: "confirmed",
+            title: "Confirmed",
+            timesCooked: 2,
+            weeksSinceCooked: 1,
+            legacyTimesPlanned: 3,
+            historyBasis: .mixed
+        )
+        let legacy = FamilyCookbook.Recipe(
+            recipeID: "legacy",
+            title: "Legacy",
+            timesCooked: 0,
+            weeksSinceCooked: nil,
+            legacyTimesPlanned: 4,
+            historyBasis: .legacyPlans
+        )
+        let unknown = FamilyCookbook.Recipe(
+            recipeID: "unknown",
+            title: "Unknown",
+            timesCooked: 0,
+            weeksSinceCooked: nil
+        )
+
+        #expect(confirmed.historyDetail == L10n.format("household.cookbook.timesCooked", 2))
+        #expect(legacy.historyDetail == L10n.string("household.cookbook.legacyPlanned"))
+        #expect(unknown.historyDetail == L10n.string("household.cookbook.notCookedYet"))
     }
 
     @Test func removingRecipeUpdatesCountAndBothGroupsImmediately() async {
@@ -125,5 +180,19 @@ private final class StubFamilyCookbookAPIClient: FamilyCookbookAPIClient {
     func familyCookbook(householdID: String, weekStartDate: String) async throws -> FamilyCookbook {
         callCount += 1
         return try result.get()
+    }
+}
+
+private final class SequencedFamilyCookbookAPIClient: FamilyCookbookAPIClient {
+    private var results: [Result<FamilyCookbook, Error>]
+    private(set) var callCount = 0
+
+    init(results: [Result<FamilyCookbook, Error>]) {
+        self.results = results
+    }
+
+    func familyCookbook(householdID: String, weekStartDate: String) async throws -> FamilyCookbook {
+        defer { callCount += 1 }
+        return try results[callCount].get()
     }
 }

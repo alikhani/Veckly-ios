@@ -26,6 +26,7 @@ final class MealOutcomeStore {
     private let apiClient: any MealOutcomeStoreAPIClient
     private let pendingStore: any MealOutcomePendingPersisting
     private let retryDelayNanoseconds: UInt64
+    private let didSyncOutcome: (String) -> Void
 
     private var outcomesByDate: [String: MealOutcomeRecord] = [:]
     private var pendingByID: [String: MealOutcomeDraft]
@@ -41,11 +42,13 @@ final class MealOutcomeStore {
     init(
         apiClient: any MealOutcomeStoreAPIClient,
         pendingStore: any MealOutcomePendingPersisting = MealOutcomePendingDiskStore(),
-        retryDelayNanoseconds: UInt64 = 2_000_000_000
+        retryDelayNanoseconds: UInt64 = 2_000_000_000,
+        didSyncOutcome: @escaping (String) -> Void = { _ in }
     ) {
         self.apiClient = apiClient
         self.pendingStore = pendingStore
         self.retryDelayNanoseconds = retryDelayNanoseconds
+        self.didSyncOutcome = didSyncOutcome
         let pending = pendingStore.load().map { $0.normalized() }
         self.pendingByID = Dictionary(uniqueKeysWithValues: pending.map { ($0.id, $0) })
     }
@@ -162,6 +165,7 @@ final class MealOutcomeStore {
                     if isActive(householdID: outgoing.householdID, weekStartDate: outgoing.weekStartDate) {
                         outcomesByDate[outgoing.date] = saved
                     }
+                    didSyncOutcome(outgoing.householdID)
                 }
                 mutationError = nil
             } catch is CancellationError {

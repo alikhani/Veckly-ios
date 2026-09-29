@@ -612,6 +612,20 @@ struct MealRecommendation: Equatable, Identifiable {
 struct FamilyRecap: Equatable {
     let plannedWeekCount: Int
     let topRecipeThisMonth: TopRecipe?
+    let cookedDinnerCountThisMonth: Int?
+    let legacyPlannedDinnerCountThisMonth: Int?
+
+    init(
+        plannedWeekCount: Int,
+        topRecipeThisMonth: TopRecipe?,
+        cookedDinnerCountThisMonth: Int? = nil,
+        legacyPlannedDinnerCountThisMonth: Int? = nil
+    ) {
+        self.plannedWeekCount = plannedWeekCount
+        self.topRecipeThisMonth = topRecipeThisMonth
+        self.cookedDinnerCountThisMonth = cookedDinnerCountThisMonth
+        self.legacyPlannedDinnerCountThisMonth = legacyPlannedDinnerCountThisMonth
+    }
 
     struct TopRecipe: Equatable {
         let title: String
@@ -628,10 +642,39 @@ struct FamilyCookbook: Equatable {
     let dueAgain: [Recipe]
 
     struct Recipe: Equatable, Identifiable {
+        enum HistoryBasis: String, Equatable {
+            case confirmedOutcomes = "confirmed_outcomes"
+            case mixed
+            case legacyPlans = "legacy_plans"
+            case none
+        }
+
         let recipeID: String
         let title: String
         let timesCooked: Int
         let weeksSinceCooked: Int?
+        let legacyTimesPlanned: Int
+        let weeksSinceLegacyPlanned: Int?
+        let historyBasis: HistoryBasis
+
+        init(
+            recipeID: String,
+            title: String,
+            timesCooked: Int,
+            weeksSinceCooked: Int?,
+            legacyTimesPlanned: Int = 0,
+            weeksSinceLegacyPlanned: Int? = nil,
+            historyBasis: HistoryBasis? = nil
+        ) {
+            self.recipeID = recipeID
+            self.title = title
+            self.timesCooked = timesCooked
+            self.weeksSinceCooked = weeksSinceCooked
+            self.legacyTimesPlanned = legacyTimesPlanned
+            self.weeksSinceLegacyPlanned = weeksSinceLegacyPlanned
+            self.historyBasis = historyBasis ?? (timesCooked > 0 ? .confirmedOutcomes : legacyTimesPlanned > 0 ? .legacyPlans : .none)
+        }
+
         var id: String { recipeID }
     }
 }
