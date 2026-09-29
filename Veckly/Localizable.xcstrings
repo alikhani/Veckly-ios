@@ -5891,6 +5891,186 @@
         }
       }
     },
+    "accessibility.retro.outcome" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ for %@ (%@)" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ för %@ (%@)" } }
+      }
+    },
+    "common.noAnswer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No answer" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inget svar" } }
+      }
+    },
+    "error.mealOutcome.load" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not load last week's answers." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Kunde inte ladda förra veckans svar." } }
+      }
+    },
+    "error.mealOutcome.pendingSync" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved on this device. Tap to retry." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Sparat på den här enheten. Tryck för att försöka igen." } }
+      }
+    },
+    "retro.details.actualMealPlaceholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What did you eat instead?" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad åt ni i stället?" } }
+      }
+    },
+    "retro.details.add" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add details" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lägg till detaljer" } }
+      }
+    },
+    "retro.details.edit" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit details" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ändra detaljer" } }
+      }
+    },
+    "retro.details.noSavedRecipe" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No saved recipe" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inget sparat recept" } }
+      }
+    },
+    "retro.details.outcome" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What happened" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad hände" } }
+      }
+    },
+    "retro.details.plannedMeal" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Planned dinner" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Planerad middag" } }
+      }
+    },
+    "retro.details.portions" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Amount of food" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Mängd mat" } }
+      }
+    },
+    "retro.details.reason" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Worth remembering" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Värt att minnas" } }
+      }
+    },
+    "retro.details.replacement" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What you ate instead" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad ni åt i stället" } }
+      }
+    },
+    "retro.details.savedRecipe" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved recipe" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Sparat recept" } }
+      }
+    },
+    "retro.details.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dinner details" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Middagsdetaljer" } }
+      }
+    },
+    "retro.finish" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Klar" } }
+      }
+    },
+    "retro.outcome.changedPlan" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Changed plans" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ändrade planer" } }
+      }
+    },
+    "retro.outcome.cooked" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cooked it" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lagade den" } }
+      }
+    },
+    "retro.outcome.skipped" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Skipped" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Hoppade över" } }
+      }
+    },
+    "retro.outcomePrompt" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What actually happened with dinner?" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad hände faktiskt med middagen?" } }
+      }
+    },
+    "retro.pending" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Will save when you're back online" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Sparas när du är online igen" } }
+      }
+    },
+    "retro.portion.rightAmount" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About right" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lagom" } }
+      }
+    },
+    "retro.portion.tooLittle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Too little" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "För lite" } }
+      }
+    },
+    "retro.portion.tooMuch" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Too much" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "För mycket" } }
+      }
+    },
+    "retro.reason.easyWeeknight" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Easy on a weeknight" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Enkel på en vardag" } }
+      }
+    },
+    "retro.reason.familyApproved" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Worked for the family" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Funkade för familjen" } }
+      }
+    },
+    "retro.reason.familyPushback" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The family wasn't keen" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Familjen var inte så förtjust" } }
+      }
+    },
+    "retro.reason.goodLeftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good leftovers" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Bra rester" } }
+      }
+    },
+    "retro.reason.poorLeftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Poor leftovers" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Dåliga rester" } }
+      }
+    },
+    "retro.reason.tooMuchEffort" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Too much effort" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "För mycket jobb" } }
+      }
+    },
     "retro.done" : {
       "localizations" : {
         "en" : {

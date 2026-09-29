@@ -159,8 +159,9 @@ struct WeekTabView: View {
                 if isViewingCurrentWeek, !retroViewModel.rows.isEmpty {
                     RetroCard(
                         viewModel: retroViewModel,
-                        feedbackStore: appModel.feedbackStore,
+                        outcomeStore: appModel.mealOutcomeStore,
                         householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                        recipes: appModel.recipeStore.recipes,
                         onResolved: {
                             appModel.recordProductEvent(.retroCompleted, weekStartDate: WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1))
                             retroViewModel.clear()
@@ -494,7 +495,7 @@ struct WeekTabView: View {
             guard !appModel.usesSeededCoreReader else { return }
             guard let household = appModel.householdStore.activeHousehold else { return }
             await refreshNextWeekEmptyState()
-            await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
+            await retroViewModel.load(household: household, weekStore: appModel.weekStore, outcomeStore: appModel.mealOutcomeStore, apiClient: appModel.apiClient)
         }
         .onAppear {
             // Browsing is a transient peek, not a persisted location — always
@@ -544,7 +545,7 @@ struct WeekTabView: View {
                   let household = appModel.householdStore.activeHousehold else { return }
             Task {
                 await refreshNextWeekEmptyState()
-                await retroViewModel.load(household: household, weekStore: appModel.weekStore, feedbackStore: appModel.feedbackStore, apiClient: appModel.apiClient)
+                await retroViewModel.load(household: household, weekStore: appModel.weekStore, outcomeStore: appModel.mealOutcomeStore, apiClient: appModel.apiClient)
             }
         }
         .alert(L10n.string("week.lock.explainTitle"), isPresented: $showLockExplanation) {

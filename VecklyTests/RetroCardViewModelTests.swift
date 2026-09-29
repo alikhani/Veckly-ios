@@ -8,105 +8,59 @@ struct RetroCardViewModelTests {
         WeekSummaryRecipe(id: id, title: title, description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 15, tags: [])
     }
 
-    private func feedbackStore(seeded votes: [String: MealVote] = [:]) -> FeedbackStore {
-        let store = FeedbackStore(apiClient: NoopFeedbackStoreAPIClient())
-        for (id, vote) in votes {
-            store.seedVote(for: id, vote: vote)
-        }
-        return store
-    }
-
-    @Test func includesAPlannedDayWithNoVoteYet() {
+    @Test func includesAPlannedDayWithItsDateAsIdentity() {
         let pasta = recipe("pasta", title: "Monday Pasta")
         let days = [WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: pasta)]
 
-        let rows = RetroCardViewModel.buildRows(days: days, feedbackStore: feedbackStore())
+        let rows = RetroCardViewModel.buildRows(days: days)
 
-        #expect(rows.map(\.recipeID) == ["pasta"])
+        #expect(rows.map(\.id) == ["2026-06-08"])
+        #expect(rows.first?.recipeID == "pasta")
         #expect(rows.first?.title == "Monday Pasta")
         #expect(rows.first?.weekdayLabel == Weekday.monday.shortDisplayName)
     }
 
-    @Test func excludesAMealAlreadyRatedByTheCurrentUser() {
-        let pasta = recipe("pasta", title: "Monday Pasta")
-        let days = [WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: pasta)]
-
-        let rows = RetroCardViewModel.buildRows(days: days, feedbackStore: feedbackStore(seeded: ["pasta": .up]))
-
-        #expect(rows.isEmpty)
-    }
-
-    @Test func excludesSkippedAndEmptyDays() {
+    @Test func excludesSkippedEmptyAndRecipeLessDays() {
+        let pasta = recipe("pasta", title: "Pasta")
         let days = [
-            WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .skipped, recipe: nil),
+            WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .skipped, recipe: pasta),
             WeekSummaryDay(dayOfWeek: .tuesday, date: "2026-06-09", state: .empty, recipe: nil),
+            WeekSummaryDay(dayOfWeek: .wednesday, date: "2026-06-10", state: .planned, recipe: nil),
         ]
 
-        let rows = RetroCardViewModel.buildRows(days: days, feedbackStore: feedbackStore())
-
-        #expect(rows.isEmpty)
+        #expect(RetroCardViewModel.buildRows(days: days).isEmpty)
     }
 
-    @Test func excludesAPlannedDayWithNoRecipeEvenIfMislabeled() {
-        // Defensive: a leftover-covered day has no recipe of its own — never
-        // give it a row, regardless of what `state` claims.
-        let days = [WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: nil)]
-
-        let rows = RetroCardViewModel.buildRows(days: days, feedbackStore: feedbackStore())
-
-        #expect(rows.isEmpty)
-    }
-
-    @Test func groupsTheSameRecipeCookedTwiceIntoOneRowWithBothWeekdays() {
+    @Test func keepsTheSameRecipeAsSeparateRowsOnSeparateDates() {
         let stew = recipe("stew", title: "Beef Stew")
         let days = [
             WeekSummaryDay(dayOfWeek: .tuesday, date: "2026-06-09", state: .planned, recipe: stew),
             WeekSummaryDay(dayOfWeek: .thursday, date: "2026-06-11", state: .planned, recipe: stew),
         ]
 
-        let rows = RetroCardViewModel.buildRows(days: days, feedbackStore: feedbackStore())
+        let rows = RetroCardViewModel.buildRows(days: days)
 
-        #expect(rows.count == 1)
-        #expect(rows.first?.weekdayLabel == "\(Weekday.tuesday.shortDisplayName) + \(Weekday.thursday.shortDisplayName)")
-    }
-
-    @Test func keepsWeeklyOrderAndOnlyDropsTheRatedRecipe() {
-        let pasta = recipe("pasta", title: "Monday Pasta")
-        let tacos = recipe("tacos", title: "Tuesday Tacos")
-        let days = [
-            WeekSummaryDay(dayOfWeek: .monday, date: "2026-06-08", state: .planned, recipe: pasta),
-            WeekSummaryDay(dayOfWeek: .tuesday, date: "2026-06-09", state: .planned, recipe: tacos),
-        ]
-
-        let rows = RetroCardViewModel.buildRows(days: days, feedbackStore: feedbackStore(seeded: ["pasta": .down]))
-
-        #expect(rows.map(\.recipeID) == ["tacos"])
+        #expect(rows.map(\.id) == ["2026-06-09", "2026-06-11"])
+        #expect(rows.map(\.recipeID) == ["stew", "stew"])
     }
 
     @Test func doneCopyFallsBackToThePlainConfirmationWithNoRecap() {
-        let copy = RetroCardViewModel.doneCopy(recap: nil, monthName: "June")
-
-        #expect(copy == L10n.string("retro.done"))
+        #expect(RetroCardViewModel.doneCopy(recap: nil, monthName: "June") == L10n.string("retro.done"))
     }
 
     @Test func doneCopyFallsBackToThePlainConfirmationWhenNoWeeksArePlannedYet() {
-        let copy = RetroCardViewModel.doneCopy(recap: FamilyRecap(plannedWeekCount: 0, topRecipeThisMonth: nil), monthName: "June")
-
-        #expect(copy == L10n.string("retro.done"))
+        let recap = FamilyRecap(plannedWeekCount: 0, topRecipeThisMonth: nil)
+        #expect(RetroCardViewModel.doneCopy(recap: recap, monthName: "June") == L10n.string("retro.done"))
     }
 
     @Test func doneCopyShowsWeekCountAloneWithNoTopRecipe() {
-        let copy = RetroCardViewModel.doneCopy(recap: FamilyRecap(plannedWeekCount: 8, topRecipeThisMonth: nil), monthName: "June")
-
-        #expect(copy == L10n.format("retro.done.weekCount", 8))
+        let recap = FamilyRecap(plannedWeekCount: 8, topRecipeThisMonth: nil)
+        #expect(RetroCardViewModel.doneCopy(recap: recap, monthName: "June") == L10n.format("retro.done.weekCount", 8))
     }
 
     @Test func doneCopyIncludesTheTopRecipeWhenAvailable() {
         let recap = FamilyRecap(plannedWeekCount: 8, topRecipeThisMonth: .init(title: "Korvstroganoff", count: 3))
-
-        let copy = RetroCardViewModel.doneCopy(recap: recap, monthName: "June")
-
-        #expect(copy == "\(L10n.format("retro.done.weekCount", 8)) \(L10n.format("retro.done.topRecipe", "June", "Korvstroganoff"))")
+        #expect(RetroCardViewModel.doneCopy(recap: recap, monthName: "June") == "\(L10n.format("retro.done.weekCount", 8)) \(L10n.format("retro.done.topRecipe", "June", "Korvstroganoff"))")
     }
 
     @Test func betaFeedbackMailURLIncludesSubjectAndWeekContext() {
@@ -117,10 +71,4 @@ struct RetroCardViewModelTests {
         #expect(url?.absoluteString.contains("subject=") == true)
         #expect(url?.absoluteString.contains("2026-07-06") == true)
     }
-}
-
-private final class NoopFeedbackStoreAPIClient: FeedbackStoreAPIClient {
-    func mealFeedback(householdID: String) async throws -> [String: MealVote] { [:] }
-    func removeMealFeedback(householdID: String, mealID: String) async throws {}
-    func submitMealFeedback(householdID: String, mealID: String, vote: MealVote) async throws {}
 }

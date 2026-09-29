@@ -46,6 +46,18 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PUT /households/{householdId}/meal-signals`.
     /// - Remark: Generated from `#/paths//households/{householdId}/meal-signals/put(upsertHouseholdMealSignal)`.
     func upsertHouseholdMealSignal(_ input: Operations.upsertHouseholdMealSignal.Input) async throws -> Operations.upsertHouseholdMealSignal.Output
+    /// List a household's actual dinner outcomes for one week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-outcomes`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)`.
+    func listMealOutcomes(_ input: Operations.listMealOutcomes.Input) async throws -> Operations.listMealOutcomes.Output
+    /// Create or replace the shared actual dinner outcome for a date
+    ///
+    /// Idempotently records what happened to a planned dinner. For changed_plan, actualRecipeId and actualMealLabel optionally describe what the household ate instead.
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-outcomes/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)`.
+    func upsertMealOutcome(_ input: Operations.upsertMealOutcome.Input) async throws -> Operations.upsertMealOutcome.Output
     /// The household's shared bookmark list
     ///
     /// - Remark: HTTP `GET /households/{householdId}/saved-recipes`.
@@ -430,6 +442,38 @@ extension APIProtocol {
         body: Operations.upsertHouseholdMealSignal.Input.Body? = nil
     ) async throws -> Operations.upsertHouseholdMealSignal.Output {
         try await upsertHouseholdMealSignal(Operations.upsertHouseholdMealSignal.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// List a household's actual dinner outcomes for one week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-outcomes`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)`.
+    internal func listMealOutcomes(
+        path: Operations.listMealOutcomes.Input.Path,
+        query: Operations.listMealOutcomes.Input.Query,
+        headers: Operations.listMealOutcomes.Input.Headers = .init()
+    ) async throws -> Operations.listMealOutcomes.Output {
+        try await listMealOutcomes(Operations.listMealOutcomes.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Create or replace the shared actual dinner outcome for a date
+    ///
+    /// Idempotently records what happened to a planned dinner. For changed_plan, actualRecipeId and actualMealLabel optionally describe what the household ate instead.
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-outcomes/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)`.
+    internal func upsertMealOutcome(
+        path: Operations.upsertMealOutcome.Input.Path,
+        headers: Operations.upsertMealOutcome.Input.Headers = .init(),
+        body: Operations.upsertMealOutcome.Input.Body? = nil
+    ) async throws -> Operations.upsertMealOutcome.Output {
+        try await upsertMealOutcome(Operations.upsertMealOutcome.Input(
             path: path,
             headers: headers,
             body: body
@@ -1527,6 +1571,178 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case mealId
                 case signal
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/MealOutcomeStatus`.
+        internal enum MealOutcomeStatus: String, Codable, Hashable, Sendable, CaseIterable {
+            case cooked = "cooked"
+            case changed_plan = "changed_plan"
+            case skipped = "skipped"
+        }
+        /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord`.
+        internal struct MealOutcomeRecord: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/weekStartDate`.
+            internal var weekStartDate: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/date`.
+            internal var date: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/plannedRecipeId`.
+            internal var plannedRecipeId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/status`.
+            internal var status: Components.Schemas.MealOutcomeStatus
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/portionOutcome`.
+            internal enum portionOutcomePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case too_little = "too_little"
+                case right_amount = "right_amount"
+                case too_much = "too_much"
+            }
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/portionOutcome`.
+            internal var portionOutcome: Components.Schemas.MealOutcomeRecord.portionOutcomePayload?
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/reason`.
+            internal enum reasonPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case easy_weeknight = "easy_weeknight"
+                case family_approved = "family_approved"
+                case good_leftovers = "good_leftovers"
+                case too_much_effort = "too_much_effort"
+                case family_pushback = "family_pushback"
+                case poor_leftovers = "poor_leftovers"
+            }
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/reason`.
+            internal var reason: Components.Schemas.MealOutcomeRecord.reasonPayload?
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/actualRecipeId`.
+            internal var actualRecipeId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/actualMealLabel`.
+            internal var actualMealLabel: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/updatedBy`.
+            internal var updatedBy: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/createdAt`.
+            internal var createdAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/updatedAt`.
+            internal var updatedAt: Swift.String
+            /// Creates a new `MealOutcomeRecord`.
+            ///
+            /// - Parameters:
+            ///   - householdId:
+            ///   - weekStartDate:
+            ///   - date:
+            ///   - plannedRecipeId:
+            ///   - status:
+            ///   - portionOutcome:
+            ///   - reason:
+            ///   - actualRecipeId:
+            ///   - actualMealLabel:
+            ///   - updatedBy:
+            ///   - createdAt:
+            ///   - updatedAt:
+            internal init(
+                householdId: Swift.String,
+                weekStartDate: Swift.String,
+                date: Swift.String,
+                plannedRecipeId: Swift.String,
+                status: Components.Schemas.MealOutcomeStatus,
+                portionOutcome: Components.Schemas.MealOutcomeRecord.portionOutcomePayload? = nil,
+                reason: Components.Schemas.MealOutcomeRecord.reasonPayload? = nil,
+                actualRecipeId: Swift.String? = nil,
+                actualMealLabel: Swift.String? = nil,
+                updatedBy: Swift.String,
+                createdAt: Swift.String,
+                updatedAt: Swift.String
+            ) {
+                self.householdId = householdId
+                self.weekStartDate = weekStartDate
+                self.date = date
+                self.plannedRecipeId = plannedRecipeId
+                self.status = status
+                self.portionOutcome = portionOutcome
+                self.reason = reason
+                self.actualRecipeId = actualRecipeId
+                self.actualMealLabel = actualMealLabel
+                self.updatedBy = updatedBy
+                self.createdAt = createdAt
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case householdId
+                case weekStartDate
+                case date
+                case plannedRecipeId
+                case status
+                case portionOutcome
+                case reason
+                case actualRecipeId
+                case actualMealLabel
+                case updatedBy
+                case createdAt
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/MealPortionOutcome`.
+        internal enum MealPortionOutcome: String, Codable, Hashable, Sendable, CaseIterable {
+            case too_little = "too_little"
+            case right_amount = "right_amount"
+            case too_much = "too_much"
+        }
+        /// - Remark: Generated from `#/components/schemas/MealOutcomeReason`.
+        internal enum MealOutcomeReason: String, Codable, Hashable, Sendable, CaseIterable {
+            case easy_weeknight = "easy_weeknight"
+            case family_approved = "family_approved"
+            case good_leftovers = "good_leftovers"
+            case too_much_effort = "too_much_effort"
+            case family_pushback = "family_pushback"
+            case poor_leftovers = "poor_leftovers"
+        }
+        /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome`.
+        internal struct UpsertMealOutcome: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/weekStartDate`.
+            internal var weekStartDate: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/plannedRecipeId`.
+            internal var plannedRecipeId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/status`.
+            internal var status: Components.Schemas.MealOutcomeStatus
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/portionOutcome`.
+            internal var portionOutcome: Components.Schemas.MealPortionOutcome?
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/reason`.
+            internal var reason: Components.Schemas.MealOutcomeReason?
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/actualRecipeId`.
+            internal var actualRecipeId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/actualMealLabel`.
+            internal var actualMealLabel: Swift.String?
+            /// Creates a new `UpsertMealOutcome`.
+            ///
+            /// - Parameters:
+            ///   - weekStartDate:
+            ///   - plannedRecipeId:
+            ///   - status:
+            ///   - portionOutcome:
+            ///   - reason:
+            ///   - actualRecipeId:
+            ///   - actualMealLabel:
+            internal init(
+                weekStartDate: Swift.String,
+                plannedRecipeId: Swift.String,
+                status: Components.Schemas.MealOutcomeStatus,
+                portionOutcome: Components.Schemas.MealPortionOutcome? = nil,
+                reason: Components.Schemas.MealOutcomeReason? = nil,
+                actualRecipeId: Swift.String? = nil,
+                actualMealLabel: Swift.String? = nil
+            ) {
+                self.weekStartDate = weekStartDate
+                self.plannedRecipeId = plannedRecipeId
+                self.status = status
+                self.portionOutcome = portionOutcome
+                self.reason = reason
+                self.actualRecipeId = actualRecipeId
+                self.actualMealLabel = actualMealLabel
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case weekStartDate
+                case plannedRecipeId
+                case status
+                case portionOutcome
+                case reason
+                case actualRecipeId
+                case actualMealLabel
             }
         }
         /// - Remark: Generated from `#/components/schemas/RecipeIngredient`.
@@ -8294,6 +8510,707 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.upsertHouseholdMealSignal.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List a household's actual dinner outcomes for one week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/meal-outcomes`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)`.
+    internal enum listMealOutcomes {
+        internal static let id: Swift.String = "listMealOutcomes"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.listMealOutcomes.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/query`.
+            internal struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/query/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - weekStartDate:
+                internal init(weekStartDate: Swift.String) {
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var query: Operations.listMealOutcomes.Input.Query
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listMealOutcomes.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listMealOutcomes.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.listMealOutcomes.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            internal init(
+                path: Operations.listMealOutcomes.Input.Path,
+                query: Operations.listMealOutcomes.Input.Query,
+                headers: Operations.listMealOutcomes.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/200/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/200/content/json/outcomes`.
+                        internal var outcomes: [Components.Schemas.MealOutcomeRecord]
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - outcomes:
+                        internal init(outcomes: [Components.Schemas.MealOutcomeRecord]) {
+                            self.outcomes = outcomes
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case outcomes
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/200/content/application\/json`.
+                    case json(Operations.listMealOutcomes.Output.Ok.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.listMealOutcomes.Output.Ok.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listMealOutcomes.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listMealOutcomes.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Shared dinner outcomes ordered by date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listMealOutcomes.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.listMealOutcomes.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/400/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/400/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/400/content/application\/json`.
+                    case json(Operations.listMealOutcomes.Output.BadRequest.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.listMealOutcomes.Output.BadRequest.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listMealOutcomes.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listMealOutcomes.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid week start date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.listMealOutcomes.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.listMealOutcomes.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/401/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/401/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/401/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/401/content/application\/json`.
+                    case json(Operations.listMealOutcomes.Output.Unauthorized.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.listMealOutcomes.Output.Unauthorized.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listMealOutcomes.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listMealOutcomes.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.listMealOutcomes.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.listMealOutcomes.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/404/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/404/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/GET/responses/404/content/application\/json`.
+                    case json(Operations.listMealOutcomes.Output.NotFound.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.listMealOutcomes.Output.NotFound.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listMealOutcomes.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listMealOutcomes.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/get(listMealOutcomes)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.listMealOutcomes.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.listMealOutcomes.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create or replace the shared actual dinner outcome for a date
+    ///
+    /// Idempotently records what happened to a planned dinner. For changed_plan, actualRecipeId and actualMealLabel optionally describe what the household ate instead.
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/meal-outcomes/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)`.
+    internal enum upsertMealOutcome {
+        internal static let id: Swift.String = "upsertMealOutcome"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/path/date`.
+                internal var date: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - date:
+                internal init(
+                    householdId: Swift.String,
+                    date: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.date = date
+                }
+            }
+            internal var path: Operations.upsertMealOutcome.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertMealOutcome.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertMealOutcome.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertMealOutcome.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpsertMealOutcome)
+            }
+            internal var body: Operations.upsertMealOutcome.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.upsertMealOutcome.Input.Path,
+                headers: Operations.upsertMealOutcome.Input.Headers = .init(),
+                body: Operations.upsertMealOutcome.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.MealOutcomeRecord)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.MealOutcomeRecord {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertMealOutcome.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertMealOutcome.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Dinner outcome saved
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertMealOutcome.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertMealOutcome.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/400/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/400/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/400/content/application\/json`.
+                    case json(Operations.upsertMealOutcome.Output.BadRequest.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.upsertMealOutcome.Output.BadRequest.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertMealOutcome.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertMealOutcome.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid outcome or date outside the selected week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.upsertMealOutcome.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.upsertMealOutcome.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/401/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/401/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/401/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/401/content/application\/json`.
+                    case json(Operations.upsertMealOutcome.Output.Unauthorized.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.upsertMealOutcome.Output.Unauthorized.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertMealOutcome.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertMealOutcome.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertMealOutcome.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertMealOutcome.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/404/content/json`.
+                    internal struct jsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/404/content/json/error`.
+                        internal var error: Swift.String
+                        /// Creates a new `jsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - error:
+                        internal init(error: Swift.String) {
+                            self.error = error
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/meal-outcomes/{date}/PUT/responses/404/content/application\/json`.
+                    case json(Operations.upsertMealOutcome.Output.NotFound.Body.jsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Operations.upsertMealOutcome.Output.NotFound.Body.jsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertMealOutcome.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertMealOutcome.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/meal-outcomes/{date}/put(upsertMealOutcome)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.upsertMealOutcome.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.upsertMealOutcome.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):

@@ -309,6 +309,151 @@ enum MealVote: String, Codable {
     case down
 }
 
+enum MealOutcomeStatus: String, Codable, CaseIterable, Equatable {
+    case cooked
+    case changedPlan = "changed_plan"
+    case skipped
+}
+
+enum MealPortionOutcome: String, Codable, CaseIterable, Equatable {
+    case tooLittle = "too_little"
+    case rightAmount = "right_amount"
+    case tooMuch = "too_much"
+}
+
+enum MealOutcomeReason: String, Codable, CaseIterable, Equatable {
+    case easyWeeknight = "easy_weeknight"
+    case familyApproved = "family_approved"
+    case goodLeftovers = "good_leftovers"
+    case tooMuchEffort = "too_much_effort"
+    case familyPushback = "family_pushback"
+    case poorLeftovers = "poor_leftovers"
+}
+
+struct MealOutcomeDraft: Codable, Equatable, Identifiable {
+    let householdID: String
+    let weekStartDate: String
+    let date: String
+    let plannedRecipeID: String
+    var status: MealOutcomeStatus
+    var portionOutcome: MealPortionOutcome?
+    var reason: MealOutcomeReason?
+    var actualRecipeID: String?
+    var actualMealLabel: String?
+
+    var id: String { "\(householdID):\(weekStartDate):\(date)" }
+
+    func normalized() -> MealOutcomeDraft {
+        var copy = self
+        if status == .skipped {
+            copy.portionOutcome = nil
+        }
+        if status != .changedPlan {
+            copy.actualRecipeID = nil
+            copy.actualMealLabel = nil
+        } else {
+            let trimmed = copy.actualMealLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
+            copy.actualMealLabel = trimmed?.isEmpty == false ? trimmed : nil
+        }
+        return copy
+    }
+}
+
+struct MealOutcomeRecord: Codable, Equatable, Identifiable {
+    let householdID: String
+    let weekStartDate: String
+    let date: String
+    let plannedRecipeID: String
+    let status: MealOutcomeStatus
+    let portionOutcome: MealPortionOutcome?
+    let reason: MealOutcomeReason?
+    let actualRecipeID: String?
+    let actualMealLabel: String?
+    let updatedAt: String?
+
+    var id: String { "\(householdID):\(weekStartDate):\(date)" }
+
+    init(draft: MealOutcomeDraft, updatedAt: String? = nil) {
+        let draft = draft.normalized()
+        householdID = draft.householdID
+        weekStartDate = draft.weekStartDate
+        date = draft.date
+        plannedRecipeID = draft.plannedRecipeID
+        status = draft.status
+        portionOutcome = draft.portionOutcome
+        reason = draft.reason
+        actualRecipeID = draft.actualRecipeID
+        actualMealLabel = draft.actualMealLabel
+        self.updatedAt = updatedAt
+    }
+
+    var draft: MealOutcomeDraft {
+        MealOutcomeDraft(
+            householdID: householdID,
+            weekStartDate: weekStartDate,
+            date: date,
+            plannedRecipeID: plannedRecipeID,
+            status: status,
+            portionOutcome: portionOutcome,
+            reason: reason,
+            actualRecipeID: actualRecipeID,
+            actualMealLabel: actualMealLabel
+        )
+    }
+}
+
+extension MealOutcomeStatus {
+    var apiModel: Components.Schemas.MealOutcomeStatus {
+        switch self {
+        case .cooked: return .cooked
+        case .changedPlan: return .changed_plan
+        case .skipped: return .skipped
+        }
+    }
+}
+
+extension MealPortionOutcome {
+    var apiModel: Components.Schemas.MealPortionOutcome {
+        switch self {
+        case .tooLittle: return .too_little
+        case .rightAmount: return .right_amount
+        case .tooMuch: return .too_much
+        }
+    }
+}
+
+extension MealOutcomeReason {
+    var apiModel: Components.Schemas.MealOutcomeReason {
+        switch self {
+        case .easyWeeknight: return .easy_weeknight
+        case .familyApproved: return .family_approved
+        case .goodLeftovers: return .good_leftovers
+        case .tooMuchEffort: return .too_much_effort
+        case .familyPushback: return .family_pushback
+        case .poorLeftovers: return .poor_leftovers
+        }
+    }
+}
+
+extension Components.Schemas.MealOutcomeRecord {
+    var appModel: MealOutcomeRecord {
+        MealOutcomeRecord(
+            draft: MealOutcomeDraft(
+                householdID: householdId,
+                weekStartDate: weekStartDate,
+                date: date,
+                plannedRecipeID: plannedRecipeId,
+                status: MealOutcomeStatus(rawValue: status.rawValue) ?? .cooked,
+                portionOutcome: portionOutcome.flatMap { MealPortionOutcome(rawValue: $0.rawValue) },
+                reason: reason.flatMap { MealOutcomeReason(rawValue: $0.rawValue) },
+                actualRecipeID: actualRecipeId,
+                actualMealLabel: actualMealLabel
+            ),
+            updatedAt: updatedAt
+        )
+    }
+}
+
 extension HouseholdMealSignal {
     var apiModel: Components.Schemas.HouseholdMealSignal {
         switch self {

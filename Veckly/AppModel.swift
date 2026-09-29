@@ -14,6 +14,7 @@ final class AppModel {
     let recipeStore: RecipeStore
     let prepBatchStore: PrepBatchStore
     let feedbackStore: FeedbackStore
+    let mealOutcomeStore: MealOutcomeStore
     let householdMealSignalStore: HouseholdMealSignalStore
     let recipeRecommendationStore: RecipeRecommendationStore
     let familyCookbookStore: FamilyCookbookStore
@@ -57,6 +58,7 @@ final class AppModel {
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
         self.feedbackStore = FeedbackStore(apiClient: apiClient)
+        self.mealOutcomeStore = MealOutcomeStore(apiClient: apiClient)
         self.householdMealSignalStore = HouseholdMealSignalStore(apiClient: apiClient)
         self.recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
         self.familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
@@ -206,6 +208,7 @@ final class AppModel {
             recipeStore.reset()
             prepBatchStore.reset()
             feedbackStore.reset()
+            mealOutcomeStore.reset()
             householdMealSignalStore.reset()
             recipeRecommendationStore.reset()
             familyCookbookStore.reset()
@@ -231,6 +234,7 @@ final class AppModel {
         recipeStore.reset()
         prepBatchStore.reset()
         feedbackStore.reset()
+        mealOutcomeStore.discardAllPending()
         householdMealSignalStore.reset()
         recipeRecommendationStore.reset()
         familyCookbookStore.reset()

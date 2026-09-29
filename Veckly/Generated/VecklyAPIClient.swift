@@ -82,6 +82,54 @@ struct VecklyAPIClient {
         }
     }
 
+    func mealOutcomes(householdID: String, weekStartDate: String) async throws -> [MealOutcomeRecord] {
+        let output = try await _client.listMealOutcomes(
+            path: .init(householdId: householdID),
+            query: .init(weekStartDate: weekStartDate)
+        )
+        switch output {
+        case let .ok(response):
+            return try response.body.json.outcomes.map(\.appModel)
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func upsertMealOutcome(_ draft: MealOutcomeDraft) async throws -> MealOutcomeRecord {
+        let draft = draft.normalized()
+        let body = Components.Schemas.UpsertMealOutcome(
+            weekStartDate: draft.weekStartDate,
+            plannedRecipeId: draft.plannedRecipeID,
+            status: draft.status.apiModel,
+            portionOutcome: draft.portionOutcome?.apiModel,
+            reason: draft.reason?.apiModel,
+            actualRecipeId: draft.actualRecipeID,
+            actualMealLabel: draft.actualMealLabel
+        )
+        let output = try await _client.upsertMealOutcome(
+            path: .init(householdId: draft.householdID, date: draft.date),
+            body: .json(body)
+        )
+        switch output {
+        case let .ok(response):
+            return try response.body.json.appModel
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
+        case .unauthorized:
+            throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
+        case let .undocumented(statusCode, _):
+            throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func familyCookbook(householdID: String, weekStartDate: String) async throws -> FamilyCookbook {
         let output = try await _client.getFamilyCookbook(path: .init(householdId: householdID), query: .init(weekStartDate: weekStartDate))
         switch output {
