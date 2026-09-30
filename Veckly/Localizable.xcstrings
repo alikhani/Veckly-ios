@@ -4547,18 +4547,18 @@
         }
       }
     },
-    "onboarding.setupWeek" : {
+    "onboarding.startPlanning" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set up my week"
+            "value" : "Save and start planning"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ställ in min vecka"
+            "value" : "Spara och börja planera"
           }
         }
       }
@@ -7482,6 +7482,22 @@
         }
       }
     },
+    "week.empty.chooseFirst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the first dinner"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Välj första middagen"
+          }
+        }
+      }
+    },
     "week.empty.eyebrow" : {
       "localizations" : {
         "en" : {
@@ -7503,13 +7519,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "We'll suggest 5 dinners that fit your week — adjust from there."
+            "value" : "Add the dinners you already know. When you're ready, Veckly can fill the open days."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vi föreslår 5 middagar som passar veckan. Justera därifrån."
+            "value" : "Lägg in middagarna ni redan vet. När ni är klara kan Veckly fylla de tomma dagarna."
           }
         }
       }
@@ -7562,18 +7578,98 @@
         }
       }
     },
-    "week.generateRest" : {
+    "week.fill.firstSuggestion" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plan the rest"
+            "value" : "Create a first suggestion"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planera resten"
+            "value" : "Skapa ett första förslag"
+          }
+        }
+      }
+    },
+    "week.fill.generatingFirst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creating a suggestion..."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skapar ett förslag..."
+          }
+        }
+      }
+    },
+    "week.fill.generatingOpenDays" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filling the open days..."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fyller de tomma dagarna..."
+          }
+        }
+      }
+    },
+    "week.fill.openDays.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill %d open day"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fyll %d tom dag"
+          }
+        }
+      }
+    },
+    "week.fill.openDays.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill %d open days"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fyll %d tomma dagar"
+          }
+        }
+      }
+    },
+    "week.fill.success" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The open days are filled. Your choices stayed in place."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De tomma dagarna är fyllda. Era val ligger kvar."
           }
         }
       }

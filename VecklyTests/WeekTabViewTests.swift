@@ -16,6 +16,35 @@ import Testing
 /// for a frame before the relevant `Task` started and flipped `isLoading`
 /// back — the "loads, something appears briefly, then loads again" flash.
 struct WeekTabViewTests {
+    @Test func fillActionOffersAFirstSuggestionUntilTheUserHasChosenADinner() {
+        #expect(WeekFillAction(plannedDinnerCount: 0, openDayCount: 5) == .firstSuggestion)
+        #expect(WeekFillAction(plannedDinnerCount: 1, openDayCount: 4) == .openDays(4))
+    }
+
+    @Test func fillCompletionReasonComesOnlyFromANewlyFilledDay() throws {
+        let manualRecipe = WeekSummaryRecipe(
+            id: "manual", title: "Tacos", description: "", servings: 4,
+            prepTimeMinutes: nil, cookTimeMinutes: nil, tags: []
+        )
+        let generatedRecipe = WeekSummaryRecipe(
+            id: "generated", title: "Soup", description: "", servings: 4,
+            prepTimeMinutes: nil, cookTimeMinutes: nil, tags: []
+        )
+        let before = [
+            weekDay(.monday, recipe: manualRecipe),
+            weekDay(.tuesday, recipe: nil)
+        ]
+        let after = [
+            weekDay(.monday, recipe: manualRecipe, reason: .familyRecipe),
+            weekDay(.tuesday, recipe: generatedRecipe, reason: .newForVariety)
+        ]
+
+        let notice = try #require(WeekFillCompletionNotice.make(before: before, after: after))
+
+        #expect(notice.reason.contains(Weekday.tuesday.displayName))
+        #expect(notice.reason.contains(AssignmentReason.newForVariety.label))
+    }
+
     @Test func showsLoadingWhileHouseholdOrWeekStoreIsLoading() {
         #expect(CoreLoadingGate.shouldShowLoadingPanel(
             isLoadingHouseholds: true,
@@ -105,5 +134,25 @@ struct WeekTabViewTests {
             hasLoadedContentOnce: true,
             contentErrorMessage: nil
         ))
+    }
+
+    private func weekDay(
+        _ weekday: Weekday,
+        recipe: WeekSummaryRecipe?,
+        reason: AssignmentReason? = nil
+    ) -> WeekDayRowViewModel {
+        WeekDayRowViewModel(
+            id: weekday.rawValue,
+            weekday: weekday,
+            weekdayLabel: weekday.displayName,
+            date: "2026-09-29",
+            dateLabel: "29 Sep",
+            mealTitle: recipe?.title ?? "",
+            detail: "",
+            isToday: false,
+            isEmpty: recipe == nil,
+            recipe: recipe,
+            reason: reason
+        )
     }
 }

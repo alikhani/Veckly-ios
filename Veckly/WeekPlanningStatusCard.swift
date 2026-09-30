@@ -1,5 +1,50 @@
 import SwiftUI
 
+enum WeekFillAction: Equatable {
+    case firstSuggestion
+    case openDays(Int)
+
+    init(plannedDinnerCount: Int, openDayCount: Int) {
+        self = plannedDinnerCount == 0 ? .firstSuggestion : .openDays(openDayCount)
+    }
+
+    var title: String {
+        switch self {
+        case .firstSuggestion:
+            L10n.string("week.fill.firstSuggestion")
+        case .openDays(let count):
+            L10n.format(count == 1 ? "week.fill.openDays.one" : "week.fill.openDays.other", count)
+        }
+    }
+
+    var progressTitle: String {
+        switch self {
+        case .firstSuggestion:
+            L10n.string("week.fill.generatingFirst")
+        case .openDays:
+            L10n.string("week.fill.generatingOpenDays")
+        }
+    }
+}
+
+struct WeekFillCompletionNotice: Equatable {
+    let reason: String
+
+    static func make(
+        before: [WeekDayRowViewModel],
+        after: [WeekDayRowViewModel]
+    ) -> WeekFillCompletionNotice? {
+        let existingRecipeDays = Set(before.compactMap { day in
+            day.recipe == nil ? nil : day.weekday
+        })
+        guard let explainedDay = after.first(where: { day in
+            !existingRecipeDays.contains(day.weekday) && day.recipe != nil && day.reason != nil
+        }), let reason = explainedDay.reason else { return nil }
+
+        return WeekFillCompletionNotice(reason: "\(explainedDay.weekdayLabel): \(reason.label)")
+    }
+}
+
 /// Replaces "Veckokoll" as the primary status surface under the hero
 /// (Fas 3): either "X planning days left" with "Plan the rest" as the single
 /// primary CTA, or "The week is planned" with "Open the shopping list".
@@ -8,6 +53,9 @@ import SwiftUI
 struct WeekPlanningStatusCard: View {
     let openDayCount: Int
     let isComplete: Bool
+    let fillActionTitle: String
+    let fillProgressTitle: String
+    let isFilling: Bool
     let onPlanRest: () -> Void
     let onOpenShoppingList: () -> Void
 
@@ -36,9 +84,20 @@ struct WeekPlanningStatusCard: View {
                         .font(VecklyDesign.Typography.cardTitle)
                         .foregroundStyle(VecklyDesign.Colors.inkDeep)
 
-                    Button("week.generateRest", action: onPlanRest)
+                    Button(action: onPlanRest) {
+                        if isFilling {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .tint(.white)
+                                Text(fillProgressTitle)
+                            }
+                        } else {
+                            Text(fillActionTitle)
+                        }
+                    }
                         .buttonStyle(VecklyPrimaryButtonStyle())
                         .padding(.top, 4)
+                        .disabled(isFilling)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

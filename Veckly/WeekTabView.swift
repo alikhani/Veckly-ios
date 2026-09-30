@@ -91,6 +91,8 @@ struct WeekTabView: View {
     @State private var retroViewModel = RetroCardViewModel()
     @State private var showSessionEndBeat = false
     @State private var isWeekendExpanded = false
+    @State private var failedFillWeekStartDate: String?
+    @State private var fillCompletionNotice: WeekFillCompletionNotice?
 
     private var viewedWeekStartDate: String {
         viewedWeekOffset.weekStartDate
@@ -109,7 +111,15 @@ struct WeekTabView: View {
                             .font(.subheadline)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                         Spacer()
+                        if failedFillWeekStartDate == viewedWeekStartDate {
+                            Button("common.tryAgain") {
+                                Task { await performGenerate(regenerate: false) }
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                        }
                         Button {
+                            failedFillWeekStartDate = nil
                             appModel.weekStore.clearMutationError()
                         } label: {
                             Image(systemName: "xmark")
@@ -156,6 +166,10 @@ struct WeekTabView: View {
 
                 sessionEndBeatCard
 
+                if let fillCompletionNotice {
+                    fillCompletionBanner(fillCompletionNotice)
+                }
+
                 if isViewingCurrentWeek, !retroViewModel.rows.isEmpty {
                     RetroCard(
                         viewModel: retroViewModel,
@@ -192,7 +206,7 @@ struct WeekTabView: View {
                     contentErrorMessage: appModel.weekStore.errorMessage
                 ) {
                     LoadingPanel(title: L10n.string("week.loading"))
-                } else if appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate {
+                } else if isFillingViewedWeek, !appModel.weekStore.hasWeekContent {
                     LoadingPanel(title: L10n.string("week.generating"))
                 } else if let errorMessage = appModel.weekStore.errorMessage ?? appModel.householdStore.errorMessage {
                     ErrorPanel(message: errorMessage) {
@@ -531,6 +545,8 @@ struct WeekTabView: View {
             // drop it the moment the user navigates away from that week.
             regenerateUndoDismissTask?.cancel()
             regenerateUndoContext = nil
+            failedFillWeekStartDate = nil
+            fillCompletionNotice = nil
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
@@ -582,6 +598,7 @@ struct WeekTabView: View {
     /// there's no backend undo endpoint, so restoring is just re-issuing the
     /// same assign/clear calls a user would make by hand.
     private func performGenerate(regenerate: Bool) async {
+        guard appModel.weekStore.generatingWeekStartDate == nil else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
         guard let userID = appModel.authSessionStore.userID else {
             await appModel.handleUnauthorized()
@@ -595,11 +612,17 @@ struct WeekTabView: View {
         // snapshot, the API call, and the undo banner it may offer) must
         // stay pinned to the week it was actually generated for.
         let targetWeekStartDate = viewedWeekStartDate
+        let rowsBeforeFill = appModel.weekStore.dayRows
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }
             : []
         let wasEmptyBefore = hasOpenRelevantDays
         let hadWeekContentBefore = appModel.weekStore.hasWeekContent
+
+        if !regenerate {
+            failedFillWeekStartDate = nil
+            fillCompletionNotice = nil
+        }
 
         appModel.shoppingListStore.invalidateCache()
         await appModel.weekStore.generateWeek(
@@ -608,6 +631,16 @@ struct WeekTabView: View {
             regenerate: regenerate,
             viewedWeekStartDate: targetWeekStartDate
         )
+        if !regenerate, viewedWeekStartDate == targetWeekStartDate {
+            if appModel.weekStore.mutationError == nil {
+                fillCompletionNotice = WeekFillCompletionNotice.make(
+                    before: rowsBeforeFill,
+                    after: appModel.weekStore.dayRows
+                )
+            } else {
+                failedFillWeekStartDate = targetWeekStartDate
+            }
+        }
         await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: targetWeekStartDate)
         if !regenerate, !hadWeekContentBefore, appModel.weekStore.mutationError == nil {
             appModel.recordProductEvent(.firstWeekGenerated, weekStartDate: targetWeekStartDate, properties: [
@@ -924,18 +957,17 @@ struct WeekTabView: View {
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
 
-                    Button("week.empty.primary") {
-                        Task { await performGenerate(regenerate: false) }
+                    Button("week.empty.chooseFirst") {
+                        mealPickerDay = firstOpenPlanningDay
                     }
                     .buttonStyle(VecklyPrimaryButtonStyle())
                     .padding(.top, 4)
-                    .disabled(appModel.householdStore.activeHousehold == nil)
+                    .disabled(firstOpenPlanningDay == nil)
 
-                    Button("week.empty.secondary") {
-                        mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.isToday })
-                            ?? appModel.weekStore.dayRows.first(where: { !$0.isPast })
+                    Button(fillAction.title) {
+                        Task { await performGenerate(regenerate: false) }
                     }
-                    .disabled(appModel.weekStore.dayRows.isEmpty)
+                    .disabled(appModel.householdStore.activeHousehold == nil || firstOpenPlanningDay == nil)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .frame(maxWidth: .infinity)
@@ -979,6 +1011,21 @@ struct WeekTabView: View {
     /// selected planning days never make this true.
     private var hasOpenRelevantDays: Bool {
         !weekPlanningScope.isComplete(days: appModel.weekStore.dayRows, coveredDates: prepCoveredDates)
+    }
+
+    private var fillAction: WeekFillAction {
+        WeekFillAction(plannedDinnerCount: plannedDinnerCount, openDayCount: openDayCount)
+    }
+
+    private var firstOpenPlanningDay: WeekDayRowViewModel? {
+        weekPlanningScope.openDays(
+            in: appModel.weekStore.dayRows,
+            coveredDates: prepCoveredDates
+        ).first
+    }
+
+    private var isFillingViewedWeek: Bool {
+        appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate
     }
 
     /// Sheets in SwiftUI can't be swapped directly — presenting a new one
@@ -1125,6 +1172,9 @@ struct WeekTabView: View {
             WeekPlanningStatusCard(
                 openDayCount: openDayCount,
                 isComplete: !hasOpenRelevantDays,
+                fillActionTitle: fillAction.title,
+                fillProgressTitle: fillAction.progressTitle,
+                isFilling: isFillingViewedWeek,
                 onPlanRest: {
                     Task { await performGenerate(regenerate: false) }
                 },
@@ -1239,17 +1289,17 @@ struct WeekTabView: View {
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
 
-                    Button("week.nextWeek.empty.cta") {
-                        Task { await performGenerate(regenerate: false) }
+                    Button("week.empty.chooseFirst") {
+                        mealPickerDay = firstOpenPlanningDay
                     }
                     .buttonStyle(VecklyPrimaryButtonStyle())
                     .padding(.top, 4)
-                    .disabled(appModel.householdStore.activeHousehold == nil)
+                    .disabled(firstOpenPlanningDay == nil)
 
-                    Button("week.empty.secondary") {
-                        mealPickerDay = appModel.weekStore.dayRows.first
+                    Button(fillAction.title) {
+                        Task { await performGenerate(regenerate: false) }
                     }
-                    .disabled(appModel.weekStore.dayRows.isEmpty)
+                    .disabled(appModel.householdStore.activeHousehold == nil || firstOpenPlanningDay == nil)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .frame(maxWidth: .infinity)
@@ -1260,6 +1310,24 @@ struct WeekTabView: View {
             weekList
             collapsedWeekendSection
         }
+    }
+
+    private func fillCompletionBanner(_ notice: WeekFillCompletionNotice) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("week.fill.success", systemImage: "checkmark.circle.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+
+            Text(notice.reason)
+                .font(.subheadline)
+                .foregroundStyle(VecklyDesign.Colors.inkMid)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(VecklyDesign.Colors.surfaceStrong)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("weekFillCompletion")
     }
 
     /// Next week already has a plan: a compact summary card showing the date

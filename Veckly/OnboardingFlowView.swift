@@ -401,7 +401,7 @@ private struct OnboardingAvoidIngredientsView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
                     } else {
-                        Text("onboarding.setupWeek")
+                        Text("onboarding.startPlanning")
                     }
                 }
                 .buttonStyle(VecklyPrimaryButtonStyle())

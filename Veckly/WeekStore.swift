@@ -219,6 +219,7 @@ final class WeekStore {
 
     func generateWeek(household: Household, userID: String, regenerate: Bool = false, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
+        guard generatingWeekStartDate == nil else { return }
         mutationError = nil
         generatingWeekStartDate = targetWeekStartDate
         defer { generatingWeekStartDate = nil }
