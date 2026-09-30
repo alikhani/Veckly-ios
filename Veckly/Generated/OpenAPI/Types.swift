@@ -4675,6 +4675,43 @@ internal enum Components {
             internal var updatedAt: Swift.String?
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/explanations`.
             internal var explanations: [Components.Schemas.WeekPlanExplanation]
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy`.
+            internal struct economyPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy/uniqueIngredientCount`.
+                internal var uniqueIngredientCount: Swift.Int
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy/uniquePurchaseCount`.
+                internal var uniquePurchaseCount: Swift.Int
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy/pantryCoveredIngredientCount`.
+                internal var pantryCoveredIngredientCount: Swift.Int
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy/reusedIngredientCount`.
+                internal var reusedIngredientCount: Swift.Int
+                /// Creates a new `economyPayload`.
+                ///
+                /// - Parameters:
+                ///   - uniqueIngredientCount:
+                ///   - uniquePurchaseCount:
+                ///   - pantryCoveredIngredientCount:
+                ///   - reusedIngredientCount:
+                internal init(
+                    uniqueIngredientCount: Swift.Int,
+                    uniquePurchaseCount: Swift.Int,
+                    pantryCoveredIngredientCount: Swift.Int,
+                    reusedIngredientCount: Swift.Int
+                ) {
+                    self.uniqueIngredientCount = uniqueIngredientCount
+                    self.uniquePurchaseCount = uniquePurchaseCount
+                    self.pantryCoveredIngredientCount = pantryCoveredIngredientCount
+                    self.reusedIngredientCount = reusedIngredientCount
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case uniqueIngredientCount
+                    case uniquePurchaseCount
+                    case pantryCoveredIngredientCount
+                    case reusedIngredientCount
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy`.
+            internal var economy: Components.Schemas.WeekPlanSummary.economyPayload
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/days`.
             internal var days: [Components.Schemas.WeekPlanSummaryDay]
             /// Creates a new `WeekPlanSummary`.
@@ -4684,18 +4721,21 @@ internal enum Components {
             ///   - weekStartDate:
             ///   - updatedAt:
             ///   - explanations:
+            ///   - economy:
             ///   - days:
             internal init(
                 household: Components.Schemas.WeekPlanSummary.householdPayload,
                 weekStartDate: Swift.String,
                 updatedAt: Swift.String? = nil,
                 explanations: [Components.Schemas.WeekPlanExplanation],
+                economy: Components.Schemas.WeekPlanSummary.economyPayload,
                 days: [Components.Schemas.WeekPlanSummaryDay]
             ) {
                 self.household = household
                 self.weekStartDate = weekStartDate
                 self.updatedAt = updatedAt
                 self.explanations = explanations
+                self.economy = economy
                 self.days = days
             }
             internal enum CodingKeys: String, CodingKey {
@@ -4703,6 +4743,7 @@ internal enum Components {
                 case weekStartDate
                 case updatedAt
                 case explanations
+                case economy
                 case days
             }
         }
