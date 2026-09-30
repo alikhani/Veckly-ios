@@ -127,16 +127,26 @@ struct PrepBatchFormSheet: View {
 
     let initialRecipeID: String
     let initialCookDate: Date
+    let weekStartDate: String
+    let initialAssignedDate: String?
 
     @State private var totalPortions = 4
     @State private var assignedDays: Set<String> = []
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    init(initialRecipeID: String, initialCookDate: Date) {
+    init(
+        initialRecipeID: String,
+        initialCookDate: Date,
+        weekStartDate: String,
+        initialAssignedDate: String? = nil
+    ) {
         self.initialRecipeID = initialRecipeID
         self.initialCookDate = initialCookDate
+        self.weekStartDate = weekStartDate
+        self.initialAssignedDate = initialAssignedDate
         _totalPortions = State(initialValue: 4)
+        _assignedDays = State(initialValue: Set([initialAssignedDate].compactMap { $0 }))
     }
 
     private var cookDateString: String { WeekCalendar.string(from: initialCookDate) }
@@ -248,7 +258,7 @@ struct PrepBatchFormSheet: View {
         do {
             try await appModel.prepBatchStore.create(
                 householdID: hid,
-                weekStartDate: appModel.weekStore.weekStartDate,
+                weekStartDate: weekStartDate,
                 recipeId: initialRecipeID,
                 cookDate: cookDateString,
                 totalPortions: totalPortions,

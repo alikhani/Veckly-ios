@@ -8078,6 +8078,102 @@
         }
       }
     },
+    "week.quality.suggestion.after" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggestion: %@" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Förslag: %@" } }
+      }
+    },
+    "week.quality.suggestion.afterLeftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggestion: leftovers from %@ on %@" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Förslag: rester från %@ på %@" } }
+      }
+    },
+    "week.quality.suggestion.before" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: %2$@" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: %2$@" } }
+      }
+    },
+    "week.quality.suggestion.confirmLeftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Set up leftovers" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Planera rester" } }
+      }
+    },
+    "week.quality.suggestion.confirmSwap" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apply change" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Genomför ändringen" } }
+      }
+    },
+    "week.quality.suggestion.confirmTitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Change the week?" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ändra veckan?" } }
+      }
+    },
+    "week.quality.suggestion.dismiss" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dismiss suggestion for this week" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Dölj förslaget för den här veckan" } }
+      }
+    },
+    "week.quality.suggestion.openDay" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open day" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Tom dag" } }
+      }
+    },
+    "week.quality.suggestion.reason.easier" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ has an uncertain fit. This alternative is simpler to shop for." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ har en osäker matchning. Alternativet är enklare att handla till." } }
+      }
+    },
+    "week.quality.suggestion.reason.leftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ is open and can be covered without cooking another dinner." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ är tom och kan täckas utan att laga ännu en middag." } }
+      }
+    },
+    "week.quality.suggestion.reason.open" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ is still open. This fills the gap." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ är fortfarande tom. Det här fyller luckan." } }
+      }
+    },
+    "week.quality.suggestion.reason.quicker" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ is the heaviest dinner. This makes the week easier." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ har veckans tyngsta middag. Det här gör veckan lättare." } }
+      }
+    },
+    "week.quality.suggestion.reason.variation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ repeats a recent dish. This adds variation." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ upprepar en rätt ni nyligen åt. Det här ger mer variation." } }
+      }
+    },
+    "week.quality.suggestion.reviewLeftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Review leftover plan" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Granska restplanen" } }
+      }
+    },
+    "week.quality.suggestion.reviewSwap" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Review change" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Granska ändringen" } }
+      }
+    },
+    "week.quality.suggestion.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "One useful improvement" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "En meningsfull förbättring" } }
+      }
+    },
     "week.quality.heavy.one" : {
       "localizations" : {
         "en" : {

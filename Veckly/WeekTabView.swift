@@ -14,7 +14,9 @@ private struct SelectedDayRecipe: Identifiable {
 private struct PrepBatchSeed: Identifiable {
     let recipeID: String
     let cookDate: String
-    var id: String { recipeID + cookDate }
+    let weekStartDate: String
+    var assignedDate: String? = nil
+    var id: String { recipeID + cookDate + weekStartDate + (assignedDate ?? "") }
 }
 
 private struct LeftoversWithoutRecipeSeed: Identifiable {
@@ -100,6 +102,8 @@ struct WeekTabView: View {
     @State private var failedFillWeekStartDate: String?
     @State private var fillCompletionNotice: WeekFillCompletionNotice?
     @State private var weekBriefPresentation: WeekBriefPresentation?
+    @State private var showQualitySuggestionConfirmation = false
+    @AppStorage("dismissedWeekQualitySuggestionKeys") private var dismissedWeekQualitySuggestionKeys = ""
 
     private var viewedWeekStartDate: String {
         viewedWeekOffset.weekStartDate
@@ -383,7 +387,13 @@ struct WeekTabView: View {
                 onMarkAsLeftover: { recipeID in
                     guard canMutateDay(day) else { return }
                     mealPickerDay = nil
-                    presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipeID, cookDate: day.date) }
+                    presentAfterDismiss {
+                        prepBatchSeed = PrepBatchSeed(
+                            recipeID: recipeID,
+                            cookDate: day.date,
+                            weekStartDate: viewedWeekStartDate
+                        )
+                    }
                 },
                 onMarkAsLeftoverNoRecipe: {
                     guard canMutateDay(day) else { return }
@@ -458,7 +468,13 @@ struct WeekTabView: View {
                     guard canEditDay(day) else { return }
                     selectedDayForDetail = nil
                     if let recipe = day.recipe {
-                        presentAfterDismiss { prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date) }
+                        presentAfterDismiss {
+                            prepBatchSeed = PrepBatchSeed(
+                                recipeID: recipe.id,
+                                cookDate: day.date,
+                                weekStartDate: viewedWeekStartDate
+                            )
+                        }
                     }
                 },
                 isLocked: day.isLocked,
@@ -479,7 +495,12 @@ struct WeekTabView: View {
             )
         }
         .sheet(item: $prepBatchSeed) { seed in
-            PrepBatchFormSheet(initialRecipeID: seed.recipeID, initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date())
+            PrepBatchFormSheet(
+                initialRecipeID: seed.recipeID,
+                initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date(),
+                weekStartDate: seed.weekStartDate,
+                initialAssignedDate: seed.assignedDate
+            )
         }
         .sheet(item: $leftoversWithoutRecipeSeed) { seed in
             LeftoversWithoutRecipeSheet(
@@ -1153,53 +1174,181 @@ struct WeekTabView: View {
         return "\(dinnersPart) · \(daysPart)"
     }
 
-    private var weekQualitySummary: WeekQualitySummary {
-        WeekQualitySummary.make(
+    private var qualitySuggestion: WeekQualitySuggestion? {
+        WeekQualitySuggestion.make(
             days: weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows),
+            recipes: appModel.recipeStore.recipes,
             prepCoveredDates: prepCoveredDates
         )
     }
 
-    /// "Veckokoll" is replaced by `weekPlanningStatusCard` (Fas 3) — this
-    /// card now only appears for insights that carry an actual warning
-    /// (a heavy week, or several low-confidence picks), never for routine
-    /// observations like "good variation" that the status card already
-    /// covers in spirit.
-    private var weekQualityWarnings: [WeekQualitySummary.Insight] {
-        weekQualitySummary.insights.filter { insight in
-            switch insight.kind {
-            case .heavyWeek, .lowConfidence, .repeatedDish: true
-            case .openDays, .quickRhythm, .prepFriendly, .goodVariation, .looksReasonable: false
-            }
-        }
+    private var visibleQualitySuggestion: WeekQualitySuggestion? {
+        guard let suggestion = qualitySuggestion else { return nil }
+        return dismissedQualitySuggestionKeys.contains(qualitySuggestionWeekKey) ? nil : suggestion
     }
 
     @ViewBuilder
     private var weekQualityCard: some View {
-        if !isViewingLastWeek, !weekQualityWarnings.isEmpty {
+        if !isViewingLastWeek, let suggestion = visibleQualitySuggestion {
             VecklyCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("week.quality.title")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                        .textCase(.uppercase)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(weekQualityWarnings) { insight in
-                            Label {
-                                Text(verbatim: weekQualityText(for: insight))
-                                    .font(.subheadline)
-                                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                            } icon: {
-                                Image(systemName: insight.icon)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeFill)
-                            }
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("week.quality.suggestion.title")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                            .textCase(.uppercase)
+                        Spacer()
+                        Button {
+                            dismissQualitySuggestionsForViewedWeek()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .frame(width: 44, height: 44)
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(L10n.string("week.quality.suggestion.dismiss"))
                     }
+
+                    Label(qualitySuggestionReason(suggestion), systemImage: qualitySuggestionIcon(suggestion))
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(qualitySuggestionBefore(suggestion))
+                            .font(.subheadline)
+                            .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                        Label(qualitySuggestionAfter(suggestion), systemImage: "arrow.down")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    }
+
+                    Button(qualitySuggestionActionTitle(suggestion)) {
+                        showQualitySuggestionConfirmation = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+                    .accessibilityIdentifier("weekQualitySuggestionAction")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .confirmationDialog(
+                L10n.string("week.quality.suggestion.confirmTitle"),
+                isPresented: $showQualitySuggestionConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button(qualitySuggestionConfirmTitle(suggestion)) {
+                    applyQualitySuggestion(suggestion)
+                }
+                Button(L10n.string("common.cancel"), role: .cancel) {}
+            } message: {
+                Text("\(qualitySuggestionBefore(suggestion))\n\(qualitySuggestionAfter(suggestion))")
+            }
+        }
+    }
+
+    private var qualitySuggestionWeekKey: String {
+        let householdID = appModel.householdStore.activeHousehold?.id ?? ""
+        return "\(householdID):\(viewedWeekStartDate)"
+    }
+
+    private var dismissedQualitySuggestionKeys: Set<String> {
+        Set(dismissedWeekQualitySuggestionKeys.split(separator: "|").map(String.init))
+    }
+
+    private func dismissQualitySuggestionsForViewedWeek() {
+        var keys = dismissedQualitySuggestionKeys
+        keys.insert(qualitySuggestionWeekKey)
+        dismissedWeekQualitySuggestionKeys = keys.sorted().joined(separator: "|")
+    }
+
+    private func qualitySuggestionIcon(_ suggestion: WeekQualitySuggestion) -> String {
+        switch suggestion.kind {
+        case .fillOpenDay: "calendar.badge.plus"
+        case .useLeftovers: "arrow.3.trianglepath"
+        case .makeQuicker: "clock.arrow.circlepath"
+        case .makeEasier: "basket"
+        case .addVariation: "arrow.2.squarepath"
+        }
+    }
+
+    private func qualitySuggestionReason(_ suggestion: WeekQualitySuggestion) -> String {
+        switch suggestion.kind {
+        case .fillOpenDay:
+            L10n.format("week.quality.suggestion.reason.open", suggestion.day.weekdayLabel)
+        case .useLeftovers:
+            L10n.format("week.quality.suggestion.reason.leftovers", suggestion.day.weekdayLabel)
+        case .makeQuicker:
+            L10n.format("week.quality.suggestion.reason.quicker", suggestion.day.weekdayLabel)
+        case .makeEasier:
+            L10n.format("week.quality.suggestion.reason.easier", suggestion.day.weekdayLabel)
+        case .addVariation:
+            L10n.format("week.quality.suggestion.reason.variation", suggestion.day.weekdayLabel)
+        }
+    }
+
+    private func qualitySuggestionBefore(_ suggestion: WeekQualitySuggestion) -> String {
+        let meal = suggestion.day.recipe?.title ?? L10n.string("week.quality.suggestion.openDay")
+        return L10n.format("week.quality.suggestion.before", suggestion.day.weekdayLabel, meal)
+    }
+
+    private func qualitySuggestionAfter(_ suggestion: WeekQualitySuggestion) -> String {
+        if suggestion.kind == .useLeftovers, let source = suggestion.sourceDay, let recipe = source.recipe {
+            return L10n.format("week.quality.suggestion.afterLeftovers", recipe.title, source.weekdayLabel)
+        }
+        return L10n.format(
+            "week.quality.suggestion.after",
+            suggestion.replacement?.title ?? L10n.string("week.quality.suggestion.openDay")
+        )
+    }
+
+    private func qualitySuggestionActionTitle(_ suggestion: WeekQualitySuggestion) -> LocalizedStringKey {
+        suggestion.kind == .useLeftovers
+            ? "week.quality.suggestion.reviewLeftovers"
+            : "week.quality.suggestion.reviewSwap"
+    }
+
+    private func qualitySuggestionConfirmTitle(_ suggestion: WeekQualitySuggestion) -> String {
+        suggestion.kind == .useLeftovers
+            ? L10n.string("week.quality.suggestion.confirmLeftovers")
+            : L10n.string("week.quality.suggestion.confirmSwap")
+    }
+
+    private func applyQualitySuggestion(_ suggestion: WeekQualitySuggestion) {
+        guard canMutateDay(suggestion.day) else { return }
+        if suggestion.kind == .useLeftovers,
+           let source = suggestion.sourceDay,
+           let recipe = source.recipe {
+            dismissQualitySuggestionsForViewedWeek()
+            presentAfterDismiss {
+                prepBatchSeed = PrepBatchSeed(
+                    recipeID: recipe.id,
+                    cookDate: source.date,
+                    weekStartDate: viewedWeekStartDate,
+                    assignedDate: suggestion.day.date
+                )
+            }
+            return
+        }
+
+        guard let recipe = suggestion.replacement,
+              let household = appModel.householdStore.activeHousehold else { return }
+        guard let userID = appModel.authSessionStore.userID else {
+            Task { await appModel.handleUnauthorized() }
+            return
+        }
+        let wasEmptyBefore = hasOpenRelevantDays
+        Task {
+            appModel.shoppingListStore.invalidateCache()
+            await appModel.weekStore.assignMeal(
+                day: suggestion.day,
+                recipe: WeekSummaryRecipe(fullRecipe: recipe),
+                household: household,
+                userID: userID,
+                viewedWeekStartDate: viewedWeekStartDate
+            )
+            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+            guard appModel.weekStore.mutationError == nil else { return }
+            dismissQualitySuggestionsForViewedWeek()
+            checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
         }
     }
 
@@ -1221,27 +1370,6 @@ struct WeekTabView: View {
                     onGoToShoppingTab?()
                 }
             )
-        }
-    }
-
-    private func weekQualityText(for insight: WeekQualitySummary.Insight) -> String {
-        switch insight.kind {
-        case .openDays(let count):
-            L10n.format(count == 1 ? "week.quality.openDays.one" : "week.quality.openDays.other", count)
-        case .quickRhythm(let count):
-            L10n.format(count == 1 ? "week.quality.quick.one" : "week.quality.quick.other", count)
-        case .heavyWeek(let count):
-            L10n.format(count == 1 ? "week.quality.heavy.one" : "week.quality.heavy.other", count)
-        case .prepFriendly(let count):
-            L10n.format(count == 1 ? "week.quality.prep.one" : "week.quality.prep.other", count)
-        case .lowConfidence(let count):
-            L10n.format(count == 1 ? "week.quality.lowConfidence.one" : "week.quality.lowConfidence.other", count)
-        case .repeatedDish(let count):
-            L10n.format(count == 1 ? "week.quality.repeated.one" : "week.quality.repeated.other", count)
-        case .goodVariation:
-            L10n.string("week.quality.variation")
-        case .looksReasonable:
-            L10n.string("week.quality.reasonable")
         }
     }
 
@@ -1285,7 +1413,11 @@ struct WeekTabView: View {
             onEatExtra: { day in
                 guard canMutateDay(day) else { return }
                 if let recipe = day.recipe {
-                    prepBatchSeed = PrepBatchSeed(recipeID: recipe.id, cookDate: day.date)
+                    prepBatchSeed = PrepBatchSeed(
+                        recipeID: recipe.id,
+                        cookDate: day.date,
+                        weekStartDate: viewedWeekStartDate
+                    )
                 }
             },
             onRemoveCoverage: { day, dayCoverage in
