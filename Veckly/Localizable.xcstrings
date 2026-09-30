@@ -8282,6 +8282,22 @@
         }
       }
     },
+    "week.reason.weekOverride" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adapted to this week's plans"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anpassad efter veckans planer"
+          }
+        }
+      }
+    },
     "week.regenerate" : {
       "localizations" : {
         "en" : {

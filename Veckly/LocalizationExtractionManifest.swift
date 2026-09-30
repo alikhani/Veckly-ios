@@ -407,6 +407,7 @@ private enum LocalizationExtractionManifest {
         _ = String(localized: "week.reason.likedBefore")
         _ = String(localized: "week.reason.newForVariety")
         _ = String(localized: "week.reason.quickWeekday")
+        _ = String(localized: "week.reason.weekOverride")
         _ = String(localized: "week.regenerateConfirm.confirm")
         _ = String(localized: "week.regenerateConfirm.message")
         _ = String(localized: "week.regenerateConfirm.title")

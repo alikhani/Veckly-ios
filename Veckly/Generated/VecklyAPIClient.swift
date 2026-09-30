@@ -1277,6 +1277,8 @@ private extension Components.Schemas.WeekPlanSummaryDay.reasonPayload {
             return .newForVariety
         case .quick_hyphen_weekday:
             return .quickWeekday
+        case .week_hyphen_override:
+            return .weekOverride
         }
     }
 }

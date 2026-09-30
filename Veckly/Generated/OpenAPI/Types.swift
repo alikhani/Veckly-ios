@@ -143,6 +143,21 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /invites/{token}/accept`.
     /// - Remark: Generated from `#/paths//invites/{token}/accept/post(acceptInvite)`.
     func acceptInvite(_ input: Operations.acceptInvite.Input) async throws -> Operations.acceptInvite.Output
+    /// Read date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-plans/{weekStartDate}/context-overrides`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)`.
+    func getWeekContextOverrides(_ input: Operations.getWeekContextOverrides.Input) async throws -> Operations.getWeekContextOverrides.Output
+    /// Create or replace date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)`.
+    func upsertWeekContextOverride(_ input: Operations.upsertWeekContextOverride.Input) async throws -> Operations.upsertWeekContextOverride.Output
+    /// Clear date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)`.
+    func clearWeekContextOverride(_ input: Operations.clearWeekContextOverride.Input) async throws -> Operations.clearWeekContextOverride.Output
     /// Generate meals for a week from household profile and available recipes
     ///
     /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/generate`.
@@ -674,6 +689,47 @@ extension APIProtocol {
         headers: Operations.acceptInvite.Input.Headers = .init()
     ) async throws -> Operations.acceptInvite.Output {
         try await acceptInvite(Operations.acceptInvite.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Read date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-plans/{weekStartDate}/context-overrides`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)`.
+    internal func getWeekContextOverrides(
+        path: Operations.getWeekContextOverrides.Input.Path,
+        headers: Operations.getWeekContextOverrides.Input.Headers = .init()
+    ) async throws -> Operations.getWeekContextOverrides.Output {
+        try await getWeekContextOverrides(Operations.getWeekContextOverrides.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Create or replace date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)`.
+    internal func upsertWeekContextOverride(
+        path: Operations.upsertWeekContextOverride.Input.Path,
+        headers: Operations.upsertWeekContextOverride.Input.Headers = .init(),
+        body: Operations.upsertWeekContextOverride.Input.Body? = nil
+    ) async throws -> Operations.upsertWeekContextOverride.Output {
+        try await upsertWeekContextOverride(Operations.upsertWeekContextOverride.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Clear date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)`.
+    internal func clearWeekContextOverride(
+        path: Operations.clearWeekContextOverride.Input.Path,
+        headers: Operations.clearWeekContextOverride.Input.Headers = .init()
+    ) async throws -> Operations.clearWeekContextOverride.Output {
+        try await clearWeekContextOverride(Operations.clearWeekContextOverride.Input(
             path: path,
             headers: headers
         ))
@@ -2607,6 +2663,105 @@ internal enum Components {
                 case expiresAt
             }
         }
+        /// - Remark: Generated from `#/components/schemas/WeekContextOverride`.
+        internal struct WeekContextOverride: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/servingsOverride`.
+            internal var servingsOverride: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/occasion`.
+            internal enum occasionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case standard = "standard"
+                case guests = "guests"
+                case treat = "treat"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/occasion`.
+            internal var occasion: Components.Schemas.WeekContextOverride.occasionPayload?
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/effortLevel`.
+            internal enum effortLevelPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case standard = "standard"
+                case busy = "busy"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/effortLevel`.
+            internal var effortLevel: Components.Schemas.WeekContextOverride.effortLevelPayload?
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/leftoversIntent`.
+            internal var leftoversIntent: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/lateEvening`.
+            internal var lateEvening: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/cookingTolerance`.
+            internal enum cookingTolerancePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case standard = "standard"
+                case relaxed = "relaxed"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/cookingTolerance`.
+            internal var cookingTolerance: Components.Schemas.WeekContextOverride.cookingTolerancePayload?
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverride/date`.
+            internal var date: Swift.String
+            /// Creates a new `WeekContextOverride`.
+            ///
+            /// - Parameters:
+            ///   - servingsOverride:
+            ///   - occasion:
+            ///   - effortLevel:
+            ///   - leftoversIntent:
+            ///   - lateEvening:
+            ///   - cookingTolerance:
+            ///   - date:
+            internal init(
+                servingsOverride: Swift.Int? = nil,
+                occasion: Components.Schemas.WeekContextOverride.occasionPayload? = nil,
+                effortLevel: Components.Schemas.WeekContextOverride.effortLevelPayload? = nil,
+                leftoversIntent: Swift.Bool? = nil,
+                lateEvening: Swift.Bool? = nil,
+                cookingTolerance: Components.Schemas.WeekContextOverride.cookingTolerancePayload? = nil,
+                date: Swift.String
+            ) {
+                self.servingsOverride = servingsOverride
+                self.occasion = occasion
+                self.effortLevel = effortLevel
+                self.leftoversIntent = leftoversIntent
+                self.lateEvening = lateEvening
+                self.cookingTolerance = cookingTolerance
+                self.date = date
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case servingsOverride
+                case occasion
+                case effortLevel
+                case leftoversIntent
+                case lateEvening
+                case cookingTolerance
+                case date
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekContextOverridesResponse`.
+        internal struct WeekContextOverridesResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekContextOverridesResponse/overrides`.
+            internal var overrides: [Components.Schemas.WeekContextOverride]
+            /// Creates a new `WeekContextOverridesResponse`.
+            ///
+            /// - Parameters:
+            ///   - overrides:
+            internal init(overrides: [Components.Schemas.WeekContextOverride]) {
+                self.overrides = overrides
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case overrides
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ClearWeekContextOverrideResponse`.
+        internal struct ClearWeekContextOverrideResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ClearWeekContextOverrideResponse/ok`.
+            internal var ok: Swift.Bool
+            /// Creates a new `ClearWeekContextOverrideResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            internal init(ok: Swift.Bool) {
+                self.ok = ok
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanResponse`.
         internal struct GenerateWeekPlanResponse: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanResponse/ok`.
@@ -2815,6 +2970,8 @@ internal enum Components {
                 case day_skipped = "day_skipped"
                 case day_unskipped = "day_unskipped"
                 case servings_changed = "servings_changed"
+                case week_context_override_upserted = "week_context_override_upserted"
+                case week_context_override_cleared = "week_context_override_cleared"
                 case week_plan_cleared = "week_plan_cleared"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanEvent/eventType`.
@@ -3130,6 +3287,7 @@ internal enum Components {
                         case based_hyphen_on_hyphen_feedback = "based-on-feedback"
                         case new_hyphen_for_hyphen_variety = "new-for-variety"
                         case quick_hyphen_weekday = "quick-weekday"
+                        case week_hyphen_override = "week-override"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/reason`.
                     internal var reason: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.reasonPayload?
@@ -3140,6 +3298,8 @@ internal enum Components {
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/confidence`.
                     internal var confidence: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.confidencePayload?
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/servings`.
+                    internal var servings: Swift.Int?
                     /// Creates a new `Case3Payload`.
                     ///
                     /// - Parameters:
@@ -3148,18 +3308,21 @@ internal enum Components {
                     ///   - recipeRef:
                     ///   - reason:
                     ///   - confidence:
+                    ///   - servings:
                     internal init(
                         eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.eventTypePayload,
                         dayOfWeek: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.dayOfWeekPayload,
                         recipeRef: Swift.String,
                         reason: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.reasonPayload? = nil,
-                        confidence: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.confidencePayload? = nil
+                        confidence: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.confidencePayload? = nil,
+                        servings: Swift.Int? = nil
                     ) {
                         self.eventType = eventType
                         self.dayOfWeek = dayOfWeek
                         self.recipeRef = recipeRef
                         self.reason = reason
                         self.confidence = confidence
+                        self.servings = servings
                     }
                     internal enum CodingKeys: String, CodingKey {
                         case eventType
@@ -3167,6 +3330,7 @@ internal enum Components {
                         case recipeRef
                         case reason
                         case confidence
+                        case servings
                     }
                 }
                 /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3`.
@@ -3470,23 +3634,150 @@ internal enum Components {
                 internal struct Case11Payload: Codable, Hashable, Sendable {
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/eventType`.
                     internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                        case week_plan_cleared = "week_plan_cleared"
+                        case week_context_override_upserted = "week_context_override_upserted"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/eventType`.
                     internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/date`.
+                    internal var date: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override`.
+                    internal struct overridePayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/servingsOverride`.
+                        internal var servingsOverride: Swift.Int?
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/occasion`.
+                        internal enum occasionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case standard = "standard"
+                            case guests = "guests"
+                            case treat = "treat"
+                        }
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/occasion`.
+                        internal var occasion: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload.occasionPayload?
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/effortLevel`.
+                        internal enum effortLevelPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case standard = "standard"
+                            case busy = "busy"
+                        }
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/effortLevel`.
+                        internal var effortLevel: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload.effortLevelPayload?
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/leftoversIntent`.
+                        internal var leftoversIntent: Swift.Bool?
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/lateEvening`.
+                        internal var lateEvening: Swift.Bool?
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/cookingTolerance`.
+                        internal enum cookingTolerancePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case standard = "standard"
+                            case relaxed = "relaxed"
+                        }
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override/cookingTolerance`.
+                        internal var cookingTolerance: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload.cookingTolerancePayload?
+                        /// Creates a new `overridePayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - servingsOverride:
+                        ///   - occasion:
+                        ///   - effortLevel:
+                        ///   - leftoversIntent:
+                        ///   - lateEvening:
+                        ///   - cookingTolerance:
+                        internal init(
+                            servingsOverride: Swift.Int? = nil,
+                            occasion: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload.occasionPayload? = nil,
+                            effortLevel: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload.effortLevelPayload? = nil,
+                            leftoversIntent: Swift.Bool? = nil,
+                            lateEvening: Swift.Bool? = nil,
+                            cookingTolerance: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload.cookingTolerancePayload? = nil
+                        ) {
+                            self.servingsOverride = servingsOverride
+                            self.occasion = occasion
+                            self.effortLevel = effortLevel
+                            self.leftoversIntent = leftoversIntent
+                            self.lateEvening = lateEvening
+                            self.cookingTolerance = cookingTolerance
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case servingsOverride
+                            case occasion
+                            case effortLevel
+                            case leftoversIntent
+                            case lateEvening
+                            case cookingTolerance
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11/override`.
+                    internal var override: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload
                     /// Creates a new `Case11Payload`.
                     ///
                     /// - Parameters:
                     ///   - eventType:
-                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.eventTypePayload) {
+                    ///   - date:
+                    ///   - override:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.eventTypePayload,
+                        date: Swift.String,
+                        override: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload.overridePayload
+                    ) {
+                        self.eventType = eventType
+                        self.date = date
+                        self.override = override
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case date
+                        case override
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11`.
+                case case11(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case12`.
+                internal struct Case12Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case12/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case week_context_override_cleared = "week_context_override_cleared"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case12/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case12Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case12/date`.
+                    internal var date: Swift.String
+                    /// Creates a new `Case12Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    ///   - date:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case12Payload.eventTypePayload,
+                        date: Swift.String
+                    ) {
+                        self.eventType = eventType
+                        self.date = date
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case date
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case12`.
+                case case12(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case12Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13`.
+                internal struct Case13Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case week_plan_cleared = "week_plan_cleared"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.eventTypePayload
+                    /// Creates a new `Case13Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.eventTypePayload) {
                         self.eventType = eventType
                     }
                     internal enum CodingKeys: String, CodingKey {
                         case eventType
                     }
                 }
-                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case11`.
-                case case11(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case11Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13`.
+                case case13(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload)
                 internal init(from decoder: any Swift.Decoder) throws {
                     var errors: [any Swift.Error] = []
                     do {
@@ -3555,6 +3846,18 @@ internal enum Components {
                     } catch {
                         errors.append(error)
                     }
+                    do {
+                        self = .case12(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .case13(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
                     throw Swift.DecodingError.failedToDecodeOneOfSchema(
                         type: Self.self,
                         codingPath: decoder.codingPath,
@@ -3584,6 +3887,10 @@ internal enum Components {
                     case let .case10(value):
                         try value.encode(to: encoder)
                     case let .case11(value):
+                        try value.encode(to: encoder)
+                    case let .case12(value):
+                        try value.encode(to: encoder)
+                    case let .case13(value):
                         try value.encode(to: encoder)
                     }
                 }
@@ -3753,6 +4060,7 @@ internal enum Components {
                 case based_hyphen_on_hyphen_feedback = "based-on-feedback"
                 case new_hyphen_for_hyphen_variety = "new-for-variety"
                 case quick_hyphen_weekday = "quick-weekday"
+                case week_hyphen_override = "week-override"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/reason`.
             internal var reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload?
@@ -12747,6 +13055,808 @@ internal enum Operations {
             }
         }
     }
+    /// Read date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-plans/{weekStartDate}/context-overrides`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)`.
+    internal enum getWeekContextOverrides {
+        internal static let id: Swift.String = "getWeekContextOverrides"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.getWeekContextOverrides.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getWeekContextOverrides.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getWeekContextOverrides.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getWeekContextOverrides.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getWeekContextOverrides.Input.Path,
+                headers: Operations.getWeekContextOverrides.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WeekContextOverridesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekContextOverridesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekContextOverrides.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekContextOverrides.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The explicit overrides saved for this week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getWeekContextOverrides.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getWeekContextOverrides.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid week start date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getWeekContextOverrides.Output.BadRequest)
+            /// Invalid week start date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getWeekContextOverrides.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getWeekContextOverrides.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getWeekContextOverrides.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getWeekContextOverrides.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getWeekContextOverrides.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create or replace date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)`.
+    internal enum upsertWeekContextOverride {
+        internal static let id: Swift.String = "upsertWeekContextOverride"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/path/date`.
+                internal var date: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                ///   - date:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String,
+                    date: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                    self.date = date
+                }
+            }
+            internal var path: Operations.upsertWeekContextOverride.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertWeekContextOverride.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.upsertWeekContextOverride.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.upsertWeekContextOverride.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json`.
+                internal struct jsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/servingsOverride`.
+                    internal var servingsOverride: Swift.Int?
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/occasion`.
+                    internal enum occasionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case standard = "standard"
+                        case guests = "guests"
+                        case treat = "treat"
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/occasion`.
+                    internal var occasion: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.occasionPayload?
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/effortLevel`.
+                    internal enum effortLevelPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case standard = "standard"
+                        case busy = "busy"
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/effortLevel`.
+                    internal var effortLevel: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.effortLevelPayload?
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/leftoversIntent`.
+                    internal var leftoversIntent: Swift.Bool?
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/lateEvening`.
+                    internal var lateEvening: Swift.Bool?
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/cookingTolerance`.
+                    internal enum cookingTolerancePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case standard = "standard"
+                        case relaxed = "relaxed"
+                    }
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/json/cookingTolerance`.
+                    internal var cookingTolerance: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.cookingTolerancePayload?
+                    /// Creates a new `jsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - servingsOverride:
+                    ///   - occasion:
+                    ///   - effortLevel:
+                    ///   - leftoversIntent:
+                    ///   - lateEvening:
+                    ///   - cookingTolerance:
+                    internal init(
+                        servingsOverride: Swift.Int? = nil,
+                        occasion: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.occasionPayload? = nil,
+                        effortLevel: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.effortLevelPayload? = nil,
+                        leftoversIntent: Swift.Bool? = nil,
+                        lateEvening: Swift.Bool? = nil,
+                        cookingTolerance: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.cookingTolerancePayload? = nil
+                    ) {
+                        self.servingsOverride = servingsOverride
+                        self.occasion = occasion
+                        self.effortLevel = effortLevel
+                        self.leftoversIntent = leftoversIntent
+                        self.lateEvening = lateEvening
+                        self.cookingTolerance = cookingTolerance
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case servingsOverride
+                        case occasion
+                        case effortLevel
+                        case leftoversIntent
+                        case lateEvening
+                        case cookingTolerance
+                    }
+                }
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/requestBody/content/application\/json`.
+                case json(Operations.upsertWeekContextOverride.Input.Body.jsonPayload)
+            }
+            internal var body: Operations.upsertWeekContextOverride.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.upsertWeekContextOverride.Input.Path,
+                headers: Operations.upsertWeekContextOverride.Input.Headers = .init(),
+                body: Operations.upsertWeekContextOverride.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WeekContextOverride)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekContextOverride {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertWeekContextOverride.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertWeekContextOverride.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The saved override
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.upsertWeekContextOverride.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.upsertWeekContextOverride.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid week or date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.upsertWeekContextOverride.Output.BadRequest)
+            /// Invalid week or date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.upsertWeekContextOverride.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.upsertWeekContextOverride.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.upsertWeekContextOverride.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.upsertWeekContextOverride.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.upsertWeekContextOverride.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Clear date-specific planning context for one week
+    ///
+    /// - Remark: HTTP `DELETE /households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)`.
+    internal enum clearWeekContextOverride {
+        internal static let id: Swift.String = "clearWeekContextOverride"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/path/date`.
+                internal var date: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                ///   - date:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String,
+                    date: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                    self.date = date
+                }
+            }
+            internal var path: Operations.clearWeekContextOverride.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.clearWeekContextOverride.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.clearWeekContextOverride.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.clearWeekContextOverride.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.clearWeekContextOverride.Input.Path,
+                headers: Operations.clearWeekContextOverride.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ClearWeekContextOverrideResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ClearWeekContextOverrideResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.clearWeekContextOverride.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.clearWeekContextOverride.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The override was cleared
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.clearWeekContextOverride.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.clearWeekContextOverride.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid week or date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.clearWeekContextOverride.Output.BadRequest)
+            /// Invalid week or date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.clearWeekContextOverride.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.clearWeekContextOverride.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.clearWeekContextOverride.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.clearWeekContextOverride.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.clearWeekContextOverride.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// Generate meals for a week from household profile and available recipes
     ///
     /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/generate`.
@@ -19094,13 +20204,13 @@ internal enum Operations {
                 /// Creates a new `TooManyRequests`.
                 internal init() {}
             }
-            /// Rate limited
+            /// Reserved for infrastructure throttling; the recommendation AI throttle uses deterministic fallback
             ///
             /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/429`.
             ///
             /// HTTP response code: `429 tooManyRequests`.
             case tooManyRequests(Operations.recommendMeals.Output.TooManyRequests)
-            /// Rate limited
+            /// Reserved for infrastructure throttling; the recommendation AI throttle uses deterministic fallback
             ///
             /// - Remark: Generated from `#/paths//recipes/recommend/post(recommendMeals)/responses/429`.
             ///

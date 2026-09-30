@@ -94,6 +94,7 @@ enum AssignmentReason: String, Decodable {
     case basedOnFeedback = "based-on-feedback"
     case newForVariety = "new-for-variety"
     case quickWeekday = "quick-weekday"
+    case weekOverride = "week-override"
 
     var label: String {
         switch self {
@@ -103,6 +104,7 @@ enum AssignmentReason: String, Decodable {
         case .basedOnFeedback: return L10n.string("week.reason.basedOnFeedback")
         case .newForVariety: return L10n.string("week.reason.newForVariety")
         case .quickWeekday: return L10n.string("week.reason.quickWeekday")
+        case .weekOverride: return L10n.string("week.reason.weekOverride")
         }
     }
 }
