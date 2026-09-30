@@ -87,6 +87,7 @@ struct TonightMealCard: View {
     let coverage: (WeekDayRowViewModel) -> PrepBatchCoverage?
     let onViewRecipe: (WeekDayRowViewModel) -> Void
     let onSwap: (WeekDayRowViewModel) -> Void
+    let onRescue: (WeekDayRowViewModel) -> Void
     let onPlanTonight: (WeekDayRowViewModel) -> Void
     let onEatExtra: (WeekDayRowViewModel) -> Void
     let onRemoveCoverage: (WeekDayRowViewModel, PrepBatchCoverage) -> Void
@@ -163,7 +164,7 @@ struct TonightMealCard: View {
                 .tint(VecklyDesign.Colors.inkMid)
                 .accessibilityLabel(L10n.string("prep.removeCoverage"))
             } else {
-                actionRow(day: day)
+                actionRow(day: day, showRescue: showTodayBadge)
             }
         }
     }
@@ -227,7 +228,7 @@ struct TonightMealCard: View {
     /// (beslut 3). Lock lives in `DayDetailSheet` and the list's status icon
     /// only, not here.
     @ViewBuilder
-    private func actionRow(day: WeekDayRowViewModel) -> some View {
+    private func actionRow(day: WeekDayRowViewModel, showRescue: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             FlowLayout(spacing: 8) {
                 Button {
@@ -247,6 +248,18 @@ struct TonightMealCard: View {
                 .buttonStyle(.bordered)
                 .tint(VecklyDesign.Colors.inkMid)
                 .accessibilityLabel(L10n.format("accessibility.swapMealFor", day.weekdayLabel))
+            }
+
+            if showRescue, day.recipe != nil {
+                Button {
+                    onRescue(day)
+                } label: {
+                    Label("rescue.action", systemImage: "wand.and.stars")
+                        .font(.callout.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                .frame(minHeight: 44)
             }
 
             if day.recipe != nil {

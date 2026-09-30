@@ -178,6 +178,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /households/{householdId}/week-plans/{weekStartDate}/summary`.
     /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/summary/get(getWeekPlanSummary)`.
     func getWeekPlanSummary(_ input: Operations.getWeekPlanSummary.Input) async throws -> Operations.getWeekPlanSummary.Output
+    /// Preview one concrete rescue for a disrupted dinner plan
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/preview`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)`.
+    func previewWeekRescue(_ input: Operations.previewWeekRescue.Input) async throws -> Operations.previewWeekRescue.Output
+    /// Apply a previously previewed rescue idempotently
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/apply`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)`.
+    func applyWeekRescue(_ input: Operations.applyWeekRescue.Input) async throws -> Operations.applyWeekRescue.Output
     /// List a household's persisted week plans
     ///
     /// - Remark: HTTP `GET /households/{householdId}/week-plans`.
@@ -788,6 +798,36 @@ extension APIProtocol {
         try await getWeekPlanSummary(Operations.getWeekPlanSummary.Input(
             path: path,
             headers: headers
+        ))
+    }
+    /// Preview one concrete rescue for a disrupted dinner plan
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/preview`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)`.
+    internal func previewWeekRescue(
+        path: Operations.previewWeekRescue.Input.Path,
+        headers: Operations.previewWeekRescue.Input.Headers = .init(),
+        body: Operations.previewWeekRescue.Input.Body? = nil
+    ) async throws -> Operations.previewWeekRescue.Output {
+        try await previewWeekRescue(Operations.previewWeekRescue.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Apply a previously previewed rescue idempotently
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/apply`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)`.
+    internal func applyWeekRescue(
+        path: Operations.applyWeekRescue.Input.Path,
+        headers: Operations.applyWeekRescue.Input.Headers = .init(),
+        body: Operations.applyWeekRescue.Input.Body? = nil
+    ) async throws -> Operations.applyWeekRescue.Output {
+        try await applyWeekRescue(Operations.applyWeekRescue.Input(
+            path: path,
+            headers: headers,
+            body: body
         ))
     }
     /// List a household's persisted week plans
@@ -2972,6 +3012,7 @@ internal enum Components {
                 case servings_changed = "servings_changed"
                 case week_context_override_upserted = "week_context_override_upserted"
                 case week_context_override_cleared = "week_context_override_cleared"
+                case week_rescued = "week_rescued"
                 case week_plan_cleared = "week_plan_cleared"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanEvent/eventType`.
@@ -3035,6 +3076,83 @@ internal enum Components {
                 case causedBy
                 case eventType
                 case payload
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekRescueIntent`.
+        internal enum WeekRescueIntent: String, Codable, Hashable, Sendable, CaseIterable {
+            case quick = "quick"
+            case no_hyphen_energy = "no-energy"
+            case missing_hyphen_ingredient = "missing-ingredient"
+            case extra_hyphen_guest = "extra-guest"
+            case swap_hyphen_day = "swap-day"
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekRescueChange`.
+        internal struct WeekRescueChange: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/date`.
+            internal var date: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/dayOfWeek`.
+            internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case monday = "monday"
+                case tuesday = "tuesday"
+                case wednesday = "wednesday"
+                case thursday = "thursday"
+                case friday = "friday"
+                case saturday = "saturday"
+                case sunday = "sunday"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/dayOfWeek`.
+            internal var dayOfWeek: Components.Schemas.WeekRescueChange.dayOfWeekPayload
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/beforeRecipeRef`.
+            internal var beforeRecipeRef: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/beforeRecipeTitle`.
+            internal var beforeRecipeTitle: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/afterRecipeRef`.
+            internal var afterRecipeRef: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/afterRecipeTitle`.
+            internal var afterRecipeTitle: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/beforeServings`.
+            internal var beforeServings: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/WeekRescueChange/afterServings`.
+            internal var afterServings: Swift.Int?
+            /// Creates a new `WeekRescueChange`.
+            ///
+            /// - Parameters:
+            ///   - date:
+            ///   - dayOfWeek:
+            ///   - beforeRecipeRef:
+            ///   - beforeRecipeTitle:
+            ///   - afterRecipeRef:
+            ///   - afterRecipeTitle:
+            ///   - beforeServings:
+            ///   - afterServings:
+            internal init(
+                date: Swift.String,
+                dayOfWeek: Components.Schemas.WeekRescueChange.dayOfWeekPayload,
+                beforeRecipeRef: Swift.String? = nil,
+                beforeRecipeTitle: Swift.String? = nil,
+                afterRecipeRef: Swift.String? = nil,
+                afterRecipeTitle: Swift.String? = nil,
+                beforeServings: Swift.Int? = nil,
+                afterServings: Swift.Int? = nil
+            ) {
+                self.date = date
+                self.dayOfWeek = dayOfWeek
+                self.beforeRecipeRef = beforeRecipeRef
+                self.beforeRecipeTitle = beforeRecipeTitle
+                self.afterRecipeRef = afterRecipeRef
+                self.afterRecipeTitle = afterRecipeTitle
+                self.beforeServings = beforeServings
+                self.afterServings = afterServings
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case date
+                case dayOfWeek
+                case beforeRecipeRef
+                case beforeRecipeTitle
+                case afterRecipeRef
+                case afterRecipeTitle
+                case beforeServings
+                case afterServings
             }
         }
         /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest`.
@@ -3761,23 +3879,93 @@ internal enum Components {
                 internal struct Case13Payload: Codable, Hashable, Sendable {
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/eventType`.
                     internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                        case week_plan_cleared = "week_plan_cleared"
+                        case week_rescued = "week_rescued"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/eventType`.
                     internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/rescueId`.
+                    internal var rescueId: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/rescueReason`.
+                    internal var rescueReason: Components.Schemas.WeekRescueIntent
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/changes`.
+                    internal var changes: [Components.Schemas.WeekRescueChange]
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/shoppingDiff`.
+                    internal struct shoppingDiffPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/shoppingDiff/added`.
+                        internal var added: [Swift.String]
+                        /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/shoppingDiff/removed`.
+                        internal var removed: [Swift.String]
+                        /// Creates a new `shoppingDiffPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - added:
+                        ///   - removed:
+                        internal init(
+                            added: [Swift.String],
+                            removed: [Swift.String]
+                        ) {
+                            self.added = added
+                            self.removed = removed
+                        }
+                        internal enum CodingKeys: String, CodingKey {
+                            case added
+                            case removed
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13/shoppingDiff`.
+                    internal var shoppingDiff: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.shoppingDiffPayload
                     /// Creates a new `Case13Payload`.
                     ///
                     /// - Parameters:
                     ///   - eventType:
-                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.eventTypePayload) {
+                    ///   - rescueId:
+                    ///   - rescueReason:
+                    ///   - changes:
+                    ///   - shoppingDiff:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.eventTypePayload,
+                        rescueId: Swift.String,
+                        rescueReason: Components.Schemas.WeekRescueIntent,
+                        changes: [Components.Schemas.WeekRescueChange],
+                        shoppingDiff: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload.shoppingDiffPayload
+                    ) {
+                        self.eventType = eventType
+                        self.rescueId = rescueId
+                        self.rescueReason = rescueReason
+                        self.changes = changes
+                        self.shoppingDiff = shoppingDiff
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case rescueId
+                        case rescueReason
+                        case changes
+                        case shoppingDiff
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13`.
+                case case13(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14`.
+                internal struct Case14Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case week_plan_cleared = "week_plan_cleared"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload.eventTypePayload
+                    /// Creates a new `Case14Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload.eventTypePayload) {
                         self.eventType = eventType
                     }
                     internal enum CodingKeys: String, CodingKey {
                         case eventType
                     }
                 }
-                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case13`.
-                case case13(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case13Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14`.
+                case case14(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload)
                 internal init(from decoder: any Swift.Decoder) throws {
                     var errors: [any Swift.Error] = []
                     do {
@@ -3858,6 +4046,12 @@ internal enum Components {
                     } catch {
                         errors.append(error)
                     }
+                    do {
+                        self = .case14(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
                     throw Swift.DecodingError.failedToDecodeOneOfSchema(
                         type: Self.self,
                         codingPath: decoder.codingPath,
@@ -3891,6 +4085,8 @@ internal enum Components {
                     case let .case12(value):
                         try value.encode(to: encoder)
                     case let .case13(value):
+                        try value.encode(to: encoder)
+                    case let .case14(value):
                         try value.encode(to: encoder)
                     }
                 }
@@ -4326,6 +4522,182 @@ internal enum Components {
                 case updatedAt
                 case explanations
                 case days
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekRescuePreview`.
+        internal struct WeekRescuePreview: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/rescueId`.
+            internal var rescueId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/intent`.
+            internal var intent: Components.Schemas.WeekRescueIntent
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/reason`.
+            internal enum reasonPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case faster = "faster"
+                case less_hyphen_effort = "less-effort"
+                case avoids_hyphen_ingredient = "avoids-ingredient"
+                case more_hyphen_portions = "more-portions"
+                case swaps_hyphen_days = "swaps-days"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/reason`.
+            internal var reason: Components.Schemas.WeekRescuePreview.reasonPayload
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/primaryChange`.
+            internal var primaryChange: Components.Schemas.WeekRescueChange
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/followUpChanges`.
+            internal var followUpChanges: [Components.Schemas.WeekRescueChange]
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/shoppingDiff`.
+            internal struct shoppingDiffPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/shoppingDiff/added`.
+                internal var added: [Swift.String]
+                /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/shoppingDiff/removed`.
+                internal var removed: [Swift.String]
+                /// Creates a new `shoppingDiffPayload`.
+                ///
+                /// - Parameters:
+                ///   - added:
+                ///   - removed:
+                internal init(
+                    added: [Swift.String],
+                    removed: [Swift.String]
+                ) {
+                    self.added = added
+                    self.removed = removed
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case added
+                    case removed
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/shoppingDiff`.
+            internal var shoppingDiff: Components.Schemas.WeekRescuePreview.shoppingDiffPayload
+            /// - Remark: Generated from `#/components/schemas/WeekRescuePreview/expectedUpdatedAt`.
+            internal var expectedUpdatedAt: Swift.String?
+            /// Creates a new `WeekRescuePreview`.
+            ///
+            /// - Parameters:
+            ///   - rescueId:
+            ///   - intent:
+            ///   - reason:
+            ///   - primaryChange:
+            ///   - followUpChanges:
+            ///   - shoppingDiff:
+            ///   - expectedUpdatedAt:
+            internal init(
+                rescueId: Swift.String,
+                intent: Components.Schemas.WeekRescueIntent,
+                reason: Components.Schemas.WeekRescuePreview.reasonPayload,
+                primaryChange: Components.Schemas.WeekRescueChange,
+                followUpChanges: [Components.Schemas.WeekRescueChange],
+                shoppingDiff: Components.Schemas.WeekRescuePreview.shoppingDiffPayload,
+                expectedUpdatedAt: Swift.String? = nil
+            ) {
+                self.rescueId = rescueId
+                self.intent = intent
+                self.reason = reason
+                self.primaryChange = primaryChange
+                self.followUpChanges = followUpChanges
+                self.shoppingDiff = shoppingDiff
+                self.expectedUpdatedAt = expectedUpdatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case rescueId
+                case intent
+                case reason
+                case primaryChange
+                case followUpChanges
+                case shoppingDiff
+                case expectedUpdatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekRescueError`.
+        internal struct WeekRescueError: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekRescueError/error`.
+            internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case NO_PLAN = "NO_PLAN"
+                case LOCKED_DAY = "LOCKED_DAY"
+                case NO_RESCUE_FOUND = "NO_RESCUE_FOUND"
+                case STALE_WEEK_PLAN = "STALE_WEEK_PLAN"
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekRescueError/error`.
+            internal var error: Components.Schemas.WeekRescueError.errorPayload
+            /// Creates a new `WeekRescueError`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            internal init(error: Components.Schemas.WeekRescueError.errorPayload) {
+                self.error = error
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekRescueRequest`.
+        internal struct WeekRescueRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekRescueRequest/rescueId`.
+            internal var rescueId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekRescueRequest/date`.
+            internal var date: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekRescueRequest/intent`.
+            internal var intent: Components.Schemas.WeekRescueIntent
+            /// - Remark: Generated from `#/components/schemas/WeekRescueRequest/missingIngredient`.
+            internal var missingIngredient: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekRescueRequest/expectedUpdatedAt`.
+            internal var expectedUpdatedAt: Swift.String?
+            /// Creates a new `WeekRescueRequest`.
+            ///
+            /// - Parameters:
+            ///   - rescueId:
+            ///   - date:
+            ///   - intent:
+            ///   - missingIngredient:
+            ///   - expectedUpdatedAt:
+            internal init(
+                rescueId: Swift.String,
+                date: Swift.String,
+                intent: Components.Schemas.WeekRescueIntent,
+                missingIngredient: Swift.String? = nil,
+                expectedUpdatedAt: Swift.String? = nil
+            ) {
+                self.rescueId = rescueId
+                self.date = date
+                self.intent = intent
+                self.missingIngredient = missingIngredient
+                self.expectedUpdatedAt = expectedUpdatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case rescueId
+                case date
+                case intent
+                case missingIngredient
+                case expectedUpdatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekRescueApplyResponse`.
+        internal struct WeekRescueApplyResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekRescueApplyResponse/ok`.
+            internal var ok: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/WeekRescueApplyResponse/alreadyApplied`.
+            internal var alreadyApplied: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/WeekRescueApplyResponse/preview`.
+            internal var preview: Components.Schemas.WeekRescuePreview
+            /// Creates a new `WeekRescueApplyResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            ///   - alreadyApplied:
+            ///   - preview:
+            internal init(
+                ok: Swift.Bool,
+                alreadyApplied: Swift.Bool,
+                preview: Components.Schemas.WeekRescuePreview
+            ) {
+                self.ok = ok
+                self.alreadyApplied = alreadyApplied
+                self.preview = preview
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
+                case alreadyApplied
+                case preview
             }
         }
         /// - Remark: Generated from `#/components/schemas/WeekHistoryListItem`.
@@ -14882,6 +15254,638 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Preview one concrete rescue for a disrupted dinner plan
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/preview`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)`.
+    internal enum previewWeekRescue {
+        internal static let id: Swift.String = "previewWeekRescue"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.previewWeekRescue.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.previewWeekRescue.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.previewWeekRescue.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.previewWeekRescue.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.WeekRescueRequest)
+            }
+            internal var body: Operations.previewWeekRescue.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.previewWeekRescue.Input.Path,
+                headers: Operations.previewWeekRescue.Input.Headers = .init(),
+                body: Operations.previewWeekRescue.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WeekRescuePreview)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekRescuePreview {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewWeekRescue.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewWeekRescue.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// A non-mutating rescue preview
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.previewWeekRescue.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.previewWeekRescue.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.previewWeekRescue.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.previewWeekRescue.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.previewWeekRescue.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.previewWeekRescue.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/409/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.WeekRescueError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekRescueError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewWeekRescue.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewWeekRescue.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// The plan changed since the request was created
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.previewWeekRescue.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.previewWeekRescue.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/422/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.WeekRescueError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekRescueError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewWeekRescue.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewWeekRescue.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// No safe rescue is available
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.previewWeekRescue.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            internal var unprocessableContent: Operations.previewWeekRescue.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Apply a previously previewed rescue idempotently
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/apply`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)`.
+    internal enum applyWeekRescue {
+        internal static let id: Swift.String = "applyWeekRescue"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.applyWeekRescue.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.applyWeekRescue.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.applyWeekRescue.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.applyWeekRescue.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.WeekRescueRequest)
+            }
+            internal var body: Operations.applyWeekRescue.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.applyWeekRescue.Input.Path,
+                headers: Operations.applyWeekRescue.Input.Headers = .init(),
+                body: Operations.applyWeekRescue.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WeekRescueApplyResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekRescueApplyResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyWeekRescue.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyWeekRescue.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The rescue was applied or had already been applied
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.applyWeekRescue.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.applyWeekRescue.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.applyWeekRescue.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.applyWeekRescue.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.applyWeekRescue.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.applyWeekRescue.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/409/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.WeekRescueError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekRescueError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyWeekRescue.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyWeekRescue.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// The plan changed since preview
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.applyWeekRescue.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.applyWeekRescue.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/422/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.WeekRescueError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekRescueError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyWeekRescue.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyWeekRescue.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// No safe rescue is available
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.applyWeekRescue.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            internal var unprocessableContent: Operations.applyWeekRescue.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
                             response: self
                         )
                     }

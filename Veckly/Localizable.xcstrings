@@ -6131,6 +6131,28 @@
         "sv" : { "stringUnit" : { "state" : "translated", "value" : "Klar" } }
       }
     },
+    "rescue.action" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save tonight" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Rädda kvällen" } } } },
+    "rescue.confirm" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use this change" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Använd ändringen" } } } },
+    "rescue.error.apply" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The plan was not changed. Try again." } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Planen ändrades inte. Försök igen." } } } },
+    "rescue.error.noSuggestion" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No safe change fits right now." } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ingen trygg ändring passar just nu." } } } },
+    "rescue.findSuggestion" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Find a solution" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Hitta en lösning" } } } },
+    "rescue.intent.extraGuest" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "We have an extra guest" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vi får en extra gäst" } } } },
+    "rescue.intent.missingIngredient" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "An ingredient is missing" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "En råvara saknas" } } } },
+    "rescue.intent.noEnergy" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Nobody has energy to cook" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ingen orkar laga" } } } },
+    "rescue.intent.quick" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Only 15–20 minutes" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Bara 15–20 minuter" } } } },
+    "rescue.intent.swapDay" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Swap with another day" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Byt plats med en annan dag" } } } },
+    "rescue.missing.label" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "What is missing?" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad saknas?" } } } },
+    "rescue.missing.placeholder" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "For example, cream" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Till exempel grädde" } } } },
+    "rescue.preview.add" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add: %@" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lägg till: %@" } } } },
+    "rescue.preview.followUp" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: %@" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@: %@" } } } },
+    "rescue.preview.remove" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove: %@" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ta bort: %@" } } } },
+    "rescue.preview.servings" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ becomes %d servings" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ blir %d portioner" } } } },
+    "rescue.preview.shopping" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Shopping list" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inköpslistan" } } } },
+    "rescue.preview.shoppingUnchanged" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No items added or removed" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inga varor läggs till eller tas bort" } } } },
+    "rescue.preview.swap" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Replace %@ with %@" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Byt %@ mot %@" } } } },
+    "rescue.preview.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggested change" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Föreslagen ändring" } } } },
+    "rescue.question" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "What changed?" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad har hänt?" } } } },
+    "rescue.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save tonight" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Rädda kvällen" } } } },
     "retro.outcome.changedPlan" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Changed plans" } },

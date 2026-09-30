@@ -306,6 +306,51 @@ final class WeekStore {
         }
     }
 
+    func previewRescue(
+        day: WeekDayRowViewModel,
+        household: Household,
+        weekStartDate: String,
+        intent: WeekRescueIntent,
+        missingIngredient: String,
+        rescueID: String,
+        expectedUpdatedAt: String?
+    ) async throws -> WeekRescuePreview {
+        try await apiClient.previewWeekRescue(
+            householdID: household.id,
+            weekStartDate: weekStartDate,
+            date: day.date,
+            intent: intent,
+            missingIngredient: intent == .missingIngredient ? missingIngredient : nil,
+            rescueID: rescueID,
+            expectedUpdatedAt: expectedUpdatedAt
+        )
+    }
+
+    func applyRescue(
+        day: WeekDayRowViewModel,
+        household: Household,
+        weekStartDate: String,
+        preview: WeekRescuePreview,
+        missingIngredient: String
+    ) async throws {
+        try await apiClient.applyWeekRescue(
+            householdID: household.id,
+            weekStartDate: weekStartDate,
+            date: day.date,
+            intent: preview.intent,
+            missingIngredient: preview.intent == .missingIngredient ? missingIngredient : nil,
+            rescueID: preview.rescueID,
+            expectedUpdatedAt: preview.expectedUpdatedAt
+        )
+        weekCache.removeValue(forKey: weekStartDate)
+        await loadWeekData(
+            household: household,
+            weekStartDate: weekStartDate,
+            isCurrentWeekSlot: weekStartDate == self.weekStartDate,
+            force: true
+        )
+    }
+
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
@@ -670,6 +715,30 @@ protocol WeekStoreAPIClient {
     ) async throws
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe
+    func previewWeekRescue(
+        householdID: String, weekStartDate: String, date: String,
+        intent: WeekRescueIntent, missingIngredient: String?, rescueID: String,
+        expectedUpdatedAt: String?
+    ) async throws -> WeekRescuePreview
+    func applyWeekRescue(
+        householdID: String, weekStartDate: String, date: String,
+        intent: WeekRescueIntent, missingIngredient: String?, rescueID: String,
+        expectedUpdatedAt: String?
+    ) async throws
+}
+
+extension WeekStoreAPIClient {
+    func previewWeekRescue(
+        householdID: String, weekStartDate: String, date: String,
+        intent: WeekRescueIntent, missingIngredient: String?, rescueID: String,
+        expectedUpdatedAt: String?
+    ) async throws -> WeekRescuePreview { throw APIError.server(statusCode: 501) }
+
+    func applyWeekRescue(
+        householdID: String, weekStartDate: String, date: String,
+        intent: WeekRescueIntent, missingIngredient: String?, rescueID: String,
+        expectedUpdatedAt: String?
+    ) async throws { throw APIError.server(statusCode: 501) }
 }
 
 extension VecklyAPIClient: WeekStoreAPIClient {}

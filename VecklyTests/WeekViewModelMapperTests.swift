@@ -377,6 +377,29 @@ struct WeekViewModelMapperTests {
     }
 
     @MainActor
+    @Test func failedRescuePreviewLeavesTheVisibleWeekUntouched() async {
+        let store = WeekStore(apiClient: FailingWeekStoreAPIClient())
+        store.seedForUITests()
+        let before = store.dayRows
+        let monday = before.first { $0.weekday == .monday }!
+
+        do {
+            _ = try await store.previewRescue(
+                day: monday,
+                household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+                weekStartDate: store.weekStartDate,
+                intent: .quick,
+                missingIngredient: "",
+                rescueID: "33333333-3333-3333-3333-333333333333",
+                expectedUpdatedAt: nil
+            )
+            Issue.record("Expected rescue preview to fail")
+        } catch {}
+
+        #expect(store.dayRows == before)
+    }
+
+    @MainActor
     @Test func toggleSkipThenUndoRestoresTheMealWithoutARefetch() async {
         let store = WeekStore(apiClient: CapturingWeekStoreAPIClient())
         store.seedForUITests()

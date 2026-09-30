@@ -4,7 +4,7 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 
 struct VecklyAPIClient {
-    private let _client: Client
+    let _client: Client
     private let _householdReaderClient: Client
     private let baseURL: URL
     private let getToken: @Sendable () async -> String?

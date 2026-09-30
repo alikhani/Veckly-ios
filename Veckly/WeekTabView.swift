@@ -84,6 +84,7 @@ struct WeekTabView: View {
     var onGoToHouseholdTab: (() -> Void)? = nil
     @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
+    @State private var rescueDay: WeekDayRowViewModel?
     @State private var selectedDayForDetail: WeekDayRowViewModel?
     @State private var prepBatchSeed: PrepBatchSeed?
     @State private var leftoversWithoutRecipeSeed: LeftoversWithoutRecipeSeed?
@@ -424,6 +425,20 @@ struct WeekTabView: View {
                 },
                 onDismiss: { mealPickerDay = nil }
             )
+        }
+        .sheet(item: $rescueDay) { day in
+            if let household = appModel.householdStore.activeHousehold {
+                WeekRescueSheet(
+                    day: day,
+                    household: household,
+                    weekStartDate: viewedWeekStartDate,
+                    expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
+                    onApplied: {
+                        appModel.shoppingListStore.invalidateCache()
+                        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+                    }
+                )
+            }
         }
         .sheet(item: $selectedDayForDetail) { day in
             DayDetailSheet(
@@ -1430,6 +1445,10 @@ struct WeekTabView: View {
             onSwap: { day in
                 guard canMutateDay(day) else { return }
                 mealPickerDay = day
+            },
+            onRescue: { day in
+                guard canMutateDay(day), !day.isLocked else { return }
+                rescueDay = day
             },
             onPlanTonight: { day in
                 guard canMutateDay(day) else { return }
