@@ -89,7 +89,7 @@ final class AppRefreshCoordinator {
     private let userProfileStore: UserProfileStore?
 
     private let freshnessWindow: TimeInterval
-    private var inFlight: [Resource: Task<Void, Never>] = [:]
+    private var inFlight: [Resource: Task<Bool, Never>] = [:]
     private var lastCompletedAt: [Resource: Date] = [:]
 
     init(
@@ -152,21 +152,27 @@ final class AppRefreshCoordinator {
         }
         async let week: Void = run(.week(household.id), trigger: trigger) {
             await self.weekStore.loadCurrentWeek(household: household, force: force)
+            return true
         }
         async let shopping: Void = run(.shopping(household.id), trigger: trigger) {
             await self.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, force: force)
+            return true
         }
         async let prep: Void = run(.prep(household.id), trigger: trigger) {
             await self.prepBatchStore.load(householdID: household.id, weekStartDate: weekStartDate, force: force)
+            return true
         }
         async let feedback: Void = run(.feedback(household.id), trigger: trigger) {
             await self.feedbackStore.loadFeedback(householdID: household.id)
+            return true
         }
         async let signals: Void = run(.signals(household.id), trigger: trigger) {
             await self.householdMealSignalStore.loadSignals(householdID: household.id)
+            return true
         }
         async let recipes: Void = run(.recipes(household.id), trigger: trigger) {
             await self.recipeStore.loadRecipes(householdID: household.id, force: force)
+            return true
         }
         _ = await (details, week, shopping, prep, feedback, signals, recipes)
 
@@ -215,6 +221,7 @@ final class AppRefreshCoordinator {
         guard !usesSeededCoreReader else { return }
         await run(.week(household.id), trigger: trigger) {
             await self.weekStore.loadCurrentWeek(household: household, force: trigger.forcesRealReload)
+            return true
         }
     }
 
@@ -224,19 +231,23 @@ final class AppRefreshCoordinator {
     /// happens between checking and populating `inFlight`, so two callers
     /// racing for the same resource on this `@MainActor` can't both slip
     /// past the check and start their own `Task`.
-    private func run(_ resource: Resource, trigger: Trigger, _ operation: @escaping () async -> Void) async {
+    private func run(_ resource: Resource, trigger: Trigger, _ operation: @escaping () async -> Bool) async {
         if !trigger.forcesRealReload, isFresh(resource) { return }
 
         if let existing = inFlight[resource] {
-            await existing.value
+            _ = await existing.value
             return
         }
 
         let task = Task { await operation() }
         inFlight[resource] = task
-        await task.value
+        let succeeded = await task.value
         inFlight[resource] = nil
-        lastCompletedAt[resource] = Date()
+        if succeeded {
+            lastCompletedAt[resource] = Date()
+        } else {
+            lastCompletedAt[resource] = nil
+        }
     }
 
     private func isFresh(_ resource: Resource) -> Bool {

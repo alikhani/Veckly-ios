@@ -2767,6 +2767,70 @@
         }
       }
     },
+    "household.detailsLoading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading household details"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laddar hushållets uppgifter"
+          }
+        }
+      }
+    },
+    "household.detailsStale" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update the details. Showing the latest saved information."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte uppdatera uppgifterna. Visar senast sparad information."
+          }
+        }
+      }
+    },
+    "household.detailsUnavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Household details are unavailable. Try again to open household settings."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hushållets uppgifter är inte tillgängliga. Försök igen för att öppna hushållsinställningarna."
+          }
+        }
+      }
+    },
+    "household.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No household could be found."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inget hushåll kunde hittas."
+          }
+        }
+      }
+    },
     "household.familyRecipesLink" : {
       "localizations" : {
         "en" : {
@@ -2811,6 +2875,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Laddar hushåll"
+          }
+        }
+      }
+    },
+    "household.refreshing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating household"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppdaterar hushåll"
+          }
+        }
+      }
+    },
+    "household.stale" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update. Showing your saved household."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte uppdatera. Visar ditt sparade hushåll."
+          }
+        }
+      }
+    },
+    "household.updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Household updated"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hushållet är uppdaterat"
           }
         }
       }

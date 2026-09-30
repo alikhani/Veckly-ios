@@ -4,6 +4,74 @@ import Testing
 
 @MainActor
 struct HouseholdStoreTests {
+    @Test func startsInInitialLoadingStateWithoutCachedData() {
+        let store = HouseholdStore(apiClient: FakeHouseholdStoreAPIClient())
+
+        #expect(store.loadState == .initialLoading)
+        #expect(store.activeHousehold == nil)
+    }
+
+    @Test func offlineRefreshKeepsCachedHouseholdAndMarksItStale() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        let store = HouseholdStore(apiClient: apiClient)
+        _ = await store.bootstrapAndLoadHouseholds()
+        let activeBeforeOfflineRefresh = store.activeHousehold
+
+        #expect(store.loadState == .ready)
+        #expect(activeBeforeOfflineRefresh != nil)
+
+        apiClient.bootstrapError = URLError(.notConnectedToInternet)
+        let succeeded = await store.bootstrapAndLoadHouseholds()
+
+        #expect(succeeded == false)
+        #expect(store.loadState == .stale)
+        #expect(store.activeHousehold == activeBeforeOfflineRefresh)
+        #expect(store.errorMessage != nil)
+    }
+
+    @Test func timedOutInitialLoadEndsInRecoverableFailure() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        apiClient.bootstrapError = URLError(.timedOut)
+        let store = HouseholdStore(apiClient: apiClient)
+
+        let succeeded = await store.bootstrapAndLoadHouseholds()
+
+        #expect(succeeded == false)
+        #expect(store.isLoading == false)
+        #expect(store.loadState == .failed)
+        #expect(store.errorMessage != nil)
+    }
+
+    @Test func reconnectingReplacesCachedFallbackWithFreshHouseholds() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        let store = HouseholdStore(apiClient: apiClient)
+
+        _ = await store.bootstrapAndLoadHouseholds()
+        apiClient.bootstrapError = URLError(.notConnectedToInternet)
+        _ = await store.bootstrapAndLoadHouseholds()
+        apiClient.bootstrapError = nil
+        let succeeded = await store.bootstrapAndLoadHouseholds()
+
+        #expect(succeeded == true)
+        #expect(store.loadState == .ready)
+        #expect(store.households == [TestHouseholds.first, TestHouseholds.second])
+    }
+
+    @Test func failedDetailRefreshKeepsLastKnownDetailsAsStale() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        let store = HouseholdStore(apiClient: apiClient)
+        _ = await store.loadHouseholdDetails(householdID: TestHouseholds.first.id)
+        let originalMembers = store.members
+
+        apiClient.detailsError = URLError(.notConnectedToInternet)
+        let succeeded = await store.loadHouseholdDetails(householdID: TestHouseholds.first.id, force: true)
+
+        #expect(succeeded == false)
+        #expect(store.detailsLoadState(for: TestHouseholds.first.id) == .stale)
+        #expect(store.members == originalMembers)
+        #expect(store.cachedProfile(for: TestHouseholds.first.id) != nil)
+    }
+
     @Test func householdDetailsAreCachedPerHousehold() async {
         let apiClient = FakeHouseholdStoreAPIClient()
         let store = HouseholdStore(apiClient: apiClient)
@@ -189,6 +257,8 @@ private enum TestHouseholds {
 private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     private var households: [Household]
     private let bootstrappedHousehold: Household
+    var bootstrapError: Error?
+    var detailsError: Error?
 
     init(
         households: [Household] = [TestHouseholds.first, TestHouseholds.second],
@@ -199,6 +269,7 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     }
 
     func bootstrapHousehold() async throws -> Household {
+        if let bootstrapError { throw bootstrapError }
         if !households.contains(bootstrappedHousehold) {
             households = [bootstrappedHousehold]
         }
@@ -210,6 +281,7 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     }
 
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
+        if let detailsError { throw detailsError }
         if householdID == TestHouseholds.first.id {
             return [HouseholdMember(userId: TestHouseholds.userA, role: .owner, givenName: nil, familyName: nil)]
         }
@@ -217,7 +289,8 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
     }
 
     func getProfile(householdID: String) async throws -> HouseholdProfile? {
-        HouseholdProfile(
+        if let detailsError { throw detailsError }
+        return HouseholdProfile(
             householdId: householdID,
             adults: householdID == TestHouseholds.first.id ? 2 : 1,
             children: 0,

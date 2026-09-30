@@ -1,6 +1,23 @@
 import Foundation
 import Observation
 
+enum HouseholdLoadState: Equatable {
+    case initialLoading
+    case refreshing
+    case ready
+    case stale
+    case empty
+    case failed
+}
+
+enum HouseholdDetailsLoadState: Equatable {
+    case initialLoading
+    case refreshing
+    case ready
+    case stale
+    case failed
+}
+
 @MainActor
 @Observable
 final class HouseholdStore {
@@ -11,6 +28,7 @@ final class HouseholdStore {
     private(set) var activeHousehold: Household?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
+    private(set) var hasLoadedOnce = false
 
     private(set) var members: [HouseholdMember] = []
     private(set) var profile: HouseholdProfile?
@@ -31,8 +49,23 @@ final class HouseholdStore {
         self.selectionStore = selectionStore
     }
 
-    func bootstrapAndLoadHouseholds() async {
-        guard !isLoading else { return }
+    var loadState: HouseholdLoadState {
+        if isLoading { return households.isEmpty ? .initialLoading : .refreshing }
+        if errorMessage != nil { return households.isEmpty ? .failed : .stale }
+        if households.isEmpty { return hasLoadedOnce ? .empty : .initialLoading }
+        return .ready
+    }
+
+    func detailsLoadState(for householdID: String) -> HouseholdDetailsLoadState {
+        let hasDetails = detailsHouseholdID == householdID
+        if isLoadingDetails { return hasDetails ? .refreshing : .initialLoading }
+        if detailsErrorMessage != nil { return hasDetails ? .stale : .failed }
+        return hasDetails ? .ready : .initialLoading
+    }
+
+    @discardableResult
+    func bootstrapAndLoadHouseholds() async -> Bool {
+        guard !isLoading else { return false }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -45,18 +78,23 @@ final class HouseholdStore {
             let preferredHousehold = households.first(where: { $0.id == preferredHouseholdID })
             let bootstrappedHousehold = households.first(where: { $0.id == bootstrapped.id })
             setActiveHousehold(preferredHousehold ?? bootstrappedHousehold ?? households.first)
+            hasLoadedOnce = true
+            return true
         } catch {
+            hasLoadedOnce = true
             errorMessage = L10n.string("error.household.load")
+            return false
         }
     }
 
-    func loadHouseholdDetails(householdID: String, force: Bool = false) async {
+    @discardableResult
+    func loadHouseholdDetails(householdID: String, force: Bool = false) async -> Bool {
         let cacheIsFresh = !force
             && detailsHouseholdID == householdID
             && detailsLastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && !members.isEmpty
-        guard !cacheIsFresh else { return }
-        guard !isLoadingDetails else { return }
+        guard !cacheIsFresh else { return true }
+        guard !isLoadingDetails else { return false }
 
         if detailsHouseholdID != householdID {
             resetDetails()
@@ -75,8 +113,10 @@ final class HouseholdStore {
             profile = newProfile
             detailsHouseholdID = householdID
             detailsLastFetchedAt = Date()
+            return true
         } catch {
             detailsErrorMessage = L10n.string("error.household.details")
+            return false
         }
     }
 
@@ -190,6 +230,7 @@ final class HouseholdStore {
         activeHousehold = nil
         errorMessage = nil
         isLoading = false
+        hasLoadedOnce = false
         members = []
         profile = nil
         invites = []
@@ -218,6 +259,7 @@ final class HouseholdStore {
         )
         detailsHouseholdID = household.id
         detailsLastFetchedAt = Date()
+        hasLoadedOnce = true
     }
 
     private func uniqueHouseholds(_ list: [Household]) -> [Household] {
@@ -267,6 +309,8 @@ final class HouseholdStore {
         } ?? list.first
 
         setActiveHousehold(nextActiveHousehold)
+        hasLoadedOnce = true
+        errorMessage = nil
     }
 }
 

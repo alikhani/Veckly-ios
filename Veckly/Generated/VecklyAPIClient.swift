@@ -5,6 +5,7 @@ import OpenAPIURLSession
 
 struct VecklyAPIClient {
     private let _client: Client
+    private let _householdReaderClient: Client
     private let baseURL: URL
     private let getToken: @Sendable () async -> String?
 
@@ -15,15 +16,24 @@ struct VecklyAPIClient {
     ) {
         self.baseURL = baseURL
         self.getToken = accessToken
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 15
+        configuration.timeoutIntervalForResource = 30
+        let middleware = RequestHeaderMiddleware(getToken: accessToken, refreshToken: refreshToken)
+        _householdReaderClient = Client(
+            serverURL: baseURL,
+            transport: URLSessionTransport(configuration: .init(session: URLSession(configuration: configuration))),
+            middlewares: [middleware]
+        )
         _client = Client(
             serverURL: baseURL,
             transport: URLSessionTransport(),
-            middlewares: [RequestHeaderMiddleware(getToken: accessToken, refreshToken: refreshToken)]
+            middlewares: [middleware]
         )
     }
 
     func bootstrapHousehold() async throws -> Household {
-        let output = try await _client.bootstrapMyHousehold()
+        let output = try await _householdReaderClient.bootstrapMyHousehold()
         switch output {
         case let .ok(response):
             return try response.body.json.appModel
@@ -37,7 +47,7 @@ struct VecklyAPIClient {
     }
 
     func listHouseholds() async throws -> [Household] {
-        let output = try await _client.getMyHouseholds()
+        let output = try await _householdReaderClient.getMyHouseholds()
         switch output {
         case let .ok(response):
             return try response.body.json.households.map(\.appModel)
@@ -701,7 +711,7 @@ struct VecklyAPIClient {
     }
 
     func listMembers(householdID: String) async throws -> [HouseholdMember] {
-        let output = try await _client.listHouseholdMembers(path: .init(householdId: householdID))
+        let output = try await _householdReaderClient.listHouseholdMembers(path: .init(householdId: householdID))
         switch output {
         case let .ok(r): return try r.body.json.members.map(\.appModel)
         case .unauthorized: throw APIError.unauthorized
@@ -739,7 +749,7 @@ struct VecklyAPIClient {
     }
 
     func getProfile(householdID: String) async throws -> HouseholdProfile? {
-        let output = try await _client.getHouseholdProfile(path: .init(householdId: householdID))
+        let output = try await _householdReaderClient.getHouseholdProfile(path: .init(householdId: householdID))
         switch output {
         case let .ok(r): return try r.body.json.profile?.appModel
         case .unauthorized: throw APIError.unauthorized

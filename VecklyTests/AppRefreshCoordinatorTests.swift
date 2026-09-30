@@ -115,6 +115,19 @@ struct AppRefreshCoordinatorTests {
         #expect(await apiClient.weekSummaryCount == 1)
     }
 
+    @Test func failedHouseholdBootstrapIsNotMarkedFreshAndReconnectRetries() async {
+        let apiClient = FakeAppRefreshAPIClient()
+        await apiClient.failNextHouseholdBootstrap()
+        let coordinator = TestCoordinatorFactory.make(apiClient: apiClient)
+
+        await coordinator.refreshCoreReader(trigger: .coldLaunch)
+        await coordinator.refreshCoreReader(trigger: .sceneActive)
+
+        #expect(await apiClient.bootstrapCount == 2)
+        #expect(await apiClient.listHouseholdsCount == 1)
+        #expect(await apiClient.weekSummaryCount == 1)
+    }
+
     /// `householdChanged` must force a real reload even moments after a
     /// fresh load — the underlying data changed (a different household),
     /// not just gone stale.
@@ -376,12 +389,17 @@ private actor FakeAppRefreshAPIClient:
     private(set) var listHouseholdRecipesCount = 0
 
     private var shouldPauseNextWeekSummary = false
+    private var shouldFailNextHouseholdBootstrap = false
     private var weekSummaryHasStarted = false
     private var weekSummaryStartedContinuation: CheckedContinuation<Void, Never>?
     private var weekSummaryResumeContinuation: CheckedContinuation<Void, Never>?
 
     func pauseNextWeekSummary() {
         shouldPauseNextWeekSummary = true
+    }
+
+    func failNextHouseholdBootstrap() {
+        shouldFailNextHouseholdBootstrap = true
     }
 
     func waitUntilWeekSummaryStarted() async {
@@ -398,6 +416,10 @@ private actor FakeAppRefreshAPIClient:
 
     func bootstrapHousehold() async throws -> Household {
         bootstrapCount += 1
+        if shouldFailNextHouseholdBootstrap {
+            shouldFailNextHouseholdBootstrap = false
+            throw URLError(.notConnectedToInternet)
+        }
         return TestAppRefreshFixtures.household
     }
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum PersonalFavoritesPresentation {
     static func titleKey(forCount count: Int) -> String {
@@ -36,21 +37,46 @@ struct HouseholdTabView: View {
         appModel.householdStore.households.count > 1
     }
 
-    private var householdLoadFailed: Bool {
-        appModel.householdStore.activeHousehold == nil
-            && !appModel.householdStore.isLoading
-            && appModel.householdStore.errorMessage != nil
+    private var householdLoadState: HouseholdLoadState {
+        appModel.householdStore.loadState
+    }
+
+    private var detailsLoadState: HouseholdDetailsLoadState {
+        guard let household else { return .initialLoading }
+        return appModel.householdStore.detailsLoadState(for: household.id)
+    }
+
+    private var hasUsableHouseholdDetails: Bool {
+        detailsLoadState == .ready || detailsLoadState == .stale || detailsLoadState == .refreshing
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: VecklyDesign.Spacing.large) {
-                if householdLoadFailed {
+                switch householdLoadState {
+                case .initialLoading:
+                    LoadingPanel(title: L10n.string("household.loading"))
+                        .accessibilityIdentifier("householdInitialLoading")
+                case .failed:
                     householdErrorView
-                } else {
+                case .empty:
+                    householdEmptyView
+                case .refreshing, .ready, .stale:
+                    if householdLoadState == .refreshing {
+                        householdRefreshingView
+                    } else if householdLoadState == .stale {
+                        householdStaleView
+                    }
                     householdSummary
                     familyCookbookSection
-                    householdSection
+                    if detailsLoadState == .stale {
+                        householdDetailsStaleView
+                    }
+                    if hasUsableHouseholdDetails {
+                        householdSection
+                    } else {
+                        householdDetailsUnavailableView
+                    }
                 }
                 appSection
                 accountSection
@@ -61,6 +87,9 @@ struct HouseholdTabView: View {
         .safeAreaPadding(.bottom, VecklyDesign.Spacing.large)
         .background(VecklyDesign.Colors.canvas)
         .navigationTitle(L10n.string("tabs.household"))
+        .refreshable {
+            await appModel.refreshCoordinator.refreshCoreReader(trigger: .pullToRefresh)
+        }
         // B2 (household-resource-loader follow-up): matches the seeded-mode
         // guard every other core-reader-adjacent `.task` in the app already
         // has (`WeekTabView`, `ShoppingListTabView`) — these two were the
@@ -73,6 +102,19 @@ struct HouseholdTabView: View {
         .task(id: appModel.householdStore.activeHousehold?.id) {
             guard !appModel.usesSeededCoreReader, let householdID = appModel.householdStore.activeHousehold?.id else { return }
             await appModel.familyCookbookStore.loadIfNeeded(householdID: householdID)
+        }
+        .onChange(of: householdLoadState) { oldState, newState in
+            guard oldState != newState else { return }
+            switch newState {
+            case .stale:
+                announce(L10n.string("household.stale"))
+            case .failed:
+                announce(L10n.string("household.loadError"))
+            case .ready:
+                announce(L10n.string("household.updated"))
+            case .initialLoading, .refreshing, .empty:
+                break
+            }
         }
         .alert(
             deleteHouseholdConfirmationTitle,
@@ -136,14 +178,98 @@ struct HouseholdTabView: View {
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
                     .multilineTextAlignment(.center)
                 Button(L10n.string("common.tryAgain")) {
-                    Task { await appModel.householdStore.bootstrapAndLoadHouseholds() }
+                    Task { await appModel.refreshCoordinator.refreshCoreReader(trigger: .pullToRefresh) }
                 }
                 .buttonStyle(.bordered)
                 .tint(VecklyDesign.Colors.hearthOrangeText)
+                .accessibilityIdentifier("householdRetryButton")
             }
             .frame(maxWidth: .infinity)
             .padding(VecklyDesign.Spacing.medium)
         }
+    }
+
+    private var householdEmptyView: some View {
+        ErrorPanel(message: L10n.string("household.empty")) {
+            Task { await appModel.refreshCoordinator.refreshCoreReader(trigger: .pullToRefresh) }
+        }
+        .accessibilityIdentifier("householdEmptyState")
+    }
+
+    private var householdRefreshingView: some View {
+        return statusView(
+            title: L10n.string("household.refreshing"),
+            systemImage: nil,
+            showsProgress: true,
+            retry: nil
+        )
+        .accessibilityIdentifier("householdRefreshingState")
+    }
+
+    private var householdStaleView: some View {
+        statusView(
+            title: L10n.string("household.stale"),
+            systemImage: "wifi.exclamationmark",
+            showsProgress: false,
+            retry: retryHouseholdRefresh
+        )
+        .accessibilityIdentifier("householdStaleState")
+    }
+
+    private var householdDetailsStaleView: some View {
+        statusView(
+            title: L10n.string("household.detailsStale"),
+            systemImage: "clock.arrow.circlepath",
+            showsProgress: false,
+            retry: retryHouseholdDetails
+        )
+        .accessibilityIdentifier("householdDetailsStaleState")
+    }
+
+    private var householdDetailsUnavailableView: some View {
+        let isLoading = detailsLoadState == .initialLoading || detailsLoadState == .refreshing
+        let retry: (() -> Void)? = detailsLoadState == .failed ? { retryHouseholdDetails() } : nil
+        return statusView(
+            title: isLoading
+                ? L10n.string("household.detailsLoading")
+                : L10n.string("household.detailsUnavailable"),
+            systemImage: detailsLoadState == .failed ? "exclamationmark.circle" : nil,
+            showsProgress: isLoading,
+            retry: retry
+        )
+        .accessibilityIdentifier("householdDetailsUnavailableState")
+    }
+
+    private func statusView(
+        title: String,
+        systemImage: String?,
+        showsProgress: Bool,
+        retry: (() -> Void)?
+    ) -> some View {
+        VecklyCard {
+            HStack(spacing: 12) {
+                if showsProgress {
+                    ProgressView()
+                        .tint(VecklyDesign.Colors.hearthOrangeFill)
+                } else if let systemImage {
+                    Image(systemName: systemImage)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                }
+                Text(title)
+                    .font(.subheadline)
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                Spacer(minLength: 8)
+                if let retry {
+                    Button(L10n.string("common.tryAgain"), action: retry)
+                        .buttonStyle(.bordered)
+                        .tint(VecklyDesign.Colors.hearthOrangeText)
+                        .accessibilityIdentifier("householdStatusRetryButton")
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
     }
 
     private var householdSummary: some View {
@@ -169,13 +295,15 @@ struct HouseholdTabView: View {
                         Text(householdSummaryText(profile))
                             .font(.subheadline)
                             .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    } else if appModel.householdStore.isLoadingDetails || household == nil {
+                    } else if detailsLoadState == .initialLoading || detailsLoadState == .refreshing {
                         ProgressView()
                             .controlSize(.small)
                     } else {
                         Button {
                             guard let hid = household?.id else { return }
-                            Task { await appModel.householdStore.loadHouseholdDetails(householdID: hid) }
+                            Task {
+                                _ = await appModel.householdStore.loadHouseholdDetails(householdID: hid, force: true)
+                            }
                         } label: {
                             Text(L10n.string("household.detailLoadError"))
                                 .font(.subheadline)
@@ -559,6 +687,25 @@ struct HouseholdTabView: View {
     private func switchHousehold(_ household: Household) async {
         appModel.householdStore.setActiveHousehold(household)
         await appModel.loadActiveHouseholdReaderData()
+    }
+
+    private func retryHouseholdRefresh() {
+        Task { await appModel.refreshCoordinator.refreshCoreReader(trigger: .pullToRefresh) }
+    }
+
+    private func retryHouseholdDetails() {
+        guard let household else { return }
+        Task {
+            await appModel.refreshCoordinator.refreshActiveHouseholdData(
+                household: household,
+                trigger: .pullToRefresh
+            )
+        }
+    }
+
+    private func announce(_ message: String) {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(notification: .announcement, argument: message)
     }
 
     private func deleteHousehold() async {
