@@ -188,6 +188,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/rescue/apply`.
     /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)`.
     func applyWeekRescue(_ input: Operations.applyWeekRescue.Input) async throws -> Operations.applyWeekRescue.Output
+    /// Preview an improved reuse of the latest completed week
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/previous-week/preview`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)`.
+    func previewPreviousWeekProposal(_ input: Operations.previewPreviousWeekProposal.Input) async throws -> Operations.previewPreviousWeekProposal.Output
+    /// Apply an improved previous-week proposal idempotently
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/previous-week/apply`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)`.
+    func applyPreviousWeekProposal(_ input: Operations.applyPreviousWeekProposal.Input) async throws -> Operations.applyPreviousWeekProposal.Output
     /// List a household's persisted week plans
     ///
     /// - Remark: HTTP `GET /households/{householdId}/week-plans`.
@@ -825,6 +835,36 @@ extension APIProtocol {
         body: Operations.applyWeekRescue.Input.Body? = nil
     ) async throws -> Operations.applyWeekRescue.Output {
         try await applyWeekRescue(Operations.applyWeekRescue.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Preview an improved reuse of the latest completed week
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/previous-week/preview`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)`.
+    internal func previewPreviousWeekProposal(
+        path: Operations.previewPreviousWeekProposal.Input.Path,
+        headers: Operations.previewPreviousWeekProposal.Input.Headers = .init(),
+        body: Operations.previewPreviousWeekProposal.Input.Body? = nil
+    ) async throws -> Operations.previewPreviousWeekProposal.Output {
+        try await previewPreviousWeekProposal(Operations.previewPreviousWeekProposal.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Apply an improved previous-week proposal idempotently
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/previous-week/apply`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)`.
+    internal func applyPreviousWeekProposal(
+        path: Operations.applyPreviousWeekProposal.Input.Path,
+        headers: Operations.applyPreviousWeekProposal.Input.Headers = .init(),
+        body: Operations.applyPreviousWeekProposal.Input.Body? = nil
+    ) async throws -> Operations.applyPreviousWeekProposal.Output {
+        try await applyPreviousWeekProposal(Operations.applyPreviousWeekProposal.Input(
             path: path,
             headers: headers,
             body: body
@@ -3013,6 +3053,7 @@ internal enum Components {
                 case week_context_override_upserted = "week_context_override_upserted"
                 case week_context_override_cleared = "week_context_override_cleared"
                 case week_rescued = "week_rescued"
+                case previous_week_reused = "previous_week_reused"
                 case week_plan_cleared = "week_plan_cleared"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanEvent/eventType`.
@@ -3153,6 +3194,98 @@ internal enum Components {
                 case afterRecipeTitle
                 case beforeServings
                 case afterServings
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PreviousWeekReuseReason`.
+        internal enum PreviousWeekReuseReason: String, Codable, Hashable, Sendable, CaseIterable {
+            case worked_hyphen_last_hyphen_week = "worked-last-week"
+            case not_hyphen_cooked = "not-cooked"
+            case family_hyphen_veto = "family-veto"
+            case disliked = "disliked"
+            case fatigued = "fatigued"
+            case changed_hyphen_plan_hyphen_often = "changed-plan-often"
+            case week_hyphen_context = "week-context"
+            case fills_hyphen_selected_hyphen_day = "fills-selected-day"
+        }
+        /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay`.
+        internal struct PreviousWeekProposalDay: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/dayOfWeek`.
+            internal enum dayOfWeekPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case monday = "monday"
+                case tuesday = "tuesday"
+                case wednesday = "wednesday"
+                case thursday = "thursday"
+                case friday = "friday"
+                case saturday = "saturday"
+                case sunday = "sunday"
+            }
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/dayOfWeek`.
+            internal var dayOfWeek: Components.Schemas.PreviousWeekProposalDay.dayOfWeekPayload
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/date`.
+            internal var date: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/action`.
+            internal enum actionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case kept = "kept"
+                case replaced = "replaced"
+                case added = "added"
+            }
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/action`.
+            internal var action: Components.Schemas.PreviousWeekProposalDay.actionPayload
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/reason`.
+            internal var reason: Components.Schemas.PreviousWeekReuseReason
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/previousRecipeRef`.
+            internal var previousRecipeRef: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/previousRecipeTitle`.
+            internal var previousRecipeTitle: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/recipeRef`.
+            internal var recipeRef: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/recipeTitle`.
+            internal var recipeTitle: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalDay/servings`.
+            internal var servings: Swift.Int
+            /// Creates a new `PreviousWeekProposalDay`.
+            ///
+            /// - Parameters:
+            ///   - dayOfWeek:
+            ///   - date:
+            ///   - action:
+            ///   - reason:
+            ///   - previousRecipeRef:
+            ///   - previousRecipeTitle:
+            ///   - recipeRef:
+            ///   - recipeTitle:
+            ///   - servings:
+            internal init(
+                dayOfWeek: Components.Schemas.PreviousWeekProposalDay.dayOfWeekPayload,
+                date: Swift.String,
+                action: Components.Schemas.PreviousWeekProposalDay.actionPayload,
+                reason: Components.Schemas.PreviousWeekReuseReason,
+                previousRecipeRef: Swift.String? = nil,
+                previousRecipeTitle: Swift.String? = nil,
+                recipeRef: Swift.String,
+                recipeTitle: Swift.String,
+                servings: Swift.Int
+            ) {
+                self.dayOfWeek = dayOfWeek
+                self.date = date
+                self.action = action
+                self.reason = reason
+                self.previousRecipeRef = previousRecipeRef
+                self.previousRecipeTitle = previousRecipeTitle
+                self.recipeRef = recipeRef
+                self.recipeTitle = recipeTitle
+                self.servings = servings
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case dayOfWeek
+                case date
+                case action
+                case reason
+                case previousRecipeRef
+                case previousRecipeTitle
+                case recipeRef
+                case recipeTitle
+                case servings
             }
         }
         /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest`.
@@ -3949,23 +4082,64 @@ internal enum Components {
                 internal struct Case14Payload: Codable, Hashable, Sendable {
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/eventType`.
                     internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                        case week_plan_cleared = "week_plan_cleared"
+                        case previous_week_reused = "previous_week_reused"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/eventType`.
                     internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload.eventTypePayload
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/proposalId`.
+                    internal var proposalId: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/sourceWeekStartDate`.
+                    internal var sourceWeekStartDate: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14/days`.
+                    internal var days: [Components.Schemas.PreviousWeekProposalDay]
                     /// Creates a new `Case14Payload`.
                     ///
                     /// - Parameters:
                     ///   - eventType:
-                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload.eventTypePayload) {
+                    ///   - proposalId:
+                    ///   - sourceWeekStartDate:
+                    ///   - days:
+                    internal init(
+                        eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload.eventTypePayload,
+                        proposalId: Swift.String,
+                        sourceWeekStartDate: Swift.String,
+                        days: [Components.Schemas.PreviousWeekProposalDay]
+                    ) {
+                        self.eventType = eventType
+                        self.proposalId = proposalId
+                        self.sourceWeekStartDate = sourceWeekStartDate
+                        self.days = days
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case eventType
+                        case proposalId
+                        case sourceWeekStartDate
+                        case days
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14`.
+                case case14(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case15`.
+                internal struct Case15Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case15/eventType`.
+                    internal enum eventTypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case week_plan_cleared = "week_plan_cleared"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case15/eventType`.
+                    internal var eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case15Payload.eventTypePayload
+                    /// Creates a new `Case15Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - eventType:
+                    internal init(eventType: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case15Payload.eventTypePayload) {
                         self.eventType = eventType
                     }
                     internal enum CodingKeys: String, CodingKey {
                         case eventType
                     }
                 }
-                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case14`.
-                case case14(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case14Payload)
+                /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case15`.
+                case case15(Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case15Payload)
                 internal init(from decoder: any Swift.Decoder) throws {
                     var errors: [any Swift.Error] = []
                     do {
@@ -4052,6 +4226,12 @@ internal enum Components {
                     } catch {
                         errors.append(error)
                     }
+                    do {
+                        self = .case15(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
                     throw Swift.DecodingError.failedToDecodeOneOfSchema(
                         type: Self.self,
                         codingPath: decoder.codingPath,
@@ -4087,6 +4267,8 @@ internal enum Components {
                     case let .case13(value):
                         try value.encode(to: encoder)
                     case let .case14(value):
+                        try value.encode(to: encoder)
+                    case let .case15(value):
                         try value.encode(to: encoder)
                     }
                 }
@@ -4698,6 +4880,127 @@ internal enum Components {
                 case ok
                 case alreadyApplied
                 case preview
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal`.
+        internal struct PreviousWeekProposal: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal/proposalId`.
+            internal var proposalId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal/sourceWeekStartDate`.
+            internal var sourceWeekStartDate: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal/expectedUpdatedAt`.
+            internal var expectedUpdatedAt: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal/keptCount`.
+            internal var keptCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal/changedCount`.
+            internal var changedCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposal/days`.
+            internal var days: [Components.Schemas.PreviousWeekProposalDay]
+            /// Creates a new `PreviousWeekProposal`.
+            ///
+            /// - Parameters:
+            ///   - proposalId:
+            ///   - sourceWeekStartDate:
+            ///   - expectedUpdatedAt:
+            ///   - keptCount:
+            ///   - changedCount:
+            ///   - days:
+            internal init(
+                proposalId: Swift.String,
+                sourceWeekStartDate: Swift.String,
+                expectedUpdatedAt: Swift.String? = nil,
+                keptCount: Swift.Int,
+                changedCount: Swift.Int,
+                days: [Components.Schemas.PreviousWeekProposalDay]
+            ) {
+                self.proposalId = proposalId
+                self.sourceWeekStartDate = sourceWeekStartDate
+                self.expectedUpdatedAt = expectedUpdatedAt
+                self.keptCount = keptCount
+                self.changedCount = changedCount
+                self.days = days
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case proposalId
+                case sourceWeekStartDate
+                case expectedUpdatedAt
+                case keptCount
+                case changedCount
+                case days
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalError`.
+        internal struct PreviousWeekProposalError: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalError/error`.
+            internal enum errorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case NO_COMPLETED_WEEK = "NO_COMPLETED_WEEK"
+                case NO_RECIPES = "NO_RECIPES"
+                case ALL_RECIPES_EXCLUDED = "ALL_RECIPES_EXCLUDED"
+                case STALE_WEEK_PLAN = "STALE_WEEK_PLAN"
+            }
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalError/error`.
+            internal var error: Components.Schemas.PreviousWeekProposalError.errorPayload
+            /// Creates a new `PreviousWeekProposalError`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            internal init(error: Components.Schemas.PreviousWeekProposalError.errorPayload) {
+                self.error = error
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalRequest`.
+        internal struct PreviousWeekProposalRequest: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalRequest/proposalId`.
+            internal var proposalId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalRequest/expectedUpdatedAt`.
+            internal var expectedUpdatedAt: Swift.String?
+            /// Creates a new `PreviousWeekProposalRequest`.
+            ///
+            /// - Parameters:
+            ///   - proposalId:
+            ///   - expectedUpdatedAt:
+            internal init(
+                proposalId: Swift.String,
+                expectedUpdatedAt: Swift.String? = nil
+            ) {
+                self.proposalId = proposalId
+                self.expectedUpdatedAt = expectedUpdatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case proposalId
+                case expectedUpdatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalApplyResponse`.
+        internal struct PreviousWeekProposalApplyResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalApplyResponse/ok`.
+            internal var ok: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalApplyResponse/alreadyApplied`.
+            internal var alreadyApplied: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/PreviousWeekProposalApplyResponse/proposal`.
+            internal var proposal: Components.Schemas.PreviousWeekProposal
+            /// Creates a new `PreviousWeekProposalApplyResponse`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            ///   - alreadyApplied:
+            ///   - proposal:
+            internal init(
+                ok: Swift.Bool,
+                alreadyApplied: Swift.Bool,
+                proposal: Components.Schemas.PreviousWeekProposal
+            ) {
+                self.ok = ok
+                self.alreadyApplied = alreadyApplied
+                self.proposal = proposal
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ok
+                case alreadyApplied
+                case proposal
             }
         }
         /// - Remark: Generated from `#/components/schemas/WeekHistoryListItem`.
@@ -15879,6 +16182,638 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.unprocessableContent`.
             /// - SeeAlso: `.unprocessableContent`.
             internal var unprocessableContent: Operations.applyWeekRescue.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Preview an improved reuse of the latest completed week
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/previous-week/preview`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)`.
+    internal enum previewPreviousWeekProposal {
+        internal static let id: Swift.String = "previewPreviousWeekProposal"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.previewPreviousWeekProposal.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.previewPreviousWeekProposal.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.previewPreviousWeekProposal.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.previewPreviousWeekProposal.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.PreviousWeekProposalRequest)
+            }
+            internal var body: Operations.previewPreviousWeekProposal.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.previewPreviousWeekProposal.Input.Path,
+                headers: Operations.previewPreviousWeekProposal.Input.Headers = .init(),
+                body: Operations.previewPreviousWeekProposal.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.PreviousWeekProposal)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PreviousWeekProposal {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewPreviousWeekProposal.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewPreviousWeekProposal.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// A non-mutating improved-week proposal
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.previewPreviousWeekProposal.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.previewPreviousWeekProposal.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.previewPreviousWeekProposal.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.previewPreviousWeekProposal.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.previewPreviousWeekProposal.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.previewPreviousWeekProposal.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/409/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.PreviousWeekProposalError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PreviousWeekProposalError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewPreviousWeekProposal.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewPreviousWeekProposal.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// The target week changed since the request was created
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.previewPreviousWeekProposal.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.previewPreviousWeekProposal.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/422/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.PreviousWeekProposalError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PreviousWeekProposalError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewPreviousWeekProposal.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewPreviousWeekProposal.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// No completed week or safe recipe pool is available
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.previewPreviousWeekProposal.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            internal var unprocessableContent: Operations.previewPreviousWeekProposal.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Apply an improved previous-week proposal idempotently
+    ///
+    /// - Remark: HTTP `POST /households/{householdId}/week-plans/{weekStartDate}/previous-week/apply`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)`.
+    internal enum applyPreviousWeekProposal {
+        internal static let id: Swift.String = "applyPreviousWeekProposal"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.applyPreviousWeekProposal.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.applyPreviousWeekProposal.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.applyPreviousWeekProposal.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.applyPreviousWeekProposal.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.PreviousWeekProposalRequest)
+            }
+            internal var body: Operations.applyPreviousWeekProposal.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.applyPreviousWeekProposal.Input.Path,
+                headers: Operations.applyPreviousWeekProposal.Input.Headers = .init(),
+                body: Operations.applyPreviousWeekProposal.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.PreviousWeekProposalApplyResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PreviousWeekProposalApplyResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyPreviousWeekProposal.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyPreviousWeekProposal.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The proposal was applied or had already been applied
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.applyPreviousWeekProposal.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.applyPreviousWeekProposal.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.applyPreviousWeekProposal.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.applyPreviousWeekProposal.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.applyPreviousWeekProposal.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.applyPreviousWeekProposal.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/409/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.PreviousWeekProposalError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PreviousWeekProposalError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyPreviousWeekProposal.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyPreviousWeekProposal.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// The target week changed since preview
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.applyPreviousWeekProposal.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            internal var conflict: Operations.applyPreviousWeekProposal.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/422/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.PreviousWeekProposalError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PreviousWeekProposalError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyPreviousWeekProposal.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyPreviousWeekProposal.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// No completed week or safe recipe pool is available
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.applyPreviousWeekProposal.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            internal var unprocessableContent: Operations.applyPreviousWeekProposal.Output.UnprocessableContent {
                 get throws {
                     switch self {
                     case let .unprocessableContent(response):

@@ -351,6 +351,40 @@ final class WeekStore {
         )
     }
 
+    func previewPreviousWeek(
+        household: Household,
+        weekStartDate: String,
+        proposalID: String,
+        expectedUpdatedAt: String?
+    ) async throws -> PreviousWeekProposal {
+        try await apiClient.previewPreviousWeekProposal(
+            householdID: household.id,
+            weekStartDate: weekStartDate,
+            proposalID: proposalID,
+            expectedUpdatedAt: expectedUpdatedAt
+        )
+    }
+
+    func applyPreviousWeek(
+        household: Household,
+        weekStartDate: String,
+        proposal: PreviousWeekProposal
+    ) async throws {
+        try await apiClient.applyPreviousWeekProposal(
+            householdID: household.id,
+            weekStartDate: weekStartDate,
+            proposalID: proposal.proposalID,
+            expectedUpdatedAt: proposal.expectedUpdatedAt
+        )
+        weekCache.removeValue(forKey: weekStartDate)
+        await loadWeekData(
+            household: household,
+            weekStartDate: weekStartDate,
+            isCurrentWeekSlot: weekStartDate == self.weekStartDate,
+            force: true
+        )
+    }
+
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
@@ -725,6 +759,12 @@ protocol WeekStoreAPIClient {
         intent: WeekRescueIntent, missingIngredient: String?, rescueID: String,
         expectedUpdatedAt: String?
     ) async throws
+    func previewPreviousWeekProposal(
+        householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
+    ) async throws -> PreviousWeekProposal
+    func applyPreviousWeekProposal(
+        householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
+    ) async throws
 }
 
 extension WeekStoreAPIClient {
@@ -738,6 +778,14 @@ extension WeekStoreAPIClient {
         householdID: String, weekStartDate: String, date: String,
         intent: WeekRescueIntent, missingIngredient: String?, rescueID: String,
         expectedUpdatedAt: String?
+    ) async throws { throw APIError.server(statusCode: 501) }
+
+    func previewPreviousWeekProposal(
+        householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
+    ) async throws -> PreviousWeekProposal { throw APIError.server(statusCode: 501) }
+
+    func applyPreviousWeekProposal(
+        householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
     ) async throws { throw APIError.server(statusCode: 501) }
 }
 

@@ -85,6 +85,7 @@ struct WeekTabView: View {
     @State private var selectedDayRecipe: SelectedDayRecipe?
     @State private var mealPickerDay: WeekDayRowViewModel?
     @State private var rescueDay: WeekDayRowViewModel?
+    @State private var showsPreviousWeekProposal = false
     @State private var selectedDayForDetail: WeekDayRowViewModel?
     @State private var prepBatchSeed: PrepBatchSeed?
     @State private var leftoversWithoutRecipeSeed: LeftoversWithoutRecipeSeed?
@@ -436,6 +437,24 @@ struct WeekTabView: View {
                     onApplied: {
                         appModel.shoppingListStore.invalidateCache()
                         await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showsPreviousWeekProposal) {
+            if let household = appModel.householdStore.activeHousehold {
+                PreviousWeekProposalSheet(
+                    household: household,
+                    weekStartDate: viewedWeekStartDate,
+                    expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
+                    onApplied: {
+                        appModel.shoppingListStore.invalidateCache()
+                        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+                    },
+                    onSwap: { date in
+                        presentAfterDismiss {
+                            mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.date == date })
+                        }
                     }
                 )
             }
@@ -1047,6 +1066,14 @@ struct WeekTabView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                     .frame(maxWidth: .infinity)
+
+                    Button("previousWeek.action") {
+                        showsPreviousWeekProposal = true
+                    }
+                    .disabled(appModel.householdStore.activeHousehold == nil)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+                    .frame(maxWidth: .infinity)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -1517,6 +1544,14 @@ struct WeekTabView: View {
                     .disabled(appModel.householdStore.activeHousehold == nil || firstOpenPlanningDay == nil)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                    .frame(maxWidth: .infinity)
+
+                    Button("previousWeek.action") {
+                        showsPreviousWeekProposal = true
+                    }
+                    .disabled(appModel.householdStore.activeHousehold == nil)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
                     .frame(maxWidth: .infinity)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
