@@ -589,6 +589,23 @@ struct HouseholdDaySelection: Equatable, Identifiable {
     }
 }
 
+struct WeekContextOverride: Equatable, Identifiable {
+    let date: String
+    var servingsOverride: Int?
+    var occasion: DayOccasion?
+    var effortLevel: DayEffortLevel?
+    var leftoversIntent: Bool?
+    var lateEvening: Bool?
+    var cookingTolerance: DayCookingTolerance?
+
+    var id: String { date }
+
+    var isEmpty: Bool {
+        servingsOverride == nil && occasion == nil && effortLevel == nil
+            && leftoversIntent == nil && lateEvening == nil && cookingTolerance == nil
+    }
+}
+
 /// Input to `POST /recipes/recommend` — one vote from `FeedbackStore.allVotes`,
 /// paired with the recipe title the AI prompt needs (the store only keys
 /// votes by id).

@@ -7466,6 +7466,138 @@
     "Veckly" : {
 
     },
+    "weekBrief.accessibility.add" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Adds this change for the day" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lägger till ändringen för dagen" } }
+      }
+    },
+    "weekBrief.accessibility.remove" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Removes this change from the day" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Tar bort ändringen från dagen" } }
+      }
+    },
+    "weekBrief.error.load" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "We couldn't load this week's plans." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Det gick inte att läsa in veckans planer." } }
+      }
+    },
+    "weekBrief.error.save" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "We couldn't save the week. Try again." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Det gick inte att spara veckan. Försök igen." } }
+      }
+    },
+    "weekBrief.error.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The week isn't available" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Veckan är inte tillgänglig" } }
+      }
+    },
+    "weekBrief.generate" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save and plan the open days" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Spara och planera tomma dagar" } }
+      }
+    },
+    "weekBrief.generateAgain" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save and redo the week" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Spara och gör om veckan" } }
+      }
+    },
+    "weekBrief.intro" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark only what differs from your usual week. Veckly uses it when filling the open days." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Markera bara det som skiljer sig från en vanlig vecka. Veckly använder det när de tomma dagarna fylls." } }
+      }
+    },
+    "weekBrief.loading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading the week…" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Läser in veckan…" } }
+      }
+    },
+    "weekBrief.normal.format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Usually: %@" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vanligtvis: %@" } }
+      }
+    },
+    "weekBrief.normal.standard" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "regular dinner" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "vanlig middag" } }
+      }
+    },
+    "weekBrief.nothingSpecial" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing special this week" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inget särskilt den här veckan" } }
+      }
+    },
+    "weekBrief.saving" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saving the week…" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Sparar veckan…" } }
+      }
+    },
+    "weekBrief.signal.away" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Away" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Bortrest" } }
+      }
+    },
+    "weekBrief.signal.busy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Busy" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Hektisk" } }
+      }
+    },
+    "weekBrief.signal.extra" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cook extra" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Laga extra" } }
+      }
+    },
+    "weekBrief.signal.guests" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Guests" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Gäster" } }
+      }
+    },
+    "weekBrief.signal.late" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Late" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Sen" } }
+      }
+    },
+    "weekBrief.signal.relaxed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time to cook" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lugn matlagning" } }
+      }
+    },
+    "weekBrief.summary.normal" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No changes — use your household's usual rhythm." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inga ändringar — använd hushållets vanliga rytm." } }
+      }
+    },
+    "weekBrief.summary.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Before Veckly plans" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Innan Veckly planerar" } }
+      }
+    },
+    "weekBrief.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What's different this week?" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Vad är annorlunda i veckan?" } }
+      }
+    },
     "week.confidence.low" : {
       "localizations" : {
         "en" : {

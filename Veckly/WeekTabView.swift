@@ -32,6 +32,12 @@ private struct RegenerateUndoContext: Identifiable {
     var id: String { weekStartDate }
 }
 
+private struct WeekBriefPresentation: Identifiable {
+    let weekStartDate: String
+    let regenerate: Bool
+    var id: String { "\(weekStartDate):\(regenerate)" }
+}
+
 /// The 3-week browsing window. Last week is view-only (no planning actions);
 /// This/Next week behave like the active week but addressed explicitly.
 /// Not `private` — `WeekHeaderView` (Fas 3 extraction) needs it too.
@@ -93,6 +99,7 @@ struct WeekTabView: View {
     @State private var isWeekendExpanded = false
     @State private var failedFillWeekStartDate: String?
     @State private var fillCompletionNotice: WeekFillCompletionNotice?
+    @State private var weekBriefPresentation: WeekBriefPresentation?
 
     private var viewedWeekStartDate: String {
         viewedWeekOffset.weekStartDate
@@ -113,7 +120,7 @@ struct WeekTabView: View {
                         Spacer()
                         if failedFillWeekStartDate == viewedWeekStartDate {
                             Button("common.tryAgain") {
-                                Task { await performGenerate(regenerate: false) }
+                                presentWeekBrief(regenerate: false)
                             }
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
@@ -481,6 +488,26 @@ struct WeekTabView: View {
                 weekStartDate: viewedWeekStartDate
             )
         }
+        .sheet(item: $weekBriefPresentation) { presentation in
+            if let household = appModel.householdStore.activeHousehold,
+               let userID = appModel.authSessionStore.userID {
+                WeekBriefSheet(
+                    apiClient: appModel.apiClient,
+                    householdID: household.id,
+                    weekStartDate: presentation.weekStartDate,
+                    userID: userID,
+                    rows: appModel.weekStore.dayRows,
+                    profile: appModel.householdStore.cachedProfile(for: household.id),
+                    isRegenerating: presentation.regenerate,
+                    onGenerate: {
+                        await performGenerate(
+                            regenerate: presentation.regenerate,
+                            weekStartDate: presentation.weekStartDate
+                        )
+                    }
+                )
+            }
+        }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             // Week/prep/household-details are core-reader resources —
             // `RootView`'s `AppRefreshCoordinator.refreshCoreReader` (cold
@@ -576,7 +603,7 @@ struct WeekTabView: View {
             titleVisibility: .visible
         ) {
             Button(L10n.string("week.regenerateConfirm.confirm"), role: .destructive) {
-                Task { await performGenerate(regenerate: true) }
+                presentWeekBrief(regenerate: true)
             }
             Button(L10n.string("common.cancel"), role: .cancel) {}
         } message: {
@@ -597,7 +624,7 @@ struct WeekTabView: View {
     /// the unlocked/unskipped rows first so a successful run can offer "Undo" —
     /// there's no backend undo endpoint, so restoring is just re-issuing the
     /// same assign/clear calls a user would make by hand.
-    private func performGenerate(regenerate: Bool) async {
+    private func performGenerate(regenerate: Bool, weekStartDate: String? = nil) async {
         guard appModel.weekStore.generatingWeekStartDate == nil else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
         guard let userID = appModel.authSessionStore.userID else {
@@ -611,7 +638,7 @@ struct WeekTabView: View {
         // before it resolves. Everything about *this* generate run (the
         // snapshot, the API call, and the undo banner it may offer) must
         // stay pinned to the week it was actually generated for.
-        let targetWeekStartDate = viewedWeekStartDate
+        let targetWeekStartDate = weekStartDate ?? viewedWeekStartDate
         let rowsBeforeFill = appModel.weekStore.dayRows
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }
@@ -656,6 +683,18 @@ struct WeekTabView: View {
         // a week that isn't on screen.
         guard viewedWeekStartDate == targetWeekStartDate else { return }
         presentRegenerateUndo(rows: preRegenerateSnapshot, weekStartDate: targetWeekStartDate)
+    }
+
+    private func presentWeekBrief(regenerate: Bool) {
+        guard appModel.householdStore.activeHousehold != nil else { return }
+        guard appModel.authSessionStore.userID != nil else {
+            Task { await appModel.handleUnauthorized() }
+            return
+        }
+        weekBriefPresentation = WeekBriefPresentation(
+            weekStartDate: viewedWeekStartDate,
+            regenerate: regenerate
+        )
     }
 
     /// Fires the "Veckan är klar" beat the instant the last *relevant* open
@@ -965,7 +1004,7 @@ struct WeekTabView: View {
                     .disabled(firstOpenPlanningDay == nil)
 
                     Button(fillAction.title) {
-                        Task { await performGenerate(regenerate: false) }
+                        presentWeekBrief(regenerate: false)
                     }
                     .disabled(appModel.householdStore.activeHousehold == nil || firstOpenPlanningDay == nil)
                     .font(.subheadline.weight(.medium))
@@ -1176,7 +1215,7 @@ struct WeekTabView: View {
                 fillProgressTitle: fillAction.progressTitle,
                 isFilling: isFillingViewedWeek,
                 onPlanRest: {
-                    Task { await performGenerate(regenerate: false) }
+                    presentWeekBrief(regenerate: false)
                 },
                 onOpenShoppingList: {
                     onGoToShoppingTab?()
@@ -1297,7 +1336,7 @@ struct WeekTabView: View {
                     .disabled(firstOpenPlanningDay == nil)
 
                     Button(fillAction.title) {
-                        Task { await performGenerate(regenerate: false) }
+                        presentWeekBrief(regenerate: false)
                     }
                     .disabled(appModel.householdStore.activeHousehold == nil || firstOpenPlanningDay == nil)
                     .font(.subheadline.weight(.medium))

@@ -680,6 +680,58 @@ struct VecklyAPIClient {
         }
     }
 
+    func weekContextOverrides(householdID: String, weekStartDate: String) async throws -> [WeekContextOverride] {
+        let output = try await _client.getWeekContextOverrides(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate)
+        )
+        switch output {
+        case let .ok(response):
+            return try response.body.json.overrides.map(\.appModel)
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func upsertWeekContextOverride(
+        householdID: String,
+        weekStartDate: String,
+        override: WeekContextOverride
+    ) async throws {
+        let output = try await _client.upsertWeekContextOverride(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate, date: override.date),
+            body: .json(.init(
+                servingsOverride: override.servingsOverride,
+                occasion: override.occasion?.weekOverridePayload,
+                effortLevel: override.effortLevel?.weekOverridePayload,
+                leftoversIntent: override.leftoversIntent,
+                lateEvening: override.lateEvening,
+                cookingTolerance: override.cookingTolerance?.weekOverridePayload
+            ))
+        )
+        switch output {
+        case .ok: return
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func clearWeekContextOverride(householdID: String, weekStartDate: String, date: String) async throws {
+        let output = try await _client.clearWeekContextOverride(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate, date: date)
+        )
+        switch output {
+        case .ok: return
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func renameHousehold(householdID: String, name: String) async throws {
         let output = try await _client.renameHousehold(path: .init(id: householdID), body: .json(.init(name: name)))
         switch output {
@@ -1485,6 +1537,48 @@ private extension Components.Schemas.HouseholdProfile {
                 )
             }
         )
+    }
+}
+
+private extension Components.Schemas.WeekContextOverride {
+    var appModel: WeekContextOverride {
+        WeekContextOverride(
+            date: date,
+            servingsOverride: servingsOverride,
+            occasion: occasion.flatMap { DayOccasion(rawValue: $0.rawValue) },
+            effortLevel: effortLevel.flatMap { DayEffortLevel(rawValue: $0.rawValue) },
+            leftoversIntent: leftoversIntent,
+            lateEvening: lateEvening,
+            cookingTolerance: cookingTolerance.flatMap { DayCookingTolerance(rawValue: $0.rawValue) }
+        )
+    }
+}
+
+private extension DayOccasion {
+    var weekOverridePayload: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.occasionPayload {
+        switch self {
+        case .standard: .standard
+        case .guests: .guests
+        case .treat: .treat
+        }
+    }
+}
+
+private extension DayEffortLevel {
+    var weekOverridePayload: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.effortLevelPayload {
+        switch self {
+        case .standard: .standard
+        case .busy: .busy
+        }
+    }
+}
+
+private extension DayCookingTolerance {
+    var weekOverridePayload: Operations.upsertWeekContextOverride.Input.Body.jsonPayload.cookingTolerancePayload {
+        switch self {
+        case .standard: .standard
+        case .relaxed: .relaxed
+        }
     }
 }
 
