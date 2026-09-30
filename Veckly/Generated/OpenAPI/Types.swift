@@ -3971,6 +3971,156 @@ internal enum Components {
                 case updatedAt
             }
         }
+        /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation`.
+        internal enum WeekPlanExplanation: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case1`.
+            internal struct Case1Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case1/kind`.
+                internal enum kindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case week_hyphen_context = "week-context"
+                }
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case1/kind`.
+                internal var kind: Components.Schemas.WeekPlanExplanation.Case1Payload.kindPayload
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case1/date`.
+                internal var date: Swift.String
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case1/recipeTitle`.
+                internal var recipeTitle: Swift.String
+                /// Creates a new `Case1Payload`.
+                ///
+                /// - Parameters:
+                ///   - kind:
+                ///   - date:
+                ///   - recipeTitle:
+                internal init(
+                    kind: Components.Schemas.WeekPlanExplanation.Case1Payload.kindPayload,
+                    date: Swift.String,
+                    recipeTitle: Swift.String
+                ) {
+                    self.kind = kind
+                    self.date = date
+                    self.recipeTitle = recipeTitle
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case kind
+                    case date
+                    case recipeTitle
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case1`.
+            case case1(Components.Schemas.WeekPlanExplanation.Case1Payload)
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2`.
+            internal struct Case2Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2/kind`.
+                internal enum kindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case leftover_hyphen_chain = "leftover-chain"
+                }
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2/kind`.
+                internal var kind: Components.Schemas.WeekPlanExplanation.Case2Payload.kindPayload
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2/recipeTitle`.
+                internal var recipeTitle: Swift.String
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2/cookDate`.
+                internal var cookDate: Swift.String
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2/coveredDates`.
+                internal var coveredDates: [Swift.String]
+                /// Creates a new `Case2Payload`.
+                ///
+                /// - Parameters:
+                ///   - kind:
+                ///   - recipeTitle:
+                ///   - cookDate:
+                ///   - coveredDates:
+                internal init(
+                    kind: Components.Schemas.WeekPlanExplanation.Case2Payload.kindPayload,
+                    recipeTitle: Swift.String,
+                    cookDate: Swift.String,
+                    coveredDates: [Swift.String]
+                ) {
+                    self.kind = kind
+                    self.recipeTitle = recipeTitle
+                    self.cookDate = cookDate
+                    self.coveredDates = coveredDates
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case kind
+                    case recipeTitle
+                    case cookDate
+                    case coveredDates
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case2`.
+            case case2(Components.Schemas.WeekPlanExplanation.Case2Payload)
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3`.
+            internal struct Case3Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3/kind`.
+                internal enum kindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case shared_hyphen_ingredient = "shared-ingredient"
+                }
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3/kind`.
+                internal var kind: Components.Schemas.WeekPlanExplanation.Case3Payload.kindPayload
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3/ingredient`.
+                internal var ingredient: Swift.String
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3/dinnerCount`.
+                internal var dinnerCount: Swift.Int
+                /// Creates a new `Case3Payload`.
+                ///
+                /// - Parameters:
+                ///   - kind:
+                ///   - ingredient:
+                ///   - dinnerCount:
+                internal init(
+                    kind: Components.Schemas.WeekPlanExplanation.Case3Payload.kindPayload,
+                    ingredient: Swift.String,
+                    dinnerCount: Swift.Int
+                ) {
+                    self.kind = kind
+                    self.ingredient = ingredient
+                    self.dinnerCount = dinnerCount
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case kind
+                    case ingredient
+                    case dinnerCount
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3`.
+            case case3(Components.Schemas.WeekPlanExplanation.Case3Payload)
+            internal init(from decoder: any Swift.Decoder) throws {
+                var errors: [any Swift.Error] = []
+                do {
+                    self = .case1(try .init(from: decoder))
+                    return
+                } catch {
+                    errors.append(error)
+                }
+                do {
+                    self = .case2(try .init(from: decoder))
+                    return
+                } catch {
+                    errors.append(error)
+                }
+                do {
+                    self = .case3(try .init(from: decoder))
+                    return
+                } catch {
+                    errors.append(error)
+                }
+                throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                    type: Self.self,
+                    codingPath: decoder.codingPath,
+                    errors: errors
+                )
+            }
+            internal func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .case1(value):
+                    try value.encode(to: encoder)
+                case let .case2(value):
+                    try value.encode(to: encoder)
+                case let .case3(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryRecipe`.
         internal struct WeekPlanSummaryRecipe: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryRecipe/id`.
@@ -4145,6 +4295,8 @@ internal enum Components {
             internal var weekStartDate: Swift.String
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/updatedAt`.
             internal var updatedAt: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/explanations`.
+            internal var explanations: [Components.Schemas.WeekPlanExplanation]
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/days`.
             internal var days: [Components.Schemas.WeekPlanSummaryDay]
             /// Creates a new `WeekPlanSummary`.
@@ -4153,22 +4305,26 @@ internal enum Components {
             ///   - household:
             ///   - weekStartDate:
             ///   - updatedAt:
+            ///   - explanations:
             ///   - days:
             internal init(
                 household: Components.Schemas.WeekPlanSummary.householdPayload,
                 weekStartDate: Swift.String,
                 updatedAt: Swift.String? = nil,
+                explanations: [Components.Schemas.WeekPlanExplanation],
                 days: [Components.Schemas.WeekPlanSummaryDay]
             ) {
                 self.household = household
                 self.weekStartDate = weekStartDate
                 self.updatedAt = updatedAt
+                self.explanations = explanations
                 self.days = days
             }
             internal enum CodingKeys: String, CodingKey {
                 case household
                 case weekStartDate
                 case updatedAt
+                case explanations
                 case days
             }
         }

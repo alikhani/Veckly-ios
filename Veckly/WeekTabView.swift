@@ -238,6 +238,7 @@ struct WeekTabView: View {
                     if !isViewingLastWeek {
                         weekPlanningStatusCard
                     }
+                    weekExplanationSummary
                     weekQualityCard
                     weekList
                     collapsedWeekendSection
@@ -1242,6 +1243,30 @@ struct WeekTabView: View {
             } message: {
                 Text("\(qualitySuggestionBefore(suggestion))\n\(qualitySuggestionAfter(suggestion))")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var weekExplanationSummary: some View {
+        if appModel.weekStore.summary?.weekStartDate == viewedWeekStartDate,
+           let explanations = appModel.weekStore.summary?.explanations,
+           !explanations.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("week.explanation.title", systemImage: "sparkles")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(VecklyDesign.Colors.inkFaint)
+                    .textCase(.uppercase)
+
+                ForEach(Array(explanations.prefix(2).enumerated()), id: \.offset) { _, explanation in
+                    Text(explanation.sentence)
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .accessibilityElement(children: .combine)
         }
     }
 

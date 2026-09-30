@@ -3,6 +3,43 @@ import Testing
 @testable import Veckly
 
 struct WeekViewModelMapperTests {
+    @Test func decodesStructuredWeekExplanations() throws {
+        let data = Data(#"""
+        {
+          "household": { "id": "11111111-1111-1111-1111-111111111111", "name": "Test" },
+          "weekStartDate": "2026-06-08",
+          "updatedAt": null,
+          "explanations": [
+            { "kind": "week-context", "date": "2026-06-08", "recipeTitle": "Pasta" },
+            { "kind": "shared-ingredient", "ingredient": "Citron", "dinnerCount": 2 }
+          ],
+          "days": []
+        }
+        """#.utf8)
+
+        let summary = try JSONDecoder().decode(WeekSummary.self, from: data)
+
+        #expect(summary.explanations == [
+            .weekContext(date: "2026-06-08", recipeTitle: "Pasta"),
+            .sharedIngredient(ingredient: "Citron", dinnerCount: 2),
+        ])
+    }
+
+    @Test func decodesOlderCachedWeekWithoutExplanations() throws {
+        let data = Data(#"""
+        {
+          "household": { "id": "11111111-1111-1111-1111-111111111111", "name": "Test" },
+          "weekStartDate": "2026-06-08",
+          "updatedAt": null,
+          "days": []
+        }
+        """#.utf8)
+
+        let summary = try JSONDecoder().decode(WeekSummary.self, from: data)
+
+        #expect(summary.explanations.isEmpty)
+    }
+
     @Test func mapsPlannedRecipeIntoReadableDayRow() {
         let recipe = WeekSummaryRecipe(
             id: "22222222-2222-2222-2222-222222222222",

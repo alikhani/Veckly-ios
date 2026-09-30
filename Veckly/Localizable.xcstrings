@@ -8382,6 +8382,30 @@
         }
       }
     },
+    "week.explanation.context" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ was chosen to match a choice you made for this week." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ valdes utifrån ett val du gjorde för veckan." } }
+      }
+    },
+    "week.explanation.leftovers" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Extra %@ also covers a later dinner." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Extra %@ täcker också en senare middag." } }
+      }
+    },
+    "week.explanation.sharedIngredient" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ is used in several dinners, so one purchase goes further." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%@ används i flera middagar, så ett inköp räcker längre." } }
+      }
+    },
+    "week.explanation.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Why this week works" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Därför hänger veckan ihop" } }
+      }
+    },
     "week.quality.title" : {
       "localizations" : {
         "en" : {

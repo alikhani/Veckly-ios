@@ -1294,8 +1294,26 @@ private extension Components.Schemas.WeekPlanSummary {
             household: SummaryHousehold(id: household.id, name: household.name),
             weekStartDate: weekStartDate,
             updatedAt: updatedAt,
+            explanations: explanations.map(\.appModel),
             days: days.map(\.appModel)
         )
+    }
+}
+
+private extension Components.Schemas.WeekPlanExplanation {
+    var appModel: WeekExplanation {
+        switch self {
+        case let .case1(payload):
+            .weekContext(date: payload.date, recipeTitle: payload.recipeTitle)
+        case let .case2(payload):
+            .leftoverChain(
+                recipeTitle: payload.recipeTitle,
+                cookDate: payload.cookDate,
+                coveredDates: payload.coveredDates
+            )
+        case let .case3(payload):
+            .sharedIngredient(ingredient: payload.ingredient, dinnerCount: payload.dinnerCount)
+        }
     }
 }
 

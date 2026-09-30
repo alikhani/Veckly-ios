@@ -19,7 +19,84 @@ struct WeekSummary: Decodable, Equatable {
     let household: SummaryHousehold
     let weekStartDate: String
     let updatedAt: String?
+    let explanations: [WeekExplanation]
     let days: [WeekSummaryDay]
+
+    init(
+        household: SummaryHousehold,
+        weekStartDate: String,
+        updatedAt: String?,
+        explanations: [WeekExplanation] = [],
+        days: [WeekSummaryDay]
+    ) {
+        self.household = household
+        self.weekStartDate = weekStartDate
+        self.updatedAt = updatedAt
+        self.explanations = explanations
+        self.days = days
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case household, weekStartDate, updatedAt, explanations, days
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        household = try container.decode(SummaryHousehold.self, forKey: .household)
+        weekStartDate = try container.decode(String.self, forKey: .weekStartDate)
+        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+        explanations = try container.decodeIfPresent([WeekExplanation].self, forKey: .explanations) ?? []
+        days = try container.decode([WeekSummaryDay].self, forKey: .days)
+    }
+}
+
+enum WeekExplanation: Decodable, Equatable {
+    case weekContext(date: String, recipeTitle: String)
+    case leftoverChain(recipeTitle: String, cookDate: String, coveredDates: [String])
+    case sharedIngredient(ingredient: String, dinnerCount: Int)
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, date, recipeTitle, cookDate, coveredDates, ingredient, dinnerCount
+    }
+
+    private enum Kind: String, Decodable {
+        case weekContext = "week-context"
+        case leftoverChain = "leftover-chain"
+        case sharedIngredient = "shared-ingredient"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        switch try container.decode(Kind.self, forKey: .kind) {
+        case .weekContext:
+            self = .weekContext(
+                date: try container.decode(String.self, forKey: .date),
+                recipeTitle: try container.decode(String.self, forKey: .recipeTitle)
+            )
+        case .leftoverChain:
+            self = .leftoverChain(
+                recipeTitle: try container.decode(String.self, forKey: .recipeTitle),
+                cookDate: try container.decode(String.self, forKey: .cookDate),
+                coveredDates: try container.decode([String].self, forKey: .coveredDates)
+            )
+        case .sharedIngredient:
+            self = .sharedIngredient(
+                ingredient: try container.decode(String.self, forKey: .ingredient),
+                dinnerCount: try container.decode(Int.self, forKey: .dinnerCount)
+            )
+        }
+    }
+
+    var sentence: String {
+        switch self {
+        case let .weekContext(_, recipeTitle):
+            L10n.format("week.explanation.context", recipeTitle)
+        case let .leftoverChain(recipeTitle, _, _):
+            L10n.format("week.explanation.leftovers", recipeTitle)
+        case let .sharedIngredient(ingredient, _):
+            L10n.format("week.explanation.sharedIngredient", ingredient)
+        }
+    }
 }
 
 struct SummaryHousehold: Decodable, Equatable {
