@@ -1291,16 +1291,22 @@ struct WeekTabView: View {
     @ViewBuilder
     private var weekExplanationSummary: some View {
         if appModel.weekStore.summary?.weekStartDate == viewedWeekStartDate,
-           let explanations = appModel.weekStore.summary?.explanations,
-           !explanations.isEmpty {
+           let summary = appModel.weekStore.summary,
+           !summary.explanations.isEmpty || !(summary.pulse?.wishes.isEmpty ?? true) {
             VStack(alignment: .leading, spacing: 8) {
                 Label("week.explanation.title", systemImage: "sparkles")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(VecklyDesign.Colors.inkFaint)
                     .textCase(.uppercase)
 
-                ForEach(Array(explanations.prefix(2).enumerated()), id: \.offset) { _, explanation in
+                ForEach(Array(summary.explanations.prefix(2).enumerated()), id: \.offset) { _, explanation in
                     Text(explanation.sentence)
+                        .font(.subheadline)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(summary.pulse?.wishes ?? []) { wish in
+                    Text(wish.sentence)
                         .font(.subheadline)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
                         .fixedSize(horizontal: false, vertical: true)

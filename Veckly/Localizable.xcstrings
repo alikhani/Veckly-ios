@@ -9071,6 +9071,150 @@
         }
       }
     },
+    "pulse.away.count" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld away" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%lld borta" } }
+      }
+    },
+    "pulse.away.footer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "If everyone is away, Veckly leaves that evening open." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Om alla är borta lämnar Veckly kvällen öppen." } }
+      }
+    },
+    "pulse.away.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Evenings I am away" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Kvällar jag är borta" } }
+      }
+    },
+    "pulse.intro" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add what matters to you. Veckly balances everyone's input when the rest of the week is filled." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Lägg till det som är viktigt för dig. Veckly balanserar allas svar när resten av veckan fylls." } }
+      }
+    },
+    "pulse.loadError" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The household pulse could not be loaded." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Hushållspulsen kunde inte hämtas." } }
+      }
+    },
+    "pulse.memberFallback" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Household member" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Hushållsmedlem" } }
+      }
+    },
+    "pulse.noSpecialRequests" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No special requests" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inga särskilda önskemål" } }
+      }
+    },
+    "pulse.notAnswered" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not answered yet" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Har inte svarat än" } }
+      }
+    },
+    "pulse.outcome.fulfilled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ wished for %2$@, which is included this week." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ önskade %2$@, som kom med den här veckan." } }
+      }
+    },
+    "pulse.outcome.notSelected" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ wished for %2$@. It was possible, but did not fit the week's overall balance." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ önskade %2$@. Det var möjligt, men fick inte plats i veckans helhet." } }
+      }
+    },
+    "pulse.outcome.unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ wished for %2$@, but no matching household recipe was available." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ önskade %2$@, men ingen matchande rätt fanns i hushållets urval." } }
+      }
+    },
+    "pulse.responseValue" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld/%2$lld answered" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld/%2$lld svarat" } }
+      }
+    },
+    "pulse.responses" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Responses %1$lld of %2$lld" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Svar %1$lld av %2$lld" } }
+      }
+    },
+    "pulse.save" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save my input" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Spara mitt svar" } }
+      }
+    },
+    "pulse.saveError" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not save" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Kunde inte spara" } }
+      }
+    },
+    "pulse.saveError.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try again in a moment." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Försök igen om en stund." } }
+      }
+    },
+    "pulse.simple.none" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No preference" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Spelar ingen roll" } }
+      }
+    },
+    "pulse.simple.selected" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "one easy evening" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "en enkel kväll" } }
+      }
+    },
+    "pulse.simple.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep it simple" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Håll det enkelt" } }
+      }
+    },
+    "pulse.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This week's pulse" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Veckans puls" } }
+      }
+    },
+    "pulse.wish.footer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Veckly tries to include possible wishes and explains compromises afterward." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Veckly försöker få med möjliga önskemål och förklarar kompromisser efteråt." } }
+      }
+    },
+    "pulse.wish.placeholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "For example tacos" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Till exempel tacos" } }
+      }
+    },
+    "pulse.wish.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "One meal I would like" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "En rätt jag önskar" } }
+      }
+    },
+    "pulse.you" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Du" } }
+      }
+    },
     "week.yourHousehold" : {
       "localizations" : {
         "en" : {

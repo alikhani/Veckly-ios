@@ -448,6 +448,19 @@ struct HouseholdTabView: View {
     private var householdSection: some View {
         settingsSection(title: L10n.string("household.section")) {
             NavigationLink {
+                WeekPulseView()
+            } label: {
+                navigationRow(
+                    title: L10n.string("pulse.title"),
+                    systemImage: "waveform.path.ecg",
+                    value: pulseResponseValue
+                )
+            }
+            .accessibilityIdentifier("weekPulseLink")
+
+            Divider()
+
+            NavigationLink {
                 HouseholdMembersView()
             } label: {
                 navigationRow(
@@ -487,6 +500,11 @@ struct HouseholdTabView: View {
                 .accessibilityIdentifier("renameHouseholdLink")
             }
         }
+    }
+
+    private var pulseResponseValue: String? {
+        guard let pulse = appModel.householdStore.weekPulse else { return nil }
+        return L10n.format("pulse.responseValue", pulse.responseCount, pulse.memberCount)
     }
 
     private var appSection: some View {

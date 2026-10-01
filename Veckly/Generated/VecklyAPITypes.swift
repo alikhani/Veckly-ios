@@ -20,6 +20,7 @@ struct WeekSummary: Decodable, Equatable {
     let weekStartDate: String
     let updatedAt: String?
     let explanations: [WeekExplanation]
+    let pulse: WeekPulseOutcome?
     let days: [WeekSummaryDay]
 
     init(
@@ -27,17 +28,19 @@ struct WeekSummary: Decodable, Equatable {
         weekStartDate: String,
         updatedAt: String?,
         explanations: [WeekExplanation] = [],
+        pulse: WeekPulseOutcome? = nil,
         days: [WeekSummaryDay]
     ) {
         self.household = household
         self.weekStartDate = weekStartDate
         self.updatedAt = updatedAt
         self.explanations = explanations
+        self.pulse = pulse
         self.days = days
     }
 
     private enum CodingKeys: String, CodingKey {
-        case household, weekStartDate, updatedAt, explanations, days
+        case household, weekStartDate, updatedAt, explanations, pulse, days
     }
 
     init(from decoder: Decoder) throws {
@@ -46,7 +49,32 @@ struct WeekSummary: Decodable, Equatable {
         weekStartDate = try container.decode(String.self, forKey: .weekStartDate)
         updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
         explanations = try container.decodeIfPresent([WeekExplanation].self, forKey: .explanations) ?? []
+        pulse = try container.decodeIfPresent(WeekPulseOutcome.self, forKey: .pulse)
         days = try container.decode([WeekSummaryDay].self, forKey: .days)
+    }
+}
+
+struct WeekPulseOutcome: Decodable, Equatable {
+    let responseCount: Int
+    let memberCount: Int
+    let wishes: [WeekPulseWishOutcome]
+}
+
+struct WeekPulseWishOutcome: Decodable, Equatable, Identifiable {
+    enum Status: String, Decodable { case fulfilled, unavailable, notSelected = "not-selected" }
+    var id: String { userId }
+    let userId: String
+    let givenName: String?
+    let wishedMeal: String
+    let status: Status
+
+    var sentence: String {
+        let name = givenName ?? L10n.string("pulse.memberFallback")
+        switch status {
+        case .fulfilled: return L10n.format("pulse.outcome.fulfilled", name, wishedMeal)
+        case .unavailable: return L10n.format("pulse.outcome.unavailable", name, wishedMeal)
+        case .notSelected: return L10n.format("pulse.outcome.notSelected", name, wishedMeal)
+        }
     }
 }
 
@@ -563,6 +591,45 @@ struct HouseholdMember: Identifiable, Equatable {
     let role: HouseholdRole
     let givenName: String?
     let familyName: String?
+}
+
+struct WeekPulse: Equatable {
+    let householdID: String
+    let weekStartDate: String
+    let responseCount: Int
+    let memberCount: Int
+    let members: [WeekPulseMember]
+
+    var currentMember: WeekPulseMember? { members.first(where: \.isCurrentUser) }
+}
+
+struct WeekPulseMember: Identifiable, Equatable {
+    var id: String { userID }
+    let userID: String
+    let givenName: String?
+    let familyName: String?
+    let responded: Bool
+    let isCurrentUser: Bool
+    let awayDates: [String]
+    let wishedMeal: String?
+    let simpleDate: String?
+
+    var displayName: String {
+        let fullName = [givenName, familyName].compactMap { $0 }.joined(separator: " ")
+        return fullName.isEmpty ? L10n.string("pulse.memberFallback") : fullName
+    }
+}
+
+struct WeekPulseDraft: Equatable {
+    var awayDates: Set<String>
+    var wishedMeal: String
+    var simpleDate: String?
+
+    init(member: WeekPulseMember? = nil) {
+        awayDates = Set(member?.awayDates ?? [])
+        wishedMeal = member?.wishedMeal ?? ""
+        simpleDate = member?.simpleDate
+    }
 }
 
 struct UserProfile: Equatable {

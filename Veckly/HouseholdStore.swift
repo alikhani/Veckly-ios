@@ -40,6 +40,9 @@ final class HouseholdStore {
     private(set) var isLoadingInvites = false
     private(set) var detailsErrorMessage: String?
     private(set) var invitesErrorMessage: String?
+    private(set) var weekPulse: WeekPulse?
+    private(set) var isLoadingWeekPulse = false
+    private(set) var weekPulseErrorMessage: String?
 
     init(
         apiClient: any HouseholdStoreAPIClient,
@@ -135,6 +138,26 @@ final class HouseholdStore {
         } catch {
             invitesErrorMessage = L10n.string("error.household.invites")
         }
+    }
+
+    @discardableResult
+    func loadWeekPulse(householdID: String, weekStartDate: String) async -> Bool {
+        guard !isLoadingWeekPulse else { return false }
+        isLoadingWeekPulse = true
+        weekPulseErrorMessage = nil
+        defer { isLoadingWeekPulse = false }
+        do {
+            weekPulse = try await apiClient.weekPulse(householdID: householdID, weekStartDate: weekStartDate)
+            return true
+        } catch {
+            weekPulseErrorMessage = L10n.string("pulse.loadError")
+            return false
+        }
+    }
+
+    func saveWeekPulse(householdID: String, weekStartDate: String, draft: WeekPulseDraft) async throws {
+        weekPulse = try await apiClient.saveWeekPulse(householdID: householdID, weekStartDate: weekStartDate, draft: draft)
+        weekPulseErrorMessage = nil
     }
 
     func saveProfile(
@@ -241,6 +264,9 @@ final class HouseholdStore {
         isLoadingInvites = false
         detailsErrorMessage = nil
         invitesErrorMessage = nil
+        weekPulse = nil
+        isLoadingWeekPulse = false
+        weekPulseErrorMessage = nil
         selectionStore.clearSelectedHouseholdID()
     }
 
@@ -273,6 +299,8 @@ final class HouseholdStore {
         detailsLastFetchedAt = nil
         detailsHouseholdID = nil
         detailsErrorMessage = nil
+        weekPulse = nil
+        weekPulseErrorMessage = nil
     }
 
     private func resetInvites() {
@@ -363,6 +391,18 @@ protocol HouseholdStoreAPIClient {
     func renameHousehold(householdID: String, name: String) async throws
     func removeMember(householdID: String, userID: String) async throws
     func deleteHousehold(householdID: String) async throws
+    func weekPulse(householdID: String, weekStartDate: String) async throws -> WeekPulse
+    func saveWeekPulse(householdID: String, weekStartDate: String, draft: WeekPulseDraft) async throws -> WeekPulse
+}
+
+extension HouseholdStoreAPIClient {
+    func weekPulse(householdID: String, weekStartDate: String) async throws -> WeekPulse {
+        WeekPulse(householdID: householdID, weekStartDate: weekStartDate, responseCount: 0, memberCount: 1, members: [])
+    }
+
+    func saveWeekPulse(householdID: String, weekStartDate: String, draft: WeekPulseDraft) async throws -> WeekPulse {
+        try await weekPulse(householdID: householdID, weekStartDate: weekStartDate)
+    }
 }
 
 extension VecklyAPIClient: HouseholdStoreAPIClient {}

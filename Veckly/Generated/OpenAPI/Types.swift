@@ -387,6 +387,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /billing/app-store/notifications`.
     /// - Remark: Generated from `#/paths//billing/app-store/notifications/post(receiveAppStoreServerNotification)`.
     func receiveAppStoreServerNotification(_ input: Operations.receiveAppStoreServerNotification.Input) async throws -> Operations.receiveAppStoreServerNotification.Output
+    /// Get the combined household pulse for a week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-pulses/{weekStartDate}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)`.
+    func getWeekPulse(_ input: Operations.getWeekPulse.Input) async throws -> Operations.getWeekPulse.Output
+    /// Create or replace the current member week pulse
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-pulses/{weekStartDate}/me`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)`.
+    func putMyWeekPulse(_ input: Operations.putMyWeekPulse.Input) async throws -> Operations.putMyWeekPulse.Output
 }
 
 /// Convenience overloads for operation inputs.
@@ -1371,6 +1381,34 @@ extension APIProtocol {
         body: Operations.receiveAppStoreServerNotification.Input.Body
     ) async throws -> Operations.receiveAppStoreServerNotification.Output {
         try await receiveAppStoreServerNotification(Operations.receiveAppStoreServerNotification.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Get the combined household pulse for a week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-pulses/{weekStartDate}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)`.
+    internal func getWeekPulse(
+        path: Operations.getWeekPulse.Input.Path,
+        headers: Operations.getWeekPulse.Input.Headers = .init()
+    ) async throws -> Operations.getWeekPulse.Output {
+        try await getWeekPulse(Operations.getWeekPulse.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Create or replace the current member week pulse
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-pulses/{weekStartDate}/me`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)`.
+    internal func putMyWeekPulse(
+        path: Operations.putMyWeekPulse.Input.Path,
+        headers: Operations.putMyWeekPulse.Input.Headers = .init(),
+        body: Operations.putMyWeekPulse.Input.Body
+    ) async throws -> Operations.putMyWeekPulse.Output {
+        try await putMyWeekPulse(Operations.putMyWeekPulse.Input(
+            path: path,
             headers: headers,
             body: body
         ))
@@ -4712,6 +4750,80 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/economy`.
             internal var economy: Components.Schemas.WeekPlanSummary.economyPayload
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse`.
+            internal struct pulsePayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/responseCount`.
+                internal var responseCount: Swift.Int
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/memberCount`.
+                internal var memberCount: Swift.Int
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishesPayload`.
+                internal struct wishesPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishesPayload/userId`.
+                    internal var userId: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishesPayload/givenName`.
+                    internal var givenName: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishesPayload/wishedMeal`.
+                    internal var wishedMeal: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishesPayload/status`.
+                    internal enum statusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case fulfilled = "fulfilled"
+                        case unavailable = "unavailable"
+                        case not_hyphen_selected = "not-selected"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishesPayload/status`.
+                    internal var status: Components.Schemas.WeekPlanSummary.pulsePayload.wishesPayloadPayload.statusPayload
+                    /// Creates a new `wishesPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - userId:
+                    ///   - givenName:
+                    ///   - wishedMeal:
+                    ///   - status:
+                    internal init(
+                        userId: Swift.String,
+                        givenName: Swift.String? = nil,
+                        wishedMeal: Swift.String,
+                        status: Components.Schemas.WeekPlanSummary.pulsePayload.wishesPayloadPayload.statusPayload
+                    ) {
+                        self.userId = userId
+                        self.givenName = givenName
+                        self.wishedMeal = wishedMeal
+                        self.status = status
+                    }
+                    internal enum CodingKeys: String, CodingKey {
+                        case userId
+                        case givenName
+                        case wishedMeal
+                        case status
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishes`.
+                internal typealias wishesPayload = [Components.Schemas.WeekPlanSummary.pulsePayload.wishesPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse/wishes`.
+                internal var wishes: Components.Schemas.WeekPlanSummary.pulsePayload.wishesPayload
+                /// Creates a new `pulsePayload`.
+                ///
+                /// - Parameters:
+                ///   - responseCount:
+                ///   - memberCount:
+                ///   - wishes:
+                internal init(
+                    responseCount: Swift.Int,
+                    memberCount: Swift.Int,
+                    wishes: Components.Schemas.WeekPlanSummary.pulsePayload.wishesPayload
+                ) {
+                    self.responseCount = responseCount
+                    self.memberCount = memberCount
+                    self.wishes = wishes
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case responseCount
+                    case memberCount
+                    case wishes
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/pulse`.
+            internal var pulse: Components.Schemas.WeekPlanSummary.pulsePayload
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummary/days`.
             internal var days: [Components.Schemas.WeekPlanSummaryDay]
             /// Creates a new `WeekPlanSummary`.
@@ -4722,6 +4834,7 @@ internal enum Components {
             ///   - updatedAt:
             ///   - explanations:
             ///   - economy:
+            ///   - pulse:
             ///   - days:
             internal init(
                 household: Components.Schemas.WeekPlanSummary.householdPayload,
@@ -4729,6 +4842,7 @@ internal enum Components {
                 updatedAt: Swift.String? = nil,
                 explanations: [Components.Schemas.WeekPlanExplanation],
                 economy: Components.Schemas.WeekPlanSummary.economyPayload,
+                pulse: Components.Schemas.WeekPlanSummary.pulsePayload,
                 days: [Components.Schemas.WeekPlanSummaryDay]
             ) {
                 self.household = household
@@ -4736,6 +4850,7 @@ internal enum Components {
                 self.updatedAt = updatedAt
                 self.explanations = explanations
                 self.economy = economy
+                self.pulse = pulse
                 self.days = days
             }
             internal enum CodingKeys: String, CodingKey {
@@ -4744,6 +4859,7 @@ internal enum Components {
                 case updatedAt
                 case explanations
                 case economy
+                case pulse
                 case days
             }
         }
@@ -8530,6 +8646,141 @@ internal enum Components {
             }
             internal enum CodingKeys: String, CodingKey {
                 case signedPayload
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekPulseMember`.
+        internal struct WeekPulseMember: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/userId`.
+            internal var userId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/givenName`.
+            internal var givenName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/familyName`.
+            internal var familyName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/responded`.
+            internal var responded: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/isCurrentUser`.
+            internal var isCurrentUser: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/awayDates`.
+            internal var awayDates: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/wishedMeal`.
+            internal var wishedMeal: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/simpleDate`.
+            internal var simpleDate: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekPulseMember/updatedAt`.
+            internal var updatedAt: Swift.String?
+            /// Creates a new `WeekPulseMember`.
+            ///
+            /// - Parameters:
+            ///   - userId:
+            ///   - givenName:
+            ///   - familyName:
+            ///   - responded:
+            ///   - isCurrentUser:
+            ///   - awayDates:
+            ///   - wishedMeal:
+            ///   - simpleDate:
+            ///   - updatedAt:
+            internal init(
+                userId: Swift.String,
+                givenName: Swift.String? = nil,
+                familyName: Swift.String? = nil,
+                responded: Swift.Bool,
+                isCurrentUser: Swift.Bool,
+                awayDates: [Swift.String],
+                wishedMeal: Swift.String? = nil,
+                simpleDate: Swift.String? = nil,
+                updatedAt: Swift.String? = nil
+            ) {
+                self.userId = userId
+                self.givenName = givenName
+                self.familyName = familyName
+                self.responded = responded
+                self.isCurrentUser = isCurrentUser
+                self.awayDates = awayDates
+                self.wishedMeal = wishedMeal
+                self.simpleDate = simpleDate
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case userId
+                case givenName
+                case familyName
+                case responded
+                case isCurrentUser
+                case awayDates
+                case wishedMeal
+                case simpleDate
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekPulse`.
+        internal struct WeekPulse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekPulse/householdId`.
+            internal var householdId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekPulse/weekStartDate`.
+            internal var weekStartDate: Swift.String
+            /// - Remark: Generated from `#/components/schemas/WeekPulse/responseCount`.
+            internal var responseCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/WeekPulse/memberCount`.
+            internal var memberCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/WeekPulse/members`.
+            internal var members: [Components.Schemas.WeekPulseMember]
+            /// Creates a new `WeekPulse`.
+            ///
+            /// - Parameters:
+            ///   - householdId:
+            ///   - weekStartDate:
+            ///   - responseCount:
+            ///   - memberCount:
+            ///   - members:
+            internal init(
+                householdId: Swift.String,
+                weekStartDate: Swift.String,
+                responseCount: Swift.Int,
+                memberCount: Swift.Int,
+                members: [Components.Schemas.WeekPulseMember]
+            ) {
+                self.householdId = householdId
+                self.weekStartDate = weekStartDate
+                self.responseCount = responseCount
+                self.memberCount = memberCount
+                self.members = members
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case householdId
+                case weekStartDate
+                case responseCount
+                case memberCount
+                case members
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WeekPulseInput`.
+        internal struct WeekPulseInput: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WeekPulseInput/awayDates`.
+            internal var awayDates: [Swift.String]?
+            /// - Remark: Generated from `#/components/schemas/WeekPulseInput/wishedMeal`.
+            internal var wishedMeal: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WeekPulseInput/simpleDate`.
+            internal var simpleDate: Swift.String?
+            /// Creates a new `WeekPulseInput`.
+            ///
+            /// - Parameters:
+            ///   - awayDates:
+            ///   - wishedMeal:
+            ///   - simpleDate:
+            internal init(
+                awayDates: [Swift.String]? = nil,
+                wishedMeal: Swift.String? = nil,
+                simpleDate: Swift.String? = nil
+            ) {
+                self.awayDates = awayDates
+                self.wishedMeal = wishedMeal
+                self.simpleDate = simpleDate
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case awayDates
+                case wishedMeal
+                case simpleDate
             }
         }
     }
@@ -26259,6 +26510,495 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "serviceUnavailable",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Get the combined household pulse for a week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-pulses/{weekStartDate}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)`.
+    internal enum getWeekPulse {
+        internal static let id: Swift.String = "getWeekPulse"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/GET/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.getWeekPulse.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getWeekPulse.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getWeekPulse.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getWeekPulse.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getWeekPulse.Input.Path,
+                headers: Operations.getWeekPulse.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WeekPulse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekPulse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekPulse.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekPulse.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Household pulse
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getWeekPulse.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getWeekPulse.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid week start date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getWeekPulse.Output.BadRequest)
+            /// Invalid week start date
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getWeekPulse.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getWeekPulse.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getWeekPulse.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getWeekPulse.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getWeekPulse.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create or replace the current member week pulse
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-pulses/{weekStartDate}/me`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)`.
+    internal enum putMyWeekPulse {
+        internal static let id: Swift.String = "putMyWeekPulse"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/path/weekStartDate`.
+                internal var weekStartDate: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - weekStartDate:
+                internal init(
+                    householdId: Swift.String,
+                    weekStartDate: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.weekStartDate = weekStartDate
+                }
+            }
+            internal var path: Operations.putMyWeekPulse.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.putMyWeekPulse.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.putMyWeekPulse.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.putMyWeekPulse.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.WeekPulseInput)
+            }
+            internal var body: Operations.putMyWeekPulse.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.putMyWeekPulse.Input.Path,
+                headers: Operations.putMyWeekPulse.Input.Headers = .init(),
+                body: Operations.putMyWeekPulse.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-pulses/{weekStartDate}/me/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WeekPulse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.WeekPulse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.putMyWeekPulse.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.putMyWeekPulse.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Updated household pulse
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.putMyWeekPulse.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.putMyWeekPulse.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Dates must belong to the requested week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.putMyWeekPulse.Output.BadRequest)
+            /// Dates must belong to the requested week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.putMyWeekPulse.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.putMyWeekPulse.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.putMyWeekPulse.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.putMyWeekPulse.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.putMyWeekPulse.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

@@ -680,6 +680,36 @@ struct VecklyAPIClient {
         }
     }
 
+    func weekPulse(householdID: String, weekStartDate: String) async throws -> WeekPulse {
+        let output = try await _client.getWeekPulse(path: .init(householdId: householdID, weekStartDate: weekStartDate))
+        switch output {
+        case let .ok(response): return try response.body.json.appModel
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func saveWeekPulse(householdID: String, weekStartDate: String, draft: WeekPulseDraft) async throws -> WeekPulse {
+        let wishedMeal = draft.wishedMeal.trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = try await _client.putMyWeekPulse(
+            path: .init(householdId: householdID, weekStartDate: weekStartDate),
+            body: .json(.init(
+                awayDates: draft.awayDates.sorted(),
+                wishedMeal: wishedMeal.isEmpty ? nil : wishedMeal,
+                simpleDate: draft.simpleDate
+            ))
+        )
+        switch output {
+        case let .ok(response): return try response.body.json.appModel
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
     func weekContextOverrides(householdID: String, weekStartDate: String) async throws -> [WeekContextOverride] {
         let output = try await _client.getWeekContextOverrides(
             path: .init(householdId: householdID, weekStartDate: weekStartDate)
@@ -1288,6 +1318,33 @@ private extension Components.Schemas.Household.rolePayload {
     }
 }
 
+private extension Components.Schemas.WeekPulse {
+    var appModel: WeekPulse {
+        WeekPulse(
+            householdID: householdId,
+            weekStartDate: weekStartDate,
+            responseCount: responseCount,
+            memberCount: memberCount,
+            members: members.map(\.appModel)
+        )
+    }
+}
+
+private extension Components.Schemas.WeekPulseMember {
+    var appModel: WeekPulseMember {
+        WeekPulseMember(
+            userID: userId,
+            givenName: givenName,
+            familyName: familyName,
+            responded: responded,
+            isCurrentUser: isCurrentUser,
+            awayDates: awayDates,
+            wishedMeal: wishedMeal,
+            simpleDate: simpleDate
+        )
+    }
+}
+
 private extension Components.Schemas.WeekPlanSummary {
     var appModel: WeekSummary {
         WeekSummary(
@@ -1295,6 +1352,18 @@ private extension Components.Schemas.WeekPlanSummary {
             weekStartDate: weekStartDate,
             updatedAt: updatedAt,
             explanations: explanations.map(\.appModel),
+            pulse: WeekPulseOutcome(
+                responseCount: pulse.responseCount,
+                memberCount: pulse.memberCount,
+                wishes: pulse.wishes.map {
+                    WeekPulseWishOutcome(
+                        userId: $0.userId,
+                        givenName: $0.givenName,
+                        wishedMeal: $0.wishedMeal,
+                        status: WeekPulseWishOutcome.Status(rawValue: $0.status.rawValue) ?? .notSelected
+                    )
+                }
+            ),
             days: days.map(\.appModel)
         )
     }

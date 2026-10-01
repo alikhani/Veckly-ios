@@ -6450,4 +6450,151 @@ internal struct Client: APIProtocol {
             }
         )
     }
+    /// Get the combined household pulse for a week
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/week-pulses/{weekStartDate}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/get(getWeekPulse)`.
+    internal func getWeekPulse(_ input: Operations.getWeekPulse.Input) async throws -> Operations.getWeekPulse.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.getWeekPulse.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/week-pulses/{}",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.getWeekPulse.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.WeekPulse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Create or replace the current member week pulse
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/week-pulses/{weekStartDate}/me`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/week-pulses/{weekStartDate}/me/put(putMyWeekPulse)`.
+    internal func putMyWeekPulse(_ input: Operations.putMyWeekPulse.Input) async throws -> Operations.putMyWeekPulse.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.putMyWeekPulse.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/households/{}/week-pulses/{}/me",
+                    parameters: [
+                        input.path.householdId,
+                        input.path.weekStartDate
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .put
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.putMyWeekPulse.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.WeekPulse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    return .badRequest(.init())
+                case 401:
+                    return .unauthorized(.init())
+                case 404:
+                    return .notFound(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
 }
