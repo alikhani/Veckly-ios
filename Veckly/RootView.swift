@@ -27,7 +27,7 @@ struct RootView: View {
             await appModel.subscriptionStore.prepare()
         }
         .onOpenURL { url in
-            Task { await appModel.handleAuthCallback(url) }
+            Task { await appModel.handleOpenURL(url) }
         }
         .fullScreenCover(isPresented: Binding(
             get: { appModel.authSessionStore.isPasswordRecoveryActive },
@@ -43,9 +43,14 @@ struct RootView: View {
             // data — now lives in `AppRefreshCoordinator` (Fas 7). This is
             // just the view-level trigger: is the phase transition one we
             // care about, and is anyone signed in to refresh for.
+            if newPhase == .background {
+                appModel.syncWidgetSnapshot()
+                return
+            }
             guard newPhase == .active, appModel.authSessionStore.isSignedIn else { return }
             Task {
                 await appModel.refreshCoordinator.refreshCoreReader(trigger: .sceneActive)
+                appModel.syncWidgetSnapshot()
                 await appModel.refreshSundayReminderIfNeeded()
                 await appModel.subscriptionStore.refreshEntitlements()
             }

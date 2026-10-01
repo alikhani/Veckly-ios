@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "widget.day.today" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "I dag" } } } },
+    "widget.dinner.description" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "See tonight's dinner and the next planned meals." } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Se kvällens middag och de nästa planerade måltiderna." } } } },
+    "widget.dinner.empty" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing planned yet" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inget planerat än" } } } },
+    "widget.dinner.name" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This week's dinners" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Veckans middagar" } } } },
+    "widget.dinner.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Dinner" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Middag" } } } },
+    "widget.shopping.description" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "See how many items remain without showing item names." } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Se hur många varor som återstår utan att visa varunamn." } } } },
+    "widget.shopping.name" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Shopping list" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Inköpslista" } } } },
+    "widget.shopping.one" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "item left" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "vara kvar" } } } },
+    "widget.shopping.other" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "items left" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "varor kvar" } } } },
+    "widget.shopping.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Shopping" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Handla" } } } },
+    "widget.update.body" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Veckly to refresh." } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Öppna Veckly för att uppdatera." } } } },
+    "widget.update.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Time to update" } }, "sv" : { "stringUnit" : { "state" : "translated", "value" : "Dags att uppdatera" } } } }
+  },
+  "version" : "1.0"
+}

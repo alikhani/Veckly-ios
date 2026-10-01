@@ -10,6 +10,7 @@
 		3C8A4E502FD9B40000A8B001 /* HTTPTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 3C8A4E4F2FD9B40000A8B001 /* HTTPTypes */; };
 		3C8A4E522FD9B40000A8B001 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 3C8A4E512FD9B40000A8B001 /* OpenAPIRuntime */; };
 		3C8A4E542FD9B40000A8B001 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 3C8A4E532FD9B40000A8B001 /* OpenAPIURLSession */; };
+		A15000012FD9B40000A8B001 /* VecklyWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A15000022FD9B40000A8B001 /* VecklyWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,11 +30,36 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		A15000032FD9B40000A8B001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A15000012FD9B40000A8B001 /* VecklyWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		3C62B5252FD8A6FB0056AE47 /* Veckly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Veckly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C62B5322FD8A6FE0056AE47 /* VecklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VecklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C62B53C2FD8A6FE0056AE47 /* VecklyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VecklyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A15000022FD9B40000A8B001 /* VecklyWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VecklyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A15000122FD9B40000A8B001 /* Exceptions for "VecklyWidgets" folder in "VecklyWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A15000052FD9B40000A8B001 /* VecklyWidgets */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3C62B5272FD8A6FB0056AE47 /* Veckly */ = {
@@ -49,6 +75,14 @@
 		3C62B53F2FD8A6FE0056AE47 /* VecklyUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = VecklyUITests;
+			sourceTree = "<group>";
+		};
+		A15000042FD9B40000A8B001 /* VecklyWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A15000122FD9B40000A8B001 /* Exceptions for "VecklyWidgets" folder in "VecklyWidgets" target */,
+			);
+			path = VecklyWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -78,6 +112,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A15000072FD9B40000A8B001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -85,6 +126,7 @@
 			isa = PBXGroup;
 			children = (
 				3C62B5272FD8A6FB0056AE47 /* Veckly */,
+				A15000042FD9B40000A8B001 /* VecklyWidgets */,
 				3C62B5352FD8A6FE0056AE47 /* VecklyTests */,
 				3C62B53F2FD8A6FE0056AE47 /* VecklyUITests */,
 				3C62B5262FD8A6FB0056AE47 /* Products */,
@@ -95,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				3C62B5252FD8A6FB0056AE47 /* Veckly.app */,
+				A15000022FD9B40000A8B001 /* VecklyWidgets.appex */,
 				3C62B5322FD8A6FE0056AE47 /* VecklyTests.xctest */,
 				3C62B53C2FD8A6FE0056AE47 /* VecklyUITests.xctest */,
 			);
@@ -111,6 +154,7 @@
 				3C62B5212FD8A6FB0056AE47 /* Sources */,
 				3C62B5222FD8A6FB0056AE47 /* Frameworks */,
 				3C62B5232FD8A6FB0056AE47 /* Resources */,
+				A15000032FD9B40000A8B001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -175,6 +219,28 @@
 			productReference = 3C62B53C2FD8A6FE0056AE47 /* VecklyUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		A15000052FD9B40000A8B001 /* VecklyWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A15000092FD9B40000A8B001 /* Build configuration list for PBXNativeTarget "VecklyWidgets" */;
+			buildPhases = (
+				A15000062FD9B40000A8B001 /* Sources */,
+				A15000072FD9B40000A8B001 /* Frameworks */,
+				A15000082FD9B40000A8B001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A15000042FD9B40000A8B001 /* VecklyWidgets */,
+			);
+			name = VecklyWidgets;
+			packageProductDependencies = (
+			);
+			productName = VecklyWidgets;
+			productReference = A15000022FD9B40000A8B001 /* VecklyWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -195,6 +261,9 @@
 					3C62B53B2FD8A6FE0056AE47 = {
 						CreatedOnToolsVersion = 26.5;
 						TestTargetID = 3C62B5242FD8A6FB0056AE47;
+					};
+					A15000052FD9B40000A8B001 = {
+						CreatedOnToolsVersion = 26.5;
 					};
 				};
 			};
@@ -219,6 +288,7 @@
 			projectRoot = "";
 			targets = (
 				3C62B5242FD8A6FB0056AE47 /* Veckly */,
+				A15000052FD9B40000A8B001 /* VecklyWidgets */,
 				3C62B5312FD8A6FE0056AE47 /* VecklyTests */,
 				3C62B53B2FD8A6FE0056AE47 /* VecklyUITests */,
 			);
@@ -247,6 +317,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A15000082FD9B40000A8B001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -265,6 +342,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		3C62B5382FD8A6FE0056AE47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A15000062FD9B40000A8B001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -562,6 +646,48 @@
 			};
 			name = Release;
 		};
+		A15000102FD9B40000A8B001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VecklyWidgets/VecklyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TCAU729S7P;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = VecklyWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nimaalikhani.Veckly.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A15000112FD9B40000A8B001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VecklyWidgets/VecklyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TCAU729S7P;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = VecklyWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nimaalikhani.Veckly.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -597,6 +723,15 @@
 			buildConfigurations = (
 				3C62B54D2FD8A6FE0056AE47 /* Debug */,
 				3C62B54E2FD8A6FE0056AE47 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A15000092FD9B40000A8B001 /* Build configuration list for PBXNativeTarget "VecklyWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A15000102FD9B40000A8B001 /* Debug */,
+				A15000112FD9B40000A8B001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

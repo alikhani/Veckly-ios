@@ -607,6 +607,11 @@ struct WeekTabView: View {
             refreshWeekendNudgeDismissalState()
             Task { await reloadViewedWeek() }
             Task { await refreshNextWeekEmptyState() }
+            Task { await consumePendingMealDeepLink() }
+        }
+        .onChange(of: appModel.pendingDeepLink) { _, destination in
+            guard case .meal = destination else { return }
+            Task { await consumePendingMealDeepLink() }
         }
         .onChange(of: appModel.pendingWeekPlanDeepLink) { _, isPending in
             // Covers the case where the notification tap is delivered to
@@ -945,6 +950,33 @@ struct WeekTabView: View {
         appModel.pendingWeekPlanDeepLink = false
         viewedWeekOffset = .next
         return true
+    }
+
+    private func consumePendingMealDeepLink() async {
+        guard case let .meal(date, recipeID) = appModel.pendingDeepLink else { return }
+        guard let targetDate = WeekCalendar.date(from: date) else {
+            appModel.pendingDeepLink = nil
+            return
+        }
+        let currentStart = WeekCalendar.date(from: WeekCalendar.currentWeekStartDate()) ?? targetDate
+        let targetStartString = WeekCalendar.currentWeekStartDate(now: targetDate)
+        let targetStart = WeekCalendar.date(from: targetStartString) ?? targetDate
+        let days = WeekCalendar.calendar.dateComponents([.day], from: currentStart, to: targetStart).day ?? 0
+        let weeks = days / 7
+        guard let offset = ViewedWeekOffset(rawValue: weeks) else {
+            appModel.pendingDeepLink = nil
+            return
+        }
+        viewedWeekOffset = offset
+        await reloadViewedWeek()
+        guard let row = appModel.weekStore.dayRows.first(where: { $0.date == date }),
+              let recipe = row.recipe,
+              recipeID == nil || recipe.id == recipeID else {
+            appModel.pendingDeepLink = nil
+            return
+        }
+        selectedDayRecipe = SelectedDayRecipe(day: row, recipe: recipe)
+        appModel.pendingDeepLink = nil
     }
 
     private func refreshWeekendNudgeDismissalState() {

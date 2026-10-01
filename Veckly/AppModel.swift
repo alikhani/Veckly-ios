@@ -29,6 +29,7 @@ final class AppModel {
     /// background. Consumed exactly once by `WeekTabView`, which lands on
     /// next week instead of its usual current-week default.
     var pendingWeekPlanDeepLink = false
+    var pendingDeepLink: AppDeepLink?
     /// Not `private` — a handful of call sites outside `AppRefreshCoordinator`
     /// still need it directly: UI-test seeding at init (below),
     /// `recordProductEvent`, and `refreshSundayReminderIfNeeded`. Every
@@ -205,6 +206,7 @@ final class AppModel {
 
     func loadCoreReader(trigger: AppRefreshCoordinator.Trigger = .coldLaunch) async {
         await refreshCoordinator.refreshCoreReader(trigger: trigger)
+        syncWidgetSnapshot()
     }
 
     /// Resets household-scoped stores (when the active household itself
@@ -217,6 +219,7 @@ final class AppModel {
     func loadActiveHouseholdReaderData(resetFeatureStores: Bool = true) async {
         guard let household = householdStore.activeHousehold else { return }
         if resetFeatureStores {
+            WidgetSnapshotStore.clear()
             weekStore.reset()
             shoppingListStore.reset()
             recipeStore.reset()
@@ -229,16 +232,55 @@ final class AppModel {
             householdSavedRecipesStore.reset()
         }
         await refreshCoordinator.refreshActiveHouseholdData(household: household, trigger: .householdChanged)
+        syncWidgetSnapshot()
     }
 
     func signOut() {
+        WidgetSnapshotStore.clear()
         authSessionStore.signOut()
         resetAllStores()
     }
 
     func deleteAccount() async throws {
         try await authSessionStore.deleteAccount()
+        WidgetSnapshotStore.clear()
         resetAllStores()
+    }
+
+    func handleOpenURL(_ url: URL) async {
+        if let deepLink = AppDeepLink(url: url) {
+            pendingDeepLink = deepLink
+            return
+        }
+        await handleAuthCallback(url)
+    }
+
+    func syncWidgetSnapshot(now: Date = Date()) {
+        guard authSessionStore.isSignedIn, householdStore.activeHousehold != nil else {
+            WidgetSnapshotStore.clear()
+            return
+        }
+
+        let meals = weekStore.currentWeekDayRows
+            .filter { !$0.isSkipped && $0.recipe != nil && WeekCalendar.date(from: $0.date).map { $0 >= Calendar.current.startOfDay(for: now) } == true }
+            .prefix(3)
+            .compactMap { row -> WidgetMealSnapshot? in
+                guard let recipe = row.recipe else { return nil }
+                let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
+                return WidgetMealSnapshot(
+                    date: row.date,
+                    title: recipe.title,
+                    minutes: total > 0 ? total : nil,
+                    recipeID: recipe.id
+                )
+            }
+        let itemKeys = Set(shoppingListStore.groups.flatMap(\.items).map(\.itemKey))
+        let remainingCount = itemKeys.subtracting(shoppingListStore.checkedItems).count
+        WidgetSnapshotStore.save(WidgetSnapshot(
+            updatedAt: now,
+            meals: Array(meals),
+            shoppingRemainingCount: remainingCount
+        ))
     }
 
     private func resetAllStores() {
