@@ -15,9 +15,6 @@ struct DayDetailSheet: View {
     var onToggleLock: (() -> Void)? = nil
     let onDismiss: () -> Void
 
-    @State private var showClearConfirmation = false
-    @State private var showSkipConfirmation = false
-
     var body: some View {
         NavigationStack {
             DayDetailContent(
@@ -26,12 +23,8 @@ struct DayDetailSheet: View {
                 onViewRecipe: onViewRecipe,
                 onSwap: onSwap,
                 onSkip: {
-                    if day.isSkipped {
-                        onSkip()
-                        onDismiss()
-                    } else {
-                        showSkipConfirmation = true
-                    }
+                    onSkip()
+                    onDismiss()
                 },
                 onClear: onClear,
                 onMarkAsLeftover: onMarkAsLeftover,
@@ -40,22 +33,9 @@ struct DayDetailSheet: View {
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("common.cancel", action: onDismiss)
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("common.done", action: onDismiss)
                 }
-                ToolbarItem(placement: .destructiveAction) {
-                    Button("meal.clear", role: .destructive) {
-                        showClearConfirmation = true
-                    }
-                    .foregroundStyle(.red)
-                }
-            }
-            .removeDishConfirmation(isPresented: $showClearConfirmation) {
-                onClear()
-            }
-            .skipDayConfirmation(isPresented: $showSkipConfirmation) {
-                onSkip()
-                onDismiss()
             }
         }
     }
@@ -77,6 +57,8 @@ struct DayDetailContent: View {
     var onToggleLock: (() -> Void)? = nil
 
     @Environment(AppModel.self) private var appModel
+    @State private var showClearConfirmation = false
+    @State private var showSkipConfirmation = false
 
     private var recipe: WeekSummaryRecipe? { day.recipe }
 
@@ -123,9 +105,15 @@ struct DayDetailContent: View {
                 // Vote buttons
                 voteButtons(recipeID: recipe.id)
 
-                householdSignalCard(recipeID: recipe.id)
+                Button {
+                    onSwap()
+                } label: {
+                    Label("meal.swapMeal", systemImage: "arrow.2.squarepath")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(VecklyPrimaryButtonStyle())
+                .accessibilityLabel(L10n.format("accessibility.swapMealFor", day.weekdayLabel))
 
-                // Action buttons
                 HStack(spacing: 12) {
                     Button {
                         onViewRecipe()
@@ -135,64 +123,58 @@ struct DayDetailContent: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(VecklyDesign.Colors.inkMid)
+                    .accessibilityLabel(L10n.format("accessibility.viewRecipeFor", recipe.title))
 
-                    Button {
-                        onSwap()
+                    Menu {
+                        Button(action: onMarkAsLeftover) {
+                            Label("prep.eatAgain", systemImage: "arrow.3.trianglepath")
+                        }
+                        Menu("meal.householdSignal.title", systemImage: "person.2") {
+                            Button {
+                                toggleHouseholdSignal(.worksForFamily, recipeID: recipe.id)
+                            } label: {
+                                Label("meal.householdSignal.works", systemImage: "checkmark.seal")
+                            }
+                            Button {
+                                toggleHouseholdSignal(.notForUs, recipeID: recipe.id)
+                            } label: {
+                                Label("meal.householdSignal.notForUs", systemImage: "xmark.seal")
+                            }
+                        }
+                        if let onToggleLock {
+                            Button(action: onToggleLock) {
+                                Label(
+                                    isLocked ? L10n.string("meal.unlockDay") : L10n.string("meal.lockDay"),
+                                    systemImage: isLocked ? "lock.open" : "lock"
+                                )
+                            }
+                        }
+                        Button {
+                            if day.isSkipped { onSkip() } else { showSkipConfirmation = true }
+                        } label: {
+                            Label(
+                                day.isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"),
+                                systemImage: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus"
+                            )
+                        }
+                        Button(role: .destructive) { showClearConfirmation = true } label: {
+                            Label("meal.clear", systemImage: "trash")
+                        }
                     } label: {
-                        Label("meal.swapMeal", systemImage: "arrow.2.squarepath")
-                            .frame(maxWidth: .infinity)
+                        Image(systemName: "ellipsis")
+                            .frame(width: 44, height: 44)
                     }
                     .buttonStyle(.bordered)
                     .tint(VecklyDesign.Colors.inkMid)
+                    .accessibilityLabel(L10n.string("common.more"))
                 }
-
-                // Eat this again (mark as leftovers for another day)
-                Button {
-                    onMarkAsLeftover()
-                } label: {
-                    HStack {
-                        Image(systemName: "arrow.3.trianglepath")
-                        Text("prep.eatAgain")
-                        Spacer()
-                    }
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                }
-                .buttonStyle(.plain)
-
-                // Lock (Fas 3: moved out of the hero card, beslut 3)
-                if let onToggleLock {
-                    Button {
-                        onToggleLock()
-                    } label: {
-                        HStack {
-                            Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                            Text(isLocked ? L10n.string("meal.unlockDay") : L10n.string("meal.lockDay"))
-                            Spacer()
-                        }
-                        .foregroundStyle(isLocked ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(isLocked ? L10n.format("accessibility.unlock", day.weekdayLabel) : L10n.format("accessibility.lock", day.weekdayLabel))
-                }
-
-                // Skip
-                Button {
-                    onSkip()
-                } label: {
-                    HStack {
-                        Image(systemName: day.isSkipped ? "calendar.badge.plus" : "calendar.badge.minus")
-                        Text(day.isSkipped ? L10n.string("meal.planDayInstead") : L10n.string("meal.skipDay"))
-                        Spacer()
-                    }
-                    .foregroundStyle(VecklyDesign.Colors.inkMid)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(day.isSkipped ? L10n.format("accessibility.planDay", day.weekdayLabel) : L10n.format("accessibility.skipDay", day.weekdayLabel))
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(VecklyDesign.Colors.canvas)
+        .removeDishConfirmation(isPresented: $showClearConfirmation, onConfirm: onClear)
+        .skipDayConfirmation(isPresented: $showSkipConfirmation, onConfirm: onSkip)
     }
 
     @ViewBuilder
@@ -237,53 +219,6 @@ struct DayDetailContent: View {
         }
     }
 
-    @ViewBuilder
-    private func householdSignalCard(recipeID: String) -> some View {
-        let currentSignal = appModel.householdMealSignalStore.signal(for: recipeID)
-        VStack(alignment: .leading, spacing: 10) {
-            Text("meal.householdSignal.title")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(VecklyDesign.Colors.inkFaint)
-                .textCase(.uppercase)
-            Text("meal.householdSignal.subtitle")
-                .font(.footnote)
-                .foregroundStyle(VecklyDesign.Colors.inkMid)
-
-            HStack(spacing: 10) {
-                householdSignalButton(.worksForFamily, currentSignal: currentSignal, recipeID: recipeID)
-                householdSignalButton(.notForUs, currentSignal: currentSignal, recipeID: recipeID)
-            }
-        }
-        .padding(14)
-        .background(VecklyDesign.Colors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func householdSignalButton(_ signal: HouseholdMealSignal, currentSignal: HouseholdMealSignal?, recipeID: String) -> some View {
-        let isSelected = currentSignal == signal
-        return Button {
-            Task {
-                await appModel.householdMealSignalStore.setSignal(
-                    householdID: householdID,
-                    recipeID: recipeID,
-                    signal: isSelected ? nil : signal
-                )
-            }
-        } label: {
-            HStack(alignment: .center, spacing: 8) {
-                Image(systemName: signal.systemImage)
-                    .frame(width: 20)
-                Text(signal.labelKey)
-                    .multilineTextAlignment(.center)
-            }
-            .font(.footnote.weight(.semibold))
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
-        }
-        .buttonStyle(.bordered)
-        .tint(isSelected ? VecklyDesign.Colors.hearthOrangeText : VecklyDesign.Colors.inkMid)
-        .accessibilityLabel(L10n.string(signal.accessibilityKey(isSelected: isSelected)))
-    }
-
     private func toggleVote(_ vote: MealVote, recipeID: String) async {
         let newVote: MealVote? = currentVote == vote ? nil : vote
         await appModel.feedbackStore.setVote(
@@ -292,29 +227,15 @@ struct DayDetailContent: View {
             vote: newVote
         )
     }
-}
 
-private extension HouseholdMealSignal {
-    var labelKey: LocalizedStringKey {
-        switch self {
-        case .worksForFamily: return "meal.householdSignal.works"
-        case .notForUs: return "meal.householdSignal.notForUs"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .worksForFamily: return "checkmark.seal"
-        case .notForUs: return "xmark.seal"
-        }
-    }
-
-    func accessibilityKey(isSelected: Bool) -> String {
-        switch (self, isSelected) {
-        case (.worksForFamily, false): return "accessibility.householdSignal.markWorks"
-        case (.worksForFamily, true): return "accessibility.householdSignal.removeWorks"
-        case (.notForUs, false): return "accessibility.householdSignal.markNotForUs"
-        case (.notForUs, true): return "accessibility.householdSignal.removeNotForUs"
+    private func toggleHouseholdSignal(_ signal: HouseholdMealSignal, recipeID: String) {
+        let current = appModel.householdMealSignalStore.signal(for: recipeID)
+        Task {
+            await appModel.householdMealSignalStore.setSignal(
+                householdID: householdID,
+                recipeID: recipeID,
+                signal: current == signal ? nil : signal
+            )
         }
     }
 }

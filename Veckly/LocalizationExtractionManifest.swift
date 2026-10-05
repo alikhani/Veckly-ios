@@ -177,6 +177,7 @@ private enum LocalizationExtractionManifest {
         _ = String(localized: "household.summary.child.other")
         _ = String(localized: "household.summary.combined")
         _ = String(localized: "language.system")
+        _ = String(localized: "common.more")
         _ = String(localized: "meal.chooseForDay")
         _ = String(localized: "meal.lockDay")
         _ = String(localized: "meal.noAssigned")

@@ -1055,6 +1055,22 @@
         }
       }
     },
+    "common.more" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More actions"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fler åtgärder"
+          }
+        }
+      }
+    },
     "common.edit" : {
       "localizations" : {
         "en" : {
@@ -8902,23 +8918,6 @@
         }
       }
     },
-    "week.empty.secondary" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Or choose each day"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eller välj dag för dag"
-          }
-        }
-      }
-    },
     "week.empty.title" : {
       "localizations" : {
         "en" : {
@@ -9283,23 +9282,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nästa vecka"
-          }
-        }
-      }
-    },
-    "week.nextWeek.empty.cta" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plan the week"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Planera veckan"
           }
         }
       }
@@ -9828,23 +9810,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En meningsfull förbättring"
-          }
-        }
-      }
-    },
-    "week.quality.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Week check"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veckokoll"
           }
         }
       }

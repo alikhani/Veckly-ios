@@ -108,7 +108,10 @@ struct MealPickerSheet: View {
                         householdID: householdID,
                         onViewRecipe: { previewRecipeID = confirmedRecipe.id },
                         onSwap: { self.confirmedRecipe = nil },
-                        onSkip: { showSkipConfirmation = true },
+                        onSkip: {
+                            onSkip()
+                            onDismiss()
+                        },
                         onClear: onClear,
                         onMarkAsLeftover: { onMarkAsLeftover(confirmedRecipe.id) }
                     )

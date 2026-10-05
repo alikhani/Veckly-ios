@@ -137,7 +137,7 @@ final class VecklyUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["What's for dinner tonight?"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Plan tonight"].exists)
         XCTAssertTrue(app.staticTexts["3 planning days left"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Plan the rest"].exists)
+        XCTAssertTrue(app.buttons["Fill 3 open days"].exists)
         XCTAssertFalse(app.staticTexts["The week is planned"].exists)
     }
 
@@ -154,7 +154,7 @@ final class VecklyUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Monday Pasta"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["The week is planned"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Open the shopping list"].exists)
-        XCTAssertFalse(app.buttons["Plan the rest"].exists)
+        XCTAssertFalse(app.buttons["Fill 3 open days"].exists)
     }
 
     /// Fas 6: destructive account/household actions must stay tucked away

@@ -177,39 +177,6 @@ struct WeekTabView: View {
                     onSelectWeek: { _ in Task { await reloadViewedWeek() } }
                 )
 
-                sessionEndBeatCard
-
-                if let fillCompletionNotice {
-                    fillCompletionBanner(fillCompletionNotice)
-                }
-
-                if isViewingCurrentWeek, !retroViewModel.rows.isEmpty {
-                    RetroCard(
-                        viewModel: retroViewModel,
-                        outcomeStore: appModel.mealOutcomeStore,
-                        householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                        recipes: appModel.recipeStore.recipes,
-                        onResolved: {
-                            appModel.recordProductEvent(.retroCompleted, weekStartDate: WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1))
-                            retroViewModel.clear()
-                        }
-                    )
-                }
-
-                if appModel.weekStore.hasPendingSync && isViewingCurrentWeek {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text(weekPendingSyncMessage)
-                            .font(.caption)
-                            .foregroundStyle(VecklyDesign.Colors.inkMid)
-                    }
-                }
-
-                if isViewingCurrentWeek {
-                    weekendNudgeBanner
-                }
-
                 if CoreLoadingGate.shouldShowLoadingPanel(
                     isLoadingHouseholds: appModel.householdStore.isLoading,
                     isLoadingContent: appModel.weekStore.isLoading,
@@ -228,6 +195,8 @@ struct WeekTabView: View {
                 } else if !appModel.weekStore.hasWeekContent {
                     if isViewingCurrentWeek {
                         emptyWeekView
+                        primaryAssistantMessage
+                        secondaryWeekContent
                     } else {
                         tonightHeroCard
                         if isViewingLastWeek {
@@ -240,10 +209,10 @@ struct WeekTabView: View {
                     if !isViewingLastWeek {
                         weekPlanningStatusCard
                     }
-                    weekExplanationSummary
-                    weekQualityCard
+                    primaryAssistantMessage
                     weekList
                     collapsedWeekendSection
+                    secondaryWeekContent
                 }
             }
             .padding(18)
@@ -679,6 +648,47 @@ struct WeekTabView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: regenerateUndoContext?.id)
+    }
+
+    @ViewBuilder
+    private var primaryAssistantMessage: some View {
+        if showSessionEndBeat, isViewingCurrentWeek {
+            sessionEndBeatCard
+        } else if let fillCompletionNotice {
+            fillCompletionBanner(fillCompletionNotice)
+        } else if isViewingCurrentWeek {
+            weekendNudgeBanner
+        }
+    }
+
+    @ViewBuilder
+    private var secondaryWeekContent: some View {
+        weekQualityCard
+        weekExplanationSummary
+
+        if isViewingCurrentWeek, !retroViewModel.rows.isEmpty {
+            RetroCard(
+                viewModel: retroViewModel,
+                outcomeStore: appModel.mealOutcomeStore,
+                householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                recipes: appModel.recipeStore.recipes,
+                onResolved: {
+                    appModel.recordProductEvent(.retroCompleted, weekStartDate: WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1))
+                    retroViewModel.clear()
+                }
+            )
+        }
+
+        if appModel.weekStore.hasPendingSync && isViewingCurrentWeek {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(weekPendingSyncMessage)
+                    .font(.caption)
+                    .foregroundStyle(VecklyDesign.Colors.inkMid)
+            }
+            .padding(.horizontal, 4)
+            .accessibilityElement(children: .combine)
+        }
     }
 
     /// Runs Generate/Regenerate. When replacing an already-full week, snapshots
@@ -1265,8 +1275,7 @@ struct WeekTabView: View {
     @ViewBuilder
     private var weekQualityCard: some View {
         if !isViewingLastWeek, let suggestion = visibleQualitySuggestion {
-            VecklyCard {
-                VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
                         Text("week.quality.suggestion.title")
                             .font(.caption.weight(.semibold))
@@ -1302,9 +1311,9 @@ struct WeekTabView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
                     .accessibilityIdentifier("weekQualitySuggestionAction")
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
             .confirmationDialog(
                 L10n.string("week.quality.suggestion.confirmTitle"),
                 isPresented: $showQualitySuggestionConfirmation,
