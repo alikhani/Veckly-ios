@@ -13,6 +13,7 @@ struct ShoppingListTabView: View {
     @State private var reminderExportNotice: ShoppingReminderExportNotice?
     @State private var isExportingReminders = false
     @State private var showPendingSyncIndicator = false
+    @State private var showCategoryOrder = false
 
     private var totalItemCount: Int {
         appModel.shoppingListStore.groups.flatMap { $0.items }.count
@@ -97,6 +98,17 @@ struct ShoppingListTabView: View {
         .accessibilityLabel(L10n.string("shopping.customItem.add"))
     }
 
+    private var categoryOrderButton: some View {
+        Button { showCategoryOrder = true } label: {
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.callout.weight(.semibold))
+                .frame(minWidth: 20, minHeight: 24)
+        }
+        .buttonStyle(.bordered)
+        .tint(VecklyDesign.Colors.inkMid)
+        .accessibilityLabel(L10n.string("shopping.categoryOrder.action"))
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -140,6 +152,7 @@ struct ShoppingListTabView: View {
                         }
                         HStack(spacing: 12) {
                             Spacer(minLength: 0)
+                            categoryOrderButton
                             shareMenu
                             addItemButton
                         }
@@ -154,6 +167,7 @@ struct ShoppingListTabView: View {
                                     .layoutPriority(-1)
                             }
                             Spacer()
+                            categoryOrderButton
                             shareMenu
                             addItemButton
                         }
@@ -328,6 +342,13 @@ struct ShoppingListTabView: View {
         .sheet(isPresented: $showCustomItemSheet) {
             ShoppingCustomItemSheet { label, category in
                 appModel.shoppingListStore.addCustomItem(label: label, category: category)
+            }
+        }
+        .sheet(isPresented: $showCategoryOrder) {
+            if let household = appModel.householdStore.activeHousehold {
+                ShoppingCategoryOrderSheet(initialOrder: appModel.shoppingListStore.categoryOrder) { order in
+                    await appModel.shoppingListStore.updateCategoryOrder(order, householdID: household.id)
+                }
             }
         }
         .onAppear {
@@ -651,6 +672,68 @@ struct ShoppingGroupView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct ShoppingCategoryOrderSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var order: [ShoppingCategory]
+    @State private var isSaving = false
+    let onSave: ([ShoppingCategory]) async -> Void
+
+    init(initialOrder: [ShoppingCategory], onSave: @escaping ([ShoppingCategory]) async -> Void) {
+        _order = State(initialValue: initialOrder)
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(order) { category in
+                        Label(category.displayLabel, systemImage: category.systemImage)
+                    }
+                    .onMove { source, destination in
+                        order.move(fromOffsets: source, toOffset: destination)
+                    }
+                } footer: {
+                    Text("shopping.categoryOrder.footer")
+                }
+            }
+            .environment(\.editMode, .constant(.active))
+            .navigationTitle("shopping.categoryOrder.title")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("common.save") {
+                        isSaving = true
+                        Task {
+                            await onSave(order)
+                            dismiss()
+                        }
+                    }
+                    .disabled(isSaving)
+                }
+            }
+        }
+        .interactiveDismissDisabled(isSaving)
+    }
+}
+
+private extension ShoppingCategory {
+    var systemImage: String {
+        switch self {
+        case .produce: "carrot"
+        case .meat: "takeoutbag.and.cup.and.straw"
+        case .dairy: "waterbottle"
+        case .pantry: "cabinet"
+        case .frozen: "snowflake"
+        case .bakery: "birthday.cake"
+        case .other: "ellipsis.circle"
         }
     }
 }

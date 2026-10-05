@@ -2239,6 +2239,12 @@
         }
       }
     },
+    "error.shopping.categoryOrder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "We couldn't save the store order." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Det gick inte att spara butiksordningen." } }
+      }
+    },
     "error.shopping.load" : {
       "localizations" : {
         "en" : {
@@ -8115,6 +8121,24 @@
         }
       }
     },
+    "shopping.categoryOrder.action" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Arrange store aisles" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ordna butiksvarv" } }
+      }
+    },
+    "shopping.categoryOrder.footer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use the order you usually walk through the store. Everyone in the household will see the same order." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Ordna efter varvet ni brukar ta i butiken. Alla i hushållet ser samma ordning." } }
+      }
+    },
+    "shopping.categoryOrder.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Store order" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Butiksordning" } }
+      }
+    },
     "shopping.category.bakery" : {
       "localizations" : {
         "en" : {
@@ -8964,6 +8988,12 @@
             "value" : "Extra %@ täcker också en senare middag."
           }
         }
+      }
+    },
+    "week.explanation.pantryCoverage" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Uses what you have: %@" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Använder det ni har: %@" } }
       }
     },
     "week.explanation.sharedIngredient" : {
@@ -9926,6 +9956,12 @@
         }
       }
     },
+    "week.reason.pantryCoverage" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Uses what you have" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Använder det ni har" } }
+      }
+    },
     "week.reason.weekOverride" : {
       "localizations" : {
         "en" : {
@@ -10628,6 +10664,18 @@
             "value" : "Inget särskilt den här veckan"
           }
         }
+      }
+    },
+    "weekBrief.pantry.subtitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Prioritize dinners that make use of these ingredients." } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Prioritera middagar som tar vara på de här råvarorna." } }
+      }
+    },
+    "weekBrief.pantry.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use what we have" } },
+        "sv" : { "stringUnit" : { "state" : "translated", "value" : "Använd det vi har" } }
       }
     },
     "weekBrief.saving" : {

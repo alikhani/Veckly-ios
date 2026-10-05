@@ -243,6 +243,16 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /households/{householdId}/shopping-lists/{weekStartDate}/state`.
     /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)`.
     func updateShoppingListState(_ input: Operations.updateShoppingListState.Input) async throws -> Operations.updateShoppingListState.Output
+    /// Read household shopping preferences
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-preferences`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)`.
+    func getShoppingPreferences(_ input: Operations.getShoppingPreferences.Input) async throws -> Operations.getShoppingPreferences.Output
+    /// Replace household shopping preferences
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/shopping-preferences`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)`.
+    func putShoppingPreferences(_ input: Operations.putShoppingPreferences.Input) async throws -> Operations.putShoppingPreferences.Output
     /// List a household's recipes
     ///
     /// - Remark: HTTP `GET /households/{householdId}/recipes`.
@@ -1000,6 +1010,34 @@ extension APIProtocol {
         body: Operations.updateShoppingListState.Input.Body? = nil
     ) async throws -> Operations.updateShoppingListState.Output {
         try await updateShoppingListState(Operations.updateShoppingListState.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Read household shopping preferences
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-preferences`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)`.
+    internal func getShoppingPreferences(
+        path: Operations.getShoppingPreferences.Input.Path,
+        headers: Operations.getShoppingPreferences.Input.Headers = .init()
+    ) async throws -> Operations.getShoppingPreferences.Output {
+        try await getShoppingPreferences(Operations.getShoppingPreferences.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Replace household shopping preferences
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/shopping-preferences`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)`.
+    internal func putShoppingPreferences(
+        path: Operations.putShoppingPreferences.Input.Path,
+        headers: Operations.putShoppingPreferences.Input.Headers = .init(),
+        body: Operations.putShoppingPreferences.Input.Body
+    ) async throws -> Operations.putShoppingPreferences.Output {
+        try await putShoppingPreferences(Operations.putShoppingPreferences.Input(
             path: path,
             headers: headers,
             body: body
@@ -2919,15 +2957,23 @@ internal enum Components {
         internal struct GenerateWeekPlanRequest: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanRequest/regenerate`.
             internal var regenerate: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/GenerateWeekPlanRequest/pantryItemKeys`.
+            internal var pantryItemKeys: [Swift.String]?
             /// Creates a new `GenerateWeekPlanRequest`.
             ///
             /// - Parameters:
             ///   - regenerate:
-            internal init(regenerate: Swift.Bool? = nil) {
+            ///   - pantryItemKeys:
+            internal init(
+                regenerate: Swift.Bool? = nil,
+                pantryItemKeys: [Swift.String]? = nil
+            ) {
                 self.regenerate = regenerate
+                self.pantryItemKeys = pantryItemKeys
             }
             internal enum CodingKeys: String, CodingKey {
                 case regenerate
+                case pantryItemKeys
             }
         }
         /// - Remark: Generated from `#/components/schemas/CausedBy`.
@@ -3577,6 +3623,7 @@ internal enum Components {
                         case new_hyphen_for_hyphen_variety = "new-for-variety"
                         case quick_hyphen_weekday = "quick-weekday"
                         case week_hyphen_override = "week-override"
+                        case pantry_hyphen_coverage = "pantry-coverage"
                     }
                     /// - Remark: Generated from `#/components/schemas/AppendWeekPlanEventRequest/value2/case3/reason`.
                     internal var reason: Components.Schemas.AppendWeekPlanEventRequest.Value2Payload.Case3Payload.reasonPayload?
@@ -4500,6 +4547,35 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case3`.
             case case3(Components.Schemas.WeekPlanExplanation.Case3Payload)
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case4`.
+            internal struct Case4Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case4/kind`.
+                internal enum kindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case pantry_hyphen_coverage = "pantry-coverage"
+                }
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case4/kind`.
+                internal var kind: Components.Schemas.WeekPlanExplanation.Case4Payload.kindPayload
+                /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case4/ingredients`.
+                internal var ingredients: [Swift.String]
+                /// Creates a new `Case4Payload`.
+                ///
+                /// - Parameters:
+                ///   - kind:
+                ///   - ingredients:
+                internal init(
+                    kind: Components.Schemas.WeekPlanExplanation.Case4Payload.kindPayload,
+                    ingredients: [Swift.String]
+                ) {
+                    self.kind = kind
+                    self.ingredients = ingredients
+                }
+                internal enum CodingKeys: String, CodingKey {
+                    case kind
+                    case ingredients
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WeekPlanExplanation/case4`.
+            case case4(Components.Schemas.WeekPlanExplanation.Case4Payload)
             internal init(from decoder: any Swift.Decoder) throws {
                 var errors: [any Swift.Error] = []
                 do {
@@ -4520,6 +4596,12 @@ internal enum Components {
                 } catch {
                     errors.append(error)
                 }
+                do {
+                    self = .case4(try .init(from: decoder))
+                    return
+                } catch {
+                    errors.append(error)
+                }
                 throw Swift.DecodingError.failedToDecodeOneOfSchema(
                     type: Self.self,
                     codingPath: decoder.codingPath,
@@ -4533,6 +4615,8 @@ internal enum Components {
                 case let .case2(value):
                     try value.encode(to: encoder)
                 case let .case3(value):
+                    try value.encode(to: encoder)
+                case let .case4(value):
                     try value.encode(to: encoder)
                 }
             }
@@ -4627,6 +4711,7 @@ internal enum Components {
                 case new_hyphen_for_hyphen_variety = "new-for-variety"
                 case quick_hyphen_weekday = "quick-weekday"
                 case week_hyphen_override = "week-override"
+                case pantry_hyphen_coverage = "pantry-coverage"
             }
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/reason`.
             internal var reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload?
@@ -6751,6 +6836,68 @@ internal enum Components {
             internal enum CodingKeys: String, CodingKey {
                 case expectedUpdatedAt
                 case state
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ShoppingPreferences`.
+        internal struct ShoppingPreferences: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ShoppingPreferences/categoryOrderPayload`.
+            internal enum categoryOrderPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case produce = "produce"
+                case protein = "protein"
+                case dairy = "dairy"
+                case pantry = "pantry"
+                case frozen = "frozen"
+                case bakery = "bakery"
+                case other = "other"
+            }
+            /// - Remark: Generated from `#/components/schemas/ShoppingPreferences/categoryOrder`.
+            internal typealias categoryOrderPayload = [Components.Schemas.ShoppingPreferences.categoryOrderPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/ShoppingPreferences/categoryOrder`.
+            internal var categoryOrder: Components.Schemas.ShoppingPreferences.categoryOrderPayload
+            /// - Remark: Generated from `#/components/schemas/ShoppingPreferences/updatedAt`.
+            internal var updatedAt: Swift.String?
+            /// Creates a new `ShoppingPreferences`.
+            ///
+            /// - Parameters:
+            ///   - categoryOrder:
+            ///   - updatedAt:
+            internal init(
+                categoryOrder: Components.Schemas.ShoppingPreferences.categoryOrderPayload,
+                updatedAt: Swift.String? = nil
+            ) {
+                self.categoryOrder = categoryOrder
+                self.updatedAt = updatedAt
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case categoryOrder
+                case updatedAt
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpdateShoppingPreferences`.
+        internal struct UpdateShoppingPreferences: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingPreferences/categoryOrderPayload`.
+            internal enum categoryOrderPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case produce = "produce"
+                case protein = "protein"
+                case dairy = "dairy"
+                case pantry = "pantry"
+                case frozen = "frozen"
+                case bakery = "bakery"
+                case other = "other"
+            }
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingPreferences/categoryOrder`.
+            internal typealias categoryOrderPayload = [Components.Schemas.UpdateShoppingPreferences.categoryOrderPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/UpdateShoppingPreferences/categoryOrder`.
+            internal var categoryOrder: Components.Schemas.UpdateShoppingPreferences.categoryOrderPayload
+            /// Creates a new `UpdateShoppingPreferences`.
+            ///
+            /// - Parameters:
+            ///   - categoryOrder:
+            internal init(categoryOrder: Components.Schemas.UpdateShoppingPreferences.categoryOrderPayload) {
+                self.categoryOrder = categoryOrder
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case categoryOrder
             }
         }
         /// - Remark: Generated from `#/components/schemas/CreateRecipe`.
@@ -19154,6 +19301,446 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Read household shopping preferences
+    ///
+    /// - Remark: HTTP `GET /households/{householdId}/shopping-preferences`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)`.
+    internal enum getShoppingPreferences {
+        internal static let id: Swift.String = "getShoppingPreferences"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/GET/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/GET/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.getShoppingPreferences.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/GET/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getShoppingPreferences.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getShoppingPreferences.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.getShoppingPreferences.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            internal init(
+                path: Operations.getShoppingPreferences.Input.Path,
+                headers: Operations.getShoppingPreferences.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/GET/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ShoppingPreferences)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ShoppingPreferences {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingPreferences.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingPreferences.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Shopping preferences
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.getShoppingPreferences.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.getShoppingPreferences.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.getShoppingPreferences.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.getShoppingPreferences.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getShoppingPreferences.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/get(getShoppingPreferences)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getShoppingPreferences.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Replace household shopping preferences
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/shopping-preferences`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)`.
+    internal enum putShoppingPreferences {
+        internal static let id: Swift.String = "putShoppingPreferences"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                internal init(householdId: Swift.String) {
+                    self.householdId = householdId
+                }
+            }
+            internal var path: Operations.putShoppingPreferences.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.putShoppingPreferences.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.putShoppingPreferences.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.putShoppingPreferences.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpdateShoppingPreferences)
+            }
+            internal var body: Operations.putShoppingPreferences.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.putShoppingPreferences.Input.Path,
+                headers: Operations.putShoppingPreferences.Input.Headers = .init(),
+                body: Operations.putShoppingPreferences.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-preferences/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ShoppingPreferences)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ShoppingPreferences {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.putShoppingPreferences.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.putShoppingPreferences.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Updated shopping preferences
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.putShoppingPreferences.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.putShoppingPreferences.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct BadRequest: Sendable, Hashable {
+                /// Creates a new `BadRequest`.
+                internal init() {}
+            }
+            /// Invalid category order
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.putShoppingPreferences.Output.BadRequest)
+            /// Invalid category order
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            internal static var badRequest: Self {
+                .badRequest(.init())
+            }
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.putShoppingPreferences.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.putShoppingPreferences.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.putShoppingPreferences.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.putShoppingPreferences.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.putShoppingPreferences.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

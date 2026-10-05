@@ -82,15 +82,17 @@ enum WeekExplanation: Decodable, Equatable {
     case weekContext(date: String, recipeTitle: String)
     case leftoverChain(recipeTitle: String, cookDate: String, coveredDates: [String])
     case sharedIngredient(ingredient: String, dinnerCount: Int)
+    case pantryCoverage(ingredients: [String])
 
     private enum CodingKeys: String, CodingKey {
-        case kind, date, recipeTitle, cookDate, coveredDates, ingredient, dinnerCount
+        case kind, date, recipeTitle, cookDate, coveredDates, ingredient, dinnerCount, ingredients
     }
 
     private enum Kind: String, Decodable {
         case weekContext = "week-context"
         case leftoverChain = "leftover-chain"
         case sharedIngredient = "shared-ingredient"
+        case pantryCoverage = "pantry-coverage"
     }
 
     init(from decoder: Decoder) throws {
@@ -112,6 +114,8 @@ enum WeekExplanation: Decodable, Equatable {
                 ingredient: try container.decode(String.self, forKey: .ingredient),
                 dinnerCount: try container.decode(Int.self, forKey: .dinnerCount)
             )
+        case .pantryCoverage:
+            self = .pantryCoverage(ingredients: try container.decode([String].self, forKey: .ingredients))
         }
     }
 
@@ -123,6 +127,8 @@ enum WeekExplanation: Decodable, Equatable {
             L10n.format("week.explanation.leftovers", recipeTitle)
         case let .sharedIngredient(ingredient, _):
             L10n.format("week.explanation.sharedIngredient", ingredient)
+        case let .pantryCoverage(ingredients):
+            L10n.format("week.explanation.pantryCoverage", ingredients.joined(separator: ", "))
         }
     }
 }
@@ -200,6 +206,7 @@ enum AssignmentReason: String, Decodable {
     case newForVariety = "new-for-variety"
     case quickWeekday = "quick-weekday"
     case weekOverride = "week-override"
+    case pantryCoverage = "pantry-coverage"
 
     var label: String {
         switch self {
@@ -210,8 +217,14 @@ enum AssignmentReason: String, Decodable {
         case .newForVariety: return L10n.string("week.reason.newForVariety")
         case .quickWeekday: return L10n.string("week.reason.quickWeekday")
         case .weekOverride: return L10n.string("week.reason.weekOverride")
+        case .pantryCoverage: return L10n.string("week.reason.pantryCoverage")
         }
     }
+}
+
+struct ShoppingPreferences: Equatable {
+    let categoryOrder: [String]
+    let updatedAt: String?
 }
 
 /// `.low` means the pick was a compromise (e.g. a repeated cuisine/protein,

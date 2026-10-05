@@ -217,7 +217,13 @@ final class WeekStore {
         schedulePendingFlush()
     }
 
-    func generateWeek(household: Household, userID: String, regenerate: Bool = false, viewedWeekStartDate: String? = nil) async {
+    func generateWeek(
+        household: Household,
+        userID: String,
+        regenerate: Bool = false,
+        viewedWeekStartDate: String? = nil,
+        pantryItemKeys: [String] = []
+    ) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         guard generatingWeekStartDate == nil else { return }
         mutationError = nil
@@ -225,7 +231,12 @@ final class WeekStore {
         defer { generatingWeekStartDate = nil }
 
         do {
-            try await apiClient.generateWeekPlan(householdID: household.id, weekStartDate: targetWeekStartDate, regenerate: regenerate)
+            try await apiClient.generateWeekPlan(
+                householdID: household.id,
+                weekStartDate: targetWeekStartDate,
+                regenerate: regenerate,
+                pantryItemKeys: pantryItemKeys
+            )
             weekCache.removeValue(forKey: targetWeekStartDate)
             if targetWeekStartDate == weekStartDate {
                 await loadCurrentWeek(household: household, force: true)
@@ -748,6 +759,7 @@ protocol WeekStoreAPIClient {
         event: WeekPlanEventInput
     ) async throws
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool, pantryItemKeys: [String]) async throws
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe
     func previewWeekRescue(
         householdID: String, weekStartDate: String, date: String,
@@ -765,6 +777,12 @@ protocol WeekStoreAPIClient {
     func applyPreviousWeekProposal(
         householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
     ) async throws
+}
+
+extension WeekStoreAPIClient {
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool, pantryItemKeys: [String]) async throws {
+        try await generateWeekPlan(householdID: householdID, weekStartDate: weekStartDate, regenerate: regenerate)
+    }
 }
 
 extension WeekStoreAPIClient {

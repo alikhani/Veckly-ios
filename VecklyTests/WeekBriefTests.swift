@@ -1,7 +1,25 @@
+import Foundation
 import Testing
 @testable import Veckly
 
 struct WeekBriefDraftTests {
+    @Test func pantrySuggestionsOnlyIncludeAvailableItemsAndStayCompact() {
+        let suggestions = PantryPlanningItem.suggestions(from: [
+            "pantry:brown-rice:g": 250,
+            "produce:tomato:": 3,
+            "dairy:milk:ml": 0,
+            "protein:beans:g": 100,
+            "frozen:peas:g": 200,
+            "pantry:pasta:g": 500,
+            "produce:onion:": 2,
+        ])
+
+        #expect(suggestions.count == 5)
+        #expect(!suggestions.contains { $0.id == "dairy:milk:ml" })
+        #expect(suggestions.contains(PantryPlanningItem(id: "pantry:brown-rice:g", label: "Brown Rice")))
+        #expect(suggestions.map(\.label) == suggestions.map(\.label).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
+    }
+
     @Test func startsFromHouseholdRhythmAndOnlyActivatesSavedDifferences() {
         let profile = HouseholdProfile(
             householdId: "h1",

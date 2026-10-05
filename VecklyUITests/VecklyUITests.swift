@@ -73,6 +73,12 @@ final class VecklyUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["spaghetti"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["We could not load your shopping list."].exists)
 
+        app.buttons["Arrange store aisles"].tap()
+        XCTAssertTrue(app.navigationBars["Store order"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Fruit & veg"].exists)
+        XCTAssertTrue(app.staticTexts["Pantry"].exists)
+        app.buttons["Cancel"].tap()
+
         app.tabBars.buttons["Household"].tap()
         XCTAssertTrue(app.staticTexts["Test household"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["We could not load your household."].exists)

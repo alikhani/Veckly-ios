@@ -524,10 +524,12 @@ struct WeekTabView: View {
                     rows: appModel.weekStore.dayRows,
                     profile: appModel.householdStore.cachedProfile(for: household.id),
                     isRegenerating: presentation.regenerate,
-                    onGenerate: {
+                    pantryItems: PantryPlanningItem.suggestions(from: appModel.shoppingListStore.pantryStock),
+                    onGenerate: { pantryItemKeys in
                         await performGenerate(
                             regenerate: presentation.regenerate,
-                            weekStartDate: presentation.weekStartDate
+                            weekStartDate: presentation.weekStartDate,
+                            pantryItemKeys: pantryItemKeys
                         )
                     }
                 )
@@ -695,7 +697,7 @@ struct WeekTabView: View {
     /// the unlocked/unskipped rows first so a successful run can offer "Undo" —
     /// there's no backend undo endpoint, so restoring is just re-issuing the
     /// same assign/clear calls a user would make by hand.
-    private func performGenerate(regenerate: Bool, weekStartDate: String? = nil) async {
+    private func performGenerate(regenerate: Bool, weekStartDate: String? = nil, pantryItemKeys: [String] = []) async {
         guard appModel.weekStore.generatingWeekStartDate == nil else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
         guard let userID = appModel.authSessionStore.userID else {
@@ -727,7 +729,8 @@ struct WeekTabView: View {
             household: household,
             userID: userID,
             regenerate: regenerate,
-            viewedWeekStartDate: targetWeekStartDate
+            viewedWeekStartDate: targetWeekStartDate,
+            pantryItemKeys: pantryItemKeys
         )
         if !regenerate, viewedWeekStartDate == targetWeekStartDate {
             if appModel.weekStore.mutationError == nil {

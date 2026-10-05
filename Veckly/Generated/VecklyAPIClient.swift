@@ -654,10 +654,10 @@ struct VecklyAPIClient {
         }
     }
 
-    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool, pantryItemKeys: [String] = []) async throws {
         let output = try await _client.generateWeekPlan(
             path: .init(householdId: householdID, weekStartDate: weekStartDate),
-            body: .json(.init(regenerate: regenerate))
+            body: .json(.init(regenerate: regenerate, pantryItemKeys: pantryItemKeys))
         )
         switch output {
         case .ok:
@@ -678,6 +678,15 @@ struct VecklyAPIClient {
         case let .undocumented(statusCode, _):
             throw APIError.server(statusCode: statusCode)
         }
+    }
+
+    func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
+        try await generateWeekPlan(
+            householdID: householdID,
+            weekStartDate: weekStartDate,
+            regenerate: regenerate,
+            pantryItemKeys: []
+        )
     }
 
     func weekPulse(householdID: String, weekStartDate: String) async throws -> WeekPulse {
@@ -1092,6 +1101,40 @@ struct VecklyAPIClient {
             throw APIError.server(statusCode: http.statusCode)
         }
     }
+
+    func shoppingPreferences(householdID: String) async throws -> ShoppingPreferences {
+        let output = try await _client.getShoppingPreferences(path: .init(householdId: householdID))
+        switch output {
+        case let .ok(response):
+            let value = try response.body.json
+            return ShoppingPreferences(categoryOrder: value.categoryOrder.map(\.rawValue), updatedAt: value.updatedAt)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
+
+    func updateShoppingPreferences(householdID: String, categoryOrder: [String]) async throws -> ShoppingPreferences {
+        let generatedOrder = try categoryOrder.map { raw -> Components.Schemas.UpdateShoppingPreferences.categoryOrderPayloadPayload in
+            guard let value = Components.Schemas.UpdateShoppingPreferences.categoryOrderPayloadPayload(rawValue: raw) else {
+                throw APIError.invalidResponse
+            }
+            return value
+        }
+        let output = try await _client.putShoppingPreferences(
+            path: .init(householdId: householdID),
+            body: .json(.init(categoryOrder: generatedOrder))
+        )
+        switch output {
+        case let .ok(response):
+            let value = try response.body.json
+            return ShoppingPreferences(categoryOrder: value.categoryOrder.map(\.rawValue), updatedAt: value.updatedAt)
+        case .badRequest: throw APIError.server(statusCode: 400)
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
 }
 
 private struct ShoppingListStateUpdateRequest: Encodable {
@@ -1382,6 +1425,8 @@ private extension Components.Schemas.WeekPlanExplanation {
             )
         case let .case3(payload):
             .sharedIngredient(ingredient: payload.ingredient, dinnerCount: payload.dinnerCount)
+        case let .case4(payload):
+            .pantryCoverage(ingredients: payload.ingredients)
         }
     }
 }
@@ -1418,6 +1463,8 @@ private extension Components.Schemas.WeekPlanSummaryDay.reasonPayload {
             return .quickWeekday
         case .week_hyphen_override:
             return .weekOverride
+        case .pantry_hyphen_coverage:
+            return .pantryCoverage
         }
     }
 }

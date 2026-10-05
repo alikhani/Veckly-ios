@@ -345,6 +345,21 @@ struct WeekViewModelMapperTests {
     }
 
     @MainActor
+    @Test func generateWeekForwardsSelectedPantryItems() async {
+        let apiClient = CapturingWeekStoreAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        let pantryItemKeys = ["pantry:rice:g", "produce:tomato:"]
+
+        await store.generateWeek(
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner),
+            userID: "33333333-3333-3333-3333-333333333333",
+            pantryItemKeys: pantryItemKeys
+        )
+
+        #expect(apiClient.generatedPantryItemKeys == pantryItemKeys)
+    }
+
+    @MainActor
     @Test func toggleSkipKeepsLocalDayRowWhenAPIRequestFails() async {
         let store = WeekStore(
             apiClient: FailingWeekStoreAPIClient(),
@@ -958,6 +973,7 @@ private actor PausableWeekStoreAPIClient: WeekStoreAPIClient {
 
 private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
     private(set) var events: [WeekPlanEventInput] = []
+    private(set) var generatedPantryItemKeys: [String] = []
 
     func weekSummary(householdID: String, weekStartDate: String) async throws -> WeekSummary {
         throw APIError.notFound
@@ -973,6 +989,15 @@ private final class CapturingWeekStoreAPIClient: WeekStoreAPIClient {
     }
 
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {}
+
+    func generateWeekPlan(
+        householdID: String,
+        weekStartDate: String,
+        regenerate: Bool,
+        pantryItemKeys: [String]
+    ) async throws {
+        generatedPantryItemKeys = pantryItemKeys
+    }
 
     func recipe(householdID: String, recipeID: String) async throws -> FullRecipe {
         throw APIError.notFound

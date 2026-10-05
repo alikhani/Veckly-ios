@@ -1,6 +1,30 @@
 import Observation
 import SwiftUI
 
+struct PantryPlanningItem: Identifiable, Equatable {
+    let id: String
+    let label: String
+
+    static func suggestions(from pantryStock: [String: Double], limit: Int = 5) -> [PantryPlanningItem] {
+        pantryStock
+            .filter { $0.value > 0 }
+            .map { key, _ in
+                let parts = key.split(separator: ":", omittingEmptySubsequences: false)
+                let rawLabel = parts.count >= 2 ? String(parts[1]) : key
+                return PantryPlanningItem(
+                    id: key,
+                    label: rawLabel
+                        .replacingOccurrences(of: "-", with: " ")
+                        .replacingOccurrences(of: "_", with: " ")
+                        .localizedCapitalized
+                )
+            }
+            .sorted { $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending }
+            .prefix(limit)
+            .map { $0 }
+    }
+}
+
 enum WeekBriefSignal: String, CaseIterable, Hashable, Identifiable {
     case busy
     case late
@@ -233,13 +257,16 @@ final class WeekBriefStore {
 struct WeekBriefSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var store: WeekBriefStore
+    @State private var usePantry = false
+    @State private var selectedPantryKeys: Set<String>
     let householdID: String
     let weekStartDate: String
     let userID: String
     let rows: [WeekDayRowViewModel]
     let profile: HouseholdProfile?
     let isRegenerating: Bool
-    let onGenerate: () async -> Void
+    let pantryItems: [PantryPlanningItem]
+    let onGenerate: ([String]) async -> Void
 
     init(
         apiClient: any WeekBriefAPIClient,
@@ -249,15 +276,18 @@ struct WeekBriefSheet: View {
         rows: [WeekDayRowViewModel],
         profile: HouseholdProfile?,
         isRegenerating: Bool,
-        onGenerate: @escaping () async -> Void
+        pantryItems: [PantryPlanningItem],
+        onGenerate: @escaping ([String]) async -> Void
     ) {
         _store = State(initialValue: WeekBriefStore(apiClient: apiClient))
+        _selectedPantryKeys = State(initialValue: Set(pantryItems.map(\.id)))
         self.householdID = householdID
         self.weekStartDate = weekStartDate
         self.userID = userID
         self.rows = rows
         self.profile = profile
         self.isRegenerating = isRegenerating
+        self.pantryItems = pantryItems
         self.onGenerate = onGenerate
     }
 
@@ -301,6 +331,10 @@ struct WeekBriefSheet: View {
 
                 ForEach(draft.days) { day in
                     daySection(day)
+                }
+
+                if !pantryItems.isEmpty {
+                    pantrySection
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -357,6 +391,49 @@ struct WeekBriefSheet: View {
         }
     }
 
+    private var pantrySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: $usePantry) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("weekBrief.pantry.title")
+                        .font(.headline)
+                    Text("weekBrief.pantry.subtitle")
+                        .font(.footnote)
+                        .foregroundStyle(VecklyDesign.Colors.inkMid)
+                }
+            }
+            .tint(VecklyDesign.Colors.hearthOrangeFill)
+
+            if usePantry {
+                FlowLayout(spacing: 8) {
+                    ForEach(pantryItems) { item in
+                        let isSelected = selectedPantryKeys.contains(item.id)
+                        Button {
+                            if isSelected {
+                                if selectedPantryKeys.count > 1 {
+                                    selectedPantryKeys.remove(item.id)
+                                }
+                            } else {
+                                selectedPantryKeys.insert(item.id)
+                            }
+                        } label: {
+                            Text(item.label)
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 9)
+                                .foregroundStyle(isSelected ? Color.white : VecklyDesign.Colors.inkDeep)
+                                .background(isSelected ? VecklyDesign.Colors.hearthOrangePrimaryFill : Color("chipSurface"))
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(isSelected ? .isSelected : [])
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
     private func daySection(_ day: WeekBriefDay) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
@@ -411,6 +488,6 @@ struct WeekBriefSheet: View {
     private func saveAndGenerate() async {
         guard await store.save(householdID: householdID, weekStartDate: weekStartDate, userID: userID) else { return }
         dismiss()
-        await onGenerate()
+        await onGenerate(usePantry ? pantryItems.map(\.id).filter(selectedPantryKeys.contains) : [])
     }
 }

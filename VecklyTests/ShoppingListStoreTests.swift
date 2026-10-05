@@ -4,6 +4,64 @@ import Testing
 
 @MainActor
 struct ShoppingListStoreTests {
+    @Test func loadsSharedCategoryOrderAndUsesItForRenderedGroups() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.summary = ShoppingListSummary(
+            household: SummaryHousehold(
+                id: TestShoppingListFixtures.household.id,
+                name: TestShoppingListFixtures.household.name
+            ),
+            weekStartDate: TestShoppingListFixtures.weekStartDate,
+            updatedAt: "2026-06-22T09:00:00.000Z",
+            groups: [
+                ShoppingListGroup(category: "Produce", items: [
+                    ShoppingListItem(itemKey: "produce:apple:", label: "Apple", amount: nil, unit: nil, checked: false),
+                ]),
+                ShoppingListGroup(category: "Pantry", items: [
+                    ShoppingListItem(itemKey: "pantry:rice:g", label: "Rice", amount: "500", unit: "g", checked: false),
+                ]),
+            ]
+        )
+        apiClient.preferences = ShoppingPreferences(
+            categoryOrder: ["pantry", "produce", "protein", "dairy", "frozen", "bakery", "other"],
+            updatedAt: "2026-06-22T09:00:00.000Z"
+        )
+        let store = ShoppingListStore(apiClient: apiClient)
+
+        await store.loadCurrentWeek(
+            household: TestShoppingListFixtures.household,
+            weekStartDate: TestShoppingListFixtures.weekStartDate
+        )
+
+        #expect(store.categoryOrder.first == .pantry)
+        #expect(store.groups.map(\.category) == ["Pantry", "Produce"])
+    }
+
+    @Test func savesCategoryOrderWithCanonicalBackendValues() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        let store = ShoppingListStore(apiClient: apiClient)
+        let order: [ShoppingCategory] = [.pantry, .meat, .produce, .dairy, .frozen, .bakery, .other]
+
+        await store.updateCategoryOrder(order, householdID: TestShoppingListFixtures.household.id)
+
+        #expect(apiClient.preferenceUpdateRequests == [["pantry", "protein", "produce", "dairy", "frozen", "bakery", "other"]])
+        #expect(store.categoryOrder == order)
+    }
+
+    @Test func failedCategoryOrderSaveRestoresPreviousOrder() async {
+        let apiClient = FakeShoppingListStoreAPIClient()
+        apiClient.preferenceUpdateError = .server(statusCode: 500)
+        let store = ShoppingListStore(apiClient: apiClient)
+
+        await store.updateCategoryOrder(
+            [.pantry, .produce, .meat, .dairy, .frozen, .bakery, .other],
+            householdID: TestShoppingListFixtures.household.id
+        )
+
+        #expect(store.categoryOrder == ShoppingCategory.allCases)
+        #expect(store.mutationError == L10n.string("error.shopping.categoryOrder"))
+    }
+
     @Test func togglePersistsExistingPantryStock() async {
         let apiClient = FakeShoppingListStoreAPIClient()
         apiClient.state = ShoppingListSharedState(
@@ -694,6 +752,11 @@ private final class FakeShoppingListStoreAPIClient: ShoppingListStoreAPIClient {
 
     var summary = TestShoppingListFixtures.summary
     var state: ShoppingListSharedState?
+    var preferences = ShoppingPreferences(
+        categoryOrder: ShoppingCategory.allCases.map(\.preferenceValue),
+        updatedAt: nil
+    )
+    var preferenceUpdateError: APIError?
     var refetchedState: ShoppingListSharedState?
     var updateResponses: [Result<String?, APIError>] = [.success("2026-06-22T09:05:00.000Z")]
     var shouldThrowCancellation = false
@@ -701,12 +764,24 @@ private final class FakeShoppingListStoreAPIClient: ShoppingListStoreAPIClient {
     var commitFailedUpdateCount = 0
     private(set) var summaryFetchCount = 0
     private(set) var updateRequests: [UpdateRequest] = []
+    private(set) var preferenceUpdateRequests: [[String]] = []
     private var shoppingListStateCallCount = 0
 
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
         if shouldThrowCancellation { throw CancellationError() }
         summaryFetchCount += 1
         return summary
+    }
+
+    func shoppingPreferences(householdID: String) async throws -> ShoppingPreferences {
+        preferences
+    }
+
+    func updateShoppingPreferences(householdID: String, categoryOrder: [String]) async throws -> ShoppingPreferences {
+        preferenceUpdateRequests.append(categoryOrder)
+        if let preferenceUpdateError { throw preferenceUpdateError }
+        preferences = ShoppingPreferences(categoryOrder: categoryOrder, updatedAt: "2026-06-22T09:05:00.000Z")
+        return preferences
     }
 
     func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?) {

@@ -3,7 +3,7 @@ import Observation
 
 // MARK: - Shopping category
 
-enum ShoppingCategory: String, CaseIterable {
+enum ShoppingCategory: String, CaseIterable, Identifiable {
     case produce
     case meat
     case dairy
@@ -11,6 +11,8 @@ enum ShoppingCategory: String, CaseIterable {
     case frozen
     case bakery
     case other
+
+    var id: String { rawValue }
 
     static func from(_ raw: String) -> ShoppingCategory {
         switch raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
@@ -59,6 +61,8 @@ enum ShoppingCategory: String, CaseIterable {
         case .other:   return "Other"
         }
     }
+
+    var preferenceValue: String { self == .meat ? "protein" : rawValue }
 }
 
 // MARK: - Store
@@ -76,6 +80,7 @@ final class ShoppingListStore {
     private(set) var customItems: [ShoppingCustomItem] = []
     private(set) var checkedItems: Set<String> = []
     private(set) var pantryStock: [String: Double] = [:]
+    private(set) var categoryOrder: [ShoppingCategory] = ShoppingCategory.allCases
     private(set) var stateUpdatedAt: String?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -139,10 +144,15 @@ final class ShoppingListStore {
         do {
             async let summaryResult = apiClient.shoppingListSummary(householdID: household.id, weekStartDate: weekStartDate)
             async let stateResult = apiClient.shoppingListState(householdID: household.id, weekStartDate: weekStartDate)
+            async let preferencesResult = try? apiClient.shoppingPreferences(householdID: household.id)
 
             let summary = try await summaryResult
             let state = try await stateResult
+            let preferences = await preferencesResult
             guard generation == loadGeneration else { return }
+            if let preferences {
+                categoryOrder = Self.validatedCategoryOrder(preferences.categoryOrder.map(ShoppingCategory.from))
+            }
             self.summary = summary
             lastFetchedAt = Date()
             let mapped = ShoppingListViewModelMapper.map(from: summary)
@@ -229,6 +239,26 @@ final class ShoppingListStore {
         scheduleFlush()
     }
 
+    func updateCategoryOrder(_ order: [ShoppingCategory], householdID: String) async {
+        let next = Self.validatedCategoryOrder(order)
+        guard next != categoryOrder else { return }
+        let previous = categoryOrder
+        categoryOrder = next
+        rebuildGroups()
+        do {
+            let saved = try await apiClient.updateShoppingPreferences(
+                householdID: householdID,
+                categoryOrder: next.map(\.preferenceValue)
+            )
+            categoryOrder = Self.validatedCategoryOrder(saved.categoryOrder.map(ShoppingCategory.from))
+            rebuildGroups()
+        } catch {
+            categoryOrder = previous
+            rebuildGroups()
+            mutationError = L10n.string("error.shopping.categoryOrder")
+        }
+    }
+
     /// Unchecks all currently-checked items and returns their keys so the caller
     /// can offer an undo action that re-checks them.
     @discardableResult
@@ -280,6 +310,7 @@ final class ShoppingListStore {
         customItems = []
         checkedItems = []
         pantryStock = [:]
+        categoryOrder = ShoppingCategory.allCases
         stateUpdatedAt = nil
         errorMessage = nil
         mutationError = nil
@@ -310,11 +341,11 @@ final class ShoppingListStore {
         self.checkedItems = checkedItems
         self.pantryStock = pantryStock
         self.customItems = deduplicatedCustomItems(customItems)
-        groups = ShoppingListViewModelMapper.inject(
+        groups = sortGroups(ShoppingListViewModelMapper.inject(
             customItems: self.customItems,
             into: regularGroups,
             checkedItems: checkedItems
-        )
+        ))
     }
 
     private func applySharedState(_ state: MutableShoppingListState) {
@@ -335,6 +366,24 @@ final class ShoppingListStore {
 
     private func isSameCustomItem(_ item: ShoppingCustomItem, label: String, category: String) -> Bool {
         shoppingCustomItemIdentity(label: item.label, category: item.category) == shoppingCustomItemIdentity(label: label, category: category)
+    }
+
+    private func rebuildGroups() {
+        applySharedState(checkedItems: checkedItems, pantryStock: pantryStock, customItems: customItems)
+    }
+
+    private func sortGroups(_ groups: [ShoppingListGroup]) -> [ShoppingListGroup] {
+        let positions = Dictionary(uniqueKeysWithValues: categoryOrder.enumerated().map { ($0.element, $0.offset) })
+        return groups.sorted {
+            (positions[ShoppingCategory.from($0.category)] ?? Int.max)
+                < (positions[ShoppingCategory.from($1.category)] ?? Int.max)
+        }
+    }
+
+    private static func validatedCategoryOrder(_ raw: [ShoppingCategory]) -> [ShoppingCategory] {
+        var seen = Set<ShoppingCategory>()
+        let unique = raw.filter { seen.insert($0).inserted }
+        return Set(unique) == Set(ShoppingCategory.allCases) ? unique : ShoppingCategory.allCases
     }
 
     private func currentState() -> MutableShoppingListState {
@@ -811,6 +860,18 @@ protocol ShoppingListStoreAPIClient {
         expectedUpdatedAt: String?,
         customItems: [ShoppingCustomItem]
     ) async throws -> String?
+    func shoppingPreferences(householdID: String) async throws -> ShoppingPreferences
+    func updateShoppingPreferences(householdID: String, categoryOrder: [String]) async throws -> ShoppingPreferences
 }
 
 extension VecklyAPIClient: ShoppingListStoreAPIClient {}
+
+extension ShoppingListStoreAPIClient {
+    func shoppingPreferences(householdID: String) async throws -> ShoppingPreferences {
+        ShoppingPreferences(categoryOrder: ShoppingCategory.allCases.map(\.preferenceValue), updatedAt: nil)
+    }
+
+    func updateShoppingPreferences(householdID: String, categoryOrder: [String]) async throws -> ShoppingPreferences {
+        ShoppingPreferences(categoryOrder: categoryOrder, updatedAt: nil)
+    }
+}
