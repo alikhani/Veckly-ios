@@ -261,24 +261,12 @@ final class AppModel {
             return
         }
 
-        let meals = weekStore.currentWeekDayRows
-            .filter { !$0.isSkipped && $0.recipe != nil && WeekCalendar.date(from: $0.date).map { $0 >= Calendar.current.startOfDay(for: now) } == true }
-            .prefix(3)
-            .compactMap { row -> WidgetMealSnapshot? in
-                guard let recipe = row.recipe else { return nil }
-                let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
-                return WidgetMealSnapshot(
-                    date: row.date,
-                    title: recipe.title,
-                    minutes: total > 0 ? total : nil,
-                    recipeID: recipe.id
-                )
-            }
+        let meals = WidgetSnapshotBuilder.upcomingMeals(from: weekStore.currentWeekDayRows, now: now)
         let itemKeys = Set(shoppingListStore.groups.flatMap(\.items).map(\.itemKey))
         let remainingCount = itemKeys.subtracting(shoppingListStore.checkedItems).count
         WidgetSnapshotStore.save(WidgetSnapshot(
             updatedAt: now,
-            meals: Array(meals),
+            meals: meals,
             shoppingRemainingCount: remainingCount
         ))
     }

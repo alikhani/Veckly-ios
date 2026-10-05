@@ -20,6 +20,34 @@ struct WidgetSnapshot: Codable, Equatable {
     }
 }
 
+enum WidgetSnapshotBuilder {
+    static func upcomingMeals(
+        from rows: [WeekDayRowViewModel],
+        now: Date = Date(),
+        calendar: Calendar = Calendar.current
+    ) -> [WidgetMealSnapshot] {
+        let today = WeekCalendar.localDateString(from: now, calendar: calendar)
+        return rows
+            .filter { row in
+                !row.isSkipped
+                    && row.recipe != nil
+                    && WeekCalendar.date(from: row.date) != nil
+                    && row.date >= today
+            }
+            .prefix(3)
+            .compactMap { row in
+                guard let recipe = row.recipe else { return nil }
+                let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
+                return WidgetMealSnapshot(
+                    date: row.date,
+                    title: recipe.title,
+                    minutes: total > 0 ? total : nil,
+                    recipeID: recipe.id
+                )
+            }
+    }
+}
+
 enum WidgetSnapshotStore {
     static let appGroupID = "group.com.nimaalikhani.Veckly"
     static let storageKey = "widget.snapshot.v1"
