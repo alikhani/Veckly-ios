@@ -13,6 +13,9 @@ struct DayDetailSheet: View {
     /// which `MealPickerSheet`'s not-yet-saved preview relies on.
     var isLocked: Bool = false
     var onToggleLock: (() -> Void)? = nil
+    var onApplyPortionSuggestion: ((Int) async -> Bool)? = nil
+    var onIgnorePortionSuggestion: (() async -> Bool)? = nil
+    var onResetPortionMemory: (() async -> Bool)? = nil
     let onDismiss: () -> Void
 
     var body: some View {
@@ -29,7 +32,11 @@ struct DayDetailSheet: View {
                 onClear: onClear,
                 onMarkAsLeftover: onMarkAsLeftover,
                 isLocked: isLocked,
-                onToggleLock: onToggleLock
+                onToggleLock: onToggleLock,
+                onApplyPortionSuggestion: onApplyPortionSuggestion,
+                onIgnorePortionSuggestion: onIgnorePortionSuggestion,
+                onResetPortionMemory: onResetPortionMemory,
+                onDismiss: onDismiss
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -55,10 +62,16 @@ struct DayDetailContent: View {
     let onMarkAsLeftover: () -> Void
     var isLocked: Bool = false
     var onToggleLock: (() -> Void)? = nil
+    var onApplyPortionSuggestion: ((Int) async -> Bool)? = nil
+    var onIgnorePortionSuggestion: (() async -> Bool)? = nil
+    var onResetPortionMemory: (() async -> Bool)? = nil
+    var onDismiss: (() -> Void)? = nil
 
     @Environment(AppModel.self) private var appModel
     @State private var showClearConfirmation = false
     @State private var showSkipConfirmation = false
+    @State private var isUpdatingPortions = false
+    @State private var portionError: String?
 
     private var recipe: WeekSummaryRecipe? { day.recipe }
 
@@ -100,6 +113,10 @@ struct DayDetailContent: View {
                     Text(recipe.description)
                         .font(.body)
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
+                }
+
+                if let suggestion = day.portionSuggestion, onApplyPortionSuggestion != nil {
+                    portionSuggestionView(suggestion)
                 }
 
                 // Vote buttons
@@ -149,6 +166,18 @@ struct DayDetailContent: View {
                                 )
                             }
                         }
+                        if let onResetPortionMemory {
+                            Button {
+                                Task {
+                                    isUpdatingPortions = true
+                                    if await onResetPortionMemory() { onDismiss?() }
+                                    else { portionError = L10n.string("error.portionMemory.update") }
+                                    isUpdatingPortions = false
+                                }
+                            } label: {
+                                Label("portionMemory.reset", systemImage: "arrow.counterclockwise")
+                            }
+                        }
                         Button {
                             if day.isSkipped { onSkip() } else { showSkipConfirmation = true }
                         } label: {
@@ -175,6 +204,63 @@ struct DayDetailContent: View {
         .background(VecklyDesign.Colors.canvas)
         .removeDishConfirmation(isPresented: $showClearConfirmation, onConfirm: onClear)
         .skipDayConfirmation(isPresented: $showSkipConfirmation, onConfirm: onSkip)
+        .alert("common.error", isPresented: Binding(
+            get: { portionError != nil },
+            set: { if !$0 { portionError = nil } }
+        )) {
+            Button("common.ok", role: .cancel) {}
+        } message: {
+            Text(portionError ?? "")
+        }
+    }
+
+    private func portionSuggestionView(_ suggestion: PortionSuggestion) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("portionMemory.title", systemImage: "person.2.badge.gearshape")
+                .font(.headline)
+                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+            Text(L10n.format(
+                suggestion.direction == .more ? "portionMemory.more.reason" : "portionMemory.less.reason",
+                suggestion.matchingCount,
+                suggestion.evidenceCount,
+                suggestion.suggestedServings
+            ))
+            .font(.subheadline)
+            .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+            HStack(spacing: 12) {
+                Button {
+                    guard let onApplyPortionSuggestion else { return }
+                    Task {
+                        isUpdatingPortions = true
+                        if await onApplyPortionSuggestion(suggestion.suggestedServings) { onDismiss?() }
+                        else { portionError = L10n.string("error.portionMemory.update") }
+                        isUpdatingPortions = false
+                    }
+                } label: {
+                    Text(L10n.format("portionMemory.apply", suggestion.suggestedServings))
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(VecklyDesign.Colors.hearthOrangeFill)
+                .accessibilityIdentifier("applyPortionSuggestionButton")
+
+                if let onIgnorePortionSuggestion {
+                    Button("portionMemory.notNow") {
+                        Task {
+                            isUpdatingPortions = true
+                            if await onIgnorePortionSuggestion() { onDismiss?() }
+                            else { portionError = L10n.string("error.portionMemory.update") }
+                            isUpdatingPortions = false
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("ignorePortionSuggestionButton")
+                }
+            }
+            .disabled(isUpdatingPortions)
+        }
+        .padding(.vertical, 4)
+        .accessibilityIdentifier("portionSuggestion")
     }
 
     @ViewBuilder

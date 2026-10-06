@@ -3,6 +3,32 @@ import Testing
 @testable import Veckly
 
 struct WeekViewModelMapperTests {
+    @Test func decodesAndMapsAPortionSuggestion() throws {
+        let data = Data(#"""
+        {
+          "household": { "id": "11111111-1111-1111-1111-111111111111", "name": "Test" },
+          "weekStartDate": "2026-06-08",
+          "updatedAt": null,
+          "days": [{
+            "dayOfWeek": "monday", "date": "2026-06-08", "state": "planned", "isLocked": false,
+            "recipe": { "id": "22222222-2222-2222-2222-222222222222", "title": "Pasta", "description": "", "servings": 4, "prepTimeMinutes": 10, "cookTimeMinutes": 10, "tags": [] },
+            "reason": null, "confidence": null, "streakWeeks": null,
+            "portionSuggestion": { "direction": "more", "suggestedServings": 5, "evidenceCount": 3, "matchingCount": 2 }
+          }]
+        }
+        """#.utf8)
+
+        let summary = try JSONDecoder().decode(WeekSummary.self, from: data)
+        let mapped = WeekViewModelMapper.map(summary: summary, today: WeekCalendar.date(from: "2026-06-08")!)
+
+        #expect(mapped.days.first?.portionSuggestion == PortionSuggestion(
+            direction: .more,
+            suggestedServings: 5,
+            evidenceCount: 3,
+            matchingCount: 2
+        ))
+    }
+
     @Test func decodesStructuredWeekExplanations() throws {
         let data = Data(#"""
         {
@@ -357,6 +383,48 @@ struct WeekViewModelMapperTests {
         )
 
         #expect(apiClient.generatedPantryItemKeys == pantryItemKeys)
+    }
+
+    @MainActor
+    @Test func confirmedPortionSuggestionPersistsAsAServingsChange() async throws {
+        let apiClient = CapturingWeekStoreAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        let recipe = WeekSummaryRecipe(
+            id: "22222222-2222-2222-2222-222222222222",
+            title: "Pasta",
+            description: "",
+            servings: 4,
+            prepTimeMinutes: nil,
+            cookTimeMinutes: nil,
+            tags: []
+        )
+        let day = WeekDayRowViewModel(
+            id: "2026-06-08",
+            weekday: .monday,
+            weekdayLabel: "Monday",
+            date: "2026-06-08",
+            dateLabel: "8 Jun",
+            mealTitle: "Pasta",
+            detail: "4 portions",
+            isToday: false,
+            isEmpty: false,
+            recipe: recipe
+        )
+
+        try await store.changeServings(
+            day: day,
+            servings: 5,
+            household: Household(id: "11111111-1111-1111-1111-111111111111", name: "Test", role: .owner),
+            userID: "33333333-3333-3333-3333-333333333333",
+            viewedWeekStartDate: "2026-06-08"
+        )
+
+        guard case let .servingsChanged(weekday, servings) = apiClient.events.last else {
+            Issue.record("Expected a servings_changed event")
+            return
+        }
+        #expect(weekday == .monday)
+        #expect(servings == 5)
     }
 
     @MainActor

@@ -120,6 +120,7 @@ struct VecklyAPIClient {
             plannedRecipeId: draft.plannedRecipeID,
             status: draft.status.apiModel,
             portionOutcome: draft.portionOutcome?.apiModel,
+            intentionalLeftovers: draft.intentionalLeftovers ?? false,
             reason: draft.reason?.apiModel,
             actualRecipeId: draft.actualRecipeID,
             actualMealLabel: draft.actualMealLabel
@@ -1135,6 +1136,20 @@ struct VecklyAPIClient {
         case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
         }
     }
+
+    func updatePortionMemory(householdID: String, recipeID: String, reset: Bool) async throws {
+        let action: Components.Schemas.UpdatePortionMemory.actionPayload = reset ? .reset : .ignore
+        let output = try await _client.updatePortionMemory(
+            path: .init(householdId: householdID, recipeId: recipeID),
+            body: .json(.init(action: action))
+        )
+        switch output {
+        case .ok: return
+        case .unauthorized: throw APIError.unauthorized
+        case .notFound: throw APIError.notFound
+        case let .undocumented(statusCode, _): throw APIError.server(statusCode: statusCode)
+        }
+    }
 }
 
 private struct ShoppingListStateUpdateRequest: Encodable {
@@ -1441,7 +1456,15 @@ private extension Components.Schemas.WeekPlanSummaryDay {
             recipe: recipe?.appModel,
             reason: reason?.appModel,
             confidence: confidence?.appModel,
-            streakWeeks: streakWeeks
+            streakWeeks: streakWeeks,
+            portionSuggestion: portionSuggestion.map {
+                PortionSuggestion(
+                    direction: PortionSuggestion.Direction(rawValue: $0.direction.rawValue) ?? .more,
+                    suggestedServings: $0.suggestedServings,
+                    evidenceCount: $0.evidenceCount,
+                    matchingCount: $0.matchingCount
+                )
+            }
         )
     }
 }
@@ -1575,6 +1598,8 @@ private extension WeekPlanEventInput {
             return .case8(.init(eventType: .day_skipped, dayOfWeek: .init(rawValue: day.rawValue)!))
         case .dayUnskipped(let day):
             return .case9(.init(eventType: .day_unskipped, dayOfWeek: .init(rawValue: day.rawValue)!))
+        case .servingsChanged(let day, let servings):
+            return .case10(.init(eventType: .servings_changed, dayOfWeek: .init(rawValue: day.rawValue)!, servings: servings))
         }
     }
 }

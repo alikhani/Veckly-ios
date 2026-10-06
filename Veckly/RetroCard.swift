@@ -241,6 +241,7 @@ struct RetroCard: View {
                 plannedRecipeID: row.recipeID,
                 status: status,
                 portionOutcome: existing?.portionOutcome,
+                intentionalLeftovers: existing?.intentionalLeftovers,
                 reason: existing?.reason,
                 actualRecipeID: existing?.actualRecipeID,
                 actualMealLabel: existing?.actualMealLabel
@@ -352,6 +353,12 @@ private struct MealOutcomeDetailSheet: View {
                             ForEach(MealPortionOutcome.allCases, id: \.self) { outcome in
                                 Text(outcome.label).tag(Optional(outcome))
                             }
+                        }
+                        if draft.portionOutcome == .tooMuch {
+                            Toggle("retro.portion.intentionalLeftovers", isOn: Binding(
+                                get: { draft.intentionalLeftovers == true },
+                                set: { draft.intentionalLeftovers = $0 }
+                            ))
                         }
                     }
                 }

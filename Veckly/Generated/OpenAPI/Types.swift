@@ -253,6 +253,11 @@ internal protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PUT /households/{householdId}/shopping-preferences`.
     /// - Remark: Generated from `#/paths//households/{householdId}/shopping-preferences/put(putShoppingPreferences)`.
     func putShoppingPreferences(_ input: Operations.putShoppingPreferences.Input) async throws -> Operations.putShoppingPreferences.Output
+    /// Ignore the current portion suggestion or reset learned portion history
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/portion-memory/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)`.
+    func updatePortionMemory(_ input: Operations.updatePortionMemory.Input) async throws -> Operations.updatePortionMemory.Output
     /// List a household's recipes
     ///
     /// - Remark: HTTP `GET /households/{householdId}/recipes`.
@@ -1038,6 +1043,21 @@ extension APIProtocol {
         body: Operations.putShoppingPreferences.Input.Body
     ) async throws -> Operations.putShoppingPreferences.Output {
         try await putShoppingPreferences(Operations.putShoppingPreferences.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Ignore the current portion suggestion or reset learned portion history
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/portion-memory/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)`.
+    internal func updatePortionMemory(
+        path: Operations.updatePortionMemory.Input.Path,
+        headers: Operations.updatePortionMemory.Input.Headers = .init(),
+        body: Operations.updatePortionMemory.Input.Body
+    ) async throws -> Operations.updatePortionMemory.Output {
+        try await updatePortionMemory(Operations.updatePortionMemory.Input(
             path: path,
             headers: headers,
             body: body
@@ -1848,6 +1868,8 @@ internal enum Components {
             }
             /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/portionOutcome`.
             internal var portionOutcome: Components.Schemas.MealOutcomeRecord.portionOutcomePayload?
+            /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/intentionalLeftovers`.
+            internal var intentionalLeftovers: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/MealOutcomeRecord/reason`.
             internal enum reasonPayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case easy_weeknight = "easy_weeknight"
@@ -1878,6 +1900,7 @@ internal enum Components {
             ///   - plannedRecipeId:
             ///   - status:
             ///   - portionOutcome:
+            ///   - intentionalLeftovers:
             ///   - reason:
             ///   - actualRecipeId:
             ///   - actualMealLabel:
@@ -1891,6 +1914,7 @@ internal enum Components {
                 plannedRecipeId: Swift.String,
                 status: Components.Schemas.MealOutcomeStatus,
                 portionOutcome: Components.Schemas.MealOutcomeRecord.portionOutcomePayload? = nil,
+                intentionalLeftovers: Swift.Bool,
                 reason: Components.Schemas.MealOutcomeRecord.reasonPayload? = nil,
                 actualRecipeId: Swift.String? = nil,
                 actualMealLabel: Swift.String? = nil,
@@ -1904,6 +1928,7 @@ internal enum Components {
                 self.plannedRecipeId = plannedRecipeId
                 self.status = status
                 self.portionOutcome = portionOutcome
+                self.intentionalLeftovers = intentionalLeftovers
                 self.reason = reason
                 self.actualRecipeId = actualRecipeId
                 self.actualMealLabel = actualMealLabel
@@ -1918,6 +1943,7 @@ internal enum Components {
                 case plannedRecipeId
                 case status
                 case portionOutcome
+                case intentionalLeftovers
                 case reason
                 case actualRecipeId
                 case actualMealLabel
@@ -1951,6 +1977,8 @@ internal enum Components {
             internal var status: Components.Schemas.MealOutcomeStatus
             /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/portionOutcome`.
             internal var portionOutcome: Components.Schemas.MealPortionOutcome?
+            /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/intentionalLeftovers`.
+            internal var intentionalLeftovers: Swift.Bool?
             /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/reason`.
             internal var reason: Components.Schemas.MealOutcomeReason?
             /// - Remark: Generated from `#/components/schemas/UpsertMealOutcome/actualRecipeId`.
@@ -1964,6 +1992,7 @@ internal enum Components {
             ///   - plannedRecipeId:
             ///   - status:
             ///   - portionOutcome:
+            ///   - intentionalLeftovers:
             ///   - reason:
             ///   - actualRecipeId:
             ///   - actualMealLabel:
@@ -1972,6 +2001,7 @@ internal enum Components {
                 plannedRecipeId: Swift.String,
                 status: Components.Schemas.MealOutcomeStatus,
                 portionOutcome: Components.Schemas.MealPortionOutcome? = nil,
+                intentionalLeftovers: Swift.Bool? = nil,
                 reason: Components.Schemas.MealOutcomeReason? = nil,
                 actualRecipeId: Swift.String? = nil,
                 actualMealLabel: Swift.String? = nil
@@ -1980,6 +2010,7 @@ internal enum Components {
                 self.plannedRecipeId = plannedRecipeId
                 self.status = status
                 self.portionOutcome = portionOutcome
+                self.intentionalLeftovers = intentionalLeftovers
                 self.reason = reason
                 self.actualRecipeId = actualRecipeId
                 self.actualMealLabel = actualMealLabel
@@ -1989,6 +2020,7 @@ internal enum Components {
                 case plannedRecipeId
                 case status
                 case portionOutcome
+                case intentionalLeftovers
                 case reason
                 case actualRecipeId
                 case actualMealLabel
@@ -4674,6 +4706,46 @@ internal enum Components {
                 case tags
             }
         }
+        /// - Remark: Generated from `#/components/schemas/PortionSuggestion`.
+        internal struct PortionSuggestion: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PortionSuggestion/direction`.
+            internal enum directionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case more = "more"
+                case less = "less"
+            }
+            /// - Remark: Generated from `#/components/schemas/PortionSuggestion/direction`.
+            internal var direction: Components.Schemas.PortionSuggestion.directionPayload
+            /// - Remark: Generated from `#/components/schemas/PortionSuggestion/suggestedServings`.
+            internal var suggestedServings: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/PortionSuggestion/evidenceCount`.
+            internal var evidenceCount: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/PortionSuggestion/matchingCount`.
+            internal var matchingCount: Swift.Int
+            /// Creates a new `PortionSuggestion`.
+            ///
+            /// - Parameters:
+            ///   - direction:
+            ///   - suggestedServings:
+            ///   - evidenceCount:
+            ///   - matchingCount:
+            internal init(
+                direction: Components.Schemas.PortionSuggestion.directionPayload,
+                suggestedServings: Swift.Int,
+                evidenceCount: Swift.Int,
+                matchingCount: Swift.Int
+            ) {
+                self.direction = direction
+                self.suggestedServings = suggestedServings
+                self.evidenceCount = evidenceCount
+                self.matchingCount = matchingCount
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case direction
+                case suggestedServings
+                case evidenceCount
+                case matchingCount
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay`.
         internal struct WeekPlanSummaryDay: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/dayOfWeek`.
@@ -4724,6 +4796,8 @@ internal enum Components {
             internal var confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload?
             /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/streakWeeks`.
             internal var streakWeeks: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/WeekPlanSummaryDay/portionSuggestion`.
+            internal var portionSuggestion: Components.Schemas.PortionSuggestion?
             /// Creates a new `WeekPlanSummaryDay`.
             ///
             /// - Parameters:
@@ -4735,6 +4809,7 @@ internal enum Components {
             ///   - reason:
             ///   - confidence:
             ///   - streakWeeks:
+            ///   - portionSuggestion:
             internal init(
                 dayOfWeek: Components.Schemas.WeekPlanSummaryDay.dayOfWeekPayload,
                 date: Swift.String,
@@ -4743,7 +4818,8 @@ internal enum Components {
                 recipe: Components.Schemas.WeekPlanSummaryRecipe? = nil,
                 reason: Components.Schemas.WeekPlanSummaryDay.reasonPayload? = nil,
                 confidence: Components.Schemas.WeekPlanSummaryDay.confidencePayload? = nil,
-                streakWeeks: Swift.Int? = nil
+                streakWeeks: Swift.Int? = nil,
+                portionSuggestion: Components.Schemas.PortionSuggestion? = nil
             ) {
                 self.dayOfWeek = dayOfWeek
                 self.date = date
@@ -4753,6 +4829,7 @@ internal enum Components {
                 self.reason = reason
                 self.confidence = confidence
                 self.streakWeeks = streakWeeks
+                self.portionSuggestion = portionSuggestion
             }
             internal enum CodingKeys: String, CodingKey {
                 case dayOfWeek
@@ -4763,6 +4840,7 @@ internal enum Components {
                 case reason
                 case confidence
                 case streakWeeks
+                case portionSuggestion
             }
         }
         /// - Remark: Generated from `#/components/schemas/WeekPlanSummary`.
@@ -6898,6 +6976,54 @@ internal enum Components {
             }
             internal enum CodingKeys: String, CodingKey {
                 case categoryOrder
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PortionMemoryUpdate`.
+        internal struct PortionMemoryUpdate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PortionMemoryUpdate/ignoredThrough`.
+            internal var ignoredThrough: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PortionMemoryUpdate/action`.
+            internal enum actionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case ignore = "ignore"
+                case reset = "reset"
+            }
+            /// - Remark: Generated from `#/components/schemas/PortionMemoryUpdate/action`.
+            internal var action: Components.Schemas.PortionMemoryUpdate.actionPayload
+            /// Creates a new `PortionMemoryUpdate`.
+            ///
+            /// - Parameters:
+            ///   - ignoredThrough:
+            ///   - action:
+            internal init(
+                ignoredThrough: Swift.String,
+                action: Components.Schemas.PortionMemoryUpdate.actionPayload
+            ) {
+                self.ignoredThrough = ignoredThrough
+                self.action = action
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case ignoredThrough
+                case action
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UpdatePortionMemory`.
+        internal struct UpdatePortionMemory: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UpdatePortionMemory/action`.
+            internal enum actionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case ignore = "ignore"
+                case reset = "reset"
+            }
+            /// - Remark: Generated from `#/components/schemas/UpdatePortionMemory/action`.
+            internal var action: Components.Schemas.UpdatePortionMemory.actionPayload
+            /// Creates a new `UpdatePortionMemory`.
+            ///
+            /// - Parameters:
+            ///   - action:
+            internal init(action: Components.Schemas.UpdatePortionMemory.actionPayload) {
+                self.action = action
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case action
             }
         }
         /// - Remark: Generated from `#/components/schemas/CreateRecipe`.
@@ -19734,6 +19860,220 @@ internal enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             internal var notFound: Operations.putShoppingPreferences.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        internal enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            internal init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            internal var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            internal static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Ignore the current portion suggestion or reset learned portion history
+    ///
+    /// - Remark: HTTP `PUT /households/{householdId}/portion-memory/{recipeId}`.
+    /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)`.
+    internal enum updatePortionMemory {
+        internal static let id: Swift.String = "updatePortionMemory"
+        internal struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/path`.
+            internal struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/path/householdId`.
+                internal var householdId: Swift.String
+                /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/path/recipeId`.
+                internal var recipeId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - householdId:
+                ///   - recipeId:
+                internal init(
+                    householdId: Swift.String,
+                    recipeId: Swift.String
+                ) {
+                    self.householdId = householdId
+                    self.recipeId = recipeId
+                }
+            }
+            internal var path: Operations.updatePortionMemory.Input.Path
+            /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/header`.
+            internal struct Headers: Sendable, Hashable {
+                internal var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updatePortionMemory.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                internal init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updatePortionMemory.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            internal var headers: Operations.updatePortionMemory.Input.Headers
+            /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/requestBody`.
+            internal enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/requestBody/content/application\/json`.
+                case json(Components.Schemas.UpdatePortionMemory)
+            }
+            internal var body: Operations.updatePortionMemory.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            internal init(
+                path: Operations.updatePortionMemory.Input.Path,
+                headers: Operations.updatePortionMemory.Input.Headers = .init(),
+                body: Operations.updatePortionMemory.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        internal enum Output: Sendable, Hashable {
+            internal struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/responses/200/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/portion-memory/{recipeId}/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.PortionMemoryUpdate)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.PortionMemoryUpdate {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updatePortionMemory.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updatePortionMemory.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Portion memory updated
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.updatePortionMemory.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            internal var ok: Operations.updatePortionMemory.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct Unauthorized: Sendable, Hashable {
+                /// Creates a new `Unauthorized`.
+                internal init() {}
+            }
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.updatePortionMemory.Output.Unauthorized)
+            /// Missing or invalid session
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            internal static var unauthorized: Self {
+                .unauthorized(.init())
+            }
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            internal var unauthorized: Operations.updatePortionMemory.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// Creates a new `NotFound`.
+                internal init() {}
+            }
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.updatePortionMemory.Output.NotFound)
+            /// Household not found or caller is not a member
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/portion-memory/{recipeId}/put(updatePortionMemory)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            internal static var notFound: Self {
+                .notFound(.init())
+            }
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.updatePortionMemory.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):

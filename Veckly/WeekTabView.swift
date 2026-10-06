@@ -495,6 +495,61 @@ struct WeekTabView: View {
                     }
                     Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                 },
+                onApplyPortionSuggestion: { servings in
+                    guard let household = appModel.householdStore.activeHousehold,
+                          let userID = appModel.authSessionStore.userID else { return false }
+                    do {
+                        try await appModel.weekStore.changeServings(
+                            day: day,
+                            servings: servings,
+                            household: household,
+                            userID: userID,
+                            viewedWeekStartDate: viewedWeekStartDate
+                        )
+                        if let recipeID = day.recipe?.id {
+                            try? await appModel.apiClient.updatePortionMemory(
+                                householdID: household.id,
+                                recipeID: recipeID,
+                                reset: false
+                            )
+                        }
+                        appModel.shoppingListStore.invalidateCache()
+                        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+                        return true
+                    } catch {
+                        return false
+                    }
+                },
+                onIgnorePortionSuggestion: {
+                    guard let household = appModel.householdStore.activeHousehold,
+                          let recipeID = day.recipe?.id else { return false }
+                    do {
+                        try await appModel.apiClient.updatePortionMemory(
+                            householdID: household.id,
+                            recipeID: recipeID,
+                            reset: false
+                        )
+                        await appModel.weekStore.refreshWeek(household: household, weekStartDate: viewedWeekStartDate)
+                        return true
+                    } catch {
+                        return false
+                    }
+                },
+                onResetPortionMemory: {
+                    guard let household = appModel.householdStore.activeHousehold,
+                          let recipeID = day.recipe?.id else { return false }
+                    do {
+                        try await appModel.apiClient.updatePortionMemory(
+                            householdID: household.id,
+                            recipeID: recipeID,
+                            reset: true
+                        )
+                        await appModel.weekStore.refreshWeek(household: household, weekStartDate: viewedWeekStartDate)
+                        return true
+                    } catch {
+                        return false
+                    }
+                },
                 onDismiss: { selectedDayForDetail = nil }
             )
         }
@@ -525,11 +580,12 @@ struct WeekTabView: View {
                     profile: appModel.householdStore.cachedProfile(for: household.id),
                     isRegenerating: presentation.regenerate,
                     pantryItems: PantryPlanningItem.suggestions(from: appModel.shoppingListStore.pantryStock),
-                    onGenerate: { pantryItemKeys in
+                    onGenerate: { pantryItemKeys, portionAdjustments in
                         await performGenerate(
                             regenerate: presentation.regenerate,
                             weekStartDate: presentation.weekStartDate,
-                            pantryItemKeys: pantryItemKeys
+                            pantryItemKeys: pantryItemKeys,
+                            portionAdjustments: portionAdjustments
                         )
                     }
                 )
@@ -697,7 +753,12 @@ struct WeekTabView: View {
     /// the unlocked/unskipped rows first so a successful run can offer "Undo" —
     /// there's no backend undo endpoint, so restoring is just re-issuing the
     /// same assign/clear calls a user would make by hand.
-    private func performGenerate(regenerate: Bool, weekStartDate: String? = nil, pantryItemKeys: [String] = []) async {
+    private func performGenerate(
+        regenerate: Bool,
+        weekStartDate: String? = nil,
+        pantryItemKeys: [String] = [],
+        portionAdjustments: [Weekday: Int] = [:]
+    ) async {
         guard appModel.weekStore.generatingWeekStartDate == nil else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
         guard let userID = appModel.authSessionStore.userID else {
@@ -712,6 +773,27 @@ struct WeekTabView: View {
         // snapshot, the API call, and the undo banner it may offer) must
         // stay pinned to the week it was actually generated for.
         let targetWeekStartDate = weekStartDate ?? viewedWeekStartDate
+        for (weekday, servings) in portionAdjustments {
+            guard let row = appModel.weekStore.dayRows.first(where: { $0.weekday == weekday }) else { continue }
+            do {
+                try await appModel.weekStore.changeServings(
+                    day: row,
+                    servings: servings,
+                    household: household,
+                    userID: userID,
+                    viewedWeekStartDate: targetWeekStartDate
+                )
+                if let recipeID = row.recipe?.id {
+                    try? await appModel.apiClient.updatePortionMemory(
+                        householdID: household.id,
+                        recipeID: recipeID,
+                        reset: false
+                    )
+                }
+            } catch {
+                return
+            }
+        }
         let rowsBeforeFill = appModel.weekStore.dayRows
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }

@@ -147,6 +147,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
     let reason: AssignmentReason?
     let confidence: AssignmentConfidence?
     let streakWeeks: Int?
+    let portionSuggestion: PortionSuggestion?
 
     var id: String { date }
 
@@ -158,7 +159,8 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         recipe: WeekSummaryRecipe?,
         reason: AssignmentReason? = nil,
         confidence: AssignmentConfidence? = nil,
-        streakWeeks: Int? = nil
+        streakWeeks: Int? = nil,
+        portionSuggestion: PortionSuggestion? = nil
     ) {
         self.dayOfWeek = dayOfWeek
         self.date = date
@@ -168,6 +170,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         self.reason = reason
         self.confidence = confidence
         self.streakWeeks = streakWeeks
+        self.portionSuggestion = portionSuggestion
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -179,6 +182,7 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         case reason
         case confidence
         case streakWeeks
+        case portionSuggestion
     }
 
     init(from decoder: Decoder) throws {
@@ -191,7 +195,16 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
         reason = try container.decodeIfPresent(AssignmentReason.self, forKey: .reason)
         confidence = try container.decodeIfPresent(AssignmentConfidence.self, forKey: .confidence)
         streakWeeks = try container.decodeIfPresent(Int.self, forKey: .streakWeeks)
+        portionSuggestion = try container.decodeIfPresent(PortionSuggestion.self, forKey: .portionSuggestion)
     }
+}
+
+struct PortionSuggestion: Decodable, Equatable {
+    enum Direction: String, Decodable { case more, less }
+    let direction: Direction
+    let suggestedServings: Int
+    let evidenceCount: Int
+    let matchingCount: Int
 }
 
 /// Why the generator picked this meal — only ever set for algorithm
@@ -355,6 +368,7 @@ enum WeekPlanEventInput {
     case mealUnlocked(day: Weekday)
     case daySkipped(day: Weekday)
     case dayUnskipped(day: Weekday)
+    case servingsChanged(day: Weekday, servings: Int)
 }
 
 struct RecipeIngredient: Decodable, Equatable {
@@ -463,6 +477,7 @@ struct MealOutcomeDraft: Codable, Equatable, Identifiable {
     let plannedRecipeID: String
     var status: MealOutcomeStatus
     var portionOutcome: MealPortionOutcome?
+    var intentionalLeftovers: Bool? = nil
     var reason: MealOutcomeReason?
     var actualRecipeID: String?
     var actualMealLabel: String?
@@ -473,6 +488,9 @@ struct MealOutcomeDraft: Codable, Equatable, Identifiable {
         var copy = self
         if status == .skipped {
             copy.portionOutcome = nil
+        }
+        if copy.portionOutcome != .tooMuch {
+            copy.intentionalLeftovers = nil
         }
         if status != .changedPlan {
             copy.actualRecipeID = nil
@@ -492,6 +510,7 @@ struct MealOutcomeRecord: Codable, Equatable, Identifiable {
     let plannedRecipeID: String
     let status: MealOutcomeStatus
     let portionOutcome: MealPortionOutcome?
+    let intentionalLeftovers: Bool
     let reason: MealOutcomeReason?
     let actualRecipeID: String?
     let actualMealLabel: String?
@@ -507,6 +526,7 @@ struct MealOutcomeRecord: Codable, Equatable, Identifiable {
         plannedRecipeID = draft.plannedRecipeID
         status = draft.status
         portionOutcome = draft.portionOutcome
+        intentionalLeftovers = draft.intentionalLeftovers ?? false
         reason = draft.reason
         actualRecipeID = draft.actualRecipeID
         actualMealLabel = draft.actualMealLabel
@@ -521,6 +541,7 @@ struct MealOutcomeRecord: Codable, Equatable, Identifiable {
             plannedRecipeID: plannedRecipeID,
             status: status,
             portionOutcome: portionOutcome,
+            intentionalLeftovers: intentionalLeftovers,
             reason: reason,
             actualRecipeID: actualRecipeID,
             actualMealLabel: actualMealLabel
@@ -571,6 +592,7 @@ extension Components.Schemas.MealOutcomeRecord {
                 plannedRecipeID: plannedRecipeId,
                 status: MealOutcomeStatus(rawValue: status.rawValue) ?? .cooked,
                 portionOutcome: portionOutcome.flatMap { MealPortionOutcome(rawValue: $0.rawValue) },
+                intentionalLeftovers: intentionalLeftovers,
                 reason: reason.flatMap { MealOutcomeReason(rawValue: $0.rawValue) },
                 actualRecipeID: actualRecipeId,
                 actualMealLabel: actualMealLabel

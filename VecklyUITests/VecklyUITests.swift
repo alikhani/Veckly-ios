@@ -163,6 +163,27 @@ final class VecklyUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Fill 3 open days"].exists)
     }
 
+    /// AVL-018: learned portions are presented as an explained choice on
+    /// the planned meal. Merely opening the week never applies the change.
+    @MainActor
+    func testPlannedMealExplainsPortionSuggestionBeforeApplyingIt() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["VECKLY_UI_TEST_MODE"] = "core-reader"
+        app.launchEnvironment["VECKLY_UI_TEST_WEEK_SCENARIO"] = "portionSuggestion"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-veckly.app-language", "english"]
+        app.launch()
+
+        let suggestedMeal = app.staticTexts["Tuesday Tacos"]
+        XCTAssertTrue(suggestedMeal.waitForExistence(timeout: 5))
+        suggestedMeal.tap()
+
+        XCTAssertTrue(app.staticTexts["Portion suggestion"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["2 of 3 times there wasn't enough. Try 5 portions."].exists)
+        XCTAssertTrue(app.buttons["Use 5 portions"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Not now"].exists)
+        XCTAssertTrue(app.staticTexts["Tuesday Tacos"].exists)
+    }
+
     /// Fas 6: destructive account/household actions must stay tucked away
     /// behind the collapsed "Advanced" disclosure — never visible directly
     /// in the normal Household tab (beslut 13).

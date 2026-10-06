@@ -259,6 +259,7 @@ struct WeekBriefSheet: View {
     @State private var store: WeekBriefStore
     @State private var usePantry = false
     @State private var selectedPantryKeys: Set<String>
+    @State private var selectedPortionDates: Set<String> = []
     let householdID: String
     let weekStartDate: String
     let userID: String
@@ -266,7 +267,11 @@ struct WeekBriefSheet: View {
     let profile: HouseholdProfile?
     let isRegenerating: Bool
     let pantryItems: [PantryPlanningItem]
-    let onGenerate: ([String]) async -> Void
+    let onGenerate: ([String], [Weekday: Int]) async -> Void
+
+    private var portionSuggestionRows: [WeekDayRowViewModel] {
+        rows.filter { !$0.isPast && !$0.isSkipped && $0.portionSuggestion != nil }
+    }
 
     init(
         apiClient: any WeekBriefAPIClient,
@@ -277,7 +282,7 @@ struct WeekBriefSheet: View {
         profile: HouseholdProfile?,
         isRegenerating: Bool,
         pantryItems: [PantryPlanningItem],
-        onGenerate: @escaping ([String]) async -> Void
+        onGenerate: @escaping ([String], [Weekday: Int]) async -> Void
     ) {
         _store = State(initialValue: WeekBriefStore(apiClient: apiClient))
         _selectedPantryKeys = State(initialValue: Set(pantryItems.map(\.id)))
@@ -331,6 +336,10 @@ struct WeekBriefSheet: View {
 
                 ForEach(draft.days) { day in
                     daySection(day)
+                }
+
+                if !portionSuggestionRows.isEmpty {
+                    portionSuggestionsSection
                 }
 
                 if !pantryItems.isEmpty {
@@ -434,6 +443,39 @@ struct WeekBriefSheet: View {
         .padding(.vertical, 4)
     }
 
+    private var portionSuggestionsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("portionMemory.brief.title")
+                .font(.headline)
+                .foregroundStyle(VecklyDesign.Colors.inkDeep)
+            Text("portionMemory.brief.subtitle")
+                .font(.footnote)
+                .foregroundStyle(VecklyDesign.Colors.inkMid)
+
+            ForEach(portionSuggestionRows) { row in
+                if let suggestion = row.portionSuggestion {
+                    Toggle(isOn: Binding(
+                        get: { selectedPortionDates.contains(row.date) },
+                        set: { selected in
+                            if selected { selectedPortionDates.insert(row.date) }
+                            else { selectedPortionDates.remove(row.date) }
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(row.mealTitle)
+                                .font(.subheadline.weight(.semibold))
+                            Text(L10n.format("portionMemory.brief.servings", suggestion.suggestedServings))
+                                .font(.footnote)
+                                .foregroundStyle(VecklyDesign.Colors.inkMid)
+                        }
+                    }
+                    .tint(VecklyDesign.Colors.hearthOrangeFill)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
     private func daySection(_ day: WeekBriefDay) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
@@ -488,6 +530,14 @@ struct WeekBriefSheet: View {
     private func saveAndGenerate() async {
         guard await store.save(householdID: householdID, weekStartDate: weekStartDate, userID: userID) else { return }
         dismiss()
-        await onGenerate(usePantry ? pantryItems.map(\.id).filter(selectedPantryKeys.contains) : [])
+        let selectedAdjustments: [(Weekday, Int)] = portionSuggestionRows.compactMap { row in
+            guard selectedPortionDates.contains(row.date), let suggestion = row.portionSuggestion else { return nil }
+            return (row.weekday, suggestion.suggestedServings)
+        }
+        let portionAdjustments = Dictionary(uniqueKeysWithValues: selectedAdjustments)
+        await onGenerate(
+            usePantry ? pantryItems.map(\.id).filter(selectedPantryKeys.contains) : [],
+            portionAdjustments
+        )
     }
 }

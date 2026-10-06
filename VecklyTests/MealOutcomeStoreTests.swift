@@ -9,6 +9,15 @@ struct MealOutcomeStoreTests {
     private let weekStartDate = "2026-06-08"
     private let date = "2026-06-09"
 
+    @Test func intentionalLeftoversOnlySurviveATooMuchOutcome() {
+        var planned = draft(status: .cooked, portion: .tooMuch)
+        planned.intentionalLeftovers = true
+        #expect(planned.normalized().intentionalLeftovers == true)
+
+        planned.portionOutcome = .rightAmount
+        #expect(planned.normalized().intentionalLeftovers == nil)
+    }
+
     @Test func loadsOutcomesByDate() async {
         let client = StubMealOutcomeAPIClient()
         client.listResult = .success([record(status: .cooked)])

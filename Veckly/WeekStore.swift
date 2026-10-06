@@ -102,6 +102,16 @@ final class WeekStore {
         await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: false, force: false)
     }
 
+    func refreshWeek(household: Household, weekStartDate: String) async {
+        weekCache.removeValue(forKey: weekStartDate)
+        await loadWeekData(
+            household: household,
+            weekStartDate: weekStartDate,
+            isCurrentWeekSlot: weekStartDate == self.weekStartDate,
+            force: true
+        )
+    }
+
     /// The shared engine behind both public loaders above. A cached copy of
     /// `weekStartDate` (if any) is applied to the display immediately and
     /// synchronously — before any `await` — so switching between weeks never
@@ -396,6 +406,28 @@ final class WeekStore {
         )
     }
 
+    func changeServings(
+        day: WeekDayRowViewModel,
+        servings: Int,
+        household: Household,
+        userID: String,
+        viewedWeekStartDate: String
+    ) async throws {
+        try await apiClient.appendWeekPlanEvent(
+            householdID: household.id,
+            weekStartDate: viewedWeekStartDate,
+            userID: userID,
+            event: .servingsChanged(day: day.weekday, servings: servings)
+        )
+        weekCache.removeValue(forKey: viewedWeekStartDate)
+        await loadWeekData(
+            household: household,
+            weekStartDate: viewedWeekStartDate,
+            isCurrentWeekSlot: viewedWeekStartDate == weekStartDate,
+            force: true
+        )
+    }
+
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
@@ -486,6 +518,10 @@ final class WeekStore {
         /// planning day, Sunday planned — exercises `.upcomingMeal` on a
         /// weekend day for a Mon–Fri household.
         case saturdayUpcoming
+        /// Tuesday is planned with a conservative portion suggestion based
+        /// on earlier outcomes. Kept separate from the legacy fixture so
+        /// existing reader and screenshot tests retain their exact shape.
+        case portionSuggestion
     }
 
     func seedForUITests(scenario: UITestWeekScenario = .legacyPartial) {
@@ -506,6 +542,15 @@ final class WeekStore {
             prepTimeMinutes: 15,
             cookTimeMinutes: 20,
             tags: []
+        )
+        let portionRecipe = WeekSummaryRecipe(
+            id: "55555555-5555-5555-5555-555555555555",
+            title: "Tuesday Tacos",
+            description: "A family favourite",
+            servings: 4,
+            prepTimeMinutes: 15,
+            cookTimeMinutes: 15,
+            tags: ["weekday"]
         )
 
         let days: [WeekSummaryDay]
@@ -555,6 +600,20 @@ final class WeekStore {
                 )
             }
             todayOffset = 5 // Saturday
+        case .portionSuggestion:
+            days = Weekday.allCases.enumerated().map { index, weekday in
+                WeekSummaryDay(
+                    dayOfWeek: weekday,
+                    date: WeekCalendar.addDays(to: weekStartDate, offset: index),
+                    state: index < 2 ? .planned : .empty,
+                    isLocked: index == 0,
+                    recipe: index == 0 ? recipe : index == 1 ? portionRecipe : nil,
+                    portionSuggestion: index == 1
+                        ? PortionSuggestion(direction: .more, suggestedServings: 5, evidenceCount: 3, matchingCount: 2)
+                        : nil
+                )
+            }
+            todayOffset = 0
         }
         let summary = WeekSummary(
             household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
@@ -826,6 +885,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
     let reason: AssignmentReason?
     let confidence: AssignmentConfidence?
     let streakWeeks: Int?
+    let portionSuggestion: PortionSuggestion?
 
     init(
         id: String,
@@ -843,7 +903,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         recipe: WeekSummaryRecipe?,
         reason: AssignmentReason? = nil,
         confidence: AssignmentConfidence? = nil,
-        streakWeeks: Int? = nil
+        streakWeeks: Int? = nil,
+        portionSuggestion: PortionSuggestion? = nil
     ) {
         self.id = id
         self.weekday = weekday
@@ -861,6 +922,7 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
         self.reason = reason
         self.confidence = confidence
         self.streakWeeks = streakWeeks
+        self.portionSuggestion = portionSuggestion
     }
 
     /// Skip is a flag layered on top of an existing meal assignment, not a
@@ -885,7 +947,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             recipe: recipe,
             reason: reason,
             confidence: confidence,
-            streakWeeks: streakWeeks
+            streakWeeks: streakWeeks,
+            portionSuggestion: portionSuggestion
         )
     }
 
@@ -906,7 +969,8 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             recipe: recipe,
             reason: reason,
             confidence: confidence,
-            streakWeeks: streakWeeks
+            streakWeeks: streakWeeks,
+            portionSuggestion: portionSuggestion
         )
     }
 
@@ -980,7 +1044,8 @@ struct WeekViewModelMapper {
             recipe: recipe,
             reason: day.reason,
             confidence: day.confidence,
-            streakWeeks: day.streakWeeks
+            streakWeeks: day.streakWeeks,
+            portionSuggestion: day.portionSuggestion
         )
     }
 
