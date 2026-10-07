@@ -43,6 +43,7 @@ final class HouseholdStore {
     private(set) var weekPulse: WeekPulse?
     private(set) var isLoadingWeekPulse = false
     private(set) var weekPulseErrorMessage: String?
+    private var weekPulseRequestID: UUID?
 
     init(
         apiClient: any HouseholdStoreAPIClient,
@@ -140,18 +141,30 @@ final class HouseholdStore {
         }
     }
 
+    /// Returns the pulse for exactly this household/week, or `nil` if the
+    /// load failed, was superseded by a newer load (or a household switch),
+    /// or the response was for a different household/week. Callers that seed
+    /// an editable draft from the result must treat `nil` as "nothing to
+    /// edit yet" — never as "this member hasn't answered".
     @discardableResult
-    func loadWeekPulse(householdID: String, weekStartDate: String) async -> Bool {
-        guard !isLoadingWeekPulse else { return false }
+    func loadWeekPulse(householdID: String, weekStartDate: String) async -> WeekPulse? {
+        let requestID = UUID()
+        weekPulseRequestID = requestID
         isLoadingWeekPulse = true
         weekPulseErrorMessage = nil
-        defer { isLoadingWeekPulse = false }
+        defer { if weekPulseRequestID == requestID { isLoadingWeekPulse = false } }
         do {
-            weekPulse = try await apiClient.weekPulse(householdID: householdID, weekStartDate: weekStartDate)
-            return true
+            let pulse = try await apiClient.weekPulse(householdID: householdID, weekStartDate: weekStartDate)
+            guard weekPulseRequestID == requestID else { return nil }
+            guard pulse.householdID == householdID, pulse.weekStartDate == weekStartDate else {
+                weekPulseErrorMessage = L10n.string("pulse.loadError")
+                return nil
+            }
+            weekPulse = pulse
+            return pulse
         } catch {
-            weekPulseErrorMessage = L10n.string("pulse.loadError")
-            return false
+            if weekPulseRequestID == requestID { weekPulseErrorMessage = L10n.string("pulse.loadError") }
+            return nil
         }
     }
 
@@ -265,6 +278,7 @@ final class HouseholdStore {
         detailsErrorMessage = nil
         invitesErrorMessage = nil
         weekPulse = nil
+        weekPulseRequestID = nil
         isLoadingWeekPulse = false
         weekPulseErrorMessage = nil
         selectionStore.clearSelectedHouseholdID()
@@ -300,6 +314,8 @@ final class HouseholdStore {
         detailsHouseholdID = nil
         detailsErrorMessage = nil
         weekPulse = nil
+        weekPulseRequestID = nil
+        isLoadingWeekPulse = false
         weekPulseErrorMessage = nil
     }
 

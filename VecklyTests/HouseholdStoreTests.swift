@@ -4,6 +4,34 @@ import Testing
 
 @MainActor
 struct HouseholdStoreTests {
+    /// A failed pulse load must not leave behind something the Week Pulse
+    /// screen could mistake for "this member hasn't answered" and build an
+    /// empty, saveable draft from.
+    @Test func failedWeekPulseLoadLeavesNoPulseToBuildADraftFrom() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        apiClient.weekPulseError = APIError.server(statusCode: 500)
+        let store = HouseholdStore(apiClient: apiClient)
+
+        let loaded = await store.loadWeekPulse(householdID: TestHouseholds.first.id, weekStartDate: "2026-10-05")
+
+        #expect(loaded == nil)
+        #expect(store.weekPulse == nil)
+        #expect(store.weekPulseErrorMessage != nil)
+    }
+
+    @Test func weekPulseResponseForAnotherHouseholdOrWeekIsNotApplied() async {
+        let apiClient = FakeHouseholdStoreAPIClient()
+        apiClient.weekPulseResponse = WeekPulse(
+            householdID: TestHouseholds.second.id, weekStartDate: "2026-09-28",
+            responseCount: 1, memberCount: 2, members: []
+        )
+        let store = HouseholdStore(apiClient: apiClient)
+
+        _ = await store.loadWeekPulse(householdID: TestHouseholds.first.id, weekStartDate: "2026-10-05")
+
+        #expect(store.weekPulse == nil)
+    }
+
     @Test func startsInInitialLoadingStateWithoutCachedData() {
         let store = HouseholdStore(apiClient: FakeHouseholdStoreAPIClient())
 
@@ -355,6 +383,15 @@ private final class FakeHouseholdStoreAPIClient: HouseholdStoreAPIClient {
 
     func deleteHousehold(householdID: String) async throws {
         households.removeAll { $0.id == householdID }
+    }
+
+    var weekPulseError: Error?
+    var weekPulseResponse: WeekPulse?
+
+    func weekPulse(householdID: String, weekStartDate: String) async throws -> WeekPulse {
+        if let weekPulseError { throw weekPulseError }
+        return weekPulseResponse
+            ?? WeekPulse(householdID: householdID, weekStartDate: weekStartDate, responseCount: 0, memberCount: 1, members: [])
     }
 }
 

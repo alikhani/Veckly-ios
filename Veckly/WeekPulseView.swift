@@ -4,14 +4,23 @@ struct WeekPulseView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
     @State private var draft = WeekPulseDraft()
-    @State private var hasLoadedDraft = false
+    /// The household the draft was seeded from. The draft is only built from
+    /// a successful load — saving an empty draft after a failed load would
+    /// overwrite this member's real answers.
+    @State private var draftHouseholdID: String?
+    @State private var loadFailed = false
     @State private var isSaving = false
     @State private var saveError: String?
 
     private let weekStartDate = WeekCalendar.currentWeekStartDate()
 
     private var household: Household? { appModel.householdStore.activeHousehold }
-    private var pulse: WeekPulse? { appModel.householdStore.weekPulse }
+    private var pulse: WeekPulse? {
+        guard let pulse = appModel.householdStore.weekPulse,
+              pulse.householdID == household?.id, pulse.weekStartDate == weekStartDate else { return nil }
+        return pulse
+    }
+    private var isDraftReady: Bool { draftHouseholdID != nil && draftHouseholdID == household?.id }
 
     private var weekDays: [(weekday: Weekday, date: String)] {
         Weekday.allCases.enumerated().map { index, weekday in
@@ -27,52 +36,23 @@ struct WeekPulseView: View {
                     .foregroundStyle(VecklyDesign.Colors.inkMid)
             }
 
-            Section {
-                ForEach(weekDays, id: \.date) { day in
-                    Toggle(isOn: awayBinding(for: day.date)) {
-                        Text(day.weekday.displayName)
+            if isDraftReady {
+                editableSections
+            } else if loadFailed {
+                Section {
+                    Text(L10n.string("pulse.loadError"))
+                        .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                    Button(L10n.string("common.tryAgain")) {
+                        Task { await load() }
                     }
+                    .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
+                    .accessibilityIdentifier("retryWeekPulseButton")
                 }
-            } header: {
-                Text(L10n.string("pulse.away.title"))
-            } footer: {
-                Text(L10n.string("pulse.away.footer"))
-            }
-
-            Section {
-                TextField(L10n.string("pulse.wish.placeholder"), text: $draft.wishedMeal)
-                    .textInputAutocapitalization(.sentences)
-                    .submitLabel(.done)
-            } header: {
-                Text(L10n.string("pulse.wish.title"))
-            } footer: {
-                Text(L10n.string("pulse.wish.footer"))
-            }
-
-            Section(L10n.string("pulse.simple.title")) {
-                Picker(L10n.string("pulse.simple.title"), selection: $draft.simpleDate) {
-                    Text(L10n.string("pulse.simple.none")).tag(String?.none)
-                    ForEach(weekDays, id: \.date) { day in
-                        Text(day.weekday.displayName).tag(String?.some(day.date))
-                    }
+            } else {
+                Section {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
                 }
-                .pickerStyle(.menu)
-            }
-
-            Section {
-                Button {
-                    Task { await save() }
-                } label: {
-                    HStack {
-                        if isSaving { ProgressView() }
-                        Text(L10n.string("pulse.save"))
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
-                .disabled(isSaving || household == nil)
-                .accessibilityIdentifier("saveWeekPulseButton")
             }
 
             if let pulse {
@@ -106,6 +86,57 @@ struct WeekPulseView: View {
         }
     }
 
+    @ViewBuilder
+    private var editableSections: some View {
+        Section {
+            ForEach(weekDays, id: \.date) { day in
+                Toggle(isOn: awayBinding(for: day.date)) {
+                    Text(day.weekday.displayName)
+                }
+            }
+        } header: {
+            Text(L10n.string("pulse.away.title"))
+        } footer: {
+            Text(L10n.string("pulse.away.footer"))
+        }
+
+        Section {
+            TextField(L10n.string("pulse.wish.placeholder"), text: $draft.wishedMeal)
+                .textInputAutocapitalization(.sentences)
+                .submitLabel(.done)
+        } header: {
+            Text(L10n.string("pulse.wish.title"))
+        } footer: {
+            Text(L10n.string("pulse.wish.footer"))
+        }
+
+        Section(L10n.string("pulse.simple.title")) {
+            Picker(L10n.string("pulse.simple.title"), selection: $draft.simpleDate) {
+                Text(L10n.string("pulse.simple.none")).tag(String?.none)
+                ForEach(weekDays, id: \.date) { day in
+                    Text(day.weekday.displayName).tag(String?.some(day.date))
+                }
+            }
+            .pickerStyle(.menu)
+        }
+
+        Section {
+            Button {
+                Task { await save() }
+            } label: {
+                HStack {
+                    if isSaving { ProgressView() }
+                    Text(L10n.string("pulse.save"))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(VecklyDesign.Colors.hearthOrangePrimaryFill)
+            .disabled(isSaving || !isDraftReady)
+            .accessibilityIdentifier("saveWeekPulseButton")
+        }
+    }
+
     private func awayBinding(for date: String) -> Binding<Bool> {
         Binding(
             get: { draft.awayDates.contains(date) },
@@ -117,15 +148,23 @@ struct WeekPulseView: View {
 
     private func load() async {
         guard let household else { return }
-        _ = await appModel.householdStore.loadWeekPulse(householdID: household.id, weekStartDate: weekStartDate)
-        if !hasLoadedDraft {
-            draft = WeekPulseDraft(member: appModel.householdStore.weekPulse?.currentMember)
-            hasLoadedDraft = true
+        loadFailed = false
+        let loaded = await appModel.householdStore.loadWeekPulse(householdID: household.id, weekStartDate: weekStartDate)
+        guard self.household?.id == household.id else { return }
+        guard let loaded else {
+            // A refresh failing after the draft is already seeded keeps the
+            // user's in-progress edits; only an unseeded draft blocks Save.
+            if draftHouseholdID != household.id { loadFailed = true }
+            return
+        }
+        if draftHouseholdID != household.id {
+            draft = WeekPulseDraft(member: loaded.currentMember)
+            draftHouseholdID = household.id
         }
     }
 
     private func save() async {
-        guard let household else { return }
+        guard let household, isDraftReady else { return }
         isSaving = true
         defer { isSaving = false }
         do {
