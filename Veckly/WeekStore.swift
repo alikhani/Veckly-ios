@@ -151,12 +151,24 @@ final class WeekStore {
             if summary.weekStartDate == weekStartDate {
                 weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date())
             }
-            guard latestRequestedWeekStartDate == weekStartDate else { return }
+            guard latestRequestedWeekStartDate == weekStartDate else {
+                // The user browsed elsewhere meanwhile: leave the display
+                // alone, but keep the current-week slot (the widget's
+                // source) in step with what just arrived.
+                if isCurrentWeekSlot {
+                    currentWeekDayRows = WeekViewModelMapper.map(summary: summary, today: Date()).days
+                    lastFetchedAt = Date()
+                }
+                return
+            }
             applyWeek(summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
         } catch APIError.notFound {
             weekCache.removeValue(forKey: weekStartDate)
-            guard latestRequestedWeekStartDate == weekStartDate else { return }
             let rows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
+            guard latestRequestedWeekStartDate == weekStartDate else {
+                if isCurrentWeekSlot { currentWeekDayRows = rows }
+                return
+            }
             summary = nil
             dayRows = rows
             if isCurrentWeekSlot { currentWeekDayRows = rows }
