@@ -1,76 +1,53 @@
 import SwiftUI
 import WidgetKit
 
-private let appGroupID = "group.com.nimaalikhani.Veckly"
-private let storageKey = "widget.snapshot.v1"
-
-private struct Meal: Codable, Hashable {
-    let date: String
-    let title: String
-    let minutes: Int?
-    let recipeID: String
-
-    var deepLink: URL? {
-        var components = URLComponents()
-        components.scheme = "veckly"
-        components.host = "meal"
-        components.queryItems = [
-            URLQueryItem(name: "date", value: date),
-            URLQueryItem(name: "recipe", value: recipeID),
-        ]
-        return components.url
-    }
-}
-
-private struct Snapshot: Codable, Hashable {
-    static let staleInterval: TimeInterval = 12 * 60 * 60
-
-    let updatedAt: Date
-    let meals: [Meal]
-    let shoppingRemainingCount: Int
-
-    func isStale(at date: Date) -> Bool {
-        date.timeIntervalSince(updatedAt) > Self.staleInterval
-    }
-}
+// Snapshot model and timeline rules live in Veckly/WidgetSnapshot.swift,
+// shared with the app so they're unit-tested in VecklyTests.
 
 private struct Entry: TimelineEntry {
     let date: Date
-    let snapshot: Snapshot?
+    let snapshot: WidgetSnapshot?
 
-    var currentSnapshot: Snapshot? {
+    var dinnerState: WidgetDinnerState {
+        WidgetTimeline.dinnerState(for: snapshot, at: date)
+    }
+
+    var shoppingRemainingCount: Int? {
         guard let snapshot, !snapshot.isStale(at: date) else { return nil }
-        return snapshot
+        return snapshot.shoppingRemainingCount
     }
 }
 
 private struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> Entry {
-        Entry(date: Date(), snapshot: Snapshot(
+        Entry(date: Date(), snapshot: WidgetSnapshot(
             updatedAt: Date(),
-            meals: [Meal(date: "2026-10-01", title: "Tomato pasta", minutes: 25, recipeID: "preview")],
+            meals: [WidgetMealSnapshot(
+                date: WidgetDay.string(from: Date()),
+                title: "Tomato pasta",
+                minutes: 25,
+                recipeID: "preview"
+            )],
             shoppingRemainingCount: 8
         ))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) {
-        completion(context.isPreview ? placeholder(in: context) : loadEntry())
+        completion(context.isPreview ? placeholder(in: context) : Entry(date: Date(), snapshot: loadSnapshot()))
     }
 
+    /// One entry per local midnight so yesterday's dinner rolls off without
+    /// the app being opened; reload once the last entry is reached.
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        let entry = loadEntry()
-        let calendar = Calendar.current
-        let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: entry.date) ?? entry.date)
-        let staleDate = entry.snapshot.map { $0.updatedAt.addingTimeInterval(Snapshot.staleInterval) }
-        let refreshDate = [midnight, staleDate].compactMap { $0 }.filter { $0 > entry.date }.min()
-            ?? entry.date.addingTimeInterval(60 * 60)
-        completion(Timeline(entries: [entry], policy: .after(refreshDate)))
+        let snapshot = loadSnapshot()
+        let entries = WidgetTimeline.entryDates(for: snapshot, now: Date())
+            .map { Entry(date: $0, snapshot: snapshot) }
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 
-    private func loadEntry() -> Entry {
-        let data = UserDefaults(suiteName: appGroupID)?.data(forKey: storageKey)
-        let snapshot = data.flatMap { try? JSONDecoder().decode(Snapshot.self, from: $0) }
-        return Entry(date: Date(), snapshot: snapshot)
+    private func loadSnapshot() -> WidgetSnapshot? {
+        let data = UserDefaults(suiteName: WidgetSnapshot.appGroupID)?.data(forKey: WidgetSnapshot.storageKey)
+        return data.flatMap { try? JSONDecoder().decode(WidgetSnapshot.self, from: $0) }
     }
 }
 
@@ -86,9 +63,12 @@ private struct DinnerWidgetView: View {
 
     var body: some View {
         Group {
-            if let snapshot = entry.currentSnapshot {
-                content(snapshot)
-            } else {
+            switch entry.dinnerState {
+            case .meals(let meals):
+                content(meals)
+            case .nothingPlanned:
+                content([])
+            case .needsUpdate:
                 unavailable
             }
         }
@@ -96,8 +76,8 @@ private struct DinnerWidgetView: View {
     }
 
     @ViewBuilder
-    private func content(_ snapshot: Snapshot) -> some View {
-        let meals = Array(snapshot.meals.prefix(family == .systemSmall ? 1 : 3))
+    private func content(_ upcoming: [WidgetMealSnapshot]) -> some View {
+        let meals = Array(upcoming.prefix(family == .systemSmall ? 1 : 3))
         VStack(alignment: .leading, spacing: family == .systemSmall ? 7 : 9) {
             Label("widget.dinner.title", systemImage: "fork.knife")
                 .font(.caption.weight(.semibold))
@@ -167,7 +147,7 @@ private struct ShoppingWidgetView: View {
                 Label("widget.shopping.title", systemImage: "checklist")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(WidgetStyle.orange)
-                if let count = entry.currentSnapshot?.shoppingRemainingCount {
+                if let count = entry.shoppingRemainingCount {
                     Text("\(count)")
                         .font(.system(.largeTitle, design: .rounded, weight: .bold))
                         .foregroundStyle(WidgetStyle.ink)

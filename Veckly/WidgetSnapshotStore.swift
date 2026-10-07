@@ -1,25 +1,6 @@
 import Foundation
 import WidgetKit
 
-struct WidgetMealSnapshot: Codable, Equatable {
-    let date: String
-    let title: String
-    let minutes: Int?
-    let recipeID: String
-}
-
-struct WidgetSnapshot: Codable, Equatable {
-    static let staleInterval: TimeInterval = 12 * 60 * 60
-
-    let updatedAt: Date
-    let meals: [WidgetMealSnapshot]
-    let shoppingRemainingCount: Int
-
-    func isStale(at date: Date = Date()) -> Bool {
-        date.timeIntervalSince(updatedAt) > Self.staleInterval
-    }
-}
-
 enum WidgetSnapshotBuilder {
     /// Today plus a full following week — enough for the widget to keep
     /// rolling over at midnight for a week without the app being opened
@@ -59,21 +40,18 @@ enum WidgetSnapshotBuilder {
 }
 
 enum WidgetSnapshotStore {
-    static let appGroupID = "group.com.nimaalikhani.Veckly"
-    static let storageKey = "widget.snapshot.v1"
-
     private static var defaults: UserDefaults? {
-        UserDefaults(suiteName: appGroupID)
+        UserDefaults(suiteName: WidgetSnapshot.appGroupID)
     }
 
     static func save(_ snapshot: WidgetSnapshot) {
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
-        defaults?.set(data, forKey: storageKey)
+        defaults?.set(data, forKey: WidgetSnapshot.storageKey)
         WidgetCenter.shared.reloadAllTimelines()
     }
 
     static func clear() {
-        defaults?.removeObject(forKey: storageKey)
+        defaults?.removeObject(forKey: WidgetSnapshot.storageKey)
         WidgetCenter.shared.reloadAllTimelines()
     }
 }

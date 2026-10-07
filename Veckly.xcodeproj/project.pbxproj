@@ -52,6 +52,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A15000132FD9B40000A8B001 /* Exceptions for "Veckly" folder in "VecklyWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				WidgetSnapshot.swift,
+			);
+			target = A15000052FD9B40000A8B001 /* VecklyWidgets */;
+		};
 		A15000122FD9B40000A8B001 /* Exceptions for "VecklyWidgets" folder in "VecklyWidgets" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -64,6 +71,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3C62B5272FD8A6FB0056AE47 /* Veckly */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A15000132FD9B40000A8B001 /* Exceptions for "Veckly" folder in "VecklyWidgets" target */,
+			);
 			path = Veckly;
 			sourceTree = "<group>";
 		};
