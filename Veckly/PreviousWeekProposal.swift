@@ -121,6 +121,10 @@ struct PreviousWeekProposalSheet: View {
                         Section {
                             Text(L10n.format("previousWeek.summary", proposal.keptCount, proposal.changedCount))
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
+                            if let errorMessage {
+                                Text(errorMessage)
+                                    .foregroundStyle(VecklyDesign.Colors.inkDeep)
+                            }
                         }
                         Section("previousWeek.plan") {
                             ForEach(proposal.days) { day in
@@ -176,6 +180,8 @@ struct PreviousWeekProposalSheet: View {
                 household: household, weekStartDate: weekStartDate,
                 proposalID: proposalID, expectedUpdatedAt: expectedUpdatedAt
             )
+        } catch where WeekStore.isStaleWeekPlan(error) {
+            errorMessage = L10n.string("error.week.stale")
         } catch {
             errorMessage = L10n.string("previousWeek.error.preview")
         }
@@ -188,6 +194,11 @@ struct PreviousWeekProposalSheet: View {
             try await appModel.weekStore.applyPreviousWeek(household: household, weekStartDate: weekStartDate, proposal: proposal)
             await onApplied()
             dismiss()
+        } catch where WeekStore.isStaleWeekPlan(error) {
+            self.proposal = nil
+            errorMessage = nil
+            await load()
+            if errorMessage == nil { errorMessage = L10n.string("error.week.changedSincePreview") }
         } catch {
             errorMessage = L10n.string("previousWeek.error.apply")
         }

@@ -336,15 +336,24 @@ final class WeekStore {
         rescueID: String,
         expectedUpdatedAt: String?
     ) async throws -> WeekRescuePreview {
-        try await apiClient.previewWeekRescue(
-            householdID: household.id,
-            weekStartDate: weekStartDate,
-            date: day.date,
-            intent: intent,
-            missingIngredient: intent == .missingIngredient ? missingIngredient : nil,
-            rescueID: rescueID,
-            expectedUpdatedAt: expectedUpdatedAt
-        )
+        func preview(_ expectedUpdatedAt: String?) async throws -> WeekRescuePreview {
+            try await apiClient.previewWeekRescue(
+                householdID: household.id,
+                weekStartDate: weekStartDate,
+                date: day.date,
+                intent: intent,
+                missingIngredient: intent == .missingIngredient ? missingIngredient : nil,
+                rescueID: rescueID,
+                expectedUpdatedAt: expectedUpdatedAt
+            )
+        }
+        do {
+            return try await preview(expectedUpdatedAt)
+        } catch where Self.isStaleWeekPlan(error) {
+            // Our copy of the week was behind; a preview changes nothing, so
+            // it's safe to refresh and ask once more against the current plan.
+            return try await preview(try await refreshAfterStaleWeekPlan(household: household, weekStartDate: weekStartDate))
+        }
     }
 
     func applyRescue(
@@ -378,12 +387,19 @@ final class WeekStore {
         proposalID: String,
         expectedUpdatedAt: String?
     ) async throws -> PreviousWeekProposal {
-        try await apiClient.previewPreviousWeekProposal(
-            householdID: household.id,
-            weekStartDate: weekStartDate,
-            proposalID: proposalID,
-            expectedUpdatedAt: expectedUpdatedAt
-        )
+        func preview(_ expectedUpdatedAt: String?) async throws -> PreviousWeekProposal {
+            try await apiClient.previewPreviousWeekProposal(
+                householdID: household.id,
+                weekStartDate: weekStartDate,
+                proposalID: proposalID,
+                expectedUpdatedAt: expectedUpdatedAt
+            )
+        }
+        do {
+            return try await preview(expectedUpdatedAt)
+        } catch where Self.isStaleWeekPlan(error) {
+            return try await preview(try await refreshAfterStaleWeekPlan(household: household, weekStartDate: weekStartDate))
+        }
     }
 
     func applyPreviousWeek(
@@ -783,6 +799,47 @@ final class WeekStore {
             mutationError = nil
         }
         isFlushingPendingChanges = false
+        // Each lock/skip write bumps the plan's `updatedAt` on the server.
+        // Without refetching, `summary.updatedAt` stays at its pre-mutation
+        // value, and Rescue / Reuse-last-week send it as `expectedUpdatedAt`
+        // and get STALE_WEEK_PLAN until some unrelated reload happens.
+        await refreshSummaryAfterSync(context: context)
+    }
+
+    private func refreshSummaryAfterSync(context: WeekPendingSyncContext) async {
+        guard let latest = try? await apiClient.weekSummary(
+            householdID: context.householdID,
+            weekStartDate: context.weekStartDate
+        ), latest.weekStartDate == context.weekStartDate else { return }
+        weekCache[context.weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
+        guard isDisplayingWeek(context.weekStartDate) else { return }
+        applyWeek(
+            latest,
+            weekStartDate: context.weekStartDate,
+            isCurrentWeekSlot: context.weekStartDate == weekStartDate,
+            fetchedAt: Date()
+        )
+    }
+
+    /// Re-fetches the week after the backend rejected a request as
+    /// STALE_WEEK_PLAN (409), updating the cache and — if it's the week on
+    /// screen — the display, and returns the server's current `updatedAt`.
+    private func refreshAfterStaleWeekPlan(household: Household, weekStartDate: String) async throws -> String? {
+        let latest = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
+        weekCache[weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
+        if isDisplayingWeek(weekStartDate) {
+            applyWeek(latest, weekStartDate: weekStartDate, isCurrentWeekSlot: weekStartDate == self.weekStartDate, fetchedAt: Date())
+        }
+        return latest.updatedAt
+    }
+
+    private func isDisplayingWeek(_ weekStartDate: String) -> Bool {
+        (latestRequestedWeekStartDate ?? summary?.weekStartDate) == weekStartDate
+    }
+
+    static func isStaleWeekPlan(_ error: Error) -> Bool {
+        if case APIError.server(statusCode: 409) = error { return true }
+        return false
     }
 
     private func scheduleRetryFlush() {

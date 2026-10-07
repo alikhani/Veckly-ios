@@ -2293,6 +2293,22 @@
         }
       }
     },
+    "error.week.changedSincePreview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The week changed in the meantime. Here is an updated suggestion."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckan ändrades under tiden. Här är ett uppdaterat förslag."
+          }
+        }
+      }
+    },
     "error.week.clearMeal" : {
       "localizations" : {
         "en" : {
@@ -2385,6 +2401,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kunde inte uppdatera portionerna. Försök igen från dagen."
+          }
+        }
+      }
+    },
+    "error.week.stale" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The week just changed. Try again."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veckan ändrades nyss. Försök igen."
           }
         }
       }

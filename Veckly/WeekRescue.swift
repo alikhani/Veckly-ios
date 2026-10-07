@@ -232,6 +232,8 @@ struct WeekRescueSheet: View {
                 intent: selectedIntent, missingIngredient: missingIngredient,
                 rescueID: rescueID, expectedUpdatedAt: expectedUpdatedAt
             )
+        } catch where WeekStore.isStaleWeekPlan(error) {
+            errorMessage = L10n.string("error.week.stale")
         } catch {
             errorMessage = L10n.string("rescue.error.noSuggestion")
         }
@@ -248,6 +250,12 @@ struct WeekRescueSheet: View {
             )
             await onApplied()
             dismiss()
+        } catch where WeekStore.isStaleWeekPlan(error) {
+            // The plan changed after this preview was shown — never apply a
+            // stale suggestion; show a fresh one to confirm instead.
+            self.preview = nil
+            await loadPreview()
+            if errorMessage == nil { errorMessage = L10n.string("error.week.changedSincePreview") }
         } catch {
             errorMessage = L10n.string("rescue.error.apply")
         }
