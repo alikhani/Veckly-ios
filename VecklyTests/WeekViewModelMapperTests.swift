@@ -801,18 +801,31 @@ struct WeekViewModelMapperTests {
     }
 
     /// A successful mutation (`assignMeal`) leaves the per-week cache
-    /// pointing at pre-mutation data unless it's explicitly invalidated —
-    /// without that, browsing away and back within the freshness window
-    /// would silently revert the just-made change back to what the week
-    /// looked like before it, straight from cache.
+    /// pointing at pre-mutation data unless it's replaced — without that,
+    /// browsing away and back within the freshness window would silently
+    /// revert the just-made change back to what the week looked like before
+    /// it, straight from cache. The store now refetches right after the
+    /// write, so the cache holds the post-mutation week instead.
     @MainActor
     @Test func assignMealInvalidatesTheCacheSoBrowsingBackDoesNotShowThePreMutationWeek() async {
         let currentWeek = WeekCalendar.currentWeekStartDate()
         let otherWeek = WeekCalendar.addWeeks(to: currentWeek, offset: -1)
+        let recipe = WeekSummaryRecipe(id: "r1", title: "New recipe", description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 10, tags: [])
+        let empty = makeWeekSummary(weekStartDate: currentWeek)
+        let afterAssign = WeekSummary(
+            household: empty.household,
+            weekStartDate: currentWeek,
+            updatedAt: nil,
+            days: empty.days.map { day in
+                day.dayOfWeek == .monday
+                    ? WeekSummaryDay(dayOfWeek: .monday, date: day.date, state: .planned, recipe: recipe)
+                    : day
+            }
+        )
         let apiClient = SequencedWeekSummaryAPIClient(summaries: [
-            makeWeekSummary(weekStartDate: currentWeek),
+            empty,
+            afterAssign,
             makeWeekSummary(weekStartDate: otherWeek),
-            makeWeekSummary(weekStartDate: currentWeek),
         ])
         let store = WeekStore(apiClient: apiClient)
         let household = Household(id: "11111111-1111-1111-1111-111111111111", name: "Test household", role: .owner)
@@ -821,17 +834,14 @@ struct WeekViewModelMapperTests {
         #expect(apiClient.fetchCount == 1)
 
         let monday = store.dayRows.first { $0.weekday == .monday }!
-        let recipe = WeekSummaryRecipe(id: "r1", title: "New recipe", description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 10, tags: [])
         await store.assignMeal(day: monday, recipe: recipe, household: household, userID: "33333333-3333-3333-3333-333333333333")
-
-        await store.loadWeek(household: household, weekStartDate: otherWeek)
         #expect(apiClient.fetchCount == 2)
 
-        // Without invalidating the cache on a successful mutation, this
-        // would be a cache hit (fetchCount staying at 2) that silently
-        // redisplays the pre-`assignMeal` week.
-        await store.loadCurrentWeek(household: household)
+        await store.loadWeek(household: household, weekStartDate: otherWeek)
         #expect(apiClient.fetchCount == 3)
+
+        await store.loadCurrentWeek(household: household)
+        #expect(store.dayRows.first { $0.weekday == .monday }?.recipe?.id == "r1")
     }
 }
 

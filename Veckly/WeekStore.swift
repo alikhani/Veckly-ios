@@ -346,6 +346,7 @@ final class WeekStore {
             // back to the pre-mutation state.
             weekCache.removeValue(forKey: targetWeekStartDate)
             if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
+            await refreshAfterMutation(householdID: household.id, weekStartDate: targetWeekStartDate)
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
                 dayRows[idx] = previous
@@ -464,12 +465,7 @@ final class WeekStore {
             event: .servingsChanged(day: day.weekday, servings: servings)
         )
         weekCache.removeValue(forKey: viewedWeekStartDate)
-        await loadWeekData(
-            household: household,
-            weekStartDate: viewedWeekStartDate,
-            isCurrentWeekSlot: viewedWeekStartDate == weekStartDate,
-            force: true
-        )
+        await refreshAfterMutation(householdID: household.id, weekStartDate: viewedWeekStartDate)
     }
 
     /// Applies the portion suggestions a user accepted in the Week Brief.
@@ -566,6 +562,7 @@ final class WeekStore {
             )
             weekCache.removeValue(forKey: targetWeekStartDate)
             if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
+            await refreshAfterMutation(householdID: household.id, weekStartDate: targetWeekStartDate)
         } catch {
             if let previous, let idx = dayRows.firstIndex(where: { $0.weekday == day.weekday }) {
                 dayRows[idx] = previous
@@ -831,34 +828,43 @@ final class WeekStore {
         // Without refetching, `summary.updatedAt` stays at its pre-mutation
         // value, and Rescue / Reuse-last-week send it as `expectedUpdatedAt`
         // and get STALE_WEEK_PLAN until some unrelated reload happens.
-        await refreshSummaryAfterSync(context: context)
+        await refreshAfterMutation(householdID: context.householdID, weekStartDate: context.weekStartDate)
     }
 
-    private func refreshSummaryAfterSync(context: WeekPendingSyncContext) async {
-        guard let latest = try? await apiClient.weekSummary(
-            householdID: context.householdID,
-            weekStartDate: context.weekStartDate
-        ), latest.weekStartDate == context.weekStartDate else { return }
-        weekCache[context.weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
-        guard isDisplayingWeek(context.weekStartDate) else { return }
-        applyWeek(
-            latest,
-            weekStartDate: context.weekStartDate,
-            isCurrentWeekSlot: context.weekStartDate == weekStartDate,
-            fetchedAt: Date()
-        )
+    /// Every week-plan write bumps the plan's `updatedAt` on the server.
+    /// Rescue / Reuse-last-week send `summary.updatedAt` as
+    /// `expectedUpdatedAt`, so after a successful write the store refetches
+    /// to keep its copy current — otherwise the next preview gets
+    /// STALE_WEEK_PLAN until some unrelated reload happens. Best effort: a
+    /// failed refetch leaves the optimistic state on screen, and the cache
+    /// entry the caller already dropped makes the next visit refetch.
+    private func refreshAfterMutation(householdID: String, weekStartDate: String) async {
+        _ = try? await fetchAndApplyLatestWeek(householdID: householdID, weekStartDate: weekStartDate)
     }
 
     /// Re-fetches the week after the backend rejected a request as
-    /// STALE_WEEK_PLAN (409), updating the cache and — if it's the week on
-    /// screen — the display, and returns the server's current `updatedAt`.
+    /// STALE_WEEK_PLAN (409) and returns the server's current `updatedAt`.
     private func refreshAfterStaleWeekPlan(household: Household, weekStartDate: String) async throws -> String? {
-        let latest = try await apiClient.weekSummary(householdID: household.id, weekStartDate: weekStartDate)
+        try await fetchAndApplyLatestWeek(householdID: household.id, weekStartDate: weekStartDate).updatedAt
+    }
+
+    /// Fetches `weekStartDate` unconditionally (no freshness or in-flight
+    /// short-circuit, unlike `loadWeekData`), caches it, and applies it to
+    /// the display if it's the week on screen — or, if it's the current
+    /// week while another is being browsed, to the current-week slot the
+    /// widget reads.
+    private func fetchAndApplyLatestWeek(householdID: String, weekStartDate: String) async throws -> WeekSummary {
+        let latest = try await apiClient.weekSummary(householdID: householdID, weekStartDate: weekStartDate)
+        guard latest.weekStartDate == weekStartDate else { return latest }
+        let isCurrentWeekSlot = weekStartDate == self.weekStartDate
         weekCache[weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
         if isDisplayingWeek(weekStartDate) {
-            applyWeek(latest, weekStartDate: weekStartDate, isCurrentWeekSlot: weekStartDate == self.weekStartDate, fetchedAt: Date())
+            applyWeek(latest, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
+        } else if isCurrentWeekSlot {
+            currentWeekDayRows = WeekViewModelMapper.map(summary: latest, today: Date()).days
+            lastFetchedAt = Date()
         }
-        return latest.updatedAt
+        return latest
     }
 
     private func isDisplayingWeek(_ weekStartDate: String) -> Bool {

@@ -28,6 +28,42 @@ struct WeekStoreStaleWeekPlanTests {
         #expect(store.dayRows.first { $0.weekday == .monday }?.isLocked == true)
     }
 
+    @Test func assignMealRefreshesSummaryUpdatedAt() async throws {
+        let apiClient = VersionedWeekAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        await store.loadCurrentWeek(household: household)
+        let monday = try #require(store.dayRows.first { $0.weekday == .monday })
+        let recipe = WeekSummaryRecipe(id: "new", title: "New", description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 10, tags: [])
+
+        await store.assignMeal(day: monday, recipe: recipe, household: household, userID: userID)
+
+        #expect(store.mutationError == nil)
+        #expect(store.summary?.updatedAt == "v1")
+    }
+
+    @Test func unassignMealRefreshesSummaryUpdatedAt() async throws {
+        let apiClient = VersionedWeekAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        await store.loadCurrentWeek(household: household)
+        let monday = try #require(store.dayRows.first { $0.weekday == .monday })
+
+        await store.unassignMeal(day: monday, household: household, userID: userID)
+
+        #expect(store.mutationError == nil)
+        #expect(store.summary?.updatedAt == "v1")
+    }
+
+    @Test func changeServingsRefreshesSummaryUpdatedAt() async throws {
+        let apiClient = VersionedWeekAPIClient()
+        let store = WeekStore(apiClient: apiClient)
+        await store.loadCurrentWeek(household: household)
+        let monday = try #require(store.dayRows.first { $0.weekday == .monday })
+
+        try await store.changeServings(day: monday, servings: 5, household: household, userID: userID, viewedWeekStartDate: store.weekStartDate)
+
+        #expect(store.summary?.updatedAt == "v1")
+    }
+
     @Test func staleRescuePreviewRefreshesAndRetriesOnceWithTheCurrentVersion() async throws {
         let apiClient = VersionedWeekAPIClient()
         let store = WeekStore(apiClient: apiClient)
