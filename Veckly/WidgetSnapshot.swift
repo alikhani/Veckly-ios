@@ -28,6 +28,7 @@ struct WidgetSnapshot: Codable, Equatable {
     static let appGroupID = "group.com.nimaalikhani.Veckly"
     static let storageKey = "widget.snapshot.v1"
     static let staleInterval: TimeInterval = 12 * 60 * 60
+    static let shoppingURL = URL(string: "veckly://shopping")!
 
     let updatedAt: Date
     let meals: [WidgetMealSnapshot]
@@ -42,6 +43,13 @@ enum WidgetDinnerState: Equatable {
     case meals([WidgetMealSnapshot])
     case nothingPlanned
     case needsUpdate
+
+    /// Whole-widget tap target. `.systemSmall` ignores `Link`, so this is the
+    /// only way a small widget deep-links; medium keeps a `Link` per row.
+    var widgetURL: URL? {
+        guard case .meals(let meals) = self else { return nil }
+        return meals.first?.deepLink
+    }
 }
 
 enum WidgetTimeline {

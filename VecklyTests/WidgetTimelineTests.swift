@@ -84,6 +84,20 @@ struct WidgetTimelineTests {
         #expect(snapshot.meals == [WidgetMealSnapshot(date: "2026-10-12", title: "Tacos", minutes: nil, recipeID: "r1")])
     }
 
+    @Test func wholeWidgetTapOpensTheFirstUpcomingDinner() throws {
+        let mondayMorning = date("2026-10-12T05:30:00Z")
+        let state = WidgetTimeline.dinnerState(for: sundaySnapshot, at: mondayMorning, calendar: stockholm)
+
+        let url = try #require(state.widgetURL)
+        #expect(AppDeepLink(url: url) == .meal(date: "2026-10-12", recipeID: "Monday tacos"))
+        #expect(WidgetDinnerState.needsUpdate.widgetURL == nil)
+        #expect(WidgetDinnerState.nothingPlanned.widgetURL == nil)
+    }
+
+    @Test func shoppingWidgetTapOpensTheShoppingList() {
+        #expect(AppDeepLink(url: WidgetSnapshot.shoppingURL) == .shopping)
+    }
+
     private func meal(_ date: String, _ title: String) -> WidgetMealSnapshot {
         WidgetMealSnapshot(date: date, title: title, minutes: 30, recipeID: title)
     }

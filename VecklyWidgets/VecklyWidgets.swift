@@ -72,6 +72,7 @@ private struct DinnerWidgetView: View {
                 unavailable
             }
         }
+        .widgetURL(entry.dinnerState.widgetURL)
         .containerBackground(WidgetStyle.canvas, for: .widget)
     }
 
@@ -88,30 +89,38 @@ private struct DinnerWidgetView: View {
                     .foregroundStyle(WidgetStyle.ink)
             } else {
                 ForEach(meals, id: \.self) { meal in
-                    Link(destination: meal.deepLink ?? URL(string: "veckly://")!) {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(dayLabel(for: meal.date))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                                .frame(width: family == .systemSmall ? nil : 52, alignment: .leading)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(meal.title)
-                                    .font(family == .systemSmall ? .headline : .subheadline.weight(.semibold))
-                                    .foregroundStyle(WidgetStyle.ink)
-                                    .lineLimit(family == .systemSmall ? 2 : 1)
-                                if let minutes = meal.minutes {
-                                    Text("\(minutes) min")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
+                    if family == .systemSmall {
+                        mealRow(meal)
+                    } else {
+                        Link(destination: meal.deepLink ?? URL(string: "veckly://")!) {
+                            mealRow(meal)
                         }
                     }
-                    .privacySensitive()
                 }
             }
             Spacer(minLength: 0)
         }
+    }
+
+    private func mealRow(_ meal: WidgetMealSnapshot) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(dayLabel(for: meal.date))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: family == .systemSmall ? nil : 52, alignment: .leading)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(meal.title)
+                    .font(family == .systemSmall ? .headline : .subheadline.weight(.semibold))
+                    .foregroundStyle(WidgetStyle.ink)
+                    .lineLimit(family == .systemSmall ? 2 : 1)
+                if let minutes = meal.minutes {
+                    Text("\(minutes) min")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .privacySensitive()
     }
 
     private var unavailable: some View {
@@ -142,29 +151,29 @@ private struct ShoppingWidgetView: View {
     let entry: Entry
 
     var body: some View {
-        Link(destination: URL(string: "veckly://shopping")!) {
-            VStack(alignment: .leading, spacing: 8) {
-                Label("widget.shopping.title", systemImage: "checklist")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(WidgetStyle.orange)
-                if let count = entry.shoppingRemainingCount {
-                    Text("\(count)")
-                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                        .foregroundStyle(WidgetStyle.ink)
-                    Text(count == 1 ? "widget.shopping.one" : "widget.shopping.other")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("widget.update.title")
-                        .font(.headline)
-                        .foregroundStyle(WidgetStyle.ink)
-                    Text("widget.update.body")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 8) {
+            Label("widget.shopping.title", systemImage: "checklist")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(WidgetStyle.orange)
+            if let count = entry.shoppingRemainingCount {
+                Text("\(count)")
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                    .foregroundStyle(WidgetStyle.ink)
+                Text(count == 1 ? "widget.shopping.one" : "widget.shopping.other")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("widget.update.title")
+                    .font(.headline)
+                    .foregroundStyle(WidgetStyle.ink)
+                Text("widget.update.body")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+            Spacer(minLength: 0)
         }
+        // Small-only widget: `Link` is ignored in `.systemSmall`.
+        .widgetURL(WidgetSnapshot.shoppingURL)
         .containerBackground(WidgetStyle.canvas, for: .widget)
     }
 }
