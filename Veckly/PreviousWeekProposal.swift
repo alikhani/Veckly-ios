@@ -143,8 +143,10 @@ struct PreviousWeekProposalSheet: View {
                                                 .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                                                 .accessibilityLabel(L10n.string("previousWeek.kept"))
                                         } else {
-                                            Button("previousWeek.swap") { onSwap(day.date); dismiss() }
+                                            Button("previousWeek.swap") { Task { await apply(proposal, thenChange: day.date) } }
                                                 .font(.footnote.weight(.semibold))
+                                                .disabled(isApplying)
+                                                .accessibilityHint(Text("previousWeek.swap.hint"))
                                         }
                                     }
                                 }
@@ -187,12 +189,20 @@ struct PreviousWeekProposalSheet: View {
         }
     }
 
-    private func apply(_ proposal: PreviousWeekProposal) async {
+    /// `thenChange` is the per-day "Change" path: the proposal is generated
+    /// and applied server-side as a whole (by `proposalId`), so the client
+    /// can't apply it minus one day. Changing a day therefore uses the plan
+    /// first — same path, same stale-plan recovery as "Use this week" — and
+    /// then opens the meal picker for that day on the now-filled week.
+    private func apply(_ proposal: PreviousWeekProposal, thenChange date: String? = nil) async {
         isApplying = true
         defer { isApplying = false }
         do {
-            try await appModel.weekStore.applyPreviousWeek(household: household, weekStartDate: weekStartDate, proposal: proposal)
-            await onApplied()
+            try await Self.commit(
+                proposal, thenChange: date,
+                weekStore: appModel.weekStore, household: household, weekStartDate: weekStartDate,
+                onApplied: onApplied, onChangeDay: onSwap
+            )
             dismiss()
         } catch where WeekStore.isStaleWeekPlan(error) {
             self.proposal = nil
@@ -202,5 +212,19 @@ struct PreviousWeekProposalSheet: View {
         } catch {
             errorMessage = L10n.string("previousWeek.error.apply")
         }
+    }
+
+    static func commit(
+        _ proposal: PreviousWeekProposal,
+        thenChange date: String?,
+        weekStore: WeekStore,
+        household: Household,
+        weekStartDate: String,
+        onApplied: () async -> Void,
+        onChangeDay: (String) -> Void
+    ) async throws {
+        try await weekStore.applyPreviousWeek(household: household, weekStartDate: weekStartDate, proposal: proposal)
+        await onApplied()
+        if let date { onChangeDay(date) }
     }
 }

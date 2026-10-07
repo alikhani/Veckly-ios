@@ -5260,13 +5260,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Change"
+            "value" : "Use & change"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ändra"
+            "value" : "Använd & ändra"
+          }
+        }
+      }
+    },
+    "previousWeek.swap.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uses this plan for the week, then lets you pick another dinner for this day."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Använder planen för veckan och låter dig sedan välja en annan middag för den här dagen."
           }
         }
       }

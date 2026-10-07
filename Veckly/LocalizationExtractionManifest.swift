@@ -393,6 +393,7 @@ private enum LocalizationExtractionManifest {
         _ = String(localized: "previousWeek.reason.worked-last-week")
         _ = String(localized: "previousWeek.summary")
         _ = String(localized: "previousWeek.swap")
+        _ = String(localized: "previousWeek.swap.hint")
         _ = String(localized: "previousWeek.title")
         _ = String(localized: "previousWeek.unavailable")
         _ = String(localized: "previousWeek.usePlan")
