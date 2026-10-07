@@ -193,6 +193,22 @@ final class WeekStore {
         reapplyPendingStateIfNeeded(for: weekStartDate)
     }
 
+    /// What the home-screen widget should know about: the current week plus
+    /// next week when it has been loaded this session (on screen right now,
+    /// including optimistic edits, or in the per-week cache). Never fetches.
+    var widgetDayRows: [WeekDayRowViewModel] {
+        let nextWeekStartDate = WeekCalendar.addWeeks(to: weekStartDate, offset: 1)
+        let nextWeekRows: [WeekDayRowViewModel]
+        if dayRows.first?.date == nextWeekStartDate {
+            nextWeekRows = dayRows
+        } else if let cached = weekCache[nextWeekStartDate] {
+            nextWeekRows = WeekViewModelMapper.map(summary: cached.summary, today: Date()).days
+        } else {
+            nextWeekRows = []
+        }
+        return currentWeekDayRows + nextWeekRows
+    }
+
     /// Side-effect-free fetch used by the weekend nudge and the Sunday retro to
     /// peek at another week's plan without disturbing the currently displayed
     /// week's `summary`/`dayRows`/`isLoading` state.

@@ -261,7 +261,7 @@ final class AppModel {
             return
         }
 
-        let meals = WidgetSnapshotBuilder.upcomingMeals(from: weekStore.currentWeekDayRows, now: now)
+        let meals = WidgetSnapshotBuilder.upcomingMeals(from: weekStore.widgetDayRows, now: now)
         let itemKeys = Set(shoppingListStore.groups.flatMap(\.items).map(\.itemKey))
         let remainingCount = itemKeys.subtracting(shoppingListStore.checkedItems).count
         WidgetSnapshotStore.save(WidgetSnapshot(

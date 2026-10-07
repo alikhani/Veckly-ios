@@ -32,6 +32,25 @@ struct WeekStoreCurrentWeekRowsTests {
         // The browsed week stays on screen.
         #expect(store.dayRows.first?.date == nextWeek)
     }
+
+    @Test func widgetDayRowsIncludeNextWeekOnceItHasBeenLoaded() async throws {
+        let store = WeekStore(apiClient: GatedWeekAPIClient())
+        let currentWeek = WeekCalendar.currentWeekStartDate()
+        let nextWeek = WeekCalendar.addWeeks(to: currentWeek, offset: 1)
+
+        await store.loadCurrentWeek(household: household)
+        #expect(store.widgetDayRows.map(\.date) == store.currentWeekDayRows.map(\.date))
+
+        // Planning next week, then returning to this week: next week's rows
+        // come from the per-week cache.
+        await store.loadWeek(household: household, weekStartDate: nextWeek)
+        await store.loadCurrentWeek(household: household)
+
+        let dates = store.widgetDayRows.map(\.date)
+        #expect(dates.count == 14)
+        #expect(dates.first == currentWeek)
+        #expect(dates.contains(WeekCalendar.addDays(to: nextWeek, offset: 6)))
+    }
 }
 
 private final class GatedWeekAPIClient: WeekStoreAPIClient, @unchecked Sendable {

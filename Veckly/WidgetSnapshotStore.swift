@@ -21,12 +21,20 @@ struct WidgetSnapshot: Codable, Equatable {
 }
 
 enum WidgetSnapshotBuilder {
+    /// Today plus a full following week — enough for the widget to keep
+    /// rolling over at midnight for a week without the app being opened
+    /// (e.g. a week planned on Sunday evening).
+    static let maxMeals = 8
+
+    /// `rows` may span several weeks (the current week plus next week when
+    /// it's loaded); they're ordered by date here, so callers needn't.
     static func upcomingMeals(
         from rows: [WeekDayRowViewModel],
         now: Date = Date(),
         calendar: Calendar = Calendar.current
     ) -> [WidgetMealSnapshot] {
         let today = WeekCalendar.localDateString(from: now, calendar: calendar)
+        var seenDates: Set<String> = []
         return rows
             .filter { row in
                 !row.isSkipped
@@ -34,7 +42,9 @@ enum WidgetSnapshotBuilder {
                     && WeekCalendar.date(from: row.date) != nil
                     && row.date >= today
             }
-            .prefix(3)
+            .sorted { $0.date < $1.date }
+            .filter { seenDates.insert($0.date).inserted }
+            .prefix(maxMeals)
             .compactMap { row in
                 guard let recipe = row.recipe else { return nil }
                 let total = [recipe.prepTimeMinutes, recipe.cookTimeMinutes].compactMap { $0 }.reduce(0, +)
