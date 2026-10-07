@@ -137,13 +137,11 @@ private struct DinnerWidgetView: View {
     }
 
     private func dayLabel(for value: String) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        formatter.dateFormat = "yyyy-MM-dd"
-        guard let date = formatter.date(from: value) else { return value }
-        if Calendar.current.isDateInToday(date) { return String(localized: "widget.day.today") }
-        formatter.setLocalizedDateFormatFromTemplate("EEE")
-        return formatter.string(from: date).capitalized
+        switch WidgetDay.label(for: value, at: entry.date) {
+        case .today: return String(localized: "widget.day.today")
+        case .weekday(let name): return name
+        case .unparsed(let raw): return raw
+        }
     }
 }
 

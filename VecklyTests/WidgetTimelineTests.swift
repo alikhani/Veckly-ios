@@ -98,6 +98,34 @@ struct WidgetTimelineTests {
         #expect(AppDeepLink(url: WidgetSnapshot.shoppingURL) == .shopping)
     }
 
+    @Test func dayLabelIsRelativeToTheEntryDateNotWhenItRenders() {
+        let mondayMorning = date("2026-10-12T05:30:00Z")
+        let english = Locale(identifier: "en_US")
+
+        #expect(WidgetDay.label(for: "2026-10-12", at: mondayMorning, locale: english, calendar: stockholm) == .today)
+        #expect(WidgetDay.label(for: "2026-10-13", at: mondayMorning, locale: english, calendar: stockholm) == .weekday("Tue"))
+    }
+
+    @Test func dayLabelParsesMachineDatesUnderANonGregorianLocale() {
+        let mondayMorning = date("2026-10-12T05:30:00Z")
+        let thai = Locale(identifier: "th_TH@calendar=buddhist")
+        var buddhistStockholm = Calendar(identifier: .buddhist)
+        buddhistStockholm.timeZone = stockholm.timeZone
+
+        #expect(WidgetDay.label(for: "2026-10-12", at: mondayMorning, locale: thai, calendar: buddhistStockholm) == .today)
+        #expect(WidgetDay.label(for: "2026-10-13", at: mondayMorning, locale: Locale(identifier: "sv_SE"), calendar: buddhistStockholm) == .weekday("Tis"))
+        // 2026-10-13 is a Tuesday — not Buddhist-era year 2026 (1483 CE).
+        #expect(WidgetDay.label(for: "2026-10-13", at: mondayMorning, locale: thai, calendar: buddhistStockholm)
+            == .weekday(Self.weekdayName(gregorianWeekday: 3, locale: thai)))
+        #expect(WidgetDay.label(for: "not-a-date", at: mondayMorning, locale: thai, calendar: buddhistStockholm) == .unparsed("not-a-date"))
+    }
+
+    private static func weekdayName(gregorianWeekday: Int, locale: Locale) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        return formatter.shortWeekdaySymbols[gregorianWeekday - 1].capitalized
+    }
+
     private func meal(_ date: String, _ title: String) -> WidgetMealSnapshot {
         WidgetMealSnapshot(date: date, title: title, minutes: 30, recipeID: title)
     }

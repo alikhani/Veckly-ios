@@ -133,3 +133,23 @@ enum WidgetDay {
         return formatter
     }
 }
+
+enum WidgetDayLabel: Equatable {
+    case today
+    case weekday(String)
+    case unparsed(String)
+}
+
+extension WidgetDay {
+    /// "Today" is judged against the timeline entry's date, not the moment
+    /// WidgetKit happens to render it (entries are rendered ahead of time).
+    static func label(for value: String, at date: Date, locale: Locale = .current, calendar: Calendar = .current) -> WidgetDayLabel {
+        guard let parsed = Self.date(from: value, calendar: calendar) else { return .unparsed(value) }
+        if value == string(from: date, calendar: calendar) { return .today }
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = calendar.timeZone
+        formatter.setLocalizedDateFormatFromTemplate("EEE")
+        return .weekday(formatter.string(from: parsed).capitalized)
+    }
+}
