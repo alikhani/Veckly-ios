@@ -757,7 +757,7 @@ struct WeekTabView: View {
         regenerate: Bool,
         weekStartDate: String? = nil,
         pantryItemKeys: [String] = [],
-        portionAdjustments: [Weekday: Int] = [:]
+        portionAdjustments: [WeekPortionAdjustment] = []
     ) async {
         guard appModel.weekStore.generatingWeekStartDate == nil else { return }
         guard let household = appModel.householdStore.activeHousehold else { return }
@@ -773,27 +773,6 @@ struct WeekTabView: View {
         // snapshot, the API call, and the undo banner it may offer) must
         // stay pinned to the week it was actually generated for.
         let targetWeekStartDate = weekStartDate ?? viewedWeekStartDate
-        for (weekday, servings) in portionAdjustments {
-            guard let row = appModel.weekStore.dayRows.first(where: { $0.weekday == weekday }) else { continue }
-            do {
-                try await appModel.weekStore.changeServings(
-                    day: row,
-                    servings: servings,
-                    household: household,
-                    userID: userID,
-                    viewedWeekStartDate: targetWeekStartDate
-                )
-                if let recipeID = row.recipe?.id {
-                    try? await appModel.apiClient.updatePortionMemory(
-                        householdID: household.id,
-                        recipeID: recipeID,
-                        reset: false
-                    )
-                }
-            } catch {
-                return
-            }
-        }
         let rowsBeforeFill = appModel.weekStore.dayRows
         let preRegenerateSnapshot = regenerate
             ? appModel.weekStore.dayRows.filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }
@@ -814,6 +793,7 @@ struct WeekTabView: View {
             viewedWeekStartDate: targetWeekStartDate,
             pantryItemKeys: pantryItemKeys
         )
+        let generateSucceeded = appModel.weekStore.mutationError == nil
         if !regenerate, viewedWeekStartDate == targetWeekStartDate {
             if appModel.weekStore.mutationError == nil {
                 fillCompletionNotice = WeekFillCompletionNotice.make(
@@ -824,15 +804,23 @@ struct WeekTabView: View {
                 failedFillWeekStartDate = targetWeekStartDate
             }
         }
+        // After generating, so only days that kept the suggestion's recipe
+        // get the new portions (see `applyPortionAdjustments`).
+        await appModel.weekStore.applyPortionAdjustments(
+            portionAdjustments,
+            household: household,
+            userID: userID,
+            weekStartDate: targetWeekStartDate
+        )
         await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: targetWeekStartDate)
-        if !regenerate, !hadWeekContentBefore, appModel.weekStore.mutationError == nil {
+        if !regenerate, !hadWeekContentBefore, generateSucceeded {
             appModel.recordProductEvent(.firstWeekGenerated, weekStartDate: targetWeekStartDate, properties: [
                 "plannedDinners": .int(plannedDinnerCount)
             ])
         }
         checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
 
-        guard regenerate, appModel.weekStore.mutationError == nil, !preRegenerateSnapshot.isEmpty else { return }
+        guard regenerate, generateSucceeded, !preRegenerateSnapshot.isEmpty else { return }
         // Only offer undo if the user is still looking at the week that was
         // just regenerated — otherwise there's nothing sensible to restore
         // into the currently-visible week, and no banner should appear for

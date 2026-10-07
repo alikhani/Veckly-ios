@@ -134,6 +134,7 @@ private enum LocalizationExtractionManifest {
         _ = String(localized: "error.week.load")
         _ = String(localized: "error.week.noRecipes")
         _ = String(localized: "error.week.pendingSync")
+        _ = String(localized: "error.week.servings")
         _ = String(localized: "format.meals.one")
         _ = String(localized: "format.meals.other")
         _ = String(localized: "format.servings")

@@ -428,6 +428,65 @@ final class WeekStore {
         )
     }
 
+    /// Applies the portion suggestions a user accepted in the Week Brief.
+    /// Runs *after* generate/regenerate: a suggestion is computed for one
+    /// specific recipe ("you usually need more of this"), so it's only
+    /// applied to days that still hold that recipe once the new week is in.
+    /// A regenerate that replaced the recipe drops the adjustment, and that
+    /// recipe's portion memory is left unconsumed so the suggestion can come
+    /// back the next time it's planned. Writing `servings_changed` *before*
+    /// generating instead was silently undone for replaced days, since new
+    /// recipes come in at their default servings. Returns `false` and sets
+    /// `mutationError` if any write failed.
+    @discardableResult
+    func applyPortionAdjustments(
+        _ adjustments: [WeekPortionAdjustment],
+        household: Household,
+        userID: String,
+        weekStartDate targetWeekStartDate: String
+    ) async -> Bool {
+        guard !adjustments.isEmpty else { return true }
+        var didWrite = false
+        var succeeded = true
+        do {
+            let summary = try await apiClient.weekSummary(householdID: household.id, weekStartDate: targetWeekStartDate)
+            let recipeIDByDay = Dictionary(
+                summary.days.compactMap { day in day.recipe.map { (day.dayOfWeek, $0.id) } },
+                uniquingKeysWith: { first, _ in first }
+            )
+            let ordered = adjustments.sorted {
+                (Weekday.allCases.firstIndex(of: $0.weekday) ?? 0) < (Weekday.allCases.firstIndex(of: $1.weekday) ?? 0)
+            }
+            for adjustment in ordered where recipeIDByDay[adjustment.weekday] == adjustment.recipeID {
+                try await apiClient.appendWeekPlanEvent(
+                    householdID: household.id,
+                    weekStartDate: targetWeekStartDate,
+                    userID: userID,
+                    event: .servingsChanged(day: adjustment.weekday, servings: adjustment.servings)
+                )
+                didWrite = true
+                try? await apiClient.updatePortionMemory(
+                    householdID: household.id,
+                    recipeID: adjustment.recipeID,
+                    reset: false
+                )
+            }
+        } catch {
+            succeeded = false
+            if mutationError == nil { mutationError = L10n.string("error.week.servings") }
+        }
+        if didWrite {
+            weekCache.removeValue(forKey: targetWeekStartDate)
+            await loadWeekData(
+                household: household,
+                weekStartDate: targetWeekStartDate,
+                isCurrentWeekSlot: targetWeekStartDate == weekStartDate,
+                force: true
+            )
+        }
+        return succeeded
+    }
+
     func unassignMeal(day: WeekDayRowViewModel, household: Household, userID: String, viewedWeekStartDate: String? = nil) async {
         let targetWeekStartDate = viewedWeekStartDate ?? weekStartDate
         mutationError = nil
@@ -836,6 +895,7 @@ protocol WeekStoreAPIClient {
     func applyPreviousWeekProposal(
         householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
     ) async throws
+    func updatePortionMemory(householdID: String, recipeID: String, reset: Bool) async throws
 }
 
 extension WeekStoreAPIClient {
@@ -864,6 +924,17 @@ extension WeekStoreAPIClient {
     func applyPreviousWeekProposal(
         householdID: String, weekStartDate: String, proposalID: String, expectedUpdatedAt: String?
     ) async throws { throw APIError.server(statusCode: 501) }
+}
+
+extension WeekStoreAPIClient {
+    func updatePortionMemory(householdID: String, recipeID: String, reset: Bool) async throws {}
+}
+
+/// A Week Brief portion choice, pinned to the recipe the suggestion was for.
+struct WeekPortionAdjustment: Equatable {
+    let weekday: Weekday
+    let recipeID: String
+    let servings: Int
 }
 
 extension VecklyAPIClient: WeekStoreAPIClient {}

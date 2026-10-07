@@ -267,10 +267,16 @@ struct WeekBriefSheet: View {
     let profile: HouseholdProfile?
     let isRegenerating: Bool
     let pantryItems: [PantryPlanningItem]
-    let onGenerate: ([String], [Weekday: Int]) async -> Void
+    let onGenerate: ([String], [WeekPortionAdjustment]) async -> Void
 
+    /// When regenerating, unlocked days get new recipes, so a suggestion
+    /// computed for the current recipe there wouldn't survive — only offer
+    /// it for days that keep their meal.
     private var portionSuggestionRows: [WeekDayRowViewModel] {
-        rows.filter { !$0.isPast && !$0.isSkipped && $0.portionSuggestion != nil }
+        rows.filter {
+            !$0.isPast && !$0.isSkipped && $0.portionSuggestion != nil && $0.recipe != nil
+                && (!isRegenerating || $0.isLocked)
+        }
     }
 
     init(
@@ -282,7 +288,7 @@ struct WeekBriefSheet: View {
         profile: HouseholdProfile?,
         isRegenerating: Bool,
         pantryItems: [PantryPlanningItem],
-        onGenerate: @escaping ([String], [Weekday: Int]) async -> Void
+        onGenerate: @escaping ([String], [WeekPortionAdjustment]) async -> Void
     ) {
         _store = State(initialValue: WeekBriefStore(apiClient: apiClient))
         _selectedPantryKeys = State(initialValue: Set(pantryItems.map(\.id)))
@@ -530,11 +536,12 @@ struct WeekBriefSheet: View {
     private func saveAndGenerate() async {
         guard await store.save(householdID: householdID, weekStartDate: weekStartDate, userID: userID) else { return }
         dismiss()
-        let selectedAdjustments: [(Weekday, Int)] = portionSuggestionRows.compactMap { row in
-            guard selectedPortionDates.contains(row.date), let suggestion = row.portionSuggestion else { return nil }
-            return (row.weekday, suggestion.suggestedServings)
+        let portionAdjustments: [WeekPortionAdjustment] = portionSuggestionRows.compactMap { row in
+            guard selectedPortionDates.contains(row.date),
+                  let suggestion = row.portionSuggestion,
+                  let recipeID = row.recipe?.id else { return nil }
+            return WeekPortionAdjustment(weekday: row.weekday, recipeID: recipeID, servings: suggestion.suggestedServings)
         }
-        let portionAdjustments = Dictionary(uniqueKeysWithValues: selectedAdjustments)
         await onGenerate(
             usePantry ? pantryItems.map(\.id).filter(selectedPantryKeys.contains) : [],
             portionAdjustments

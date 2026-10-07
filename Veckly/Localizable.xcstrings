@@ -2373,6 +2373,22 @@
         }
       }
     },
+    "error.week.servings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We could not update the portions. Try again from the day."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunde inte uppdatera portionerna. Försök igen från dagen."
+          }
+        }
+      }
+    },
     "format.meals.one" : {
       "localizations" : {
         "en" : {
