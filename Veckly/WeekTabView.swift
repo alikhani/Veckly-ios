@@ -504,15 +504,9 @@ struct WeekTabView: View {
                             servings: servings,
                             household: household,
                             userID: userID,
-                            viewedWeekStartDate: viewedWeekStartDate
+                            viewedWeekStartDate: viewedWeekStartDate,
+                            consumesPortionSuggestion: true
                         )
-                        if let recipeID = day.recipe?.id {
-                            try? await appModel.apiClient.updatePortionMemory(
-                                householdID: household.id,
-                                recipeID: recipeID,
-                                reset: false
-                            )
-                        }
                         appModel.shoppingListStore.invalidateCache()
                         await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
                         return true

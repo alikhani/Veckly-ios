@@ -69,6 +69,11 @@ final class WeekStore {
     /// somewhere else recognize it's stale and skip applying itself to the
     /// display (it still gets cached for whichever week it was actually for).
     private var latestRequestedWeekStartDate: String?
+    /// Recipes whose accepted portion suggestion couldn't be recorded in
+    /// portion memory. The backend keeps suggesting `current ± 1` for them
+    /// until it is, so after the servings change it would offer yet another
+    /// portion; hide their suggestion for the rest of the session instead.
+    private var unrecordedPortionSuggestionRecipeIDs: Set<String> = []
 
     init(
         apiClient: any WeekStoreAPIClient,
@@ -156,7 +161,7 @@ final class WeekStore {
                 // alone, but keep the current-week slot (the widget's
                 // source) in step with what just arrived.
                 if isCurrentWeekSlot {
-                    currentWeekDayRows = WeekViewModelMapper.map(summary: summary, today: Date()).days
+                    currentWeekDayRows = mapWeek(summary).days
                     lastFetchedAt = Date()
                 }
                 return
@@ -182,7 +187,7 @@ final class WeekStore {
 
     private func applyWeek(_ summary: WeekSummary, weekStartDate: String, isCurrentWeekSlot: Bool, fetchedAt: Date) {
         self.summary = summary
-        let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
+        let mapped = mapWeek(summary)
         dayRows = mapped.days
         if isCurrentWeekSlot {
             currentWeekDayRows = dayRows
@@ -202,7 +207,7 @@ final class WeekStore {
         if dayRows.first?.date == nextWeekStartDate {
             nextWeekRows = dayRows
         } else if let cached = weekCache[nextWeekStartDate] {
-            nextWeekRows = WeekViewModelMapper.map(summary: cached.summary, today: Date()).days
+            nextWeekRows = mapWeek(cached.summary).days
         } else {
             nextWeekRows = []
         }
@@ -456,7 +461,8 @@ final class WeekStore {
         servings: Int,
         household: Household,
         userID: String,
-        viewedWeekStartDate: String
+        viewedWeekStartDate: String,
+        consumesPortionSuggestion: Bool = false
     ) async throws {
         try await apiClient.appendWeekPlanEvent(
             householdID: household.id,
@@ -464,8 +470,31 @@ final class WeekStore {
             userID: userID,
             event: .servingsChanged(day: day.weekday, servings: servings)
         )
+        // Record the accepted suggestion *before* reloading: the reloaded
+        // row's suggestion is computed from portion memory.
+        if consumesPortionSuggestion, let recipeID = day.recipe?.id {
+            await recordAcceptedPortionSuggestion(recipeID: recipeID, householdID: household.id)
+        }
         weekCache.removeValue(forKey: viewedWeekStartDate)
         await refreshAfterMutation(householdID: household.id, weekStartDate: viewedWeekStartDate)
+    }
+
+    private func recordAcceptedPortionSuggestion(recipeID: String, householdID: String) async {
+        do {
+            try await apiClient.updatePortionMemory(householdID: householdID, recipeID: recipeID, reset: false)
+        } catch {
+            unrecordedPortionSuggestionRecipeIDs.insert(recipeID)
+        }
+    }
+
+    private func mapWeek(_ summary: WeekSummary) -> (days: [WeekDayRowViewModel], today: WeekDayRowViewModel?) {
+        let mapped = WeekViewModelMapper.map(summary: summary, today: Date())
+        guard !unrecordedPortionSuggestionRecipeIDs.isEmpty else { return mapped }
+        let days = mapped.days.map { row in
+            guard let recipeID = row.recipe?.id, unrecordedPortionSuggestionRecipeIDs.contains(recipeID) else { return row }
+            return row.withoutPortionSuggestion()
+        }
+        return (days, days.first(where: \.isToday))
     }
 
     /// Applies the portion suggestions a user accepted in the Week Brief.
@@ -505,11 +534,7 @@ final class WeekStore {
                     event: .servingsChanged(day: adjustment.weekday, servings: adjustment.servings)
                 )
                 didWrite = true
-                try? await apiClient.updatePortionMemory(
-                    householdID: household.id,
-                    recipeID: adjustment.recipeID,
-                    reset: false
-                )
+                await recordAcceptedPortionSuggestion(recipeID: adjustment.recipeID, householdID: household.id)
             }
         } catch {
             succeeded = false
@@ -597,6 +622,7 @@ final class WeekStore {
         weekCache = [:]
         inFlightWeekFetches = []
         latestRequestedWeekStartDate = nil
+        unrecordedPortionSuggestionRecipeIDs = []
     }
 
     /// Fas 3 UI-test fixtures for the four hero states — `.legacyPartial` is
@@ -794,7 +820,7 @@ final class WeekStore {
                 )
                 if let latest {
                     weekCache[context.weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
-                    let mapped = WeekViewModelMapper.map(summary: latest, today: Date())
+                    let mapped = mapWeek(latest)
                     syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
                     if summary?.weekStartDate == latest.weekStartDate {
                         summary = latest
@@ -861,7 +887,7 @@ final class WeekStore {
         if isDisplayingWeek(weekStartDate) {
             applyWeek(latest, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
         } else if isCurrentWeekSlot {
-            currentWeekDayRows = WeekViewModelMapper.map(summary: latest, today: Date()).days
+            currentWeekDayRows = mapWeek(latest).days
             lastFetchedAt = Date()
         }
         return latest
@@ -1133,6 +1159,27 @@ struct WeekDayRowViewModel: Equatable, Identifiable {
             confidence: confidence,
             streakWeeks: streakWeeks,
             portionSuggestion: portionSuggestion
+        )
+    }
+
+    func withoutPortionSuggestion() -> WeekDayRowViewModel {
+        WeekDayRowViewModel(
+            id: id,
+            weekday: weekday,
+            weekdayLabel: weekdayLabel,
+            date: date,
+            dateLabel: dateLabel,
+            mealTitle: mealTitle,
+            detail: detail,
+            isToday: isToday,
+            isPast: isPast,
+            isEmpty: isEmpty,
+            isLocked: isLocked,
+            isSkipped: isSkipped,
+            recipe: recipe,
+            reason: reason,
+            confidence: confidence,
+            streakWeeks: streakWeeks
         )
     }
 
