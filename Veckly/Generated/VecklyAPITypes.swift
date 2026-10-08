@@ -1,12 +1,12 @@
 import Foundation
 
-struct Household: Decodable, Equatable, Identifiable {
+struct Household: Codable, Equatable, Identifiable {
     let id: String
     let name: String
     let role: HouseholdRole
 }
 
-enum HouseholdRole: String, Decodable {
+enum HouseholdRole: String, Codable {
     case owner
     case member
 }
@@ -15,7 +15,7 @@ struct MyHouseholdsResponse: Decodable, Equatable {
     let households: [Household]
 }
 
-struct WeekSummary: Decodable, Equatable {
+struct WeekSummary: Codable, Equatable {
     let household: SummaryHousehold
     let weekStartDate: String
     let updatedAt: String?
@@ -54,14 +54,14 @@ struct WeekSummary: Decodable, Equatable {
     }
 }
 
-struct WeekPulseOutcome: Decodable, Equatable {
+struct WeekPulseOutcome: Codable, Equatable {
     let responseCount: Int
     let memberCount: Int
     let wishes: [WeekPulseWishOutcome]
 }
 
-struct WeekPulseWishOutcome: Decodable, Equatable, Identifiable {
-    enum Status: String, Decodable { case fulfilled, unavailable, notSelected = "not-selected" }
+struct WeekPulseWishOutcome: Codable, Equatable, Identifiable {
+    enum Status: String, Codable { case fulfilled, unavailable, notSelected = "not-selected" }
     var id: String { userId }
     let userId: String
     let givenName: String?
@@ -78,7 +78,7 @@ struct WeekPulseWishOutcome: Decodable, Equatable, Identifiable {
     }
 }
 
-enum WeekExplanation: Decodable, Equatable {
+enum WeekExplanation: Codable, Equatable {
     case weekContext(date: String, recipeTitle: String)
     case leftoverChain(recipeTitle: String, cookDate: String, coveredDates: [String])
     case sharedIngredient(ingredient: String, dinnerCount: Int)
@@ -88,7 +88,7 @@ enum WeekExplanation: Decodable, Equatable {
         case kind, date, recipeTitle, cookDate, coveredDates, ingredient, dinnerCount, ingredients
     }
 
-    private enum Kind: String, Decodable {
+    private enum Kind: String, Codable {
         case weekContext = "week-context"
         case leftoverChain = "leftover-chain"
         case sharedIngredient = "shared-ingredient"
@@ -119,6 +119,28 @@ enum WeekExplanation: Decodable, Equatable {
         }
     }
 
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case let .weekContext(date, recipeTitle):
+            try container.encode(Kind.weekContext, forKey: .kind)
+            try container.encode(date, forKey: .date)
+            try container.encode(recipeTitle, forKey: .recipeTitle)
+        case let .leftoverChain(recipeTitle, cookDate, coveredDates):
+            try container.encode(Kind.leftoverChain, forKey: .kind)
+            try container.encode(recipeTitle, forKey: .recipeTitle)
+            try container.encode(cookDate, forKey: .cookDate)
+            try container.encode(coveredDates, forKey: .coveredDates)
+        case let .sharedIngredient(ingredient, dinnerCount):
+            try container.encode(Kind.sharedIngredient, forKey: .kind)
+            try container.encode(ingredient, forKey: .ingredient)
+            try container.encode(dinnerCount, forKey: .dinnerCount)
+        case let .pantryCoverage(ingredients):
+            try container.encode(Kind.pantryCoverage, forKey: .kind)
+            try container.encode(ingredients, forKey: .ingredients)
+        }
+    }
+
     var sentence: String {
         switch self {
         case let .weekContext(_, recipeTitle):
@@ -133,12 +155,12 @@ enum WeekExplanation: Decodable, Equatable {
     }
 }
 
-struct SummaryHousehold: Decodable, Equatable {
+struct SummaryHousehold: Codable, Equatable {
     let id: String
     let name: String
 }
 
-struct WeekSummaryDay: Decodable, Equatable, Identifiable {
+struct WeekSummaryDay: Codable, Equatable, Identifiable {
     let dayOfWeek: Weekday
     let date: String
     let state: WeekDayState
@@ -199,8 +221,8 @@ struct WeekSummaryDay: Decodable, Equatable, Identifiable {
     }
 }
 
-struct PortionSuggestion: Decodable, Equatable {
-    enum Direction: String, Decodable { case more, less }
+struct PortionSuggestion: Codable, Equatable {
+    enum Direction: String, Codable { case more, less }
     let direction: Direction
     let suggestedServings: Int
     let evidenceCount: Int
@@ -211,7 +233,7 @@ struct PortionSuggestion: Decodable, Equatable {
 /// assignments (see `Veckly-backend`'s `deriveAssignmentReason`); a manual
 /// pick via the meal picker has none. Drives the discreet reason line in
 /// the week view.
-enum AssignmentReason: String, Decodable {
+enum AssignmentReason: String, Codable {
     case familyRecipe = "family-recipe"
     case likedBefore = "liked-before"
     case backAfterBreak = "back-after-break"
@@ -242,12 +264,12 @@ struct ShoppingPreferences: Equatable {
 
 /// `.low` means the pick was a compromise (e.g. a repeated cuisine/protein,
 /// or two hearty meals back to back) — see `evaluateAssignmentConfidence`.
-enum AssignmentConfidence: String, Decodable {
+enum AssignmentConfidence: String, Codable {
     case ok
     case low
 }
 
-enum Weekday: String, Decodable, CaseIterable {
+enum Weekday: String, Codable, CaseIterable {
     case monday
     case tuesday
     case wednesday
@@ -257,13 +279,13 @@ enum Weekday: String, Decodable, CaseIterable {
     case sunday
 }
 
-enum WeekDayState: String, Decodable {
+enum WeekDayState: String, Codable {
     case empty
     case planned
     case skipped
 }
 
-struct WeekSummaryRecipe: Decodable, Equatable, Identifiable {
+struct WeekSummaryRecipe: Codable, Equatable, Identifiable {
     let id: String
     let title: String
     let description: String
@@ -287,21 +309,21 @@ extension WeekSummaryRecipe {
     }
 }
 
-struct ShoppingListSummary: Decodable, Equatable {
+struct ShoppingListSummary: Codable, Equatable {
     let household: SummaryHousehold
     let weekStartDate: String
     let updatedAt: String?
     let groups: [ShoppingListGroup]
 }
 
-struct ShoppingListGroup: Decodable, Equatable, Identifiable {
+struct ShoppingListGroup: Codable, Equatable, Identifiable {
     let category: String
     let items: [ShoppingListItem]
 
     var id: String { category }
 }
 
-struct ShoppingListItem: Decodable, Equatable, Identifiable {
+struct ShoppingListItem: Codable, Equatable, Identifiable {
     let itemKey: String
     let label: String
     let amount: String?
