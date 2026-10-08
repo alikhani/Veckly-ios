@@ -51,6 +51,44 @@ final class AuthSessionStore {
         }
     }
 
+    /// Cold-launch restore that never waits for the network, so the first
+    /// frame can show cached content. A saved session whose access token has
+    /// expired is adopted as it is (the token itself is refreshed on first use
+    /// by `currentValidToken()`); the caller must then call
+    /// `confirmRestoredSession()`, which refreshes it and signs out if that
+    /// fails — the same outcome `restoreSession()` has, just not blocking.
+    /// Returns whether confirmation is needed.
+    @discardableResult
+    func restoreSessionWithoutWaiting() -> Bool {
+        defer { isRestoring = false }
+        if accessToken != nil { return false }
+        guard let session = sessionStorage.load() else { return false }
+
+        guard JWTClaims.isExpired(session.accessToken) else {
+            accessToken = session.accessToken
+            userID = session.userID
+            return false
+        }
+        guard session.refreshToken != nil else {
+            sessionStorage.clear()
+            return false
+        }
+        accessToken = session.accessToken
+        userID = session.userID
+        return true
+    }
+
+    /// Refreshes a session adopted by `restoreSessionWithoutWaiting()`.
+    /// On failure the session is cleared and the store is signed out, exactly
+    /// as `restoreSession()` does; the caller resets the rest of the app.
+    func confirmRestoredSession() async -> Bool {
+        if await refreshSession() { return true }
+        accessToken = nil
+        userID = nil
+        sessionStorage.clear()
+        return false
+    }
+
     func signInWithApple(identityToken: String, nonce: String?) async {
         await performAuth(errorKey: "error.auth.signInMoment") {
             try await authClient.signInWithApple(identityToken: identityToken, nonce: nonce)

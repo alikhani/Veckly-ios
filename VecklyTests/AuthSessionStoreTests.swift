@@ -82,6 +82,90 @@ struct AuthSessionStoreTests {
         #expect(storage.session == nil)
     }
 
+    // MARK: Restoring without waiting for the network
+
+    @Test func optimisticRestoreOfAValidSessionNeedsNoConfirmation() {
+        let session = AuthSession(accessToken: testJWT(subject: "saved-user"), refreshToken: "refresh", userID: "saved-user")
+        let client = FakeAuthClient()
+        let store = AuthSessionStore(authClient: client, sessionStorage: MemorySessionStorage(session: session))
+
+        let needsConfirmation = store.restoreSessionWithoutWaiting()
+
+        #expect(!needsConfirmation)
+        #expect(store.isSignedIn)
+        #expect(store.userID == "saved-user")
+        #expect(!store.isRestoring)
+        #expect(client.refreshTokens.isEmpty)
+    }
+
+    @Test func optimisticRestoreOfAnExpiredSessionSignsInAtOnceWithoutTheNetwork() {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "old-refresh", userID: "user")
+        let client = FakeAuthClient()
+        let store = AuthSessionStore(authClient: client, sessionStorage: MemorySessionStorage(session: old))
+
+        let needsConfirmation = store.restoreSessionWithoutWaiting()
+
+        #expect(needsConfirmation)
+        #expect(store.isSignedIn)
+        #expect(store.userID == "user")
+        #expect(!store.isRestoring)
+        #expect(client.refreshTokens.isEmpty)
+    }
+
+    @Test func confirmingAnExpiredRestoredSessionRotatesIt() async {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "old-refresh", userID: "user")
+        let fresh = AuthSession(accessToken: testJWT(subject: "user"), refreshToken: "new-refresh", userID: "user")
+        let client = FakeAuthClient()
+        client.refreshSessionValue = fresh
+        let storage = MemorySessionStorage(session: old)
+        let store = AuthSessionStore(authClient: client, sessionStorage: storage)
+        store.restoreSessionWithoutWaiting()
+
+        let confirmed = await store.confirmRestoredSession()
+
+        #expect(confirmed)
+        #expect(client.refreshTokens == ["old-refresh"])
+        #expect(storage.session == fresh)
+        #expect(store.isSignedIn)
+    }
+
+    @Test func aRejectedRestoredSessionIsSignedOutAndCleared() async {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "revoked", userID: "user")
+        let client = FakeAuthClient()
+        client.refreshError = .invalidCredentials
+        let storage = MemorySessionStorage(session: old)
+        let store = AuthSessionStore(authClient: client, sessionStorage: storage)
+        store.restoreSessionWithoutWaiting()
+
+        let confirmed = await store.confirmRestoredSession()
+
+        #expect(!confirmed)
+        #expect(!store.isSignedIn)
+        #expect(store.userID == nil)
+        #expect(storage.session == nil)
+    }
+
+    @Test func optimisticRestoreOfAnExpiredSessionWithoutARefreshTokenSignsOut() {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: nil, userID: "user")
+        let storage = MemorySessionStorage(session: old)
+        let store = AuthSessionStore(authClient: FakeAuthClient(), sessionStorage: storage)
+
+        let needsConfirmation = store.restoreSessionWithoutWaiting()
+
+        #expect(!needsConfirmation)
+        #expect(!store.isSignedIn)
+        #expect(!store.isRestoring)
+        #expect(storage.session == nil)
+    }
+
+    @Test func optimisticRestoreWithNothingSavedIsSignedOut() {
+        let store = AuthSessionStore(authClient: FakeAuthClient(), sessionStorage: MemorySessionStorage())
+
+        #expect(!store.restoreSessionWithoutWaiting())
+        #expect(!store.isSignedIn)
+        #expect(!store.isRestoring)
+    }
+
     private func testJWT(subject: String, expiresIn: TimeInterval = 3_600) -> String {
         let payload: [String: Any] = ["sub": subject, "exp": Date().timeIntervalSince1970 + expiresIn]
         let data = try! JSONSerialization.data(withJSONObject: payload)
