@@ -65,6 +65,8 @@ struct VecklyAPIClient {
         switch output {
         case let .ok(response):
             return try response.body.json.appModel
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
         case .unauthorized:
             throw APIError.unauthorized
         case .notFound:
@@ -224,6 +226,8 @@ struct VecklyAPIClient {
         switch output {
         case let .ok(response):
             return try response.body.json.appModel
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
         case .unauthorized:
             throw APIError.unauthorized
         case .notFound:
@@ -308,8 +312,12 @@ struct VecklyAPIClient {
         switch output {
         case .created:
             return
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
         case .unauthorized:
             throw APIError.unauthorized
+        case .notFound:
+            throw APIError.notFound
         case let .undocumented(statusCode, _):
             throw APIError.server(statusCode: statusCode)
         }
@@ -670,6 +678,8 @@ struct VecklyAPIClient {
             case .ALL_RECIPES_EXCLUDED:
                 throw APIError.allRecipesExcludedForGeneration
             }
+        case .badRequest:
+            throw APIError.server(statusCode: 400)
         case .unauthorized:
             throw APIError.unauthorized
         case let .forbidden(r):

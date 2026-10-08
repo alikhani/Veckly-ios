@@ -1480,6 +1480,79 @@ internal enum Servers {}
 internal enum Components {
     /// Types generated from the `#/components/schemas` section of the OpenAPI document.
     internal enum Schemas {
+        /// - Remark: Generated from `#/components/schemas/ErrorCode`.
+        internal enum ErrorCode: String, Codable, Hashable, Sendable, CaseIterable {
+            case NOT_MEMBER = "NOT_MEMBER"
+            case HOUSEHOLD_NOT_FOUND = "HOUSEHOLD_NOT_FOUND"
+            case WEEK_PLAN_NOT_FOUND = "WEEK_PLAN_NOT_FOUND"
+            case SHOPPING_LIST_NOT_FOUND = "SHOPPING_LIST_NOT_FOUND"
+            case INVALID_JSON = "INVALID_JSON"
+            case INVALID_REQUEST = "INVALID_REQUEST"
+            case INVALID_WEEK_START_DATE = "INVALID_WEEK_START_DATE"
+            case INVALID_WEEK_CONTEXT_DATE = "INVALID_WEEK_CONTEXT_DATE"
+            case INVALID_WEEK_RANGE = "INVALID_WEEK_RANGE"
+            case NO_PLAN = "NO_PLAN"
+            case LOCKED_DAY = "LOCKED_DAY"
+            case NO_RESCUE_FOUND = "NO_RESCUE_FOUND"
+            case NO_COMPLETED_WEEK = "NO_COMPLETED_WEEK"
+            case NO_RECIPES = "NO_RECIPES"
+            case ALL_RECIPES_EXCLUDED = "ALL_RECIPES_EXCLUDED"
+            case STALE_WEEK_PLAN = "STALE_WEEK_PLAN"
+            case STALE_WEEK_PLAN_STATE = "STALE_WEEK_PLAN_STATE"
+            case STALE_SHOPPING_STATE = "STALE_SHOPPING_STATE"
+        }
+        /// - Remark: Generated from `#/components/schemas/ValidationIssue`.
+        internal struct ValidationIssue: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ValidationIssue/code`.
+            internal var code: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ValidationIssue/path`.
+            internal var path: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/ValidationIssue/message`.
+            internal var message: Swift.String
+            /// Creates a new `ValidationIssue`.
+            ///
+            /// - Parameters:
+            ///   - code:
+            ///   - path:
+            ///   - message:
+            internal init(
+                code: Swift.String,
+                path: [Swift.String],
+                message: Swift.String
+            ) {
+                self.code = code
+                self.path = path
+                self.message = message
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case code
+                case path
+                case message
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ErrorResponse`.
+        internal struct ErrorResponse: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ErrorResponse/error`.
+            internal var error: Components.Schemas.ErrorCode
+            /// - Remark: Generated from `#/components/schemas/ErrorResponse/issues`.
+            internal var issues: [Components.Schemas.ValidationIssue]?
+            /// Creates a new `ErrorResponse`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            ///   - issues:
+            internal init(
+                error: Components.Schemas.ErrorCode,
+                issues: [Components.Schemas.ValidationIssue]? = nil
+            ) {
+                self.error = error
+                self.issues = issues
+            }
+            internal enum CodingKeys: String, CodingKey {
+                case error
+                case issues
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek`.
         internal struct HouseholdActiveWeek: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/HouseholdActiveWeek/householdId`.
@@ -14556,23 +14629,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekContextOverrides.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekContextOverrides.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid week start date
+            /// Invalid request, or week start is not a Monday
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.getWeekContextOverrides.Output.BadRequest)
-            /// Invalid week start date
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -14626,23 +14715,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekContextOverrides.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekContextOverrides.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.getWeekContextOverrides.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/get(getWeekContextOverrides)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -14873,23 +14978,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertWeekContextOverride.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertWeekContextOverride.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid week or date
+            /// Invalid request, week start is not a Monday, or the date is outside that week
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.upsertWeekContextOverride.Output.BadRequest)
-            /// Invalid week or date
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -14943,23 +15064,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/PUT/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertWeekContextOverride.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertWeekContextOverride.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.upsertWeekContextOverride.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/put(upsertWeekContextOverride)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -15118,23 +15255,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.clearWeekContextOverride.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.clearWeekContextOverride.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid week or date
+            /// Invalid request, week start is not a Monday, or the date is outside that week
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.clearWeekContextOverride.Output.BadRequest)
-            /// Invalid week or date
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -15188,23 +15341,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.clearWeekContextOverride.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.clearWeekContextOverride.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.clearWeekContextOverride.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/context-overrides/{date}/delete(clearWeekContextOverride)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -15366,6 +15535,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.generateWeekPlan.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.generateWeekPlan.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/generate/post(generateWeekPlan)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.generateWeekPlan.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.generateWeekPlan.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -15453,23 +15673,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/generate/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.generateWeekPlan.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.generateWeekPlan.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/generate/post(generateWeekPlan)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.generateWeekPlan.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/generate/post(generateWeekPlan)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -15682,6 +15918,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/events/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/events/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.appendWeekPlanEvent.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.appendWeekPlanEvent.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, week start is not a Monday, or the date is outside that week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/events/post(appendWeekPlanEvent)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.appendWeekPlanEvent.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.appendWeekPlanEvent.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -15712,6 +15999,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/events/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/events/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.appendWeekPlanEvent.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.appendWeekPlanEvent.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Caller is not a member of the household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/events/post(appendWeekPlanEvent)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.appendWeekPlanEvent.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.appendWeekPlanEvent.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -15852,6 +16190,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekPlan.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekPlan.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/get(getWeekPlan)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getWeekPlan.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getWeekPlan.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -15888,23 +16277,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekPlan.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekPlan.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// The week hasn't started yet — no projection exists
+            /// The week hasn't started yet (no projection exists), or caller is not a member
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/get(getWeekPlan)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.getWeekPlan.Output.NotFound)
-            /// The week hasn't started yet — no projection exists
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/get(getWeekPlan)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -16057,6 +16462,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/summary/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/summary/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekPlanSummary.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekPlanSummary.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/summary/get(getWeekPlanSummary)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getWeekPlanSummary.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getWeekPlanSummary.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -16093,8 +16549,32 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/summary/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/summary/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekPlanSummary.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekPlanSummary.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
             /// Household not found or caller is not a member
             ///
@@ -16102,14 +16582,6 @@ internal enum Operations {
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.getWeekPlanSummary.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/summary/get(getWeekPlanSummary)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -16271,6 +16743,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewWeekRescue.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewWeekRescue.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, week start is not a Monday, or the date is outside that week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.previewWeekRescue.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.previewWeekRescue.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -16307,23 +16830,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/preview/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewWeekRescue.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewWeekRescue.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.previewWeekRescue.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/preview/post(previewWeekRescue)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -16587,6 +17126,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyWeekRescue.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyWeekRescue.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, week start is not a Monday, or the date is outside that week
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.applyWeekRescue.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.applyWeekRescue.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -16623,23 +17213,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/rescue/apply/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyWeekRescue.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyWeekRescue.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.applyWeekRescue.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/rescue/apply/post(applyWeekRescue)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -16903,6 +17509,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewPreviousWeekProposal.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewPreviousWeekProposal.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.previewPreviousWeekProposal.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.previewPreviousWeekProposal.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -16939,23 +17596,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.previewPreviousWeekProposal.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.previewPreviousWeekProposal.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.previewPreviousWeekProposal.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/preview/post(previewPreviousWeekProposal)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -17219,6 +17892,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyPreviousWeekProposal.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyPreviousWeekProposal.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.applyPreviousWeekProposal.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.applyPreviousWeekProposal.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -17255,23 +17979,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.applyPreviousWeekProposal.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.applyPreviousWeekProposal.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.applyPreviousWeekProposal.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/previous-week/apply/post(applyPreviousWeekProposal)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -17543,23 +18283,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listWeekHistoryPlans.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listWeekHistoryPlans.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid range
+            /// Invalid request, or a range bound is not a Monday
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/get(listWeekHistoryPlans)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.listWeekHistoryPlans.Output.BadRequest)
-            /// Invalid range
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/get(listWeekHistoryPlans)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -17664,23 +18420,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.listWeekHistoryPlans.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.listWeekHistoryPlans.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Household not found or caller is not a member
+            /// Caller is not a member of the household
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/get(listWeekHistoryPlans)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.listWeekHistoryPlans.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/get(listWeekHistoryPlans)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -17834,23 +18606,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekHistoryPlan.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekHistoryPlan.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid week start date
+            /// Invalid request, or week start is not a Monday
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/get(getWeekHistoryPlan)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.getWeekHistoryPlan.Output.BadRequest)
-            /// Invalid week start date
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/get(getWeekHistoryPlan)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -17898,6 +18686,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getWeekHistoryPlan.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getWeekHistoryPlan.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Caller is not a member of the household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/get(getWeekHistoryPlan)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getWeekHistoryPlan.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getWeekHistoryPlan.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -18048,23 +18887,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/PATCH/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/PATCH/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertWeekHistoryPlan.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertWeekHistoryPlan.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid request
+            /// Invalid request, or week start is not a Monday
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/patch(upsertWeekHistoryPlan)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.upsertWeekHistoryPlan.Output.BadRequest)
-            /// Invalid request
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/patch(upsertWeekHistoryPlan)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -18112,6 +18967,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/PATCH/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/history/PATCH/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.upsertWeekHistoryPlan.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.upsertWeekHistoryPlan.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Caller is not a member of the household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/history/patch(upsertWeekHistoryPlan)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.upsertWeekHistoryPlan.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.upsertWeekHistoryPlan.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -18304,23 +19210,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/finalize/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/finalize/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.finalizeWeekHistoryPlan.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.finalizeWeekHistoryPlan.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid week start date
+            /// Invalid request, or week start is not a Monday
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/finalize/post(finalizeWeekHistoryPlan)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.finalizeWeekHistoryPlan.Output.BadRequest)
-            /// Invalid week start date
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/finalize/post(finalizeWeekHistoryPlan)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -18374,23 +19296,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/finalize/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/week-plans/{weekStartDate}/finalize/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.finalizeWeekHistoryPlan.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.finalizeWeekHistoryPlan.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// Week plan not found
+            /// Week plan not found, or caller is not a member
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/finalize/post(finalizeWeekHistoryPlan)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.finalizeWeekHistoryPlan.Output.NotFound)
-            /// Week plan not found
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/week-plans/{weekStartDate}/finalize/post(finalizeWeekHistoryPlan)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -18552,6 +19490,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/events/POST/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/events/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.appendShoppingListEvent.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.appendShoppingListEvent.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/events/post(appendShoppingListEvent)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.appendShoppingListEvent.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.appendShoppingListEvent.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -18582,6 +19571,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/events/POST/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/events/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.appendShoppingListEvent.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.appendShoppingListEvent.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Caller is not a member of the household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/events/post(appendShoppingListEvent)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.appendShoppingListEvent.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.appendShoppingListEvent.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -18722,6 +19762,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingList.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingList.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/get(getShoppingList)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getShoppingList.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getShoppingList.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -18758,23 +19849,39 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingList.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingList.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
-            /// The list hasn't started yet — no projection exists
+            /// The list hasn't started yet (no projection exists), or caller is not a member
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/get(getShoppingList)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.getShoppingList.Output.NotFound)
-            /// The list hasn't started yet — no projection exists
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/get(getShoppingList)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -18927,6 +20034,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/summary/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/summary/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingListSummary.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingListSummary.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/summary/get(getShoppingListSummary)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getShoppingListSummary.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getShoppingListSummary.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -18963,8 +20121,32 @@ internal enum Operations {
                 }
             }
             internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/summary/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/summary/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingListSummary.Output.NotFound.Body
                 /// Creates a new `NotFound`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingListSummary.Output.NotFound.Body) {
+                    self.body = body
+                }
             }
             /// Household not found or caller is not a member
             ///
@@ -18972,14 +20154,6 @@ internal enum Operations {
             ///
             /// HTTP response code: `404 notFound`.
             case notFound(Operations.getShoppingListSummary.Output.NotFound)
-            /// Household not found or caller is not a member
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/summary/get(getShoppingListSummary)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            internal static var notFound: Self {
-                .notFound(.init())
-            }
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
@@ -19132,6 +20306,57 @@ internal enum Operations {
                     }
                 }
             }
+            internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingListState.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingListState.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Invalid request, or week start is not a Monday
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.getShoppingListState.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            internal var badRequest: Operations.getShoppingListState.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             internal struct Unauthorized: Sendable, Hashable {
                 /// Creates a new `Unauthorized`.
                 internal init() {}
@@ -19162,6 +20387,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.getShoppingListState.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.getShoppingListState.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Caller is not a member of the household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/get(getShoppingListState)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.getShoppingListState.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.getShoppingListState.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -19312,23 +20588,39 @@ internal enum Operations {
                 }
             }
             internal struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/400/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/400/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updateShoppingListState.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
-                internal init() {}
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updateShoppingListState.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
-            /// Invalid request body
+            /// Invalid request, or week start is not a Monday
             ///
             /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
             case badRequest(Operations.updateShoppingListState.Output.BadRequest)
-            /// Invalid request body
-            ///
-            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            internal static var badRequest: Self {
-                .badRequest(.init())
-            }
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
@@ -19376,6 +20668,57 @@ internal enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            internal struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/404/content`.
+                internal enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/households/{householdId}/shopping-lists/{weekStartDate}/state/PATCH/responses/404/content/application\/json`.
+                    case json(Components.Schemas.ErrorResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    internal var json: Components.Schemas.ErrorResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                internal var body: Operations.updateShoppingListState.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                internal init(body: Operations.updateShoppingListState.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Caller is not a member of the household
+            ///
+            /// - Remark: Generated from `#/paths//households/{householdId}/shopping-lists/{weekStartDate}/state/patch(updateShoppingListState)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.updateShoppingListState.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            internal var notFound: Operations.updateShoppingListState.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

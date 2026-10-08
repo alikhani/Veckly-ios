@@ -105,6 +105,7 @@ extension VecklyAPIClient {
         )
         switch output {
         case let .ok(response): return try response.body.json.appModel(intent: intent)
+        case .badRequest: throw APIError.server(statusCode: 400)
         case .unauthorized: throw APIError.unauthorized
         case .notFound: throw APIError.notFound
         case .conflict: throw APIError.server(statusCode: 409)
@@ -135,6 +136,7 @@ extension VecklyAPIClient {
         )
         switch output {
         case .ok: return
+        case .badRequest: throw APIError.server(statusCode: 400)
         case .unauthorized: throw APIError.unauthorized
         case .notFound: throw APIError.notFound
         case .conflict: throw APIError.server(statusCode: 409)
