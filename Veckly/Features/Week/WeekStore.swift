@@ -7,6 +7,9 @@ final class WeekStore {
     private let apiClient: any WeekStoreAPIClient
     private let syncDebounceNanoseconds: UInt64
     private let retryDelayNanoseconds: UInt64
+    private let cacheStore: any WeekStoreCachePersisting
+    private let currentUserID: () -> String?
+    private let currentLanguage: () -> String
 
     private(set) var weekStartDate: String = WeekCalendar.currentWeekStartDate()
     private(set) var summary: WeekSummary?
@@ -64,6 +67,14 @@ final class WeekStore {
     }
     private var weekCache: [String: CachedWeek] = [:]
     private var inFlightWeekFetches: Set<String> = []
+    /// Which household `weekCache` and the displayed week belong to, so a
+    /// different household's week is never shown as if it were cached for this
+    /// one (a stored household that turned out not to be the active one).
+    private var cacheHouseholdID: String?
+    /// The week currently on screen because it was restored from disk and the
+    /// network hasn't answered for it yet. Lets the Week tab keep showing it
+    /// while the household list is still loading.
+    private var restoredWeekStartDate: String?
     /// Set synchronously at the top of every `loadWeekData` call — lets a
     /// network response that resolves after the user has already browsed
     /// somewhere else recognize it's stale and skip applying itself to the
@@ -75,14 +86,46 @@ final class WeekStore {
     /// portion; hide their suggestion for the rest of the session instead.
     private var unrecordedPortionSuggestionRecipeIDs: Set<String> = []
 
+    /// `currentUserID` defaults to "nobody", which keeps the disk cache out of
+    /// the picture: it is only read or written for a known signed-in user.
     init(
         apiClient: any WeekStoreAPIClient,
         syncDebounceNanoseconds: UInt64 = 400_000_000,
-        retryDelayNanoseconds: UInt64 = 2_000_000_000
+        retryDelayNanoseconds: UInt64 = 2_000_000_000,
+        cacheStore: any WeekStoreCachePersisting = WeekStoreDiskCache(),
+        currentUserID: @escaping () -> String? = { nil },
+        currentLanguage: @escaping () -> String = { CacheScope.currentLanguage }
     ) {
         self.apiClient = apiClient
         self.syncDebounceNanoseconds = syncDebounceNanoseconds
         self.retryDelayNanoseconds = retryDelayNanoseconds
+        self.cacheStore = cacheStore
+        self.currentUserID = currentUserID
+        self.currentLanguage = currentLanguage
+    }
+
+    /// True while the screen shows `viewedWeekStartDate` from the disk cache
+    /// and the network hasn't answered for it yet.
+    func isShowingRestoredWeek(_ viewedWeekStartDate: String) -> Bool {
+        restoredWeekStartDate == viewedWeekStartDate
+            && summary?.weekStartDate == viewedWeekStartDate
+            && latestRequestedWeekStartDate == viewedWeekStartDate
+    }
+
+    /// Cold start: puts the current week from the disk cache on screen without
+    /// touching the network. A miss changes nothing.
+    func restoreCurrentWeekFromCache(household: Household) {
+        weekStartDate = WeekCalendar.currentWeekStartDate()
+        latestRequestedWeekStartDate = weekStartDate
+        discardCacheIfHouseholdChanged(to: household.id)
+        guard let cached = cachedWeek(householdID: household.id, weekStartDate: weekStartDate) else { return }
+        applyWeek(cached.summary, weekStartDate: weekStartDate, isCurrentWeekSlot: true, fetchedAt: cached.fetchedAt)
+        hasLoadedOnce = true
+    }
+
+    /// Sign-out: the cache holds household data.
+    func clearPersistedCache() {
+        cacheStore.deleteAll()
     }
 
     func clearMutationError() { mutationError = nil }
@@ -108,7 +151,7 @@ final class WeekStore {
     }
 
     func refreshWeek(household: Household, weekStartDate: String) async {
-        weekCache.removeValue(forKey: weekStartDate)
+        invalidateCachedWeek(weekStartDate, householdID: household.id)
         await loadWeekData(
             household: household,
             weekStartDate: weekStartDate,
@@ -128,8 +171,9 @@ final class WeekStore {
     /// something was already on screen to look at.
     private func loadWeekData(household: Household, weekStartDate: String, isCurrentWeekSlot: Bool, force: Bool) async {
         latestRequestedWeekStartDate = weekStartDate
+        discardCacheIfHouseholdChanged(to: household.id)
 
-        let cached = weekCache[weekStartDate]
+        let cached = cachedWeek(householdID: household.id, weekStartDate: weekStartDate)
         if let cached {
             applyWeek(cached.summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: cached.fetchedAt)
         }
@@ -155,6 +199,8 @@ final class WeekStore {
             // later call think this slot is already satisfied.
             if summary.weekStartDate == weekStartDate {
                 weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date())
+                persistWeek(summary, householdID: household.id)
+                if restoredWeekStartDate == weekStartDate { restoredWeekStartDate = nil }
             }
             guard latestRequestedWeekStartDate == weekStartDate else {
                 // The user browsed elsewhere meanwhile: leave the display
@@ -168,7 +214,7 @@ final class WeekStore {
             }
             applyWeek(summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
         } catch APIError.notFound {
-            weekCache.removeValue(forKey: weekStartDate)
+            invalidateCachedWeek(weekStartDate, householdID: household.id)
             let rows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             guard latestRequestedWeekStartDate == weekStartDate else {
                 if isCurrentWeekSlot { currentWeekDayRows = rows }
@@ -183,6 +229,54 @@ final class WeekStore {
             guard latestRequestedWeekStartDate == weekStartDate, cached == nil else { return }
             errorMessage = L10n.string("error.week.load")
         }
+    }
+
+    private func cacheScope(householdID: String) -> CacheScope? {
+        guard let userID = currentUserID() else { return nil }
+        return CacheScope(userID: userID, householdID: householdID, language: currentLanguage())
+    }
+
+    /// The remembered copy of a week: this session's, else the one on disk.
+    /// A disk copy is registered as already out of date (`.distantPast`) so a
+    /// network fetch always follows it.
+    private func cachedWeek(householdID: String, weekStartDate: String) -> CachedWeek? {
+        if let cached = weekCache[weekStartDate] { return cached }
+        guard let scope = cacheScope(householdID: householdID),
+              let summary = cacheStore.loadWeek(scope: scope, weekStartDate: weekStartDate) else { return nil }
+        let restored = CachedWeek(summary: summary, fetchedAt: .distantPast)
+        weekCache[weekStartDate] = restored
+        restoredWeekStartDate = weekStartDate
+        cacheHouseholdID = householdID
+        return restored
+    }
+
+    private func persistWeek(_ summary: WeekSummary, householdID: String) {
+        cacheHouseholdID = householdID
+        guard let scope = cacheScope(householdID: householdID) else { return }
+        cacheStore.saveWeek(summary, scope: scope)
+    }
+
+    /// Forgets a week that a write has just made out of date, in memory and on
+    /// disk, so neither can bring the pre-write plan back.
+    private func invalidateCachedWeek(_ weekStartDate: String, householdID: String) {
+        weekCache.removeValue(forKey: weekStartDate)
+        if restoredWeekStartDate == weekStartDate { restoredWeekStartDate = nil }
+        guard let scope = cacheScope(householdID: householdID) else { return }
+        cacheStore.removeWeek(scope: scope, weekStartDate: weekStartDate)
+    }
+
+    private func discardCacheIfHouseholdChanged(to householdID: String) {
+        defer { cacheHouseholdID = householdID }
+        let displayedFromAnotherHousehold = summary.map { $0.household.id != householdID } ?? false
+        guard displayedFromAnotherHousehold || (cacheHouseholdID.map { $0 != householdID } ?? false) else { return }
+        weekCache = [:]
+        restoredWeekStartDate = nil
+        summary = nil
+        dayRows = []
+        currentWeekDayRows = []
+        today = nil
+        syncedDayStates = [:]
+        hasLoadedOnce = false
     }
 
     private func applyWeek(_ summary: WeekSummary, weekStartDate: String, isCurrentWeekSlot: Bool, fetchedAt: Date) {
@@ -280,7 +374,7 @@ final class WeekStore {
                 regenerate: regenerate,
                 pantryItemKeys: pantryItemKeys
             )
-            weekCache.removeValue(forKey: targetWeekStartDate)
+            invalidateCachedWeek(targetWeekStartDate, householdID: household.id)
             if targetWeekStartDate == weekStartDate {
                 await loadCurrentWeek(household: household, force: true)
             } else {
@@ -349,7 +443,7 @@ final class WeekStore {
             // predates this mutation) — remove it so a later revisit
             // refetches instead of silently reverting the optimistic change
             // back to the pre-mutation state.
-            weekCache.removeValue(forKey: targetWeekStartDate)
+            invalidateCachedWeek(targetWeekStartDate, householdID: household.id)
             if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
             await refreshAfterMutation(householdID: household.id, weekStartDate: targetWeekStartDate)
         } catch {
@@ -406,7 +500,7 @@ final class WeekStore {
             rescueID: preview.rescueID,
             expectedUpdatedAt: preview.expectedUpdatedAt
         )
-        weekCache.removeValue(forKey: weekStartDate)
+        invalidateCachedWeek(weekStartDate, householdID: household.id)
         await loadWeekData(
             household: household,
             weekStartDate: weekStartDate,
@@ -447,7 +541,7 @@ final class WeekStore {
             proposalID: proposal.proposalID,
             expectedUpdatedAt: proposal.expectedUpdatedAt
         )
-        weekCache.removeValue(forKey: weekStartDate)
+        invalidateCachedWeek(weekStartDate, householdID: household.id)
         await loadWeekData(
             household: household,
             weekStartDate: weekStartDate,
@@ -475,7 +569,7 @@ final class WeekStore {
         if consumesPortionSuggestion, let recipeID = day.recipe?.id {
             await recordAcceptedPortionSuggestion(recipeID: recipeID, householdID: household.id)
         }
-        weekCache.removeValue(forKey: viewedWeekStartDate)
+        invalidateCachedWeek(viewedWeekStartDate, householdID: household.id)
         await refreshAfterMutation(householdID: household.id, weekStartDate: viewedWeekStartDate)
     }
 
@@ -568,7 +662,7 @@ final class WeekStore {
             if mutationError == nil { mutationError = L10n.string("error.week.servings") }
         }
         if didWrite {
-            weekCache.removeValue(forKey: targetWeekStartDate)
+            invalidateCachedWeek(targetWeekStartDate, householdID: household.id)
             await loadWeekData(
                 household: household,
                 weekStartDate: targetWeekStartDate,
@@ -612,7 +706,7 @@ final class WeekStore {
                 userID: userID,
                 event: .mealUnassigned(day: day.weekday)
             )
-            weekCache.removeValue(forKey: targetWeekStartDate)
+            invalidateCachedWeek(targetWeekStartDate, householdID: household.id)
             if targetWeekStartDate == weekStartDate { lastFetchedAt = Date() }
             await refreshAfterMutation(householdID: household.id, weekStartDate: targetWeekStartDate)
         } catch {
@@ -647,6 +741,8 @@ final class WeekStore {
         syncedDayStates = [:]
         isFlushingPendingChanges = false
         weekCache = [:]
+        cacheHouseholdID = nil
+        restoredWeekStartDate = nil
         inFlightWeekFetches = []
         latestRequestedWeekStartDate = nil
         unrecordedPortionSuggestionRecipeIDs = []
@@ -838,7 +934,7 @@ final class WeekStore {
                 try await syncDesiredState(desired, baseline: baseline, weekday: weekday, context: context)
                 syncedDayStates[weekday] = desired
                 pendingDesiredDayStates.removeValue(forKey: weekday)
-                weekCache.removeValue(forKey: context.weekStartDate)
+                invalidateCachedWeek(context.weekStartDate, householdID: context.householdID)
                 if context.weekStartDate == weekStartDate { lastFetchedAt = Date() }
             } catch {
                 let latest = try? await apiClient.weekSummary(
@@ -847,6 +943,7 @@ final class WeekStore {
                 )
                 if let latest {
                     weekCache[context.weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
+                    persistWeek(latest, householdID: context.householdID)
                     let mapped = mapWeek(latest)
                     syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
                     if summary?.weekStartDate == latest.weekStartDate {
@@ -911,6 +1008,8 @@ final class WeekStore {
         guard latest.weekStartDate == weekStartDate else { return latest }
         let isCurrentWeekSlot = weekStartDate == self.weekStartDate
         weekCache[weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
+        persistWeek(latest, householdID: householdID)
+        if restoredWeekStartDate == weekStartDate { restoredWeekStartDate = nil }
         if isDisplayingWeek(weekStartDate) {
             applyWeek(latest, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
         } else if isCurrentWeekSlot {
