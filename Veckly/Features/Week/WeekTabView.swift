@@ -517,32 +517,20 @@ struct WeekTabView: View {
                 onIgnorePortionSuggestion: {
                     guard let household = appModel.householdStore.activeHousehold,
                           let recipeID = day.recipe?.id else { return false }
-                    do {
-                        try await appModel.apiClient.updatePortionMemory(
-                            householdID: household.id,
-                            recipeID: recipeID,
-                            reset: false
-                        )
-                        await appModel.weekStore.refreshWeek(household: household, weekStartDate: viewedWeekStartDate)
-                        return true
-                    } catch {
-                        return false
-                    }
+                    return await appModel.weekStore.ignorePortionSuggestion(
+                        recipeID: recipeID,
+                        household: household,
+                        weekStartDate: viewedWeekStartDate
+                    )
                 },
                 onResetPortionMemory: {
                     guard let household = appModel.householdStore.activeHousehold,
                           let recipeID = day.recipe?.id else { return false }
-                    do {
-                        try await appModel.apiClient.updatePortionMemory(
-                            householdID: household.id,
-                            recipeID: recipeID,
-                            reset: true
-                        )
-                        await appModel.weekStore.refreshWeek(household: household, weekStartDate: viewedWeekStartDate)
-                        return true
-                    } catch {
-                        return false
-                    }
+                    return await appModel.weekStore.resetPortionMemory(
+                        recipeID: recipeID,
+                        household: household,
+                        weekStartDate: viewedWeekStartDate
+                    )
                 },
                 onDismiss: { selectedDayForDetail = nil }
             )

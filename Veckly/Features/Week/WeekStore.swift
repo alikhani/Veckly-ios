@@ -479,6 +479,33 @@ final class WeekStore {
         await refreshAfterMutation(householdID: household.id, weekStartDate: viewedWeekStartDate)
     }
 
+    /// "Not now" on a portion suggestion: records it in portion memory so it
+    /// isn't suggested again, then reloads the week so the row's suggestion
+    /// reflects that. Returns `false` (and skips the reload) on failure.
+    func ignorePortionSuggestion(recipeID: String, household: Household, weekStartDate: String) async -> Bool {
+        await updatePortionMemory(recipeID: recipeID, household: household, weekStartDate: weekStartDate, reset: false)
+    }
+
+    /// Clears a recipe's learned portions, then reloads the week. Returns
+    /// `false` (and skips the reload) on failure.
+    func resetPortionMemory(recipeID: String, household: Household, weekStartDate: String) async -> Bool {
+        await updatePortionMemory(recipeID: recipeID, household: household, weekStartDate: weekStartDate, reset: true)
+    }
+
+    private func updatePortionMemory(recipeID: String, household: Household, weekStartDate: String, reset: Bool) async -> Bool {
+        do {
+            try await apiClient.updatePortionMemory(
+                householdID: household.id,
+                recipeID: recipeID,
+                reset: reset
+            )
+            await refreshWeek(household: household, weekStartDate: weekStartDate)
+            return true
+        } catch {
+            return false
+        }
+    }
+
     private func recordAcceptedPortionSuggestion(recipeID: String, householdID: String) async {
         do {
             try await apiClient.updatePortionMemory(householdID: householdID, recipeID: recipeID, reset: false)
