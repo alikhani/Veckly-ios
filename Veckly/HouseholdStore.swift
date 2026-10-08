@@ -23,6 +23,8 @@ enum HouseholdDetailsLoadState: Equatable {
 final class HouseholdStore {
     private let apiClient: any HouseholdStoreAPIClient
     private let selectionStore: any HouseholdSelectionPersisting
+    private let snapshotStore: any HouseholdSnapshotPersisting
+    private let currentUserID: () -> String?
 
     private(set) var households: [Household] = []
     private(set) var activeHousehold: Household?
@@ -47,10 +49,27 @@ final class HouseholdStore {
 
     init(
         apiClient: any HouseholdStoreAPIClient,
-        selectionStore: any HouseholdSelectionPersisting = UserDefaultsHouseholdSelectionStore()
+        selectionStore: any HouseholdSelectionPersisting = UserDefaultsHouseholdSelectionStore(),
+        snapshotStore: any HouseholdSnapshotPersisting = HouseholdSnapshotDiskStore(),
+        currentUserID: @escaping () -> String? = { nil }
     ) {
         self.apiClient = apiClient
         self.selectionStore = selectionStore
+        self.snapshotStore = snapshotStore
+        self.currentUserID = currentUserID
+    }
+
+    /// Cold start: makes the household this user last had active the active
+    /// one again, without the network, so cached content can be shown while
+    /// `bootstrapAndLoadHouseholds()` confirms (or replaces) it. Does nothing
+    /// if a household is already active or none is remembered for this user.
+    @discardableResult
+    func restoreFromSnapshot() -> Household? {
+        guard activeHousehold == nil,
+              let userID = currentUserID(),
+              let household = snapshotStore.load(userID: userID) else { return nil }
+        activeHousehold = household
+        return household
     }
 
     var loadState: HouseholdLoadState {
@@ -200,6 +219,7 @@ final class HouseholdStore {
         }
         if let current = activeHousehold, current.id == householdID {
             activeHousehold = Household(id: householdID, name: trimmed, role: current.role)
+            rememberActiveHousehold()
         }
     }
 
@@ -253,10 +273,12 @@ final class HouseholdStore {
         guard activeHousehold?.id != household?.id else {
             activeHousehold = household
             persistActiveHouseholdID(household?.id)
+            rememberActiveHousehold()
             return
         }
         activeHousehold = household
         persistActiveHouseholdID(household?.id)
+        rememberActiveHousehold()
         resetDetails()
         resetInvites()
     }
@@ -282,6 +304,7 @@ final class HouseholdStore {
         isLoadingWeekPulse = false
         weekPulseErrorMessage = nil
         selectionStore.clearSelectedHouseholdID()
+        snapshotStore.clear()
     }
 
     func seedForUITests() {
@@ -325,6 +348,11 @@ final class HouseholdStore {
         invitesErrorMessage = nil
     }
 
+    private func rememberActiveHousehold() {
+        guard let household = activeHousehold, let userID = currentUserID() else { return }
+        snapshotStore.save(household, userID: userID)
+    }
+
     private func persistActiveHouseholdID(_ householdID: String?) {
         guard let householdID else {
             selectionStore.clearSelectedHouseholdID()
@@ -355,6 +383,44 @@ final class HouseholdStore {
         setActiveHousehold(nextActiveHousehold)
         hasLoadedOnce = true
         errorMessage = nil
+    }
+}
+
+protocol HouseholdSnapshotPersisting {
+    func load(userID: String) -> Household?
+    func save(_ household: Household, userID: String)
+    func clear()
+}
+
+/// The minimal snapshot of the active household (id, name, role) on disk,
+/// for the user who had it active. Cleared on sign-out.
+struct HouseholdSnapshotFile: Codable {
+    let schemaVersion: Int
+    let userID: String
+    let household: Household
+}
+
+struct HouseholdSnapshotDiskStore: HouseholdSnapshotPersisting {
+    private static let schemaVersion = 1
+    private let cache: JSONDiskCache<HouseholdSnapshotFile>
+
+    init(baseDirectory: URL? = nil) {
+        cache = JSONDiskCache(fileName: "active-household.json", baseDirectory: baseDirectory)
+    }
+
+    func load(userID: String) -> Household? {
+        guard let file = cache.load(),
+              file.schemaVersion == Self.schemaVersion,
+              file.userID == userID else { return nil }
+        return file.household
+    }
+
+    func save(_ household: Household, userID: String) {
+        cache.save(HouseholdSnapshotFile(schemaVersion: Self.schemaVersion, userID: userID, household: household))
+    }
+
+    func clear() {
+        cache.delete()
     }
 }
 
