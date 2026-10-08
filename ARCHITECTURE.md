@@ -71,6 +71,14 @@ Don't run the full `VecklyUITests` as a gate. For visual changes, compare screen
 
 ## Known debt
 
-- `WeekScreenModel.swift` (~965 lines) should be split by responsibility (generation/undo, quality suggestions, deep links/loading).
-- Most features are still flat in `Veckly/` and reach `AppModel` through `@Environment`.
+- `WeekScreenModel` is split across `WeekScreenModel+*.swift`, so its dependencies and state setters
+  are internal rather than `private` (Swift's `private` doesn't reach other files). Only the model's own
+  extensions should write them.
+- Week and Shopping (`Features/Shopping/`, `ShoppingScreenModel`) follow the target layout. The other
+  features are still flat in `Veckly/` and reach `AppModel` through `@Environment`.
+- `ShoppingListStore.swift` (~880 lines) also holds `ShoppingCategory`, `ShoppingListViewModelMapper`,
+  `ShoppingListShareText` and `ShoppingListHandoffState`; split those out when next working there.
+  `WeekStore.swift` (~1 340 lines) is the same kind of debt.
+- The Shopping tab's seeded UI-test mode can't check or add items (the store has no sync context
+  without a loaded summary), so those interactions are covered by `ShoppingScreenModelTests` only.
 - `VecklyAPIClient.swift` is hand-written but lives in `Generated/`. Move it to `Core/` and split it per domain.
