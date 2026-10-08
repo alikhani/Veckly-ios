@@ -56,7 +56,8 @@ is the hand-written adapter on top of them.
   `git diff --stat` shows only those lines. Don't commit Xcode's unrelated extraction churn.
 - Commit messages are a single imperative title line.
 
-CI (`.github/workflows/ci.yml`) runs on every push and PR:
+CI (`.github/workflows/ci.yml`) is **manual for now** to save CI minutes (`gh workflow run CI --ref <branch>`).
+Run it before a TestFlight upload. It checks:
 1. **Generated client matches the committed spec.** Fails if you changed `OpenAPI/veckly-openapi.json`
    without regenerating.
 2. **Committed spec vs production backend.** Informational only. A difference means a TestFlight build would
