@@ -240,17 +240,24 @@ struct WeekScreenModelTests {
 
     // MARK: Quality suggestions, deep links, loading
 
-    @Test func aLeftoversSuggestionReturnsAPrepBatchSeedAndDismissesTheSuggestion() async {
+    @Test func aLeftoversSuggestionOpensThePrepBatchSheetAndDismissesTheSuggestion() async {
         let harness = await WeekScreenHarness.make()
         let source = harness.row(.monday)
         let suggestion = WeekQualitySuggestion(kind: .useLeftovers, day: harness.row(.sunday), replacement: nil, sourceDay: source)
 
-        let seed = harness.model.applyQualitySuggestion(suggestion)
+        harness.model.applyQualitySuggestion(suggestion)
+        #expect(harness.model.sheet == nil)
+        await harness.model.lastTask?.value
 
-        #expect(seed?.recipeID == source.recipe?.id)
-        #expect(seed?.cookDate == source.date)
-        #expect(seed?.assignedDate == harness.row(.sunday).date)
-        #expect(seed?.weekStartDate == WeekCalendar.currentWeekStartDate())
+        guard case let .prepBatch(seed) = harness.model.sheet else {
+            Issue.record("Expected the prep batch sheet, got \(String(describing: harness.model.sheet))")
+            return
+        }
+
+        #expect(seed.recipeID == source.recipe?.id)
+        #expect(seed.cookDate == source.date)
+        #expect(seed.assignedDate == harness.row(.sunday).date)
+        #expect(seed.weekStartDate == WeekCalendar.currentWeekStartDate())
         #expect(harness.model.dismissedQualitySuggestionKeys == ["\(WeekScreenFixtures.household.id):\(WeekCalendar.currentWeekStartDate())"])
         #expect(harness.defaults.string(forKey: WeekScreenModel.dismissedQualitySuggestionKeysKey) == "\(WeekScreenFixtures.household.id):\(WeekCalendar.currentWeekStartDate())")
         #expect(harness.api.weekEvents.isEmpty)
@@ -260,10 +267,10 @@ struct WeekScreenModelTests {
         let harness = await WeekScreenHarness.make()
         let suggestion = WeekQualitySuggestion(kind: .fillOpenDay, day: harness.row(.sunday), replacement: WeekScreenFixtures.fullRecipe, sourceDay: nil)
 
-        let seed = harness.model.applyQualitySuggestion(suggestion)
+        harness.model.applyQualitySuggestion(suggestion)
         await harness.model.lastTask?.value
 
-        #expect(seed == nil)
+        #expect(harness.model.sheet == nil)
         #expect(harness.api.weekEvents.count == 1)
         if case let .mealAssigned(day, recipeID) = harness.api.weekEvents.first?.event {
             #expect(day == .sunday)
@@ -280,7 +287,7 @@ struct WeekScreenModelTests {
         harness.api.failsWeekEvents = true
         let suggestion = WeekQualitySuggestion(kind: .fillOpenDay, day: harness.row(.sunday), replacement: WeekScreenFixtures.fullRecipe, sourceDay: nil)
 
-        _ = harness.model.applyQualitySuggestion(suggestion)
+        harness.model.applyQualitySuggestion(suggestion)
         await harness.model.lastTask?.value
 
         #expect(harness.model.dismissedQualitySuggestionKeys.isEmpty)
@@ -316,13 +323,19 @@ struct WeekScreenModelTests {
         let monday = harness.row(.monday)
         harness.pendingDeepLink = .meal(date: monday.date, recipeID: monday.recipe?.id)
 
-        let first = await harness.model.consumePendingMealDeepLink()
-        let second = await harness.model.consumePendingMealDeepLink()
+        await harness.model.consumePendingMealDeepLink()
 
-        #expect(first?.day.date == monday.date)
-        #expect(first?.recipe.id == monday.recipe?.id)
+        guard case let .recipe(pair) = harness.model.sheet else {
+            Issue.record("Expected the recipe sheet, got \(String(describing: harness.model.sheet))")
+            return
+        }
+        #expect(pair.day.date == monday.date)
+        #expect(pair.recipe.id == monday.recipe?.id)
         #expect(harness.pendingDeepLink == nil)
-        #expect(second == nil)
+
+        harness.model.sheet = nil
+        await harness.model.consumePendingMealDeepLink()
+        #expect(harness.model.sheet == nil)
     }
 
     @Test func aMealDeepLinkThatNoLongerMatchesIsClearedWithoutOpening() async {
@@ -330,9 +343,9 @@ struct WeekScreenModelTests {
         let sunday = harness.row(.sunday)
         harness.pendingDeepLink = .meal(date: sunday.date, recipeID: "gone")
 
-        let opened = await harness.model.consumePendingMealDeepLink()
+        await harness.model.consumePendingMealDeepLink()
 
-        #expect(opened == nil)
+        #expect(harness.model.sheet == nil)
         #expect(harness.pendingDeepLink == nil)
     }
 
@@ -383,6 +396,84 @@ struct WeekScreenModelTests {
         harness.defaults.set(Date().addingTimeInterval(-3 * 24 * 60 * 60), forKey: WeekScreenModel.weekendNudgeDismissalKey)
         harness.model.refreshWeekendNudgeDismissalState()
         #expect(!harness.model.weekendNudgeDismissedToday)
+    }
+
+    // MARK: Sheet routing
+
+    @Test func presentingTheWeekBriefPinsItToTheViewedWeek() async {
+        let harness = await WeekScreenHarness.make()
+        harness.model.viewedWeekOffset = .next
+
+        harness.model.presentWeekBrief(regenerate: true)
+
+        guard case let .weekBrief(presentation) = harness.model.sheet else {
+            Issue.record("Expected the week brief sheet")
+            return
+        }
+        #expect(presentation.weekStartDate == ViewedWeekOffset.next.weekStartDate)
+        #expect(presentation.regenerate)
+    }
+
+    @Test func theWeekBriefNeedsASession() async {
+        let harness = await WeekScreenHarness.make(signedIn: false)
+
+        harness.model.presentWeekBrief(regenerate: false)
+        await harness.model.lastTask?.value
+
+        #expect(harness.model.sheet == nil)
+        #expect(harness.unauthorizedCount == 1)
+    }
+
+    @Test func aSheetsOwnDismissNeverClosesTheSheetThatReplacedIt() async {
+        let harness = await WeekScreenHarness.make()
+        let detail = WeekSheet.dayDetail(harness.row(.monday))
+        harness.model.sheet = .mealPicker(harness.row(.sunday))
+
+        harness.model.dismissSheet(detail.id)
+        #expect(harness.model.sheet?.id == WeekSheet.mealPicker(harness.row(.sunday)).id)
+
+        harness.model.dismissSheet(WeekSheet.mealPicker(harness.row(.sunday)).id)
+        #expect(harness.model.sheet == nil)
+    }
+
+    @Test func presentAfterDismissOpensTheNextSheetOnlyAfterTheDelay() async {
+        let harness = await WeekScreenHarness.make()
+        let day = harness.row(.monday)
+        harness.model.sheet = .dayDetail(day)
+
+        harness.model.dismissSheet(WeekSheet.dayDetail(day).id)
+        harness.model.presentAfterDismiss { .mealPicker(day) }
+        #expect(harness.model.sheet == nil)
+
+        await harness.model.lastTask?.value
+        #expect(harness.model.sheet?.id == WeekSheet.mealPicker(day).id)
+    }
+
+    @Test func presentAfterDismissWithNothingToShowLeavesSheetsAlone() async {
+        let harness = await WeekScreenHarness.make()
+
+        harness.model.presentAfterDismiss { nil }
+        await harness.model.lastTask?.value
+
+        #expect(harness.model.sheet == nil)
+    }
+
+    @Test func everySheetCaseHasADistinctIdentity() async {
+        let harness = await WeekScreenHarness.make()
+        let day = harness.row(.monday)
+        let seed = PrepBatchSeed(recipeID: "r", cookDate: day.date, weekStartDate: WeekCalendar.currentWeekStartDate())
+        let sheets: [WeekSheet] = [
+            .recipe(SelectedDayRecipe(day: day, recipe: day.recipe!)),
+            .mealPicker(day),
+            .rescue(day),
+            .previousWeekProposal,
+            .dayDetail(day),
+            .prepBatch(seed),
+            .leftoversWithoutRecipe(LeftoversWithoutRecipeSeed(day: day, defaultPortions: 4)),
+            .weekBrief(WeekBriefPresentation(weekStartDate: WeekCalendar.currentWeekStartDate(), regenerate: false)),
+        ]
+
+        #expect(Set(sheets.map(\.id)).count == sheets.count)
     }
 }
 

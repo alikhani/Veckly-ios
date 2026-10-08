@@ -1,11 +1,5 @@
 import SwiftUI
 
-private struct LeftoversWithoutRecipeSeed: Identifiable {
-    let day: WeekDayRowViewModel
-    let defaultPortions: Int
-    var id: String { day.id }
-}
-
 /// The 3-week browsing window. Last week is view-only (no planning actions);
 /// This/Next week behave like the active week but addressed explicitly.
 /// Not `private` — `WeekHeaderView` (Fas 3 extraction) needs it too.
@@ -47,13 +41,6 @@ struct WeekTabView: View {
     @State private var model: WeekScreenModel
     var onGoToShoppingTab: (() -> Void)? = nil
     var onGoToHouseholdTab: (() -> Void)? = nil
-    @State private var selectedDayRecipe: SelectedDayRecipe?
-    @State private var mealPickerDay: WeekDayRowViewModel?
-    @State private var rescueDay: WeekDayRowViewModel?
-    @State private var showsPreviousWeekProposal = false
-    @State private var selectedDayForDetail: WeekDayRowViewModel?
-    @State private var prepBatchSeed: PrepBatchSeed?
-    @State private var leftoversWithoutRecipeSeed: LeftoversWithoutRecipeSeed?
     @State private var isWeekPickerPresented = false
     @AppStorage("hasSeenLockExplanation") private var hasSeenLockExplanation = false
     @State private var showLockExplanation = false
@@ -249,204 +236,8 @@ struct WeekTabView: View {
                 }
             }
         }
-        .sheet(item: $selectedDayRecipe) { pair in
-            let interaction = weekListPresentation.interaction(for: pair.day)
-            let allowsDayMutation = interaction == .editDay
-            NavigationStack {
-                RecipeDetailView(
-                    recipe: pair.recipe,
-                    householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                    isSkipped: allowsDayMutation ? pair.day.isSkipped : nil,
-                    onSkip: allowsDayMutation ? {
-                        guard canEditDay(pair.day) else { return }
-                        if model.toggleSkip(pair.day) {
-                            selectedDayRecipe = nil
-                        }
-                    } : nil,
-                    isReadOnly: !allowsDayMutation
-                )
-            }
-        }
-        .sheet(item: $mealPickerDay) { day in
-            MealPickerSheet(
-                day: day,
-                isSkipped: day.isSkipped,
-                coverage: coverage(for: day),
-                householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                weekStartDate: viewedWeekStartDate,
-                onSelect: { recipe in
-                    guard canMutateDay(day) else { return }
-                    model.assignMeal(day, recipe: WeekSummaryRecipe(fullRecipe: recipe))
-                },
-                onClear: {
-                    guard canMutateDay(day) else { return }
-                    if model.unassignMeal(day) {
-                        mealPickerDay = nil
-                    }
-                },
-                onSkip: {
-                    guard canMutateDay(day) else { return }
-                    model.toggleSkip(day, checksSessionEnd: true)
-                },
-                onMarkAsLeftover: { recipeID in
-                    guard canMutateDay(day) else { return }
-                    mealPickerDay = nil
-                    presentAfterDismiss {
-                        prepBatchSeed = PrepBatchSeed(
-                            recipeID: recipeID,
-                            cookDate: day.date,
-                            weekStartDate: viewedWeekStartDate
-                        )
-                    }
-                },
-                onMarkAsLeftoverNoRecipe: {
-                    guard canMutateDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    let profile = appModel.householdStore.cachedProfile(for: household.id)
-                    mealPickerDay = nil
-                    presentAfterDismiss {
-                        leftoversWithoutRecipeSeed = LeftoversWithoutRecipeSeed(
-                            day: day,
-                            defaultPortions: LeftoversWithoutRecipeFormModel.defaultPortions(profile: profile)
-                        )
-                    }
-                },
-                onRemoveCoverage: {
-                    guard canMutateDay(day) else { return }
-                    guard let dayCoverage = coverage(for: day),
-                          model.removeCoverage(day, coverage: dayCoverage) else { return }
-                    mealPickerDay = nil
-                },
-                onDismiss: { mealPickerDay = nil }
-            )
-        }
-        .sheet(item: $rescueDay) { day in
-            if let household = appModel.householdStore.activeHousehold {
-                WeekRescueSheet(
-                    day: day,
-                    household: household,
-                    weekStartDate: viewedWeekStartDate,
-                    expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
-                    onApplied: {
-                        await model.weekPlanChangedElsewhere(household: household)
-                    }
-                )
-            }
-        }
-        .sheet(isPresented: $showsPreviousWeekProposal) {
-            if let household = appModel.householdStore.activeHousehold {
-                PreviousWeekProposalSheet(
-                    household: household,
-                    weekStartDate: viewedWeekStartDate,
-                    expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
-                    onApplied: {
-                        await model.weekPlanChangedElsewhere(household: household)
-                    },
-                    onSwap: { date in
-                        presentAfterDismiss {
-                            mealPickerDay = appModel.weekStore.dayRows.first(where: { $0.date == date })
-                        }
-                    }
-                )
-            }
-        }
-        .sheet(item: $selectedDayForDetail) { day in
-            DayDetailSheet(
-                day: day,
-                householdID: appModel.householdStore.activeHousehold?.id ?? "",
-                onViewRecipe: {
-                    selectedDayForDetail = nil
-                    presentAfterDismiss {
-                        if let recipe = day.recipe {
-                            selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
-                        }
-                    }
-                },
-                onSwap: {
-                    guard canEditDay(day) else { return }
-                    selectedDayForDetail = nil
-                    presentAfterDismiss { mealPickerDay = day }
-                },
-                onSkip: {
-                    guard canEditDay(day) else { return }
-                    model.toggleSkip(day)
-                },
-                onClear: {
-                    guard canEditDay(day) else { return }
-                    if model.unassignMeal(day) {
-                        selectedDayForDetail = nil
-                    }
-                },
-                onMarkAsLeftover: {
-                    guard canEditDay(day) else { return }
-                    selectedDayForDetail = nil
-                    if let recipe = day.recipe {
-                        presentAfterDismiss {
-                            prepBatchSeed = PrepBatchSeed(
-                                recipeID: recipe.id,
-                                cookDate: day.date,
-                                weekStartDate: viewedWeekStartDate
-                            )
-                        }
-                    }
-                },
-                isLocked: day.isLocked,
-                onToggleLock: {
-                    guard canEditDay(day) else { return }
-                    guard model.toggleLock(day) else { return }
-                    if !hasSeenLockExplanation {
-                        showLockExplanation = true
-                    }
-                },
-                onApplyPortionSuggestion: { servings in
-                    await model.applyPortionSuggestion(day, servings: servings)
-                },
-                onIgnorePortionSuggestion: {
-                    await model.ignorePortionSuggestion(day)
-                },
-                onResetPortionMemory: {
-                    await model.resetPortionMemory(day)
-                },
-                onDismiss: { selectedDayForDetail = nil }
-            )
-        }
-        .sheet(item: $prepBatchSeed) { seed in
-            PrepBatchFormSheet(
-                initialRecipeID: seed.recipeID,
-                initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date(),
-                weekStartDate: seed.weekStartDate,
-                initialAssignedDate: seed.assignedDate
-            )
-        }
-        .sheet(item: $leftoversWithoutRecipeSeed) { seed in
-            LeftoversWithoutRecipeSheet(
-                day: seed.day,
-                initialPortions: seed.defaultPortions,
-                weekStartDate: viewedWeekStartDate
-            )
-        }
-        .sheet(item: $model.weekBriefPresentation) { presentation in
-            if let household = appModel.householdStore.activeHousehold,
-               let userID = appModel.authSessionStore.userID {
-                WeekBriefSheet(
-                    store: model.makeWeekBriefStore(),
-                    householdID: household.id,
-                    weekStartDate: presentation.weekStartDate,
-                    userID: userID,
-                    rows: appModel.weekStore.dayRows,
-                    profile: appModel.householdStore.cachedProfile(for: household.id),
-                    isRegenerating: presentation.regenerate,
-                    pantryItems: PantryPlanningItem.suggestions(from: appModel.shoppingListStore.pantryStock),
-                    onGenerate: { pantryItemKeys, portionAdjustments in
-                        await model.performGenerate(
-                            regenerate: presentation.regenerate,
-                            weekStartDate: presentation.weekStartDate,
-                            pantryItemKeys: pantryItemKeys,
-                            portionAdjustments: portionAdjustments
-                        )
-                    }
-                )
-            }
+        .sheet(item: $model.sheet) { sheet in
+            sheetContent(sheet)
         }
         .task(id: appModel.householdStore.activeHousehold?.id) {
             // Retro + weekend next-week peek, re-run whenever the active
@@ -467,11 +258,11 @@ struct WeekTabView: View {
             model.refreshWeekendNudgeDismissalState()
             Task { await model.reloadViewedWeek() }
             Task { await model.refreshNextWeekEmptyState() }
-            Task { await consumePendingMealDeepLink() }
+            Task { await model.consumePendingMealDeepLink() }
         }
         .onChange(of: appModel.pendingDeepLink) { _, destination in
             guard case .meal = destination else { return }
-            Task { await consumePendingMealDeepLink() }
+            Task { await model.consumePendingMealDeepLink() }
         }
         .onChange(of: appModel.pendingWeekPlanDeepLink) { _, isPending in
             // Covers the case where the notification tap is delivered to
@@ -517,6 +308,204 @@ struct WeekTabView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: regenerateUndoContext?.id)
+    }
+
+    /// Routes `model.sheet` to its view. Each sheet's own close/dismiss
+    /// callbacks go through `model.dismissSheet(sheet.id)`, so they can only
+    /// ever close the sheet they belong to.
+    @ViewBuilder
+    private func sheetContent(_ sheet: WeekSheet) -> some View {
+        switch sheet {
+        case let .recipe(pair):
+            let interaction = weekListPresentation.interaction(for: pair.day)
+            let allowsDayMutation = interaction == .editDay
+            NavigationStack {
+                RecipeDetailView(
+                    recipe: pair.recipe,
+                    householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                    isSkipped: allowsDayMutation ? pair.day.isSkipped : nil,
+                    onSkip: allowsDayMutation ? {
+                        guard canEditDay(pair.day) else { return }
+                        if model.toggleSkip(pair.day) {
+                            model.dismissSheet(sheet.id)
+                        }
+                    } : nil,
+                    isReadOnly: !allowsDayMutation
+                )
+            }
+        case let .mealPicker(day):
+            MealPickerSheet(
+                day: day,
+                isSkipped: day.isSkipped,
+                coverage: coverage(for: day),
+                householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                weekStartDate: viewedWeekStartDate,
+                onSelect: { recipe in
+                    guard canMutateDay(day) else { return }
+                    model.assignMeal(day, recipe: WeekSummaryRecipe(fullRecipe: recipe))
+                },
+                onClear: {
+                    guard canMutateDay(day) else { return }
+                    if model.unassignMeal(day) {
+                        model.dismissSheet(sheet.id)
+                    }
+                },
+                onSkip: {
+                    guard canMutateDay(day) else { return }
+                    model.toggleSkip(day, checksSessionEnd: true)
+                },
+                onMarkAsLeftover: { recipeID in
+                    guard canMutateDay(day) else { return }
+                    model.dismissSheet(sheet.id)
+                    model.presentAfterDismiss {
+                        .prepBatch(PrepBatchSeed(
+                            recipeID: recipeID,
+                            cookDate: day.date,
+                            weekStartDate: model.viewedWeekStartDate
+                        ))
+                    }
+                },
+                onMarkAsLeftoverNoRecipe: {
+                    guard canMutateDay(day) else { return }
+                    guard let household = appModel.householdStore.activeHousehold else { return }
+                    let profile = appModel.householdStore.cachedProfile(for: household.id)
+                    model.dismissSheet(sheet.id)
+                    model.presentAfterDismiss {
+                        .leftoversWithoutRecipe(LeftoversWithoutRecipeSeed(
+                            day: day,
+                            defaultPortions: LeftoversWithoutRecipeFormModel.defaultPortions(profile: profile)
+                        ))
+                    }
+                },
+                onRemoveCoverage: {
+                    guard canMutateDay(day) else { return }
+                    guard let dayCoverage = coverage(for: day),
+                          model.removeCoverage(day, coverage: dayCoverage) else { return }
+                    model.dismissSheet(sheet.id)
+                },
+                onDismiss: { model.dismissSheet(sheet.id) }
+            )
+        case let .rescue(day):
+            if let household = appModel.householdStore.activeHousehold {
+                WeekRescueSheet(
+                    day: day,
+                    household: household,
+                    weekStartDate: viewedWeekStartDate,
+                    expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
+                    onApplied: {
+                        await model.weekPlanChangedElsewhere(household: household)
+                    }
+                )
+            }
+        case .previousWeekProposal:
+            if let household = appModel.householdStore.activeHousehold {
+                PreviousWeekProposalSheet(
+                    household: household,
+                    weekStartDate: viewedWeekStartDate,
+                    expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
+                    onApplied: {
+                        await model.weekPlanChangedElsewhere(household: household)
+                    },
+                    onSwap: { date in
+                        model.presentAfterDismiss {
+                            appModel.weekStore.dayRows.first(where: { $0.date == date }).map(WeekSheet.mealPicker)
+                        }
+                    }
+                )
+            }
+        case let .dayDetail(day):
+            DayDetailSheet(
+                day: day,
+                householdID: appModel.householdStore.activeHousehold?.id ?? "",
+                onViewRecipe: {
+                    model.dismissSheet(sheet.id)
+                    model.presentAfterDismiss {
+                        day.recipe.map { .recipe(SelectedDayRecipe(day: day, recipe: $0)) }
+                    }
+                },
+                onSwap: {
+                    guard canEditDay(day) else { return }
+                    model.dismissSheet(sheet.id)
+                    model.presentAfterDismiss { .mealPicker(day) }
+                },
+                onSkip: {
+                    guard canEditDay(day) else { return }
+                    model.toggleSkip(day)
+                },
+                onClear: {
+                    guard canEditDay(day) else { return }
+                    if model.unassignMeal(day) {
+                        model.dismissSheet(sheet.id)
+                    }
+                },
+                onMarkAsLeftover: {
+                    guard canEditDay(day) else { return }
+                    model.dismissSheet(sheet.id)
+                    if let recipe = day.recipe {
+                        model.presentAfterDismiss {
+                            .prepBatch(PrepBatchSeed(
+                                recipeID: recipe.id,
+                                cookDate: day.date,
+                                weekStartDate: model.viewedWeekStartDate
+                            ))
+                        }
+                    }
+                },
+                isLocked: day.isLocked,
+                onToggleLock: {
+                    guard canEditDay(day) else { return }
+                    guard model.toggleLock(day) else { return }
+                    if !hasSeenLockExplanation {
+                        showLockExplanation = true
+                    }
+                },
+                onApplyPortionSuggestion: { servings in
+                    await model.applyPortionSuggestion(day, servings: servings)
+                },
+                onIgnorePortionSuggestion: {
+                    await model.ignorePortionSuggestion(day)
+                },
+                onResetPortionMemory: {
+                    await model.resetPortionMemory(day)
+                },
+                onDismiss: { model.dismissSheet(sheet.id) }
+            )
+        case let .prepBatch(seed):
+            PrepBatchFormSheet(
+                initialRecipeID: seed.recipeID,
+                initialCookDate: WeekCalendar.date(from: seed.cookDate) ?? Date(),
+                weekStartDate: seed.weekStartDate,
+                initialAssignedDate: seed.assignedDate
+            )
+        case let .leftoversWithoutRecipe(seed):
+            LeftoversWithoutRecipeSheet(
+                day: seed.day,
+                initialPortions: seed.defaultPortions,
+                weekStartDate: viewedWeekStartDate
+            )
+        case let .weekBrief(presentation):
+            if let household = appModel.householdStore.activeHousehold,
+               let userID = appModel.authSessionStore.userID {
+                WeekBriefSheet(
+                    store: model.makeWeekBriefStore(),
+                    householdID: household.id,
+                    weekStartDate: presentation.weekStartDate,
+                    userID: userID,
+                    rows: appModel.weekStore.dayRows,
+                    profile: appModel.householdStore.cachedProfile(for: household.id),
+                    isRegenerating: presentation.regenerate,
+                    pantryItems: PantryPlanningItem.suggestions(from: appModel.shoppingListStore.pantryStock),
+                    onGenerate: { pantryItemKeys, portionAdjustments in
+                        await model.performGenerate(
+                            regenerate: presentation.regenerate,
+                            weekStartDate: presentation.weekStartDate,
+                            pantryItemKeys: pantryItemKeys,
+                            portionAdjustments: portionAdjustments
+                        )
+                    }
+                )
+            }
+        }
     }
 
     @ViewBuilder
@@ -631,12 +620,6 @@ struct WeekTabView: View {
         }
     }
 
-    private func consumePendingMealDeepLink() async {
-        if let pair = await model.consumePendingMealDeepLink() {
-            selectedDayRecipe = pair
-        }
-    }
-
     /// "Veckan är klar" — a one-time, dismissible beat shown the moment the
     /// last empty day of the current week gets filled or skipped (see
     /// `checkForSessionEnd`). Not persisted anywhere: it's local `@State`,
@@ -729,7 +712,7 @@ struct WeekTabView: View {
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
 
                     Button("week.empty.chooseFirst") {
-                        mealPickerDay = firstOpenPlanningDay
+                        model.sheet = firstOpenPlanningDay.map(WeekSheet.mealPicker)
                     }
                     .buttonStyle(VecklyPrimaryButtonStyle())
                     .padding(.top, 4)
@@ -744,7 +727,7 @@ struct WeekTabView: View {
                     .frame(maxWidth: .infinity)
 
                     Button("previousWeek.action") {
-                        showsPreviousWeekProposal = true
+                        model.sheet = .previousWeekProposal
                     }
                     .disabled(appModel.householdStore.activeHousehold == nil)
                     .font(.subheadline.weight(.medium))
@@ -764,17 +747,6 @@ struct WeekTabView: View {
     private var fillAction: WeekFillAction { model.fillAction }
     private var firstOpenPlanningDay: WeekDayRowViewModel? { model.firstOpenPlanningDay }
     private var isFillingViewedWeek: Bool { model.isFillingViewedWeek }
-
-    /// Sheets in SwiftUI can't be swapped directly — presenting a new one
-    /// while another is still dismissing is silently dropped. A short delay
-    /// lets the dismiss animation finish first; centralized here so all
-    /// "close this sheet, then open that one" flows share the same timing.
-    private func presentAfterDismiss(_ present: @escaping () -> Void) {
-        Task {
-            try? await Task.sleep(for: .milliseconds(50))
-            present()
-        }
-    }
 
     private var heroMode: TonightMealCardMode { model.heroMode }
     private var todayRowIsHeroOwned: Bool { model.todayRowIsHeroOwned }
@@ -870,7 +842,7 @@ struct WeekTabView: View {
                 titleVisibility: .visible
             ) {
                 Button(qualitySuggestionConfirmTitle(suggestion)) {
-                    applyQualitySuggestion(suggestion)
+                    model.applyQualitySuggestion(suggestion)
                 }
                 Button(L10n.string("common.cancel"), role: .cancel) {}
             } message: {
@@ -961,13 +933,6 @@ struct WeekTabView: View {
             : L10n.string("week.quality.suggestion.confirmSwap")
     }
 
-    private func applyQualitySuggestion(_ suggestion: WeekQualitySuggestion) {
-        guard let seed = model.applyQualitySuggestion(suggestion) else { return }
-        presentAfterDismiss {
-            prepBatchSeed = seed
-        }
-    }
-
     /// Replaces "Veckokoll" as the primary status surface (Fas 3): a single
     /// primary CTA reflecting whether relevant planning days remain.
     @ViewBuilder
@@ -1015,29 +980,29 @@ struct WeekTabView: View {
             coverage: { coverage(for: $0) },
             onViewRecipe: { day in
                 if let recipe = day.recipe {
-                    selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                    model.sheet = .recipe(SelectedDayRecipe(day: day, recipe: recipe))
                 }
             },
             onSwap: { day in
                 guard canMutateDay(day) else { return }
-                mealPickerDay = day
+                model.sheet = .mealPicker(day)
             },
             onRescue: { day in
                 guard canMutateDay(day), !day.isLocked else { return }
-                rescueDay = day
+                model.sheet = .rescue(day)
             },
             onPlanTonight: { day in
                 guard canMutateDay(day) else { return }
-                mealPickerDay = day
+                model.sheet = .mealPicker(day)
             },
             onEatExtra: { day in
                 guard canMutateDay(day) else { return }
                 if let recipe = day.recipe {
-                    prepBatchSeed = PrepBatchSeed(
+                    model.sheet = .prepBatch(PrepBatchSeed(
                         recipeID: recipe.id,
                         cookDate: day.date,
                         weekStartDate: viewedWeekStartDate
-                    )
+                    ))
                 }
             },
             onRemoveCoverage: { day, dayCoverage in
@@ -1072,7 +1037,7 @@ struct WeekTabView: View {
                         .foregroundStyle(VecklyDesign.Colors.inkMid)
 
                     Button("week.empty.chooseFirst") {
-                        mealPickerDay = firstOpenPlanningDay
+                        model.sheet = firstOpenPlanningDay.map(WeekSheet.mealPicker)
                     }
                     .buttonStyle(VecklyPrimaryButtonStyle())
                     .padding(.top, 4)
@@ -1087,7 +1052,7 @@ struct WeekTabView: View {
                     .frame(maxWidth: .infinity)
 
                     Button("previousWeek.action") {
-                        showsPreviousWeekProposal = true
+                        model.sheet = .previousWeekProposal
                     }
                     .disabled(appModel.householdStore.activeHousehold == nil)
                     .font(.subheadline.weight(.medium))
@@ -1191,12 +1156,12 @@ struct WeekTabView: View {
             break
         case .viewRecipe:
             if let recipe = day.recipe {
-                selectedDayRecipe = SelectedDayRecipe(day: day, recipe: recipe)
+                model.sheet = .recipe(SelectedDayRecipe(day: day, recipe: recipe))
             }
         case .editDay:
-            selectedDayForDetail = day
+            model.sheet = .dayDetail(day)
         case .planDay:
-            mealPickerDay = day
+            model.sheet = .mealPicker(day)
         }
     }
 

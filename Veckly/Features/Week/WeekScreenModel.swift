@@ -10,25 +10,6 @@ struct RegenerateUndoContext: Identifiable {
     var id: String { weekStartDate }
 }
 
-/// Pairs a recipe with the day it belongs to, so RecipeDetailView can offer
-/// day-level actions (skip/plan) in context.
-struct SelectedDayRecipe: Identifiable {
-    let day: WeekDayRowViewModel
-    let recipe: WeekSummaryRecipe
-    var id: String { recipe.id + day.id }
-}
-
-/// Seeds a new prep batch from a day that's already planned — "we made
-/// extra of this, mark it as eaten again on other days" — without making
-/// the user re-pick the recipe or cook date in `PrepBatchFormSheet`.
-struct PrepBatchSeed: Identifiable {
-    let recipeID: String
-    let cookDate: String
-    let weekStartDate: String
-    var assignedDate: String? = nil
-    var id: String { recipeID + cookDate + weekStartDate + (assignedDate ?? "") }
-}
-
 /// The app-level deep-link slots the Week tab consumes, as closures so the
 /// model never depends on `AppModel` itself.
 struct WeekDeepLinkInbox {
@@ -36,12 +17,6 @@ struct WeekDeepLinkInbox {
     var clearPendingWeekPlan: () -> Void
     var pendingDeepLink: () -> AppDeepLink?
     var clearPendingDeepLink: () -> Void
-}
-
-struct WeekBriefPresentation: Identifiable {
-    let weekStartDate: String
-    let regenerate: Bool
-    var id: String { "\(weekStartDate):\(regenerate)" }
 }
 
 /// Owns the Week tab's user intents and the orchestration between stores
@@ -87,7 +62,8 @@ final class WeekScreenModel {
     private(set) var regenerateUndo: RegenerateUndoContext?
     private(set) var fillCompletionNotice: WeekFillCompletionNotice?
     private(set) var failedFillWeekStartDate: String?
-    var weekBriefPresentation: WeekBriefPresentation?
+    /// The one sheet the Week tab is presenting, if any.
+    var sheet: WeekSheet?
     /// nil until checked — see `refreshNextWeekEmptyState`.
     private(set) var nextWeekIsEmpty: Bool?
     private(set) var weekendNudgeDismissedToday = false
@@ -270,6 +246,32 @@ final class WeekScreenModel {
         }
     }
 
+    // MARK: Sheets
+
+    /// Closes `sheet` only if it is still the one identified by `id` — a
+    /// sheet's own close/dismiss callback must never close a different
+    /// sheet that has since replaced it (as separate `.sheet` modifiers
+    /// each guaranteed before this enum existed).
+    func dismissSheet(_ id: String) {
+        guard sheet?.id == id else { return }
+        sheet = nil
+    }
+
+    /// Sheets in SwiftUI can't be swapped directly — presenting a new one
+    /// while another is still dismissing is silently dropped. A short delay
+    /// lets the dismiss animation finish first; centralized here so all
+    /// "close this sheet, then open that one" flows share the same timing.
+    /// `makeSheet` runs after the delay, so it sees state as of then; a nil
+    /// result presents nothing.
+    func presentAfterDismiss(_ makeSheet: @escaping () -> WeekSheet?) {
+        lastTask = Task {
+            try? await Task.sleep(for: .milliseconds(50))
+            if let next = makeSheet() {
+                sheet = next
+            }
+        }
+    }
+
     // MARK: Session
 
     /// The one place the Week tab resolves "who is acting on which
@@ -418,10 +420,10 @@ final class WeekScreenModel {
     /// Generate/Regenerate goes through before `performGenerate`.
     func presentWeekBrief(regenerate: Bool) {
         guard session() != nil else { return }
-        weekBriefPresentation = WeekBriefPresentation(
+        sheet = .weekBrief(WeekBriefPresentation(
             weekStartDate: viewedWeekStartDate,
             regenerate: regenerate
-        )
+        ))
     }
 
     /// Runs Generate/Regenerate. When replacing an already-full week, snapshots
@@ -683,14 +685,14 @@ final class WeekScreenModel {
     }
 
     /// Consumes a pending widget/notification meal link: switches to its
-    /// week, loads it, and returns the day + recipe to open — or nil when
-    /// the link doesn't (or no longer) match a planned dinner. Either way
-    /// the link is cleared, so it's acted on exactly once.
-    func consumePendingMealDeepLink() async -> SelectedDayRecipe? {
-        guard case let .meal(date, recipeID) = deepLinks.pendingDeepLink() else { return nil }
+    /// week, loads it, and opens that day's recipe — unless the link
+    /// doesn't (or no longer) match a planned dinner. Either way the link is
+    /// cleared, so it's acted on exactly once.
+    func consumePendingMealDeepLink() async {
+        guard case let .meal(date, recipeID) = deepLinks.pendingDeepLink() else { return }
         guard let targetDate = WeekCalendar.date(from: date) else {
             deepLinks.clearPendingDeepLink()
-            return nil
+            return
         }
         let currentStart = WeekCalendar.date(from: WeekCalendar.currentWeekStartDate()) ?? targetDate
         let targetStartString = WeekCalendar.currentWeekStartDate(now: targetDate)
@@ -699,7 +701,7 @@ final class WeekScreenModel {
         let weeks = days / 7
         guard let offset = ViewedWeekOffset(rawValue: weeks) else {
             deepLinks.clearPendingDeepLink()
-            return nil
+            return
         }
         viewedWeekOffset = offset
         await reloadViewedWeek()
@@ -707,10 +709,10 @@ final class WeekScreenModel {
               let recipe = row.recipe,
               recipeID == nil || recipe.id == recipeID else {
             deepLinks.clearPendingDeepLink()
-            return nil
+            return
         }
+        sheet = .recipe(SelectedDayRecipe(day: row, recipe: recipe))
         deepLinks.clearPendingDeepLink()
-        return SelectedDayRecipe(day: row, recipe: recipe)
     }
 
     // MARK: Weekend nudge
@@ -779,25 +781,28 @@ final class WeekScreenModel {
         dismissedQualitySuggestionKeys = keys
     }
 
-    /// A leftovers suggestion is reviewed in the prep-batch sheet, so it
-    /// returns the seed for the caller to present; a replacement suggestion
-    /// is applied right away (and only dismissed once the write succeeded).
-    func applyQualitySuggestion(_ suggestion: WeekQualitySuggestion) -> PrepBatchSeed? {
-        guard canMutateDay(suggestion.day) else { return nil }
+    /// A leftovers suggestion is reviewed in the prep-batch sheet; a
+    /// replacement suggestion is applied right away (and only dismissed
+    /// once the write succeeded).
+    func applyQualitySuggestion(_ suggestion: WeekQualitySuggestion) {
+        guard canMutateDay(suggestion.day) else { return }
         if suggestion.kind == .useLeftovers,
            let source = suggestion.sourceDay,
            let recipe = source.recipe {
             dismissQualitySuggestionsForViewedWeek()
-            return PrepBatchSeed(
-                recipeID: recipe.id,
-                cookDate: source.date,
-                weekStartDate: viewedWeekStartDate,
-                assignedDate: suggestion.day.date
-            )
+            presentAfterDismiss {
+                .prepBatch(PrepBatchSeed(
+                    recipeID: recipe.id,
+                    cookDate: source.date,
+                    weekStartDate: self.viewedWeekStartDate,
+                    assignedDate: suggestion.day.date
+                ))
+            }
+            return
         }
 
-        guard let recipe = suggestion.replacement else { return nil }
-        guard let (household, userID) = session() else { return nil }
+        guard let recipe = suggestion.replacement else { return }
+        guard let (household, userID) = session() else { return }
         let wasEmptyBefore = hasOpenRelevantDays
         lastTask = Task {
             shoppingListStore.invalidateCache()
@@ -813,7 +818,6 @@ final class WeekScreenModel {
             dismissQualitySuggestionsForViewedWeek()
             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
         }
-        return nil
     }
 
     // MARK: Planning session end
