@@ -1,6 +1,40 @@
 import Foundation
 import Observation
 
+/// The 3-week browsing window. Last week is view-only (no planning actions);
+/// This/Next week behave like the active week but addressed explicitly.
+/// Not `private` — `WeekHeaderView` (Fas 3 extraction) needs it too.
+enum ViewedWeekOffset: Int, CaseIterable, Identifiable {
+    case last = -1
+    case current = 0
+    case next = 1
+
+    var id: Int { rawValue }
+
+    var relativeLabelKey: String {
+        switch self {
+        case .last: "week.lastWeek"
+        case .current: "week.thisWeek"
+        case .next: "week.nextWeek"
+        }
+    }
+
+    var isViewOnly: Bool { self == .last }
+}
+
+extension ViewedWeekOffset {
+    var weekStartDate: String {
+        WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: rawValue)
+    }
+
+    func subtitleLabel() -> String {
+        let start = weekStartDate
+        let weekNumber = WeekCalendar.weekNumber(for: start)
+        let range = WeekCalendar.dateRangeLabel(weekStartDate: start)
+        return "\(L10n.format("format.week", weekNumber)) · \(range)"
+    }
+}
+
 /// Snapshot of the days a "Regenerate" run is about to overwrite, captured
 /// just before the API call — restoring from it is how the undo banner puts
 /// the previous plan back without the backend needing an undo endpoint.
@@ -269,6 +303,55 @@ final class WeekScreenModel {
             if let next = makeSheet() {
                 sheet = next
             }
+        }
+    }
+
+    // MARK: Day intents
+
+    /// Shared tap handling for both the main list and the collapsed weekend
+    /// section — a day already owned by the hero (today, when the hero is
+    /// showing today) has no tap target of its own (beslut 3); the hero
+    /// itself carries the actions.
+    func openDay(_ day: WeekDayRowViewModel) {
+        if isViewingCurrentWeek, day.isToday, todayRowIsHeroOwned { return }
+        switch weekListPresentation.interaction(for: day) {
+        case .none:
+            break
+        case .viewRecipe:
+            viewRecipe(day)
+        case .editDay:
+            sheet = .dayDetail(day)
+        case .planDay:
+            sheet = .mealPicker(day)
+        }
+    }
+
+    func viewRecipe(_ day: WeekDayRowViewModel) {
+        if let recipe = day.recipe {
+            sheet = .recipe(SelectedDayRecipe(day: day, recipe: recipe))
+        }
+    }
+
+    /// The hero's "Swap" and "Plan tonight".
+    func pickMeal(for day: WeekDayRowViewModel) {
+        guard canMutateDay(day) else { return }
+        sheet = .mealPicker(day)
+    }
+
+    func rescue(_ day: WeekDayRowViewModel) {
+        guard canMutateDay(day), !day.isLocked else { return }
+        sheet = .rescue(day)
+    }
+
+    /// The hero's "Cook extra": a prep batch seeded from tonight's dinner.
+    func cookExtra(_ day: WeekDayRowViewModel) {
+        guard canMutateDay(day) else { return }
+        if let recipe = day.recipe {
+            sheet = .prepBatch(PrepBatchSeed(
+                recipeID: recipe.id,
+                cookDate: day.date,
+                weekStartDate: viewedWeekStartDate
+            ))
         }
     }
 

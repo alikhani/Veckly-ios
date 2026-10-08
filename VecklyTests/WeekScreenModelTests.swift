@@ -475,6 +475,70 @@ struct WeekScreenModelTests {
 
         #expect(Set(sheets.map(\.id)).count == sheets.count)
     }
+
+    // MARK: Day intents
+
+    @Test func tappingTodaysRowDoesNothingWhileTheHeroOwnsIt() async {
+        let harness = await WeekScreenHarness.make()
+        guard let today = harness.weekStore.dayRows.first(where: \.isToday) else {
+            Issue.record("Expected a today row in the current week")
+            return
+        }
+        #expect(harness.model.todayRowIsHeroOwned)
+
+        harness.model.openDay(today)
+
+        #expect(harness.model.sheet == nil)
+    }
+
+    @Test func tappingADayOpensTheSheetForItsInteraction() async {
+        let harness = await WeekScreenHarness.make()
+        harness.model.viewedWeekOffset = .next
+        await harness.weekStore.loadWeek(household: WeekScreenFixtures.household, weekStartDate: ViewedWeekOffset.next.weekStartDate)
+
+        harness.model.openDay(harness.row(.monday))
+        #expect(harness.model.sheet?.id == WeekSheet.dayDetail(harness.row(.monday)).id)
+
+        harness.model.openDay(harness.row(.sunday))
+        #expect(harness.model.sheet?.id == WeekSheet.mealPicker(harness.row(.sunday)).id)
+
+        harness.model.viewedWeekOffset = .last
+        harness.model.sheet = nil
+        harness.model.openDay(harness.row(.monday))
+        guard case .recipe = harness.model.sheet else {
+            Issue.record("Last week's planned day should open read-only as a recipe")
+            return
+        }
+    }
+
+    @Test func rescueAndCookExtraRespectTheDayRules() async {
+        let weekStartDate = ViewedWeekOffset.next.weekStartDate
+        let api = WeekScreenFakeAPIClient()
+        api.summaries[weekStartDate] = WeekScreenFixtures.summary(weekStartDate: weekStartDate, locked: [.monday])
+        let harness = await WeekScreenHarness.make(api: api)
+        harness.model.viewedWeekOffset = .next
+        await harness.weekStore.loadWeek(household: WeekScreenFixtures.household, weekStartDate: weekStartDate)
+
+        harness.model.rescue(harness.row(.monday))
+        #expect(harness.model.sheet == nil)
+
+        harness.model.rescue(harness.row(.tuesday))
+        #expect(harness.model.sheet?.id == WeekSheet.rescue(harness.row(.tuesday)).id)
+
+        harness.model.cookExtra(harness.row(.tuesday))
+        guard case let .prepBatch(seed) = harness.model.sheet else {
+            Issue.record("Expected the prep batch sheet")
+            return
+        }
+        #expect(seed.weekStartDate == weekStartDate)
+        #expect(seed.cookDate == harness.row(.tuesday).date)
+        #expect(seed.assignedDate == nil)
+
+        harness.model.viewedWeekOffset = .last
+        harness.model.sheet = nil
+        harness.model.pickMeal(for: harness.row(.tuesday))
+        #expect(harness.model.sheet == nil)
+    }
 }
 
 // MARK: - Harness
