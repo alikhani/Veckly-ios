@@ -162,6 +162,49 @@ struct AppModelCacheTests {
         #expect(cold.model.weekStore.dayRows.first?.mealTitle == "Cachad rätt 0")
     }
 
+    /// The grocery-store case: an expired access token and no network. The saved
+    /// session and the cached content must survive; only the refresh is deferred.
+    @Test func coldStartOfflineWithAnExpiredSessionKeepsTheSessionAndTheCache() async {
+        let cold = makeColdStart(session: expiredSession())
+        defer { try? FileManager.default.removeItem(at: cold.directory) }
+        cold.auth.refreshFailure = URLError(.notConnectedToInternet)
+
+        await cold.model.restoreSession()
+
+        #expect(cold.model.authSessionStore.isSignedIn)
+        #expect(cold.storage.session != nil)
+        #expect(cold.model.weekStore.dayRows.first?.mealTitle == "Cachad rätt 0")
+        let week = WeekCalendar.currentWeekStartDate()
+        let scope = Self.scope(language: CacheScope.currentLanguage)
+        #expect(cold.weekCache.loadWeek(scope: scope, weekStartDate: week) != nil)
+        #expect(cold.shoppingCache.loadList(scope: scope, weekStartDate: week) != nil)
+        #expect(cold.snapshots.load(userID: Self.userID) != nil)
+    }
+
+    @Test func anUnauthorizedAnswerWhileOfflineDoesNotSignOut() async {
+        let cold = makeColdStart(session: expiredSession())
+        defer { try? FileManager.default.removeItem(at: cold.directory) }
+        cold.model.authSessionStore.restoreSessionWithoutWaiting()
+        cold.auth.refreshFailure = URLError(.notConnectedToInternet)
+
+        await cold.model.handleUnauthorized()
+
+        #expect(cold.model.authSessionStore.isSignedIn)
+        #expect(cold.storage.session != nil)
+    }
+
+    @Test func anUnauthorizedAnswerWithARejectedRefreshTokenSignsOut() async {
+        let cold = makeColdStart(session: expiredSession())
+        defer { try? FileManager.default.removeItem(at: cold.directory) }
+        cold.model.authSessionStore.restoreSessionWithoutWaiting()
+        cold.auth.refreshResult = .failure(.rejected)
+
+        await cold.model.handleUnauthorized()
+
+        #expect(!cold.model.authSessionStore.isSignedIn)
+        #expect(cold.storage.session == nil)
+    }
+
     @Test func coldStartWithARejectedSessionSignsOutAndClearsEverything() async {
         let cold = makeColdStart(session: expiredSession())
         defer { try? FileManager.default.removeItem(at: cold.directory) }

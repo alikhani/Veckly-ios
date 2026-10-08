@@ -129,6 +129,90 @@ struct AuthSessionStoreTests {
         #expect(store.isSignedIn)
     }
 
+    /// Offline / bad reception must never cost the user their session: only an
+    /// explicit rejection from the auth server may sign out.
+    @Test(arguments: [URLError(.notConnectedToInternet), URLError(.timedOut), URLError(.networkConnectionLost)])
+    func aNetworkFailureWhileConfirmingKeepsTheSession(_ failure: URLError) async {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "refresh", userID: "user")
+        let client = FakeAuthClient()
+        client.refreshFailure = failure
+        let storage = MemorySessionStorage(session: old)
+        let store = AuthSessionStore(authClient: client, sessionStorage: storage)
+        store.restoreSessionWithoutWaiting()
+
+        let stillSignedIn = await store.confirmRestoredSession()
+
+        #expect(stillSignedIn)
+        #expect(store.isSignedIn)
+        #expect(storage.session == old)
+    }
+
+    @Test(arguments: [SupabaseAuthError.unknown, .rateLimited])
+    func aServerSideFailureWhileConfirmingKeepsTheSession(_ failure: SupabaseAuthError) async {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "refresh", userID: "user")
+        let client = FakeAuthClient()
+        client.refreshError = failure
+        let storage = MemorySessionStorage(session: old)
+        let store = AuthSessionStore(authClient: client, sessionStorage: storage)
+        store.restoreSessionWithoutWaiting()
+
+        let stillSignedIn = await store.confirmRestoredSession()
+
+        #expect(stillSignedIn)
+        #expect(storage.session == old)
+    }
+
+    @Test(arguments: [SupabaseAuthError.invalidCredentials, .rejected])
+    func anExplicitRejectionWhileConfirmingSignsOut(_ failure: SupabaseAuthError) async {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "revoked", userID: "user")
+        let client = FakeAuthClient()
+        client.refreshError = failure
+        let storage = MemorySessionStorage(session: old)
+        let store = AuthSessionStore(authClient: client, sessionStorage: storage)
+        store.restoreSessionWithoutWaiting()
+
+        let stillSignedIn = await store.confirmRestoredSession()
+
+        #expect(!stillSignedIn)
+        #expect(!store.isSignedIn)
+        #expect(storage.session == nil)
+    }
+
+    @Test func theRefreshOutcomeSaysWhyItFailed() async {
+        let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "refresh", userID: "user")
+        let client = FakeAuthClient()
+        let store = AuthSessionStore(authClient: client, sessionStorage: MemorySessionStorage(session: old))
+
+        client.refreshFailure = URLError(.notConnectedToInternet)
+        #expect(await store.refreshSessionOutcome() == .unavailable)
+
+        client.refreshFailure = nil
+        client.refreshError = .rejected
+        #expect(await store.refreshSessionOutcome() == .rejected)
+
+        client.refreshError = nil
+        client.refreshSessionValue = AuthSession(accessToken: testJWT(subject: "user"), refreshToken: "next", userID: "user")
+        #expect(await store.refreshSessionOutcome() == .refreshed)
+
+        let withoutRefreshToken = AuthSessionStore(
+            authClient: client,
+            sessionStorage: MemorySessionStorage(session: AuthSession(accessToken: "x", refreshToken: nil, userID: "user"))
+        )
+        #expect(await withoutRefreshToken.refreshSessionOutcome() == .rejected)
+    }
+
+    @Test func theAuthServersStatusSeparatesARejectionFromTrouble() {
+        #expect(SupabaseAuthError(data: Data(), statusCode: 400) == .rejected)
+        #expect(SupabaseAuthError(data: Data(), statusCode: 401) == .rejected)
+        #expect(SupabaseAuthError(data: Data(), statusCode: 403) == .rejected)
+        #expect(SupabaseAuthError(data: Data(), statusCode: 500) == .unknown)
+        #expect(SupabaseAuthError(data: Data(), statusCode: 503) == .unknown)
+        #expect(SupabaseAuthError(data: Data(), statusCode: nil) == .unknown)
+        #expect(SupabaseAuthError(data: Data(), statusCode: 429) == .rateLimited)
+        let known = Data(#"{"error_code":"invalid_credentials"}"#.utf8)
+        #expect(SupabaseAuthError(data: known, statusCode: 400) == .invalidCredentials)
+    }
+
     @Test func aRejectedRestoredSessionIsSignedOutAndCleared() async {
         let old = AuthSession(accessToken: testJWT(subject: "user", expiresIn: -120), refreshToken: "revoked", userID: "user")
         let client = FakeAuthClient()
@@ -181,6 +265,7 @@ private final class FakeAuthClient: AuthServicing {
     var signUpSession: AuthSession?
     var refreshSessionValue: AuthSession?
     var refreshError: SupabaseAuthError?
+    var refreshFailure: Error?
     var refreshTokens: [String] = []
     var resentEmail: String?
     var updatedPassword: String?
@@ -201,6 +286,7 @@ private final class FakeAuthClient: AuthServicing {
     func deleteUser(accessToken: String) async throws {}
     func refreshSession(refreshToken: String) async throws -> AuthSession {
         refreshTokens.append(refreshToken)
+        if let refreshFailure { throw refreshFailure }
         if let refreshError { throw refreshError }
         return try requiredSession(refreshSessionValue)
     }

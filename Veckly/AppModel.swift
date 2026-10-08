@@ -336,14 +336,15 @@ final class AppModel {
         await householdSavedRecipesStore.loadSavedRecipeIDs(householdID: householdID)
     }
 
-    // Call when any API response returns 401. Tries to refresh the token and
-    // reload data; signs out if refresh fails (dead or missing refresh token).
+    // Call when any API response returns 401 (or a request had no usable token).
+    // Tries to refresh the token and reload data. Signs out only when the auth
+    // server rejects the refresh token (dead or missing); offline or server
+    // trouble keeps the session and what is on screen.
     func handleUnauthorized() async {
-        let refreshed = await authSessionStore.refreshSession()
-        if refreshed {
-            await loadCoreReader()
-        } else {
-            signOut()
+        switch await authSessionStore.refreshSessionOutcome() {
+        case .refreshed: await loadCoreReader()
+        case .rejected: signOut()
+        case .unavailable: break
         }
     }
 

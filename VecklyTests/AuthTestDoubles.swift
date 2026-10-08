@@ -13,6 +13,8 @@ final class InMemoryAuthSessionStorage: AuthSessionPersisting {
 
 final class StubAuthService: AuthServicing {
     var refreshResult: Result<AuthSession, SupabaseAuthError> = .failure(.unknown)
+    /// Thrown instead of `refreshResult` when set — lets a test fail the refresh with a non-auth error such as `URLError`.
+    var refreshFailure: Error?
     private(set) var refreshTokens: [String] = []
 
     func signInWithEmail(email: String, password: String) async throws -> AuthSession { throw SupabaseAuthError.unknown }
@@ -24,6 +26,7 @@ final class StubAuthService: AuthServicing {
     func deleteUser(accessToken: String) async throws {}
     func refreshSession(refreshToken: String) async throws -> AuthSession {
         refreshTokens.append(refreshToken)
+        if let refreshFailure { throw refreshFailure }
         return try refreshResult.get()
     }
 }

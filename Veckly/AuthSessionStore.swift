@@ -10,7 +10,7 @@ final class AuthSessionStore {
     private let authClient: any AuthServicing
     private let sessionStorage: any AuthSessionPersisting
     private var recoverySession: AuthSession?
-    private var refreshTask: Task<Bool, Never>?
+    private var refreshTask: Task<SessionRefreshOutcome, Never>?
 
     private(set) var accessToken: String?
     private(set) var userID: String?
@@ -34,6 +34,10 @@ final class AuthSessionStore {
         self.sessionStorage = sessionStorage
     }
 
+    /// Blocking variant, kept for its tests: it waits for the network and treats
+    /// *every* refresh failure as a rejection. Launch uses
+    /// `restoreSessionWithoutWaiting()` + `confirmRestoredSession()` instead,
+    /// which only sign out on an explicit rejection.
     func restoreSession() async {
         defer { isRestoring = false }
         if accessToken != nil { return }
@@ -41,7 +45,7 @@ final class AuthSessionStore {
 
         if JWTClaims.isExpired(session.accessToken) {
             guard let refreshToken = session.refreshToken,
-                  await attemptRefresh(refreshToken: refreshToken) else {
+                  await attemptRefresh(refreshToken: refreshToken) == .refreshed else {
                 sessionStorage.clear()
                 return
             }
@@ -79,14 +83,19 @@ final class AuthSessionStore {
     }
 
     /// Refreshes a session adopted by `restoreSessionWithoutWaiting()`.
-    /// On failure the session is cleared and the store is signed out, exactly
-    /// as `restoreSession()` does; the caller resets the rest of the app.
+    /// Returns whether the user stays signed in. Only an explicit rejection
+    /// from the auth server signs out (the session is cleared, and the caller
+    /// resets the rest of the app). Offline, a timeout or server trouble keeps
+    /// the saved session and the cached content: the refresh simply happens
+    /// again on the next request.
     func confirmRestoredSession() async -> Bool {
-        if await refreshSession() { return true }
-        accessToken = nil
-        userID = nil
-        sessionStorage.clear()
-        return false
+        if await refreshSessionOutcome() == .rejected {
+            accessToken = nil
+            userID = nil
+            sessionStorage.clear()
+            return false
+        }
+        return true
     }
 
     func signInWithApple(identityToken: String, nonce: String?) async {
@@ -221,7 +230,13 @@ final class AuthSessionStore {
     }
 
     func refreshSession() async -> Bool {
-        guard let stored = sessionStorage.load(), let refreshToken = stored.refreshToken else { return false }
+        await refreshSessionOutcome() == .refreshed
+    }
+
+    /// Like `refreshSession()`, but says why a refresh failed. A saved session
+    /// with no refresh token can never be refreshed, so it counts as rejected.
+    func refreshSessionOutcome() async -> SessionRefreshOutcome {
+        guard let stored = sessionStorage.load(), let refreshToken = stored.refreshToken else { return .rejected }
         return await attemptRefresh(refreshToken: refreshToken)
     }
 
@@ -257,20 +272,31 @@ final class AuthSessionStore {
     }
 
     @discardableResult
-    private func attemptRefresh(refreshToken: String) async -> Bool {
+    private func attemptRefresh(refreshToken: String) async -> SessionRefreshOutcome {
         if let refreshTask { return await refreshTask.value }
-        let task = Task<Bool, Never> {
+        let task = Task<SessionRefreshOutcome, Never> {
             do {
                 applySession(try await authClient.refreshSession(refreshToken: refreshToken))
-                return true
+                return .refreshed
             } catch {
-                return false
+                return Self.isRejection(error) ? .rejected : .unavailable
             }
         }
         refreshTask = task
         let result = await task.value
         refreshTask = nil
         return result
+    }
+
+    /// Only an answer from the auth server that refuses the refresh token ends
+    /// the session. A `URLError` (offline, timeout), a 5xx and a rate limit say
+    /// nothing about the token, and neither does anything we failed to decode.
+    private static func isRejection(_ error: Error) -> Bool {
+        guard let authError = error as? SupabaseAuthError else { return false }
+        switch authError {
+        case .rateLimited, .unknown: return false
+        default: return true
+        }
     }
 
     private func localizedMessage(for error: Error, fallbackKey: String) -> String {
@@ -283,9 +309,19 @@ final class AuthSessionStore {
         case .rateLimited: return L10n.string("error.auth.rateLimited")
         case .emailNotConfirmed: return L10n.string("error.auth.emailNotConfirmed")
         case .linkExpired: return L10n.string("error.auth.linkExpired")
-        case .unknown: return L10n.string(fallbackKey)
+        case .rejected, .unknown: return L10n.string(fallbackKey)
         }
     }
+}
+
+/// Why a session refresh did or did not produce a fresh session.
+enum SessionRefreshOutcome: Equatable {
+    case refreshed
+    /// The auth server refused the refresh token: the session is dead.
+    case rejected
+    /// No answer we can act on (offline, timeout, server trouble, rate limit):
+    /// the session may well still be valid, so it must be kept.
+    case unavailable
 }
 
 struct AuthSession: Codable, Equatable, Sendable {
@@ -418,7 +454,7 @@ struct SupabaseAuthClient: AuthServicing {
 }
 
 enum SupabaseAuthError: Error, Equatable {
-    case invalidCredentials, alreadyRegistered, weakPassword, rateLimited, emailNotConfirmed, linkExpired, unknown
+    case invalidCredentials, alreadyRegistered, weakPassword, rateLimited, emailNotConfirmed, linkExpired, rejected, unknown
 
     init(data: Data, statusCode: Int?) {
         if statusCode == 429 { self = .rateLimited; return }
@@ -429,7 +465,7 @@ enum SupabaseAuthError: Error, Equatable {
         case "weak_password": self = .weakPassword
         case "email_not_confirmed": self = .emailNotConfirmed
         case "otp_expired": self = .linkExpired
-        default: self = .unknown
+        default: self = (400..<500).contains(statusCode ?? 0) ? .rejected : .unknown
         }
     }
 }
