@@ -19,7 +19,10 @@ struct MainTabView: View {
             .tag(0)
 
             NavigationStack {
-                ShoppingListTabView(onGoToWeekTab: { selectedTab = 0 })
+                ShoppingListTabView(
+                    model: ShoppingScreenModel.live(appModel),
+                    onGoToWeekTab: { selectedTab = 0 }
+                )
             }
             .tabItem {
                 Label("tabs.shopping", systemImage: "checklist")

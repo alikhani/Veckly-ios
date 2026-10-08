@@ -3,57 +3,29 @@ import SwiftUI
 struct ShoppingListTabView: View {
     var onGoToWeekTab: (() -> Void)? = nil
 
-    @Environment(AppModel.self) private var appModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var model: ShoppingScreenModel
     @State private var showCustomItemSheet = false
-    @State private var clearedKeys: [String] = []
-    @State private var undoTask: Task<Void, Never>?
-    @State private var reportedCompletedShoppingListWeeks: Set<String> = []
-    @State private var reminderExporter = ShoppingListReminderExporter()
-    @State private var reminderExportNotice: ShoppingReminderExportNotice?
-    @State private var isExportingReminders = false
     @State private var showPendingSyncIndicator = false
     @State private var showCategoryOrder = false
 
-    private var totalItemCount: Int {
-        appModel.shoppingListStore.groups.flatMap { $0.items }.count
-    }
-
-    private var checkedItemCount: Int {
-        let stapleKeys = Set(appModel.shoppingListStore.stapledItems.map(\.itemKey))
-        return appModel.shoppingListStore.checkedItems.filter { !stapleKeys.contains($0) }.count
-    }
-
-    /// "V.26 · 2 MIDDAGAR" — nil if data is unavailable.
-    private var weekContextLine: String? {
-        let weekStartString = appModel.weekStore.weekStartDate
-        guard WeekCalendar.date(from: weekStartString) != nil else { return nil }
-
-        let weekNumber = WeekCalendar.weekNumber(for: weekStartString)
-
-        let dayRows = appModel.weekStore.currentWeekDayRows
-        let mealCount = dayRows.filter { $0.recipe != nil }.count
-
-        var parts: [String] = [L10n.format("format.week", weekNumber)]
-        if mealCount > 0 {
-            parts.append(L10n.format(mealCount == 1 ? "format.meals.one" : "format.meals.other", mealCount))
-        }
-
-        return parts.joined(separator: " · ")
+    init(model: ShoppingScreenModel, onGoToWeekTab: (() -> Void)? = nil) {
+        _model = State(initialValue: model)
+        self.onGoToWeekTab = onGoToWeekTab
     }
 
     @ViewBuilder
     private var shareMenu: some View {
-        if !shoppingReminderItems.isEmpty {
+        if !model.reminderItems.isEmpty {
             Menu {
                 Button {
-                    Task { await exportShoppingListToReminders() }
+                    Task { await model.exportToReminders() }
                 } label: {
-                    Label(remindersExportButtonLabel, systemImage: "checklist")
+                    Label(model.remindersExportButtonLabel, systemImage: "checklist")
                 }
-                .disabled(isExportingReminders)
+                .disabled(model.isExportingReminders)
 
-                if let shoppingShareText {
+                if let shoppingShareText = model.shareText {
                     ShareLink(item: shoppingShareText) {
                         Label(L10n.string("shopping.share.textFallback"), systemImage: "square.and.arrow.up")
                     }
@@ -112,14 +84,14 @@ struct ShoppingListTabView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                if let err = appModel.shoppingListStore.mutationError {
+                if let err = model.mutationError {
                     HStack(spacing: 10) {
                         Text(err)
                             .font(.subheadline)
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                         Spacer()
                         Button {
-                            appModel.shoppingListStore.clearMutationError()
+                            model.dismissMutationError()
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.caption.weight(.semibold))
@@ -145,7 +117,7 @@ struct ShoppingListTabView: View {
                     // buttons for space in one line, fixes it without
                     // affecting the normal-size layout at all.
                     if dynamicTypeSize.isAccessibilitySize {
-                        if let contextLine = weekContextLine {
+                        if let contextLine = model.weekContextLine {
                             Text(contextLine)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
@@ -158,7 +130,7 @@ struct ShoppingListTabView: View {
                         }
                     } else {
                         HStack(alignment: .center, spacing: 12) {
-                            if let contextLine = weekContextLine {
+                            if let contextLine = model.weekContextLine {
                                 Text(contextLine)
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
@@ -179,21 +151,14 @@ struct ShoppingListTabView: View {
 
                 }
 
-                if CoreLoadingGate.shouldShowLoadingPanel(
-                    isLoadingHouseholds: appModel.householdStore.isLoading,
-                    isLoadingContent: appModel.shoppingListStore.isLoading,
-                    hasActiveHousehold: appModel.householdStore.activeHousehold != nil,
-                    householdErrorMessage: appModel.householdStore.errorMessage,
-                    hasLoadedContentOnce: appModel.shoppingListStore.hasLoadedOnce,
-                    contentErrorMessage: appModel.shoppingListStore.errorMessage
-                ) {
+                if model.showsLoadingPanel {
                     LoadingPanel(title: L10n.string("shopping.loading"))
-                } else if let errorMessage = appModel.shoppingListStore.errorMessage ?? appModel.householdStore.errorMessage {
+                } else if let errorMessage = model.loadErrorMessage {
                     ErrorPanel(message: errorMessage) {
-                        Task { await appModel.loadCoreReader(trigger: .pullToRefresh) }
+                        model.retryLoad()
                     }
-                } else if appModel.shoppingListStore.groups.isEmpty && appModel.shoppingListStore.stapledItems.isEmpty {
-                    if appModel.shoppingListStore.summary != nil {
+                } else if model.isListEmpty {
+                    if model.hasWeekPlan {
                         // Week plan exists but all meals are skipped/unassigned.
                         VecklyCard {
                             VStack(alignment: .leading, spacing: 12) {
@@ -226,11 +191,11 @@ struct ShoppingListTabView: View {
                     }
                 } else {
                     // Progress indicator
-                    if totalItemCount > 0 {
+                    if model.totalItemCount > 0 {
                         HStack(spacing: 10) {
-                            ProgressView(value: Double(checkedItemCount), total: Double(totalItemCount))
+                            ProgressView(value: Double(model.checkedItemCount), total: Double(model.totalItemCount))
                                 .tint(VecklyDesign.Colors.hearthOrangeFill)
-                            Text("\(checkedItemCount) / \(totalItemCount)")
+                            Text("\(model.checkedItemCount) / \(model.totalItemCount)")
                                 .font(.caption)
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
                                 .monospacedDigit()
@@ -242,7 +207,7 @@ struct ShoppingListTabView: View {
                                 .accessibilityLabel(pendingSyncMessage)
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(L10n.format("accessibility.itemsChecked", checkedItemCount, totalItemCount))
+                        .accessibilityLabel(L10n.format("accessibility.itemsChecked", model.checkedItemCount, model.totalItemCount))
                         .accessibilityValue(showPendingSyncIndicator ? pendingSyncMessage : "")
                     }
 
@@ -250,31 +215,31 @@ struct ShoppingListTabView: View {
                     // just repeat the progress row above in prose ("3 of 7
                     // checked"). Only the `.completed` handoff moment earns
                     // its own card now — the list itself is the workspace.
-                    if let shoppingHandoffState, shoppingHandoffState.isCompleted {
-                        ShoppingHandoffStatusCard(state: shoppingHandoffState)
+                    if let handoffState = model.handoffState, handoffState.isCompleted {
+                        ShoppingHandoffStatusCard(state: handoffState)
                     }
 
                     // Category groups
-                    ForEach(appModel.shoppingListStore.groups) { group in
+                    ForEach(model.groups) { group in
                         ShoppingGroupView(
                             group: group,
-                            checkedItems: appModel.shoppingListStore.checkedItems,
+                            checkedItems: model.checkedItems,
                             onToggle: { key in
-                                Task { await appModel.shoppingListStore.toggleItem(key: key) }
+                                model.toggleItem(key)
                             },
                             onRemoveCustom: { key in
-                                removeCustomItem(key: key)
+                                model.removeCustomItem(key)
                             }
                         )
                     }
 
                     // Pantry staples collapsed group
-                    if !appModel.shoppingListStore.stapledItems.isEmpty {
+                    if !model.stapledItems.isEmpty {
                         StaplesGroupView(
-                            items: appModel.shoppingListStore.stapledItems,
-                            checkedItems: appModel.shoppingListStore.checkedItems,
+                            items: model.stapledItems,
+                            checkedItems: model.checkedItems,
                             onToggle: { key in
-                                Task { await appModel.shoppingListStore.toggleItem(key: key) }
+                                model.toggleItem(key)
                             }
                         )
                     }
@@ -284,47 +249,29 @@ struct ShoppingListTabView: View {
             .accessibilityIdentifier("shoppingList")
         }
         .refreshable {
-            guard let household = appModel.householdStore.activeHousehold else { return }
-            let weekStartDate = appModel.weekStore.weekStartDate
-            appModel.shoppingListStore.invalidateCache()
-            await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+            await model.refresh()
         }
         .safeAreaPadding(.bottom, VecklyDesign.Spacing.large)
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !appModel.shoppingListStore.checkedItems.isEmpty {
+            if !model.checkedItems.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(L10n.string("shopping.clearChecked")) {
-                        let keys = appModel.shoppingListStore.bulkClearChecked()
-                        guard !keys.isEmpty else { return }
-                        clearedKeys = keys
-                        undoTask?.cancel()
-                        undoTask = Task {
-                            try? await Task.sleep(nanoseconds: 4_000_000_000)
-                            guard !Task.isCancelled else { return }
-                            clearedKeys = []
-                        }
+                        model.clearChecked()
                     }
                 }
             }
         }
         .overlay(alignment: .bottom) {
-            if !clearedKeys.isEmpty {
+            if !model.clearedKeys.isEmpty {
                 HStack(spacing: 16) {
                     Text(L10n.string("shopping.itemsCleared"))
                         .font(.subheadline)
                         .foregroundStyle(.white)
                     Spacer()
                     Button(L10n.string("common.undo")) {
-                        undoTask?.cancel()
-                        let keys = clearedKeys
-                        clearedKeys = []
-                        Task {
-                            for key in keys {
-                                appModel.shoppingListStore.setItemChecked(key: key, isChecked: true)
-                            }
-                        }
+                        model.undoClearChecked()
                     }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(VecklyDesign.Colors.hearthOrangeTextDark)
@@ -336,70 +283,46 @@ struct ShoppingListTabView: View {
                 .padding(.horizontal, 18)
                 .padding(.bottom, 12)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeInOut(duration: 0.25), value: clearedKeys.isEmpty)
+                .animation(.easeInOut(duration: 0.25), value: model.clearedKeys.isEmpty)
             }
         }
         .sheet(isPresented: $showCustomItemSheet) {
             ShoppingCustomItemSheet { label, category in
-                appModel.shoppingListStore.addCustomItem(label: label, category: category)
+                model.addCustomItem(label: label, category: category)
             }
         }
         .sheet(isPresented: $showCategoryOrder) {
-            if let household = appModel.householdStore.activeHousehold {
-                ShoppingCategoryOrderSheet(initialOrder: appModel.shoppingListStore.categoryOrder) { order in
-                    await appModel.shoppingListStore.updateCategoryOrder(order, householdID: household.id)
+            if model.hasActiveHousehold {
+                ShoppingCategoryOrderSheet(initialOrder: model.categoryOrder) { order in
+                    await model.saveCategoryOrder(order)
                 }
             }
         }
         .onAppear {
-            // Re-fetch the shopping list whenever the tab becomes visible so
-            // that mutations made on the Week tab (add/remove/generate) are
-            // reflected here. `ShoppingListStore.loadCurrentWeek` short-circuits
-            // if data is fresh (< 5 min), so this is cheap during normal
-            // browsing and only hits the network after `invalidateCache()` is
-            // called following a week plan change.
-            //
-            // Unlike `WeekTabView`, this tab was never migrated onto
-            // `AppRefreshCoordinator` (Fas 7's migration only covered the
-            // Week tab), so it needs its own `usesSeededCoreReader` guard —
-            // without it, seeded UI-test mode still made a real network call
-            // here and silently overwrote the seeded shopping list with a
-            // load-error banner.
-            guard !appModel.usesSeededCoreReader else { return }
-            guard let household = appModel.householdStore.activeHousehold else { return }
-            let weekStartDate = appModel.weekStore.weekStartDate
-            Task { await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate) }
+            model.tabDidAppear()
         }
-        .task(id: appModel.weekStore.weekStartDate) {
-            guard !appModel.usesSeededCoreReader else { return }
-            guard let household = appModel.householdStore.activeHousehold else { return }
-            let weekStartDate = appModel.weekStore.weekStartDate
-            await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        .task(id: model.weekStartDate) {
+            await model.weekDidChange()
         }
-        .task(id: appModel.shoppingListStore.hasPendingSync) {
-            if appModel.shoppingListStore.hasPendingSync {
+        .task(id: model.hasPendingSync) {
+            if model.hasPendingSync {
                 try? await Task.sleep(for: .milliseconds(800))
-                guard !Task.isCancelled, appModel.shoppingListStore.hasPendingSync else { return }
+                guard !Task.isCancelled, model.hasPendingSync else { return }
                 showPendingSyncIndicator = true
             } else {
                 showPendingSyncIndicator = false
             }
         }
-        .onChange(of: shoppingHandoffState?.isCompleted) { _, isCompleted in
-            guard isCompleted == true else { return }
-            recordShoppingMainListCompletedIfNeeded()
+        .onChange(of: model.handoffState?.isCompleted) { _, isCompleted in
+            model.handoffCompletionDidChange(isCompleted: isCompleted)
         }
-        .alert(item: $reminderExportNotice) { notice in
+        .alert(item: $model.reminderExportNotice) { notice in
             Alert(
                 title: Text(notice.title),
                 message: Text(notice.message),
                 dismissButton: .default(Text(L10n.string("common.ok")))
             )
         }
-    }
-
-    private func removeCustomItem(key: String) {
-        appModel.shoppingListStore.removeCustomItem(itemKey: key)
     }
 
     private var addOwnItemButtonLabel: String {
@@ -418,100 +341,6 @@ struct ShoppingListTabView: View {
 
     private var pendingSyncMessage: String {
         L10n.string("shopping.sync.pending")
-    }
-
-    private var shoppingShareText: String? {
-        ShoppingListShareText.make(
-            title: L10n.string("shopping.title"),
-            contextLine: weekContextLine,
-            groups: appModel.shoppingListStore.groups,
-            staples: appModel.shoppingListStore.stapledItems,
-            checkedItems: appModel.shoppingListStore.checkedItems
-        )
-    }
-
-    private var shoppingReminderItems: [String] {
-        let reminderItems = ShoppingListShareText.reminderItems(
-            groups: appModel.shoppingListStore.groups,
-            checkedItems: appModel.shoppingListStore.checkedItems
-        )
-
-        if !reminderItems.isEmpty {
-            return reminderItems
-        }
-
-        return shoppingShareText.map { [$0] } ?? []
-    }
-
-    private var remindersExportButtonLabel: String {
-        let count = shoppingReminderItems.count
-        let key = count == 1 ? "shopping.reminders.export.one" : "shopping.reminders.export.other"
-        return L10n.format(key, count)
-    }
-
-    private var shoppingHandoffState: ShoppingListHandoffState? {
-        ShoppingListHandoffState.make(
-            groups: appModel.shoppingListStore.groups,
-            checkedItems: appModel.shoppingListStore.checkedItems
-        )
-    }
-
-    private func exportShoppingListToReminders() async {
-        guard !isExportingReminders else { return }
-        isExportingReminders = true
-        defer { isExportingReminders = false }
-
-        do {
-            let count = try await reminderExporter.export(
-                items: shoppingReminderItems,
-                listTitle: L10n.string("shopping.title"),
-                notes: weekContextLine
-            )
-            reminderExportNotice = ShoppingReminderExportNotice(
-                title: L10n.string("shopping.reminders.success.title"),
-                message: L10n.format(
-                    count == 1 ? "shopping.reminders.success.message.one" : "shopping.reminders.success.message.other",
-                    count
-                )
-            )
-            appModel.recordProductEvent(.shoppingShared, weekStartDate: appModel.weekStore.weekStartDate, properties: [
-                "items": .int(count),
-                "checkedItems": .int(checkedItemCount)
-            ])
-        } catch ShoppingListReminderExportError.accessDenied {
-            reminderExportNotice = ShoppingReminderExportNotice(
-                title: L10n.string("shopping.reminders.denied.title"),
-                message: L10n.string("shopping.reminders.denied.message")
-            )
-        } catch {
-            reminderExportNotice = ShoppingReminderExportNotice(
-                title: L10n.string("shopping.reminders.error.title"),
-                message: L10n.string("shopping.reminders.error.message")
-            )
-        }
-    }
-
-    private func recordShoppingMainListCompletedIfNeeded() {
-        let weekStartDate = appModel.weekStore.weekStartDate
-        guard reportedCompletedShoppingListWeeks.insert(weekStartDate).inserted else { return }
-        appModel.recordProductEvent(.shoppingMainListCompleted, weekStartDate: weekStartDate, properties: [
-            "items": .int(totalItemCount)
-        ])
-    }
-}
-
-private struct ShoppingReminderExportNotice: Identifiable {
-    let id = UUID()
-    let title: String
-    let message: String
-}
-
-private extension ShoppingListHandoffState {
-    var isCompleted: Bool {
-        switch self {
-        case .completed: true
-        case .ready: false
-        }
     }
 }
 
