@@ -188,14 +188,23 @@ struct WeekTabView: View {
             Text(L10n.string("week.regenerateConfirm.message"))
         }
         .overlay(alignment: .bottom) {
-            if let regenerateUndoContext = model.regenerateUndo {
-                WeekRegenerateUndoBanner(onUndo: { model.undoRegenerate(regenerateUndoContext) })
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 12)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            VStack(spacing: 8) {
+                if appModel.weekStore.hasPendingUpdate(for: model.viewedWeekStartDate) {
+                    // An overlay with a fade only: it never moves the content
+                    // under the user's finger.
+                    UpdateAvailableBanner(onShow: { model.showPendingUpdate() })
+                        .transition(.opacity)
+                }
+                if let regenerateUndoContext = model.regenerateUndo {
+                    WeekRegenerateUndoBanner(onUndo: { model.undoRegenerate(regenerateUndoContext) })
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 12)
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: model.regenerateUndo?.id)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: appModel.weekStore.hasPendingUpdate(for: model.viewedWeekStartDate))
     }
 
     /// The viewed week is on screen from the disk cache and the network hasn't

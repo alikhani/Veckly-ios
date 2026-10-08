@@ -5,6 +5,7 @@ struct ShoppingListTabView: View {
 
     @State private var model: ShoppingScreenModel
     @State private var showPendingSyncIndicator = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(model: ShoppingScreenModel, onGoToWeekTab: (() -> Void)? = nil) {
         _model = State(initialValue: model)
@@ -62,14 +63,25 @@ struct ShoppingListTabView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if !model.clearedKeys.isEmpty {
-                ShoppingClearedToast {
-                    model.undoClearChecked()
+            VStack(spacing: 0) {
+                if model.hasPendingUpdate {
+                    // An overlay with a fade only: it never moves the list
+                    // under the user's finger.
+                    UpdateAvailableBanner(onShow: { model.showPendingUpdate() })
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, 12)
+                        .transition(.opacity)
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeInOut(duration: 0.25), value: model.clearedKeys.isEmpty)
+                if !model.clearedKeys.isEmpty {
+                    ShoppingClearedToast {
+                        model.undoClearChecked()
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.25), value: model.clearedKeys.isEmpty)
+                }
             }
         }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: model.hasPendingUpdate)
         .sheet(item: $model.sheet) { sheet in
             switch sheet {
             case .customItem:

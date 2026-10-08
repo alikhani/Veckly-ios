@@ -521,6 +521,8 @@ private enum LocalizationExtractionManifest {
         _ = String(localized: "week.thisWeek")
         _ = String(localized: "week.viewOnly")
         _ = String(localized: "week.yourHousehold")
+        _ = String(localized: "update.available.title")
+        _ = String(localized: "update.available.action")
         _ = String(localized: "pulse.away.count")
         _ = String(localized: "pulse.away.footer")
         _ = String(localized: "pulse.away.title")

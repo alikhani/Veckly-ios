@@ -84,6 +84,13 @@ final class ShoppingScreenModel {
     var categoryOrder: [ShoppingCategory] { shoppingListStore.categoryOrder }
     var mutationError: String? { shoppingListStore.mutationError }
     var hasPendingSync: Bool { shoppingListStore.hasPendingSync }
+    /// Fresher data has arrived that differs from the list on screen.
+    var hasPendingUpdate: Bool { shoppingListStore.hasPendingUpdate }
+
+    /// The "updates available" banner's button.
+    func showPendingUpdate() {
+        shoppingListStore.applyPendingUpdate()
+    }
     var hasActiveHousehold: Bool { householdStore.activeHousehold != nil }
     /// The week the list belongs to — the view reloads when it changes.
     var weekStartDate: String { weekStore.weekStartDate }

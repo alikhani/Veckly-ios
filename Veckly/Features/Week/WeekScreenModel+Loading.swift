@@ -29,6 +29,13 @@ extension WeekScreenModel {
         }
     }
 
+    /// The "updates available" banner's button: brings the waiting copy of the
+    /// viewed week onto the screen.
+    func showPendingUpdate() {
+        guard weekStore.hasPendingUpdate(for: viewedWeekStartDate) else { return }
+        weekStore.applyPendingUpdate()
+    }
+
     /// Jumps to next week and loads it — the weekend nudge's CTA and the
     /// hero's "Plan next week".
     func planNextWeek() {
