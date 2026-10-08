@@ -124,6 +124,6 @@ extension WeekScreenModel {
     func refreshShoppingListAfterWeekMutation(household: Household, weekStartDate: String) async {
         guard weekStore.mutationError == nil else { return }
         shoppingListStore.invalidateCache()
-        await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, origin: .userInitiated)
     }
 }

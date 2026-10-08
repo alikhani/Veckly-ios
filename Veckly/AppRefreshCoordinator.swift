@@ -165,7 +165,7 @@ final class AppRefreshCoordinator {
             return true
         }
         async let shopping: Void = run(.shopping(household.id), trigger: trigger) {
-            await self.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, force: force)
+            await self.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, force: force, origin: trigger.loadOrigin)
             return true
         }
         async let prep: Void = run(.prep(household.id), trigger: trigger) {

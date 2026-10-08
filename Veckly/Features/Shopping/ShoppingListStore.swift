@@ -100,6 +100,14 @@ final class ShoppingListStore {
     /// hasn't answered for it yet. Lets the Shopping tab keep showing it while
     /// the household list is still loading.
     private(set) var isShowingRestoredList = false
+    /// A fresher copy of the list that differs from what is on screen and
+    /// waits behind the "updates available" banner until the user asks for it
+    /// (`applyPendingUpdate()`). Scoped to household + week.
+    private(set) var pendingUpdate: PendingUpdate<ShoppingListSnapshot>?
+    var hasPendingUpdate: Bool { pendingUpdate != nil }
+    /// The last server state the screen was built from — what a background
+    /// response is compared against.
+    private var serverSnapshot: ShoppingListSnapshot?
     private var regularGroups: [ShoppingListGroup] = []
     private var pendingMutations: [ShoppingListMutation] = []
     private var inFlightMutations: [ShoppingListMutation] = []
@@ -149,6 +157,27 @@ final class ShoppingListStore {
         hasLoadedOnce = true
     }
 
+    private static func pendingScope(householdID: String, weekStartDate: String) -> String {
+        "\(householdID)|\(weekStartDate)"
+    }
+
+    /// The user tapped the banner: the waiting copy replaces what is on
+    /// screen (local edits not yet synced are laid back on top of it).
+    func applyPendingUpdate() {
+        guard let pending = pendingUpdate else { return }
+        pendingUpdate = nil
+        let snapshot = pending.value
+        guard let summary,
+              summary.household.id == snapshot.summary.household.id,
+              summary.weekStartDate == snapshot.summary.weekStartDate else { return }
+        install(
+            snapshot,
+            context: ShoppingListSyncContext(householdID: summary.household.id, weekStartDate: summary.weekStartDate),
+            revision: stateRevision,
+            isFromNetwork: true
+        )
+    }
+
     /// Sign-out: the cache holds household data.
     func clearPersistedCache() {
         cacheStore.deleteAll()
@@ -157,7 +186,7 @@ final class ShoppingListStore {
     /// `force` bypasses the freshness cache below — see the identical
     /// parameter on `WeekStore.loadCurrentWeek` for why `AppRefreshCoordinator`
     /// needs it for forcing triggers (pull-to-refresh, household switch).
-    func loadCurrentWeek(household: Household, weekStartDate: String, force: Bool = false) async {
+    func loadCurrentWeek(household: Household, weekStartDate: String, force: Bool = false, origin: LoadOrigin = .background) async {
         let requestedContext = ShoppingListSyncContext(householdID: household.id, weekStartDate: weekStartDate)
         guard await prepareForLoad(context: requestedContext) else { return }
         guard !isLoading else { return }
@@ -165,6 +194,9 @@ final class ShoppingListStore {
             && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && summary?.weekStartDate == weekStartDate
         guard !hasFreshRequestedWeek else { return }
+        if pendingUpdate?.scope != Self.pendingScope(householdID: household.id, weekStartDate: weekStartDate) {
+            pendingUpdate = nil
+        }
         restoreFromCacheIfNeeded(household: household, weekStartDate: weekStartDate)
         isLoading = summary == nil
         errorMessage = nil
@@ -191,14 +223,41 @@ final class ShoppingListStore {
                 stateUpdatedAt: state.updatedAt,
                 categoryOrder: preferences?.categoryOrder
             )
-            install(snapshot, context: requestedContext, revision: revision, isFromNetwork: true)
             persist(snapshot)
+            // A local edit that raced this GET keeps its own merge path (see
+            // `install`); otherwise the response may have to wait for the user.
+            let localEditRaced = revision != stateRevision || hasPendingSync
+            // Only a list for this same household and week counts as "shown".
+            let shown = serverSnapshot.flatMap {
+                $0.summary.household.id == household.id && $0.summary.weekStartDate == weekStartDate ? $0 : nil
+            }
+            let decision: UpdateDecision = localEditRaced
+                ? .applyNow
+                : PendingUpdate.decide(displayed: self.summary == nil ? nil : shown, fetched: snapshot, origin: origin)
+            switch decision {
+            case .applyNow:
+                pendingUpdate = nil
+                install(snapshot, context: requestedContext, revision: revision, isFromNetwork: true)
+            case .ignore:
+                pendingUpdate = nil
+                lastFetchedAt = Date()
+                isShowingRestoredList = false
+            case .deferBehindBanner:
+                pendingUpdate = PendingUpdate(
+                    value: snapshot,
+                    scope: Self.pendingScope(householdID: household.id, weekStartDate: weekStartDate)
+                )
+                lastFetchedAt = Date()
+                isShowingRestoredList = false
+            }
         } catch APIError.notFound {
             guard generation == loadGeneration else { return }
             if let scope = cacheScope(householdID: household.id) {
                 cacheStore.removeList(scope: scope, weekStartDate: weekStartDate)
             }
             isShowingRestoredList = false
+            pendingUpdate = nil
+            serverSnapshot = nil
             summary = nil
             groups = []
             regularGroups = []
@@ -335,6 +394,8 @@ final class ShoppingListStore {
         lastFetchedAt = nil
         hasLoadedOnce = false
         isShowingRestoredList = false
+        pendingUpdate = nil
+        serverSnapshot = nil
         needsFlushWhenSummaryLoads = !pendingMutations.isEmpty
     }
 
@@ -394,6 +455,8 @@ final class ShoppingListStore {
         lastFetchedAt = nil
         hasLoadedOnce = false
         isShowingRestoredList = false
+        pendingUpdate = nil
+        serverSnapshot = nil
     }
 
     /// Puts a loaded (or restored) list on screen, re-applying any local
@@ -403,6 +466,7 @@ final class ShoppingListStore {
             categoryOrder = Self.validatedCategoryOrder(order.map(ShoppingCategory.from))
         }
         self.summary = snapshot.summary
+        serverSnapshot = snapshot
         if isFromNetwork {
             lastFetchedAt = Date()
             isShowingRestoredList = false
@@ -604,7 +668,7 @@ final class ShoppingListStore {
         guard let summary,
               summary.household.id == context.householdID,
               summary.weekStartDate == context.weekStartDate else { return }
-        persist(ShoppingListSnapshot(
+        let snapshot = ShoppingListSnapshot(
             summary: summary,
             state: ShoppingListSharedState(
                 checkedItems: Array(state.checkedItems),
@@ -613,7 +677,11 @@ final class ShoppingListStore {
             ),
             stateUpdatedAt: stateUpdatedAt,
             categoryOrder: categoryOrder.map(\.preferenceValue)
-        ))
+        )
+        persist(snapshot)
+        serverSnapshot = snapshot
+        // The user's own write is newer than anything that was waiting.
+        pendingUpdate = nil
     }
 
     private func scheduleFlushAfterRetryDelay() {

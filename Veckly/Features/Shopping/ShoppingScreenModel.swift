@@ -285,7 +285,7 @@ final class ShoppingScreenModel {
         guard let household = householdStore.activeHousehold else { return }
         let weekStartDate = weekStore.weekStartDate
         shoppingListStore.invalidateCache()
-        await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, origin: .userInitiated)
     }
 
     /// The load-error panel's "Try again".
