@@ -1533,7 +1533,54 @@ internal enum Components {
         /// - Remark: Generated from `#/components/schemas/ErrorResponse`.
         internal struct ErrorResponse: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/ErrorResponse/error`.
-            internal var error: Components.Schemas.ErrorCode
+            internal struct errorPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/ErrorResponse/error/value1`.
+                internal var value1: Components.Schemas.ErrorCode?
+                /// - Remark: Generated from `#/components/schemas/ErrorResponse/error/value2`.
+                internal var value2: Swift.String?
+                /// Creates a new `errorPayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                ///   - value2:
+                internal init(
+                    value1: Components.Schemas.ErrorCode? = nil,
+                    value2: Swift.String? = nil
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                internal init(from decoder: any Swift.Decoder) throws {
+                    var errors: [any Swift.Error] = []
+                    do {
+                        self.value1 = try decoder.decodeFromSingleValueContainer()
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self.value2 = try decoder.decodeFromSingleValueContainer()
+                    } catch {
+                        errors.append(error)
+                    }
+                    try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                        [
+                            self.value1,
+                            self.value2
+                        ],
+                        type: Self.self,
+                        codingPath: decoder.codingPath,
+                        errors: errors
+                    )
+                }
+                internal func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                        self.value1,
+                        self.value2
+                    ])
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/ErrorResponse/error`.
+            internal var error: Components.Schemas.ErrorResponse.errorPayload
             /// - Remark: Generated from `#/components/schemas/ErrorResponse/issues`.
             internal var issues: [Components.Schemas.ValidationIssue]?
             /// Creates a new `ErrorResponse`.
@@ -1542,7 +1589,7 @@ internal enum Components {
             ///   - error:
             ///   - issues:
             internal init(
-                error: Components.Schemas.ErrorCode,
+                error: Components.Schemas.ErrorResponse.errorPayload,
                 issues: [Components.Schemas.ValidationIssue]? = nil
             ) {
                 self.error = error
