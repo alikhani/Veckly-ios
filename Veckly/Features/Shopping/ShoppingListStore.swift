@@ -73,6 +73,9 @@ final class ShoppingListStore {
     private let apiClient: any ShoppingListStoreAPIClient
     private let syncDebounceNanoseconds: UInt64
     private let retryDelayNanoseconds: UInt64
+    private let cacheStore: any ShoppingListStoreCachePersisting
+    private let currentUserID: () -> String?
+    private let currentLanguage: () -> String
 
     private(set) var summary: ShoppingListSummary?
     private(set) var groups: [ShoppingListGroup] = []
@@ -93,6 +96,10 @@ final class ShoppingListStore {
     /// `groups`/`summary`.
     private(set) var hasLoadedOnce = false
     private(set) var hasPendingSync = false
+    /// True while the list on screen came from the disk cache and the network
+    /// hasn't answered for it yet. Lets the Shopping tab keep showing it while
+    /// the household list is still loading.
+    private(set) var isShowingRestoredList = false
     private var regularGroups: [ShoppingListGroup] = []
     private var pendingMutations: [ShoppingListMutation] = []
     private var inFlightMutations: [ShoppingListMutation] = []
@@ -103,14 +110,22 @@ final class ShoppingListStore {
     private var loadGeneration = 0
     private var stateRevision = 0
 
+    /// `currentUserID` defaults to "nobody", which keeps the disk cache out of
+    /// the picture: it is only read or written for a known signed-in user.
     init(
         apiClient: any ShoppingListStoreAPIClient,
         syncDebounceNanoseconds: UInt64 = 400_000_000,
-        retryDelayNanoseconds: UInt64 = 2_000_000_000
+        retryDelayNanoseconds: UInt64 = 2_000_000_000,
+        cacheStore: any ShoppingListStoreCachePersisting = ShoppingListStoreDiskCache(),
+        currentUserID: @escaping () -> String? = { nil },
+        currentLanguage: @escaping () -> String = { CacheScope.currentLanguage }
     ) {
         self.apiClient = apiClient
         self.syncDebounceNanoseconds = syncDebounceNanoseconds
         self.retryDelayNanoseconds = retryDelayNanoseconds
+        self.cacheStore = cacheStore
+        self.currentUserID = currentUserID
+        self.currentLanguage = currentLanguage
     }
 
     func clearMutationError() { mutationError = nil }
@@ -118,7 +133,26 @@ final class ShoppingListStore {
     /// Clears the freshness timestamp so the next call to `loadCurrentWeek`
     /// always fetches from the server. Call this after any week plan mutation
     /// (assign/unassign meal, generate week) so the shopping list stays in sync.
-    func invalidateCache() { lastFetchedAt = nil }
+    func invalidateCache() {
+        lastFetchedAt = nil
+        // The list on disk is out of date too: it must not come back on the
+        // next cold start in place of a list that includes the change.
+        if let summary, let scope = cacheScope(householdID: summary.household.id) {
+            cacheStore.removeList(scope: scope, weekStartDate: summary.weekStartDate)
+        }
+    }
+
+    /// Cold start: puts the cached list on screen without touching the
+    /// network. A miss changes nothing.
+    func restoreCurrentWeekFromCache(household: Household, weekStartDate: String) {
+        guard restoreFromCacheIfNeeded(household: household, weekStartDate: weekStartDate) else { return }
+        hasLoadedOnce = true
+    }
+
+    /// Sign-out: the cache holds household data.
+    func clearPersistedCache() {
+        cacheStore.deleteAll()
+    }
 
     /// `force` bypasses the freshness cache below — see the identical
     /// parameter on `WeekStore.loadCurrentWeek` for why `AppRefreshCoordinator`
@@ -131,6 +165,7 @@ final class ShoppingListStore {
             && lastFetchedAt.map { Date().timeIntervalSince($0) <= 300 } == true
             && summary?.weekStartDate == weekStartDate
         guard !hasFreshRequestedWeek else { return }
+        restoreFromCacheIfNeeded(household: household, weekStartDate: weekStartDate)
         isLoading = summary == nil
         errorMessage = nil
         loadGeneration += 1
@@ -150,38 +185,20 @@ final class ShoppingListStore {
             let state = try await stateResult
             let preferences = await preferencesResult
             guard generation == loadGeneration else { return }
-            if let preferences {
-                categoryOrder = Self.validatedCategoryOrder(preferences.categoryOrder.map(ShoppingCategory.from))
-            }
-            self.summary = summary
-            lastFetchedAt = Date()
-            let mapped = ShoppingListViewModelMapper.map(from: summary)
-            regularGroups = ShoppingListViewModelMapper.regularGroups(from: mapped.groups)
-            stapledItems = mapped.stapledItems
-            let fallbackCheckedItems = Set((mapped.groups.flatMap(\.items) + mapped.stapledItems).filter(\.checked).map(\.itemKey))
-            if revision == stateRevision {
-                var desired = MutableShoppingListState(
-                    checkedItems: state.state.map { Set($0.checkedItems) } ?? fallbackCheckedItems,
-                    pantryStock: state.state?.pantryStock ?? [:],
-                    customItems: state.state?.customItems ?? mapped.customItems
-                )
-                for mutation in mutations(for: requestedContext) {
-                    mutation.apply(to: &desired)
-                }
-                applySharedState(desired)
-                stateUpdatedAt = state.updatedAt ?? summary.updatedAt
-            } else {
-                // A local edit or completed write won the race with this GET.
-                // Keep that newer shared state while still accepting the
-                // refreshed shopping-list structure above.
-                applySharedState(currentState())
-            }
-            if needsFlushWhenSummaryLoads {
-                needsFlushWhenSummaryLoads = false
-                scheduleFlush(immediate: true)
-            }
+            let snapshot = ShoppingListSnapshot(
+                summary: summary,
+                state: state.state,
+                stateUpdatedAt: state.updatedAt,
+                categoryOrder: preferences?.categoryOrder
+            )
+            install(snapshot, context: requestedContext, revision: revision, isFromNetwork: true)
+            persist(snapshot)
         } catch APIError.notFound {
             guard generation == loadGeneration else { return }
+            if let scope = cacheScope(householdID: household.id) {
+                cacheStore.removeList(scope: scope, weekStartDate: weekStartDate)
+            }
+            isShowingRestoredList = false
             summary = nil
             groups = []
             regularGroups = []
@@ -317,6 +334,7 @@ final class ShoppingListStore {
         isLoading = false
         lastFetchedAt = nil
         hasLoadedOnce = false
+        isShowingRestoredList = false
         needsFlushWhenSummaryLoads = !pendingMutations.isEmpty
     }
 
@@ -331,6 +349,89 @@ final class ShoppingListStore {
         customItems = []
         checkedItems = []
         hasLoadedOnce = true
+    }
+
+    private func cacheScope(householdID: String) -> CacheScope? {
+        guard let userID = currentUserID() else { return nil }
+        return CacheScope(userID: userID, householdID: householdID, language: currentLanguage())
+    }
+
+    private func persist(_ snapshot: ShoppingListSnapshot) {
+        guard let scope = cacheScope(householdID: snapshot.summary.household.id) else { return }
+        cacheStore.saveList(snapshot, scope: scope)
+    }
+
+    /// Shows the disk copy of `weekStartDate`'s list if nothing is on screen
+    /// yet. A list belonging to another household is dropped first: it must
+    /// never stand in for this household's. Returns whether a copy was shown.
+    @discardableResult
+    private func restoreFromCacheIfNeeded(household: Household, weekStartDate: String) -> Bool {
+        if let summary, summary.household.id != household.id, mutationContext == nil {
+            discardDisplayedList()
+        }
+        guard summary == nil,
+              let scope = cacheScope(householdID: household.id),
+              let snapshot = cacheStore.loadList(scope: scope, weekStartDate: weekStartDate) else { return false }
+        install(
+            snapshot,
+            context: ShoppingListSyncContext(householdID: household.id, weekStartDate: weekStartDate),
+            revision: stateRevision,
+            isFromNetwork: false
+        )
+        isShowingRestoredList = true
+        return true
+    }
+
+    private func discardDisplayedList() {
+        summary = nil
+        groups = []
+        regularGroups = []
+        stapledItems = []
+        customItems = []
+        checkedItems = []
+        pantryStock = [:]
+        stateUpdatedAt = nil
+        lastFetchedAt = nil
+        hasLoadedOnce = false
+        isShowingRestoredList = false
+    }
+
+    /// Puts a loaded (or restored) list on screen, re-applying any local
+    /// edits that haven't reached the server yet.
+    private func install(_ snapshot: ShoppingListSnapshot, context: ShoppingListSyncContext, revision: Int, isFromNetwork: Bool) {
+        if let order = snapshot.categoryOrder {
+            categoryOrder = Self.validatedCategoryOrder(order.map(ShoppingCategory.from))
+        }
+        self.summary = snapshot.summary
+        if isFromNetwork {
+            lastFetchedAt = Date()
+            isShowingRestoredList = false
+        }
+        let mapped = ShoppingListViewModelMapper.map(from: snapshot.summary)
+        regularGroups = ShoppingListViewModelMapper.regularGroups(from: mapped.groups)
+        stapledItems = mapped.stapledItems
+        let fallbackCheckedItems = Set((mapped.groups.flatMap(\.items) + mapped.stapledItems).filter(\.checked).map(\.itemKey))
+        if revision == stateRevision {
+            var desired = MutableShoppingListState(
+                checkedItems: snapshot.state.map { Set($0.checkedItems) } ?? fallbackCheckedItems,
+                pantryStock: snapshot.state?.pantryStock ?? [:],
+                customItems: snapshot.state?.customItems ?? mapped.customItems
+            )
+            for mutation in mutations(for: context) {
+                mutation.apply(to: &desired)
+            }
+            applySharedState(desired)
+            stateUpdatedAt = snapshot.stateUpdatedAt ?? snapshot.summary.updatedAt
+        } else {
+            // A local edit or completed write won the race with this GET.
+            // Keep that newer shared state while still accepting the
+            // refreshed shopping-list structure above.
+            applySharedState(currentState())
+        }
+        if needsFlushWhenSummaryLoads {
+            needsFlushWhenSummaryLoads = false
+            scheduleFlush(immediate: true)
+        }
     }
 
     private func applySharedState(
@@ -448,6 +549,7 @@ final class ShoppingListStore {
                 finishFlush()
                 return
             }
+            persistSyncedState(desired, context: context)
             inFlightMutations = []
             stateRevision += 1
             mutationError = nil
@@ -494,6 +596,24 @@ final class ShoppingListStore {
             mutationContext = nil
             updatePendingSyncState()
         }
+    }
+
+    /// The server now holds `state` (the write just succeeded), so that is
+    /// what a cold start should find — not any further edits still queued.
+    private func persistSyncedState(_ state: MutableShoppingListState, context: ShoppingListSyncContext) {
+        guard let summary,
+              summary.household.id == context.householdID,
+              summary.weekStartDate == context.weekStartDate else { return }
+        persist(ShoppingListSnapshot(
+            summary: summary,
+            state: ShoppingListSharedState(
+                checkedItems: Array(state.checkedItems),
+                pantryStock: state.pantryStock,
+                customItems: state.customItems
+            ),
+            stateUpdatedAt: stateUpdatedAt,
+            categoryOrder: categoryOrder.map(\.preferenceValue)
+        ))
     }
 
     private func scheduleFlushAfterRetryDelay() {
