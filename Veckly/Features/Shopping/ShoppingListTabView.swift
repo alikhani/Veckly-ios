@@ -53,7 +53,7 @@ struct ShoppingListTabView: View {
         .background(VecklyDesign.Colors.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !model.checkedItems.isEmpty {
+            if model.hasCheckedItemsOnList {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(L10n.string("shopping.clearChecked")) {
                         model.clearChecked()

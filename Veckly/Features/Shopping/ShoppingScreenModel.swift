@@ -116,9 +116,19 @@ final class ShoppingScreenModel {
         shoppingListStore.groups.flatMap { $0.items }.count
     }
 
+    /// Progress counts only checked items that are on the list right now. The
+    /// persisted checked set also holds the keys of items whose meal was since
+    /// swapped, rescued or removed, and those must not count ("7 / 5").
     var checkedItemCount: Int {
-        let stapleKeys = Set(shoppingListStore.stapledItems.map(\.itemKey))
-        return shoppingListStore.checkedItems.filter { !stapleKeys.contains($0) }.count
+        let listKeys = Set(shoppingListStore.groups.flatMap { $0.items.map(\.itemKey) })
+        return shoppingListStore.checkedItems.intersection(listKeys).count
+    }
+
+    /// Something on the list — a regular item or a "likely at home" staple — is checked.
+    var hasCheckedItemsOnList: Bool {
+        let listKeys = Set(shoppingListStore.groups.flatMap { $0.items.map(\.itemKey) })
+            .union(shoppingListStore.stapledItems.map(\.itemKey))
+        return !shoppingListStore.checkedItems.isDisjoint(with: listKeys)
     }
 
     /// "V.26 · 2 MIDDAGAR" — nil if data is unavailable.

@@ -18,6 +18,28 @@ struct ShoppingScreenModelTests {
         #expect(harness.model.checkedItemCount == 1)
     }
 
+    /// Keys of items whose meal was since swapped, rescued or removed stay in the
+    /// persisted checked set. They must not count towards progress ("7 / 5").
+    @Test func progressIgnoresCheckedKeysOfItemsThatLeftTheList() async {
+        let harness = await ShoppingScreenHarness.make(
+            checked: ["produce:apples:", "produce:swapped-out:", "dairy:removed:", "pantry:gone:"]
+        )
+
+        #expect(harness.model.totalItemCount == 2)
+        #expect(harness.model.checkedItemCount == 1)
+    }
+
+    @Test func clearCheckedIsOnlyOfferedWhenSomethingOnTheListIsChecked() async {
+        let onlyStale = await ShoppingScreenHarness.make(checked: ["produce:swapped-out:"])
+        #expect(!onlyStale.model.hasCheckedItemsOnList)
+
+        let aListItem = await ShoppingScreenHarness.make(checked: ["produce:apples:"])
+        #expect(aListItem.model.hasCheckedItemsOnList)
+
+        let aStaple = await ShoppingScreenHarness.make(checked: ["pantry:salt:"])
+        #expect(aStaple.model.hasCheckedItemsOnList)
+    }
+
     @Test func theContextLineNamesTheWeekAndItsPlannedDinners() async {
         let harness = await ShoppingScreenHarness.make()
         let weekStartDate = harness.weekStore.weekStartDate
