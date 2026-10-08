@@ -5,9 +5,7 @@ struct ShoppingListTabView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var model: ShoppingScreenModel
-    @State private var showCustomItemSheet = false
     @State private var showPendingSyncIndicator = false
-    @State private var showCategoryOrder = false
 
     init(model: ShoppingScreenModel, onGoToWeekTab: (() -> Void)? = nil) {
         _model = State(initialValue: model)
@@ -50,7 +48,7 @@ struct ShoppingListTabView: View {
 
     private var addItemButton: some View {
         Button {
-            showCustomItemSheet = true
+            model.presentCustomItemSheet()
         } label: {
             ViewThatFits(in: .horizontal) {
                 addOwnItemButtonContent(addOwnItemButtonLabel)
@@ -71,7 +69,7 @@ struct ShoppingListTabView: View {
     }
 
     private var categoryOrderButton: some View {
-        Button { showCategoryOrder = true } label: {
+        Button { model.presentCategoryOrderSheet() } label: {
             Image(systemName: "arrow.up.arrow.down")
                 .font(.callout.weight(.semibold))
                 .frame(minWidth: 20, minHeight: 24)
@@ -286,15 +284,17 @@ struct ShoppingListTabView: View {
                 .animation(.easeInOut(duration: 0.25), value: model.clearedKeys.isEmpty)
             }
         }
-        .sheet(isPresented: $showCustomItemSheet) {
-            ShoppingCustomItemSheet { label, category in
-                model.addCustomItem(label: label, category: category)
-            }
-        }
-        .sheet(isPresented: $showCategoryOrder) {
-            if model.hasActiveHousehold {
-                ShoppingCategoryOrderSheet(initialOrder: model.categoryOrder) { order in
-                    await model.saveCategoryOrder(order)
+        .sheet(item: $model.sheet) { sheet in
+            switch sheet {
+            case .customItem:
+                ShoppingCustomItemSheet { label, category in
+                    model.addCustomItem(label: label, category: category)
+                }
+            case .categoryOrder:
+                if model.hasActiveHousehold {
+                    ShoppingCategoryOrderSheet(initialOrder: model.categoryOrder) { order in
+                        await model.saveCategoryOrder(order)
+                    }
                 }
             }
         }

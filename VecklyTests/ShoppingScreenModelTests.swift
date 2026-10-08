@@ -37,6 +37,19 @@ struct ShoppingScreenModelTests {
         #expect(harness.model.reminderItems.first == harness.model.shareText)
     }
 
+    // MARK: Sheets
+
+    @Test func eachHeaderActionRequestsItsOwnSheet() async {
+        let harness = await ShoppingScreenHarness.make()
+        #expect(harness.model.sheet == nil)
+
+        harness.model.presentCustomItemSheet()
+        #expect(harness.model.sheet == .customItem)
+
+        harness.model.presentCategoryOrderSheet()
+        #expect(harness.model.sheet == .categoryOrder)
+    }
+
     // MARK: Clear checked / undo
 
     @Test func clearCheckedOffersAnUndoThatRechecksTheClearedItems() async {

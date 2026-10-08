@@ -41,6 +41,8 @@ final class ShoppingScreenModel {
 
     // MARK: Screen state
 
+    /// The one sheet the Shopping tab is presenting, if any.
+    var sheet: ShoppingSheet?
     /// Keys unchecked by the last "Clear checked" — non-empty while the
     /// undo toast is showing.
     private(set) var clearedKeys: [String] = []
@@ -171,6 +173,16 @@ final class ShoppingScreenModel {
             groups: shoppingListStore.groups,
             checkedItems: shoppingListStore.checkedItems
         )
+    }
+
+    // MARK: Sheets
+
+    func presentCustomItemSheet() {
+        sheet = .customItem
+    }
+
+    func presentCategoryOrderSheet() {
+        sheet = .categoryOrder
     }
 
     // MARK: Item intents
