@@ -25,21 +25,6 @@ private struct LeftoversWithoutRecipeSeed: Identifiable {
     var id: String { day.id }
 }
 
-/// Snapshot of the days a "Regenerate" run is about to overwrite, captured
-/// just before the API call — restoring from it is how the undo banner puts
-/// the previous plan back without the backend needing an undo endpoint.
-private struct RegenerateUndoContext: Identifiable {
-    let rows: [WeekDayRowViewModel]
-    let weekStartDate: String
-    var id: String { weekStartDate }
-}
-
-private struct WeekBriefPresentation: Identifiable {
-    let weekStartDate: String
-    let regenerate: Bool
-    var id: String { "\(weekStartDate):\(regenerate)" }
-}
-
 /// The 3-week browsing window. Last week is view-only (no planning actions);
 /// This/Next week behave like the active week but addressed explicitly.
 /// Not `private` — `WeekHeaderView` (Fas 3 extraction) needs it too.
@@ -96,13 +81,8 @@ struct WeekTabView: View {
     @AppStorage("hasSeenLockExplanation") private var hasSeenLockExplanation = false
     @State private var showLockExplanation = false
     @State private var showRegenerateConfirmation = false
-    @State private var regenerateUndoContext: RegenerateUndoContext?
-    @State private var regenerateUndoDismissTask: Task<Void, Never>?
     @State private var retroViewModel = RetroCardViewModel()
     @State private var isWeekendExpanded = false
-    @State private var failedFillWeekStartDate: String?
-    @State private var fillCompletionNotice: WeekFillCompletionNotice?
-    @State private var weekBriefPresentation: WeekBriefPresentation?
     @State private var showQualitySuggestionConfirmation = false
     @AppStorage("dismissedWeekQualitySuggestionKeys") private var dismissedWeekQualitySuggestionKeys = ""
 
@@ -123,6 +103,9 @@ struct WeekTabView: View {
     private var isViewingCurrentWeek: Bool { model.isViewingCurrentWeek }
     private var isViewingLastWeek: Bool { model.isViewingLastWeek }
     private var showSessionEndBeat: Bool { model.showSessionEndBeat }
+    private var failedFillWeekStartDate: String? { model.failedFillWeekStartDate }
+    private var fillCompletionNotice: WeekFillCompletionNotice? { model.fillCompletionNotice }
+    private var regenerateUndoContext: RegenerateUndoContext? { model.regenerateUndo }
     private var weekPendingSyncMessage: String { L10n.string("week.sync.pending") }
 
     var body: some View {
@@ -142,8 +125,7 @@ struct WeekTabView: View {
                             .foregroundStyle(VecklyDesign.Colors.hearthOrangeText)
                         }
                         Button {
-                            failedFillWeekStartDate = nil
-                            appModel.weekStore.clearMutationError()
+                            model.dismissWeekMutationError()
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.caption.weight(.semibold))
@@ -257,11 +239,7 @@ struct WeekTabView: View {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button(role: .destructive) {
-                            guard appModel.householdStore.activeHousehold != nil else { return }
-                            guard appModel.authSessionStore.userID != nil else {
-                                Task { await appModel.handleUnauthorized() }
-                                return
-                            }
+                            guard model.session() != nil else { return }
                             showRegenerateConfirmation = true
                         } label: {
                             Label("week.regenerate", systemImage: "arrow.triangle.2.circlepath")
@@ -471,7 +449,7 @@ struct WeekTabView: View {
                 weekStartDate: viewedWeekStartDate
             )
         }
-        .sheet(item: $weekBriefPresentation) { presentation in
+        .sheet(item: $model.weekBriefPresentation) { presentation in
             if let household = appModel.householdStore.activeHousehold,
                let userID = appModel.authSessionStore.userID {
                 WeekBriefSheet(
@@ -484,7 +462,7 @@ struct WeekTabView: View {
                     isRegenerating: presentation.regenerate,
                     pantryItems: PantryPlanningItem.suggestions(from: appModel.shoppingListStore.pantryStock),
                     onGenerate: { pantryItemKeys, portionAdjustments in
-                        await performGenerate(
+                        await model.performGenerate(
                             regenerate: presentation.regenerate,
                             weekStartDate: presentation.weekStartDate,
                             pantryItemKeys: pantryItemKeys,
@@ -553,18 +531,9 @@ struct WeekTabView: View {
             Task { await reloadViewedWeek() }
         }
         .onChange(of: model.viewedWeekOffset) { _, _ in
-            // The undo banner replays writes against `context.weekStartDate`
-            // by matching rows on weekday only, with no check that the
-            // currently-loaded `dayRows` still belong to that week — so if
-            // the user browses to a different week while the banner is still
-            // up, a tap on "Undo" would overwrite the *other* week's rows
-            // with the regenerated week's snapshot. Simplest safe fix: the
-            // banner only makes sense for the week it was generated for, so
-            // drop it the moment the user navigates away from that week.
-            regenerateUndoDismissTask?.cancel()
-            regenerateUndoContext = nil
-            failedFillWeekStartDate = nil
-            fillCompletionNotice = nil
+            // Drops the undo banner (and fill notices) for the week the user
+            // just left — see `WeekScreenModel.viewedWeekDidChange`.
+            model.viewedWeekDidChange()
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
@@ -652,133 +621,12 @@ struct WeekTabView: View {
         }
     }
 
-    /// Runs Generate/Regenerate. When replacing an already-full week, snapshots
-    /// the unlocked/unskipped rows first so a successful run can offer "Undo" —
-    /// there's no backend undo endpoint, so restoring is just re-issuing the
-    /// same assign/clear calls a user would make by hand.
-    private func performGenerate(
-        regenerate: Bool,
-        weekStartDate: String? = nil,
-        pantryItemKeys: [String] = [],
-        portionAdjustments: [WeekPortionAdjustment] = []
-    ) async {
-        guard appModel.weekStore.generatingWeekStartDate == nil else { return }
-        guard let household = appModel.householdStore.activeHousehold else { return }
-        guard let userID = appModel.authSessionStore.userID else {
-            await appModel.handleUnauthorized()
-            return
-        }
-
-        // Captured once, up front — `viewedWeekStartDate` is a computed
-        // property that tracks live navigation, and the API call below can
-        // take long enough for the user to browse to a different week
-        // before it resolves. Everything about *this* generate run (the
-        // snapshot, the API call, and the undo banner it may offer) must
-        // stay pinned to the week it was actually generated for.
-        let targetWeekStartDate = weekStartDate ?? viewedWeekStartDate
-        let rowsBeforeFill = appModel.weekStore.dayRows
-        let preRegenerateSnapshot = regenerate
-            ? appModel.weekStore.dayRows.filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }
-            : []
-        let wasEmptyBefore = hasOpenRelevantDays
-        let hadWeekContentBefore = appModel.weekStore.hasWeekContent
-
-        if !regenerate {
-            failedFillWeekStartDate = nil
-            fillCompletionNotice = nil
-        }
-
-        appModel.shoppingListStore.invalidateCache()
-        await appModel.weekStore.generateWeek(
-            household: household,
-            userID: userID,
-            regenerate: regenerate,
-            viewedWeekStartDate: targetWeekStartDate,
-            pantryItemKeys: pantryItemKeys
-        )
-        let generateSucceeded = appModel.weekStore.mutationError == nil
-        if !regenerate, viewedWeekStartDate == targetWeekStartDate {
-            if appModel.weekStore.mutationError == nil {
-                fillCompletionNotice = WeekFillCompletionNotice.make(
-                    before: rowsBeforeFill,
-                    after: appModel.weekStore.dayRows
-                )
-            } else {
-                failedFillWeekStartDate = targetWeekStartDate
-            }
-        }
-        // After generating, so only days that kept the suggestion's recipe
-        // get the new portions (see `applyPortionAdjustments`).
-        await appModel.weekStore.applyPortionAdjustments(
-            portionAdjustments,
-            household: household,
-            userID: userID,
-            weekStartDate: targetWeekStartDate
-        )
-        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: targetWeekStartDate)
-        if !regenerate, !hadWeekContentBefore, generateSucceeded {
-            appModel.recordProductEvent(.firstWeekGenerated, weekStartDate: targetWeekStartDate, properties: [
-                "plannedDinners": .int(plannedDinnerCount)
-            ])
-        }
-        checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
-
-        guard regenerate, generateSucceeded, !preRegenerateSnapshot.isEmpty else { return }
-        // Only offer undo if the user is still looking at the week that was
-        // just regenerated — otherwise there's nothing sensible to restore
-        // into the currently-visible week, and no banner should appear for
-        // a week that isn't on screen.
-        guard viewedWeekStartDate == targetWeekStartDate else { return }
-        presentRegenerateUndo(rows: preRegenerateSnapshot, weekStartDate: targetWeekStartDate)
-    }
-
-    private func presentWeekBrief(regenerate: Bool) {
-        guard appModel.householdStore.activeHousehold != nil else { return }
-        guard appModel.authSessionStore.userID != nil else {
-            Task { await appModel.handleUnauthorized() }
-            return
-        }
-        weekBriefPresentation = WeekBriefPresentation(
-            weekStartDate: viewedWeekStartDate,
-            regenerate: regenerate
-        )
-    }
-
     private func checkForSessionEnd(wasEmptyBefore: Bool) {
         model.checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
     }
 
-    private func presentRegenerateUndo(rows: [WeekDayRowViewModel], weekStartDate: String) {
-        regenerateUndoDismissTask?.cancel()
-        regenerateUndoContext = RegenerateUndoContext(rows: rows, weekStartDate: weekStartDate)
-        regenerateUndoDismissTask = Task {
-            try? await Task.sleep(for: .seconds(8))
-            guard !Task.isCancelled else { return }
-            regenerateUndoContext = nil
-        }
-    }
-
-    private func undoRegenerate(_ context: RegenerateUndoContext) {
-        regenerateUndoDismissTask?.cancel()
-        regenerateUndoContext = nil
-        guard let household = appModel.householdStore.activeHousehold,
-              let userID = appModel.authSessionStore.userID else { return }
-        // Defense in depth alongside the `.onChange(of: viewedWeekOffset)`
-        // dismissal above — never replay a snapshot into a week other than
-        // the one it was taken from.
-        guard context.weekStartDate == viewedWeekStartDate else { return }
-
-        Task {
-            appModel.shoppingListStore.invalidateCache()
-            for row in context.rows {
-                if let recipe = row.recipe {
-                    await appModel.weekStore.assignMeal(day: row, recipe: recipe, household: household, userID: userID, viewedWeekStartDate: context.weekStartDate)
-                } else {
-                    await appModel.weekStore.unassignMeal(day: row, household: household, userID: userID, viewedWeekStartDate: context.weekStartDate)
-                }
-            }
-            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: context.weekStartDate)
-        }
+    private func presentWeekBrief(regenerate: Bool) {
+        model.presentWeekBrief(regenerate: regenerate)
     }
 
     private func refreshShoppingListAfterWeekMutation(household: Household, weekStartDate: String) async {
@@ -792,7 +640,7 @@ struct WeekTabView: View {
                 .foregroundStyle(.white)
             Spacer()
             Button(L10n.string("common.undo")) {
-                undoRegenerate(context)
+                model.undoRegenerate(context)
             }
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(VecklyDesign.Colors.hearthOrangeTextDark)

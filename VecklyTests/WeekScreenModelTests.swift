@@ -72,6 +72,171 @@ struct WeekScreenModelTests {
         #expect(started)
         #expect(harness.weekStore.mutationError == nil)
     }
+    // MARK: Generate, undo, session end
+
+    @Test func regenerateOffersNoUndoWhenTheUserNavigatedAwayDuringTheCall() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.onGenerate = { @MainActor in
+            harness.model.viewedWeekOffset = .next
+        }
+
+        await harness.model.performGenerate(regenerate: true)
+
+        #expect(harness.api.generateCalls.map(\.weekStartDate) == [WeekCalendar.currentWeekStartDate()])
+        #expect(harness.model.regenerateUndo == nil)
+    }
+
+    @Test func regenerateOnTheSameWeekSnapshotsOnlyOpenUnlockedUnskippedDays() async {
+        let weekStartDate = WeekCalendar.currentWeekStartDate()
+        let api = WeekScreenFakeAPIClient()
+        api.summaries[weekStartDate] = WeekScreenFixtures.summary(
+            weekStartDate: weekStartDate,
+            locked: [.monday],
+            skipped: [.tuesday]
+        )
+        let harness = await WeekScreenHarness.make(api: api)
+        let expected = harness.weekStore.dayRows
+            .filter { !$0.isPast && !$0.isLocked && !$0.isSkipped }
+            .map(\.weekday)
+
+        await harness.model.performGenerate(regenerate: true)
+
+        let undo = harness.model.regenerateUndo
+        #expect(undo?.weekStartDate == weekStartDate)
+        #expect(undo?.rows.map(\.weekday) == expected)
+        #expect(undo?.rows.contains { $0.weekday == .monday || $0.weekday == .tuesday } == false)
+        #expect(undo?.rows.contains { $0.weekday == .sunday } == true)
+    }
+
+    @Test func theUndoBannerDismissesItselfAfterItsTimeout() async throws {
+        let harness = await WeekScreenHarness.make(regenerateUndoDuration: .milliseconds(10))
+
+        await harness.model.performGenerate(regenerate: true)
+        #expect(harness.model.regenerateUndo != nil)
+
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(harness.model.regenerateUndo == nil)
+    }
+
+    @Test func undoReplaysTheSnapshotIntoTheWeekItWasTakenFrom() async {
+        let harness = await WeekScreenHarness.make()
+        await harness.model.performGenerate(regenerate: true)
+        guard let context = harness.model.regenerateUndo else {
+            Issue.record("Expected an undo context after regenerate")
+            return
+        }
+        harness.api.weekEvents = []
+
+        harness.model.undoRegenerate(context)
+        await harness.model.lastTask?.value
+
+        #expect(harness.model.regenerateUndo == nil)
+        #expect(harness.api.weekEvents.count == context.rows.count)
+        #expect(Set(harness.api.weekEvents.map(\.weekStartDate)) == [context.weekStartDate])
+    }
+
+    @Test func undoForAWeekOtherThanTheViewedOneMutatesNothing() async {
+        let harness = await WeekScreenHarness.make()
+        await harness.model.performGenerate(regenerate: true)
+        guard let context = harness.model.regenerateUndo else {
+            Issue.record("Expected an undo context after regenerate")
+            return
+        }
+        harness.api.weekEvents = []
+        harness.model.viewedWeekOffset = .next
+
+        harness.model.undoRegenerate(context)
+        await harness.model.lastTask?.value
+
+        #expect(harness.model.regenerateUndo == nil)
+        #expect(harness.api.weekEvents.isEmpty)
+    }
+
+    @Test func navigatingToAnotherWeekDropsUndoAndFillNotices() async {
+        let harness = await WeekScreenHarness.make()
+        await harness.model.performGenerate(regenerate: true)
+        #expect(harness.model.regenerateUndo != nil)
+
+        harness.model.viewedWeekOffset = .next
+        harness.model.viewedWeekDidChange()
+
+        #expect(harness.model.regenerateUndo == nil)
+        #expect(harness.model.failedFillWeekStartDate == nil)
+        #expect(harness.model.fillCompletionNotice == nil)
+    }
+
+    @Test func theFirstFillOfAnEmptyWeekLogsFirstWeekGeneratedExactlyOnce() async {
+        let weekStartDate = WeekCalendar.currentWeekStartDate()
+        let api = WeekScreenFakeAPIClient()
+        api.summaries[weekStartDate] = WeekScreenFixtures.summary(weekStartDate: weekStartDate, openDays: Set(Weekday.allCases))
+        api.summaryAfterGenerate = { WeekScreenFixtures.summary(weekStartDate: $0, openDays: []) }
+        let harness = await WeekScreenHarness.make(api: api)
+        #expect(!harness.weekStore.hasWeekContent)
+
+        await harness.model.performGenerate(regenerate: false)
+        await harness.model.performGenerate(regenerate: false)
+
+        #expect(harness.api.generateCalls.count == 2)
+        #expect(harness.eventCount(.firstWeekGenerated) == 1)
+        #expect(harness.events.first { $0.name == .firstWeekGenerated }?.weekStartDate == weekStartDate)
+    }
+
+    @Test func aFailedFillRemembersWhichWeekFailed() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.failsGenerate = true
+
+        await harness.model.performGenerate(regenerate: false)
+
+        #expect(harness.model.failedFillWeekStartDate == WeekCalendar.currentWeekStartDate())
+        #expect(harness.model.fillCompletionNotice == nil)
+        #expect(harness.eventCount(.firstWeekGenerated) == 0)
+
+        harness.model.dismissWeekMutationError()
+        #expect(harness.model.failedFillWeekStartDate == nil)
+        #expect(harness.weekStore.mutationError == nil)
+    }
+
+    @Test func aSuccessfulFillOnTheViewedWeekShowsACompletionNotice() async {
+        let weekStartDate = WeekCalendar.currentWeekStartDate()
+        let api = WeekScreenFakeAPIClient()
+        api.summaryAfterGenerate = { WeekScreenFixtures.summary(weekStartDate: $0, openDays: [], reason: .quickWeekday) }
+        let harness = await WeekScreenHarness.make(api: api)
+
+        await harness.model.performGenerate(regenerate: false)
+
+        #expect(harness.api.generateCalls.map(\.weekStartDate) == [weekStartDate])
+        #expect(harness.model.fillCompletionNotice != nil)
+        #expect(harness.model.failedFillWeekStartDate == nil)
+    }
+
+    @Test func fillingTheLastOpenDayEndsTheSessionAndLogsWeekCompleted() async {
+        let harness = await WeekScreenHarness.make()
+        #expect(harness.model.hasOpenRelevantDays)
+
+        harness.model.assignMeal(harness.row(.sunday), recipe: WeekScreenFixtures.recipe)
+        await harness.model.lastTask?.value
+
+        #expect(!harness.model.hasOpenRelevantDays)
+        #expect(harness.model.showSessionEndBeat)
+        #expect(harness.eventCount(.weekCompleted) == 1)
+
+        harness.model.dismissSessionEndBeat()
+        #expect(!harness.model.showSessionEndBeat)
+    }
+
+    @Test func completingAWeekOtherThanTheCurrentOneDoesNotEndTheSession() async {
+        let harness = await WeekScreenHarness.make()
+        harness.model.viewedWeekOffset = .next
+        await harness.weekStore.loadWeek(household: WeekScreenFixtures.household, weekStartDate: ViewedWeekOffset.next.weekStartDate)
+        #expect(harness.model.hasOpenRelevantDays)
+
+        harness.model.assignMeal(harness.row(.sunday), recipe: WeekScreenFixtures.recipe)
+        await harness.model.lastTask?.value
+
+        #expect(!harness.model.hasOpenRelevantDays)
+        #expect(!harness.model.showSessionEndBeat)
+        #expect(harness.eventCount(.weekCompleted) == 0)
+    }
 }
 
 // MARK: - Harness
@@ -103,7 +268,13 @@ enum WeekScreenFixtures {
     /// Every day planned except `openDays` — Sunday by default, which is
     /// never in the past within the current week, so tests don't depend on
     /// which weekday they run on.
-    static func summary(weekStartDate: String, openDays: Set<Weekday> = [.sunday], locked: Set<Weekday> = [], skipped: Set<Weekday> = []) -> WeekSummary {
+    static func summary(
+        weekStartDate: String,
+        openDays: Set<Weekday> = [.sunday],
+        locked: Set<Weekday> = [],
+        skipped: Set<Weekday> = [],
+        reason: AssignmentReason? = nil
+    ) -> WeekSummary {
         WeekSummary(
             household: SummaryHousehold(id: household.id, name: household.name),
             weekStartDate: weekStartDate,
@@ -115,7 +286,8 @@ enum WeekScreenFixtures {
                     date: WeekCalendar.addDays(to: weekStartDate, offset: index),
                     state: skipped.contains(weekday) ? .skipped : isOpen ? .empty : .planned,
                     isLocked: locked.contains(weekday),
-                    recipe: isOpen ? nil : plannedRecipe(weekday)
+                    recipe: isOpen ? nil : plannedRecipe(weekday),
+                    reason: isOpen ? nil : reason
                 )
             }
         )
@@ -139,7 +311,7 @@ final class WeekScreenHarness {
     private(set) var unauthorizedCount = 0
     private(set) var model: WeekScreenModel!
 
-    private init(api: WeekScreenFakeAPIClient) {
+    private init(api: WeekScreenFakeAPIClient, regenerateUndoDuration: Duration) {
         self.api = api
         weekStore = WeekStore(apiClient: api)
         householdStore = HouseholdStore(apiClient: api, selectionStore: WeekScreenFakeSelectionStore())
@@ -159,7 +331,8 @@ final class WeekScreenHarness {
             },
             onUnauthorized: { [unowned self] in
                 unauthorizedCount += 1
-            }
+            },
+            regenerateUndoDuration: regenerateUndoDuration
         )
     }
 
@@ -168,9 +341,10 @@ final class WeekScreenHarness {
     static func make(
         signedIn: Bool = true,
         hasHousehold: Bool = true,
-        api: WeekScreenFakeAPIClient = WeekScreenFakeAPIClient()
+        api: WeekScreenFakeAPIClient = WeekScreenFakeAPIClient(),
+        regenerateUndoDuration: Duration = .seconds(60)
     ) async -> WeekScreenHarness {
-        let harness = WeekScreenHarness(api: api)
+        let harness = WeekScreenHarness(api: api, regenerateUndoDuration: regenerateUndoDuration)
         if signedIn { harness.authSessionStore.seedForUITests() }
         guard hasHousehold else { return harness }
         harness.householdStore.setActiveHousehold(WeekScreenFixtures.household)
@@ -222,9 +396,36 @@ final class WeekScreenFakeAPIClient:
         return summaries[weekStartDate] ?? WeekScreenFixtures.summary(weekStartDate: weekStartDate)
     }
 
+    /// Assign/unassign writes are applied to the stored summary, so the
+    /// store's post-mutation refetch sees them like it would on the server.
     func appendWeekPlanEvent(householdID: String, weekStartDate: String, userID: String, event: WeekPlanEventInput) async throws {
         if failsWeekEvents { throw APIError.server(statusCode: 500) }
         weekEvents.append(WeekEvent(weekStartDate: weekStartDate, event: event))
+        let current = summaries[weekStartDate] ?? WeekScreenFixtures.summary(weekStartDate: weekStartDate)
+        let change: (Weekday, WeekSummaryRecipe?)
+        switch event {
+        case let .mealAssigned(day, recipeID):
+            change = (day, WeekSummaryRecipe(id: recipeID, title: recipeID, description: "", servings: 4, prepTimeMinutes: 10, cookTimeMinutes: 10, tags: []))
+        case let .mealUnassigned(day):
+            change = (day, nil)
+        default:
+            return
+        }
+        summaries[weekStartDate] = WeekSummary(
+            household: current.household,
+            weekStartDate: current.weekStartDate,
+            updatedAt: current.updatedAt,
+            days: current.days.map { day in
+                guard day.dayOfWeek == change.0 else { return day }
+                return WeekSummaryDay(
+                    dayOfWeek: day.dayOfWeek,
+                    date: day.date,
+                    state: change.1 == nil ? .empty : .planned,
+                    isLocked: day.isLocked,
+                    recipe: change.1
+                )
+            }
+        )
     }
 
     func generateWeekPlan(householdID: String, weekStartDate: String, regenerate: Bool) async throws {
