@@ -167,12 +167,13 @@ final class ShoppingListStore {
         guard let pending = pendingUpdate else { return }
         pendingUpdate = nil
         let snapshot = pending.value
-        guard let summary,
-              summary.household.id == snapshot.summary.household.id,
-              summary.weekStartDate == snapshot.summary.weekStartDate else { return }
+        if let summary {
+            guard summary.household.id == snapshot.summary.household.id,
+                  summary.weekStartDate == snapshot.summary.weekStartDate else { return }
+        }
         install(
             snapshot,
-            context: ShoppingListSyncContext(householdID: summary.household.id, weekStartDate: summary.weekStartDate),
+            context: ShoppingListSyncContext(householdID: snapshot.summary.household.id, weekStartDate: snapshot.summary.weekStartDate),
             revision: stateRevision,
             isFromNetwork: true
         )
@@ -496,6 +497,23 @@ final class ShoppingListStore {
             needsFlushWhenSummaryLoads = false
             scheduleFlush(immediate: true)
         }
+    }
+
+    /// UI-test fixture for the "updates available" banner: a newer copy of the
+    /// seeded list with one more item waiting behind the banner.
+    func seedPendingUpdateForUITests() {
+        var items = groups.flatMap(\.items)
+        items.append(ShoppingListItem(itemKey: "dairy:milk:", label: "milk", amount: "1", unit: "l", checked: false))
+        let summary = ShoppingListSummary(
+            household: SummaryHousehold(id: "11111111-1111-1111-1111-111111111111", name: "Test household"),
+            weekStartDate: WeekCalendar.currentWeekStartDate(),
+            updatedAt: "ui-test-newer",
+            groups: [ShoppingListGroup(category: "Pantry", items: items)]
+        )
+        pendingUpdate = PendingUpdate(
+            value: ShoppingListSnapshot(summary: summary, state: nil, stateUpdatedAt: nil, categoryOrder: nil),
+            scope: "ui-test"
+        )
     }
 
     private func applySharedState(

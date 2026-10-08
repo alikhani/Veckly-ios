@@ -935,6 +935,34 @@ final class WeekStore {
         hasLoadedOnce = true
     }
 
+    /// UI-test fixture for the "updates available" banner: a newer copy of the
+    /// seeded week (Tuesday has another dinner) waiting behind the banner.
+    func seedPendingUpdateForUITests() {
+        guard let summary else { return }
+        let replacement = WeekSummaryRecipe(
+            id: "66666666-6666-6666-6666-666666666666",
+            title: "Tuesday Update",
+            description: "Changed on another phone",
+            servings: 4,
+            prepTimeMinutes: 10,
+            cookTimeMinutes: 20,
+            tags: []
+        )
+        let days = summary.days.map { day in
+            day.dayOfWeek == .tuesday
+                ? WeekSummaryDay(dayOfWeek: day.dayOfWeek, date: day.date, state: .planned, recipe: replacement)
+                : day
+        }
+        let newer = WeekSummary(
+            household: summary.household,
+            weekStartDate: summary.weekStartDate,
+            updatedAt: "ui-test-newer",
+            days: days
+        )
+        weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date())
+        pendingUpdate = PendingUpdate(value: newer, scope: weekStartDate)
+    }
+
     private func preparePendingSyncContext(
         householdID: String,
         userID: String,

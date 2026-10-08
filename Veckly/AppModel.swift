@@ -116,6 +116,10 @@ final class AppModel {
             let scenario = scenarioRawValue.flatMap(WeekStore.UITestWeekScenario.init(rawValue:)) ?? .legacyPartial
             weekStore.seedForUITests(scenario: scenario)
             shoppingListStore.seedForUITests()
+            if ProcessInfo.processInfo.environment["VECKLY_UI_TEST_PENDING_UPDATE"] == "1" {
+                weekStore.seedPendingUpdateForUITests()
+                shoppingListStore.seedPendingUpdateForUITests()
+            }
         }
 
         notificationDelegate.onSundayReminderTapped = { [weak self] in
