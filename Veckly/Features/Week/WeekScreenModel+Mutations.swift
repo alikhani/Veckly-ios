@@ -39,7 +39,7 @@ extension WeekScreenModel {
         lastTask = Task {
             shoppingListStore.invalidateCache()
             await weekStore.assignMeal(day: day, recipe: recipe, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
-            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+            refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
         }
         return true
@@ -51,7 +51,7 @@ extension WeekScreenModel {
         lastTask = Task {
             shoppingListStore.invalidateCache()
             await weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
-            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+            refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
         }
         return true
     }
@@ -71,7 +71,7 @@ extension WeekScreenModel {
                 consumesPortionSuggestion: true
             )
             shoppingListStore.invalidateCache()
-            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+            refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
             return true
         } catch {
             return false
@@ -118,12 +118,23 @@ extension WeekScreenModel {
     /// (rescue, reuse last week): the shopping list must follow.
     func weekPlanChangedElsewhere(household: Household) async {
         shoppingListStore.invalidateCache()
-        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+        refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
     }
 
-    func refreshShoppingListAfterWeekMutation(household: Household, weekStartDate: String) async {
+    /// Starts the shopping-list reload that follows a week change and returns
+    /// at once: the cache is invalidated here (and the tab reloads when it is
+    /// shown), so the action is done when the week is. Does nothing if the
+    /// mutation failed. Reloads are chained, never skipped — a reload that
+    /// starts while another is running waits for it, and invalidates again,
+    /// so the earlier one's timestamp can't mark an out-of-date list fresh.
+    func refreshShoppingListAfterWeekMutation(household: Household, weekStartDate: String) {
         guard weekStore.mutationError == nil else { return }
         shoppingListStore.invalidateCache()
-        await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, origin: .userInitiated)
+        let previous = shoppingRefreshTask
+        shoppingRefreshTask = Task {
+            await previous?.value
+            shoppingListStore.invalidateCache()
+            await shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate, origin: .userInitiated)
+        }
     }
 }

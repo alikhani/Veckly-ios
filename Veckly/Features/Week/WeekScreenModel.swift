@@ -112,6 +112,10 @@ final class WeekScreenModel {
     /// unauthorized handling it triggered). The view never awaits it — it
     /// exists so tests can wait for an intent's effects deterministically.
     var lastTask: Task<Void, Never>?
+    /// The most recent background shopping-list reload after a week change
+    /// (see `refreshShoppingListAfterWeekMutation`). Never awaited by intents;
+    /// exists so tests can wait for it.
+    var shoppingRefreshTask: Task<Void, Never>?
 
     init(
         weekStore: WeekStore,

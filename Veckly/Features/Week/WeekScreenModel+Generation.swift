@@ -85,7 +85,7 @@ extension WeekScreenModel {
             userID: userID,
             weekStartDate: targetWeekStartDate
         )
-        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: targetWeekStartDate)
+        refreshShoppingListAfterWeekMutation(household: household, weekStartDate: targetWeekStartDate)
         if !regenerate, !hadWeekContentBefore, generateSucceeded {
             recordEvent(.firstWeekGenerated, targetWeekStartDate, [
                 "plannedDinners": .int(plannedDinnerCount)
@@ -132,7 +132,7 @@ extension WeekScreenModel {
                     await weekStore.unassignMeal(day: row, household: household, userID: userID, viewedWeekStartDate: context.weekStartDate)
                 }
             }
-            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: context.weekStartDate)
+            refreshShoppingListAfterWeekMutation(household: household, weekStartDate: context.weekStartDate)
         }
     }
 

@@ -60,7 +60,7 @@ extension WeekScreenModel {
                 userID: userID,
                 viewedWeekStartDate: viewedWeekStartDate
             )
-            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+            refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
             guard weekStore.mutationError == nil else { return }
             dismissQualitySuggestionsForViewedWeek()
             checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)

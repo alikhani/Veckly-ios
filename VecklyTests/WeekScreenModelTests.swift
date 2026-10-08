@@ -42,10 +42,60 @@ struct WeekScreenModelTests {
 
         let started = harness.model.assignMeal(harness.row(.tuesday), recipe: WeekScreenFixtures.recipe)
         await harness.model.lastTask?.value
+        // The shopping-list reload runs in the background (Del 3): wait for it explicitly.
+        await harness.model.shoppingRefreshTask?.value
 
         #expect(started)
         #expect(harness.api.weekEvents.map(\.weekStartDate) == [nextWeekStart])
         #expect(harness.api.shoppingSummaryRequests == [nextWeekStart])
+    }
+
+    @Test func aWeekMutationIsDoneBeforeTheShoppingListHasReloaded() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.holdFirstShoppingSummary = true
+
+        let started = harness.model.unassignMeal(harness.row(.sunday))
+        await harness.model.lastTask?.value
+
+        #expect(started)
+        #expect(harness.api.weekEvents.count == 1)
+        #expect(harness.api.shoppingSummaryCompleted == 0)
+        // The cache is already invalidated, so nothing can read it as fresh meanwhile.
+        #expect(harness.shoppingListStore.lastFetchedAt == nil)
+
+        harness.api.holdFirstShoppingSummary = false
+        await harness.model.shoppingRefreshTask?.value
+        #expect(harness.api.shoppingSummaryCompleted == 1)
+    }
+
+    @Test func aFailedMutationStartsNoShoppingListReloadAtAll() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.failsWeekEvents = true
+
+        harness.model.unassignMeal(harness.row(.sunday))
+        await harness.model.lastTask?.value
+
+        #expect(harness.model.shoppingRefreshTask == nil)
+        #expect(harness.api.shoppingSummaryRequests.isEmpty)
+    }
+
+    @Test func backToBackMutationsEndWithAListThatReflectsTheLastOne() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.labelsShoppingSummaries = true
+        harness.api.holdFirstShoppingSummary = true
+
+        harness.model.unassignMeal(harness.row(.sunday))
+        await harness.model.lastTask?.value
+        harness.model.unassignMeal(harness.row(.saturday))
+        await harness.model.lastTask?.value
+
+        harness.api.holdFirstShoppingSummary = false
+        await harness.model.shoppingRefreshTask?.value
+
+        // The second reload ran after the first finished and was not skipped
+        // as "fresh" by the first one's timestamp.
+        #expect(harness.api.shoppingSummaryRequests.count == 2)
+        #expect(harness.shoppingListStore.groups.flatMap(\.items).map(\.label) == ["v2"])
     }
 
     @Test func aFailedMutationDoesNotReloadTheShoppingList() async {
@@ -732,6 +782,11 @@ final class WeekScreenFakeAPIClient:
     var weekEvents: [WeekEvent] = []
     var generateCalls: [(weekStartDate: String, regenerate: Bool)] = []
     var shoppingSummaryRequests: [String] = []
+    var shoppingSummaryCompleted = 0
+    /// Holds the first shopping-list request open until the test flips it off.
+    var holdFirstShoppingSummary = false
+    /// Makes each shopping-list response carry one item named after its call number.
+    var labelsShoppingSummaries = false
     var weekSummaryRequests: [String] = []
     /// Lets a test act (e.g. navigate away) while generate is in flight.
     var onGenerate: (() async -> Void)?
@@ -826,7 +881,15 @@ final class WeekScreenFakeAPIClient:
 
     func shoppingListSummary(householdID: String, weekStartDate: String) async throws -> ShoppingListSummary {
         shoppingSummaryRequests.append(weekStartDate)
-        return ShoppingListSummary(household: SummaryHousehold(id: householdID, name: "Test household"), weekStartDate: weekStartDate, updatedAt: nil, groups: [])
+        let callIndex = shoppingSummaryRequests.count
+        if holdFirstShoppingSummary, callIndex == 1 {
+            while holdFirstShoppingSummary { await Task.yield() }
+        }
+        shoppingSummaryCompleted += 1
+        let groups = labelsShoppingSummaries
+            ? [ShoppingListGroup(category: "Dairy", items: [ShoppingListItem(itemKey: "dairy:v\(callIndex):", label: "v\(callIndex)", amount: nil, unit: nil, checked: false)])]
+            : []
+        return ShoppingListSummary(household: SummaryHousehold(id: householdID, name: "Test household"), weekStartDate: weekStartDate, updatedAt: nil, groups: groups)
     }
     func shoppingListState(householdID: String, weekStartDate: String) async throws -> (state: ShoppingListSharedState?, updatedAt: String?) {
         (nil, nil)
