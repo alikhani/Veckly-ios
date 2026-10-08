@@ -36,6 +36,11 @@ final class WeekStore {
     private(set) var errorMessage: String?
     private(set) var mutationError: String?
     private(set) var lastFetchedAt: Date?
+    /// A fresher copy of the viewed week that differs from what is on screen
+    /// and waits behind the "updates available" banner until the user asks
+    /// for it (`applyPendingUpdate()`). Keyed by week; dropped when the user
+    /// moves to another week or household.
+    private(set) var pendingUpdate: PendingUpdate<WeekSummary>?
     /// True once a week fetch has actually resolved (success, a handled
     /// "not found", or an error) at least once this session — see
     /// `CoreLoadingGate`. Unlike `isLoading`, this can't be used on its own
@@ -123,6 +128,20 @@ final class WeekStore {
         hasLoadedOnce = true
     }
 
+    func hasPendingUpdate(for viewedWeekStartDate: String) -> Bool {
+        pendingUpdate?.scope == viewedWeekStartDate
+    }
+
+    /// The user tapped the banner: the waiting copy replaces what is on screen.
+    func applyPendingUpdate() {
+        guard let pending = pendingUpdate else { return }
+        pendingUpdate = nil
+        let week = pending.scope
+        guard isDisplayingWeek(week) else { return }
+        weekCache[week] = CachedWeek(summary: pending.value, fetchedAt: Date())
+        applyWeek(pending.value, weekStartDate: week, isCurrentWeekSlot: week == weekStartDate, fetchedAt: Date())
+    }
+
     /// Sign-out: the cache holds household data.
     func clearPersistedCache() {
         cacheStore.deleteAll()
@@ -136,9 +155,9 @@ final class WeekStore {
     /// the last successful fetch. Without it, a caller asking for a forced
     /// reload would still silently no-op here, since this freshness check
     /// doesn't know anything about *why* the caller wants fresh data.
-    func loadCurrentWeek(household: Household, force: Bool = false) async {
+    func loadCurrentWeek(household: Household, force: Bool = false, origin: LoadOrigin = .background) async {
         weekStartDate = WeekCalendar.currentWeekStartDate()
-        await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: true, force: force)
+        await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: true, force: force, origin: origin)
     }
 
     /// Loads a specific week's summary for browsing (Last/Next week), populating
@@ -147,7 +166,7 @@ final class WeekStore {
     /// read as "the active week." Callers (e.g. WeekTabView's browsing UI) own
     /// their own viewed-week state and pass it back in for mutations.
     func loadWeek(household: Household, weekStartDate: String) async {
-        await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: false, force: false)
+        await loadWeekData(household: household, weekStartDate: weekStartDate, isCurrentWeekSlot: false, force: false, origin: .background)
     }
 
     func refreshWeek(household: Household, weekStartDate: String) async {
@@ -156,7 +175,8 @@ final class WeekStore {
             household: household,
             weekStartDate: weekStartDate,
             isCurrentWeekSlot: weekStartDate == self.weekStartDate,
-            force: true
+            force: true,
+            origin: .userInitiated
         )
     }
 
@@ -169,9 +189,10 @@ final class WeekStore {
     /// follows if that cached copy is missing, older than the freshness
     /// window, or `force` is set, and it runs quietly (no loading state) if
     /// something was already on screen to look at.
-    private func loadWeekData(household: Household, weekStartDate: String, isCurrentWeekSlot: Bool, force: Bool) async {
+    private func loadWeekData(household: Household, weekStartDate: String, isCurrentWeekSlot: Bool, force: Bool, origin: LoadOrigin) async {
         latestRequestedWeekStartDate = weekStartDate
         discardCacheIfHouseholdChanged(to: household.id)
+        if pendingUpdate?.scope != weekStartDate { pendingUpdate = nil }
 
         let cached = cachedWeek(householdID: household.id, weekStartDate: weekStartDate)
         if let cached {
@@ -197,8 +218,8 @@ final class WeekStore {
             // actually says so itself — a response that doesn't match the
             // week it was requested for (a backend anomaly) must not make a
             // later call think this slot is already satisfied.
-            if summary.weekStartDate == weekStartDate {
-                weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date())
+            let matchesRequestedWeek = summary.weekStartDate == weekStartDate
+            if matchesRequestedWeek {
                 persistWeek(summary, householdID: household.id)
                 if restoredWeekStartDate == weekStartDate { restoredWeekStartDate = nil }
             }
@@ -206,15 +227,38 @@ final class WeekStore {
                 // The user browsed elsewhere meanwhile: leave the display
                 // alone, but keep the current-week slot (the widget's
                 // source) in step with what just arrived.
+                if matchesRequestedWeek { weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date()) }
                 if isCurrentWeekSlot {
                     currentWeekDayRows = mapWeek(summary).days
                     lastFetchedAt = Date()
                 }
                 return
             }
-            applyWeek(summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
+            let decision = matchesRequestedWeek
+                ? PendingUpdate.decide(displayed: weekCache[weekStartDate]?.summary, fetched: summary, origin: origin)
+                : .applyNow
+            switch decision {
+            case .applyNow:
+                if matchesRequestedWeek { weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date()) }
+                if pendingUpdate?.scope == weekStartDate { pendingUpdate = nil }
+                applyWeek(summary, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
+            case .ignore:
+                weekCache[weekStartDate] = CachedWeek(summary: summary, fetchedAt: Date())
+                if pendingUpdate?.scope == weekStartDate { pendingUpdate = nil }
+                if isCurrentWeekSlot { lastFetchedAt = Date() }
+            case .deferBehindBanner:
+                // The screen keeps showing what it has; the newer copy waits
+                // for the user. Remember that we checked, so it isn't asked
+                // for again straight away.
+                if let displayed = weekCache[weekStartDate]?.summary {
+                    weekCache[weekStartDate] = CachedWeek(summary: displayed, fetchedAt: Date())
+                }
+                pendingUpdate = PendingUpdate(value: summary, scope: weekStartDate)
+                if isCurrentWeekSlot { lastFetchedAt = Date() }
+            }
         } catch APIError.notFound {
             invalidateCachedWeek(weekStartDate, householdID: household.id)
+            if pendingUpdate?.scope == weekStartDate { pendingUpdate = nil }
             let rows = WeekViewModelMapper.emptyRows(weekStartDate: weekStartDate)
             guard latestRequestedWeekStartDate == weekStartDate else {
                 if isCurrentWeekSlot { currentWeekDayRows = rows }
@@ -271,6 +315,7 @@ final class WeekStore {
         guard displayedFromAnotherHousehold || (cacheHouseholdID.map { $0 != householdID } ?? false) else { return }
         weekCache = [:]
         restoredWeekStartDate = nil
+        pendingUpdate = nil
         summary = nil
         dayRows = []
         currentWeekDayRows = []
@@ -376,7 +421,7 @@ final class WeekStore {
             )
             invalidateCachedWeek(targetWeekStartDate, householdID: household.id)
             if targetWeekStartDate == weekStartDate {
-                await loadCurrentWeek(household: household, force: true)
+                await loadCurrentWeek(household: household, force: true, origin: .userInitiated)
             } else {
                 await loadWeek(household: household, weekStartDate: targetWeekStartDate)
             }
@@ -505,7 +550,8 @@ final class WeekStore {
             household: household,
             weekStartDate: weekStartDate,
             isCurrentWeekSlot: weekStartDate == self.weekStartDate,
-            force: true
+            force: true,
+            origin: .userInitiated
         )
     }
 
@@ -546,7 +592,8 @@ final class WeekStore {
             household: household,
             weekStartDate: weekStartDate,
             isCurrentWeekSlot: weekStartDate == self.weekStartDate,
-            force: true
+            force: true,
+            origin: .userInitiated
         )
     }
 
@@ -667,7 +714,8 @@ final class WeekStore {
                 household: household,
                 weekStartDate: targetWeekStartDate,
                 isCurrentWeekSlot: targetWeekStartDate == weekStartDate,
-                force: true
+                force: true,
+                origin: .userInitiated
             )
         }
         return succeeded
@@ -743,6 +791,7 @@ final class WeekStore {
         weekCache = [:]
         cacheHouseholdID = nil
         restoredWeekStartDate = nil
+        pendingUpdate = nil
         inFlightWeekFetches = []
         latestRequestedWeekStartDate = nil
         unrecordedPortionSuggestionRecipeIDs = []
@@ -946,6 +995,7 @@ final class WeekStore {
                     persistWeek(latest, householdID: context.householdID)
                     let mapped = mapWeek(latest)
                     syncedDayStates = Dictionary(uniqueKeysWithValues: mapped.days.map { ($0.weekday, WeekPendingDayState(row: $0)) })
+                    if pendingUpdate?.scope == latest.weekStartDate { pendingUpdate = nil }
                     if summary?.weekStartDate == latest.weekStartDate {
                         summary = latest
                         dayRows = mapped.days
@@ -1010,6 +1060,8 @@ final class WeekStore {
         weekCache[weekStartDate] = CachedWeek(summary: latest, fetchedAt: Date())
         persistWeek(latest, householdID: householdID)
         if restoredWeekStartDate == weekStartDate { restoredWeekStartDate = nil }
+        // The answer to the user's own change is newer than anything waiting.
+        if pendingUpdate?.scope == weekStartDate { pendingUpdate = nil }
         if isDisplayingWeek(weekStartDate) {
             applyWeek(latest, weekStartDate: weekStartDate, isCurrentWeekSlot: isCurrentWeekSlot, fetchedAt: Date())
         } else if isCurrentWeekSlot {

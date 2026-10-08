@@ -38,6 +38,16 @@ final class AppRefreshCoordinator {
         /// changed, not just gone stale.
         case householdChanged
 
+        /// Only an explicit pull is the user asking for new data; every other
+        /// trigger loads quietly, so a differing answer waits behind the
+        /// "updates available" banner instead of replacing the screen.
+        var loadOrigin: LoadOrigin {
+            switch self {
+            case .pullToRefresh: .userInitiated
+            case .coldLaunch, .sceneActive, .householdChanged: .background
+            }
+        }
+
         fileprivate var forcesRealReload: Bool {
             switch self {
             case .sceneActive: false
@@ -151,7 +161,7 @@ final class AppRefreshCoordinator {
             await self.householdStore.loadHouseholdDetails(householdID: household.id, force: force)
         }
         async let week: Void = run(.week(household.id), trigger: trigger) {
-            await self.weekStore.loadCurrentWeek(household: household, force: force)
+            await self.weekStore.loadCurrentWeek(household: household, force: force, origin: trigger.loadOrigin)
             return true
         }
         async let shopping: Void = run(.shopping(household.id), trigger: trigger) {
@@ -220,7 +230,7 @@ final class AppRefreshCoordinator {
     func refreshWeek(household: Household, trigger: Trigger) async {
         guard !usesSeededCoreReader else { return }
         await run(.week(household.id), trigger: trigger) {
-            await self.weekStore.loadCurrentWeek(household: household, force: trigger.forcesRealReload)
+            await self.weekStore.loadCurrentWeek(household: household, force: trigger.forcesRealReload, origin: trigger.loadOrigin)
             return true
         }
     }
