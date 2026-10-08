@@ -280,7 +280,7 @@ struct WeekBriefSheet: View {
     }
 
     init(
-        apiClient: any WeekBriefAPIClient,
+        store: WeekBriefStore,
         householdID: String,
         weekStartDate: String,
         userID: String,
@@ -290,7 +290,7 @@ struct WeekBriefSheet: View {
         pantryItems: [PantryPlanningItem],
         onGenerate: @escaping ([String], [WeekPortionAdjustment]) async -> Void
     ) {
-        _store = State(initialValue: WeekBriefStore(apiClient: apiClient))
+        _store = State(initialValue: store)
         _selectedPantryKeys = State(initialValue: Set(pantryItems.map(\.id)))
         self.householdID = householdID
         self.weekStartDate = weekStartDate

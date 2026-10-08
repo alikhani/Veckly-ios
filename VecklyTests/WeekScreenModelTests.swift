@@ -237,6 +237,153 @@ struct WeekScreenModelTests {
         #expect(!harness.model.showSessionEndBeat)
         #expect(harness.eventCount(.weekCompleted) == 0)
     }
+
+    // MARK: Quality suggestions, deep links, loading
+
+    @Test func aLeftoversSuggestionReturnsAPrepBatchSeedAndDismissesTheSuggestion() async {
+        let harness = await WeekScreenHarness.make()
+        let source = harness.row(.monday)
+        let suggestion = WeekQualitySuggestion(kind: .useLeftovers, day: harness.row(.sunday), replacement: nil, sourceDay: source)
+
+        let seed = harness.model.applyQualitySuggestion(suggestion)
+
+        #expect(seed?.recipeID == source.recipe?.id)
+        #expect(seed?.cookDate == source.date)
+        #expect(seed?.assignedDate == harness.row(.sunday).date)
+        #expect(seed?.weekStartDate == WeekCalendar.currentWeekStartDate())
+        #expect(harness.model.dismissedQualitySuggestionKeys == ["\(WeekScreenFixtures.household.id):\(WeekCalendar.currentWeekStartDate())"])
+        #expect(harness.defaults.string(forKey: WeekScreenModel.dismissedQualitySuggestionKeysKey) == "\(WeekScreenFixtures.household.id):\(WeekCalendar.currentWeekStartDate())")
+        #expect(harness.api.weekEvents.isEmpty)
+    }
+
+    @Test func aReplacementSuggestionAssignsTheRecipeThenDismissesTheSuggestion() async {
+        let harness = await WeekScreenHarness.make()
+        let suggestion = WeekQualitySuggestion(kind: .fillOpenDay, day: harness.row(.sunday), replacement: WeekScreenFixtures.fullRecipe, sourceDay: nil)
+
+        let seed = harness.model.applyQualitySuggestion(suggestion)
+        await harness.model.lastTask?.value
+
+        #expect(seed == nil)
+        #expect(harness.api.weekEvents.count == 1)
+        if case let .mealAssigned(day, recipeID) = harness.api.weekEvents.first?.event {
+            #expect(day == .sunday)
+            #expect(recipeID == WeekScreenFixtures.fullRecipe.id)
+        } else {
+            Issue.record("Expected a mealAssigned event")
+        }
+        #expect(!harness.model.dismissedQualitySuggestionKeys.isEmpty)
+        #expect(harness.model.showSessionEndBeat)
+    }
+
+    @Test func aFailedReplacementKeepsTheSuggestionVisible() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.failsWeekEvents = true
+        let suggestion = WeekQualitySuggestion(kind: .fillOpenDay, day: harness.row(.sunday), replacement: WeekScreenFixtures.fullRecipe, sourceDay: nil)
+
+        _ = harness.model.applyQualitySuggestion(suggestion)
+        await harness.model.lastTask?.value
+
+        #expect(harness.model.dismissedQualitySuggestionKeys.isEmpty)
+        #expect(!harness.model.showSessionEndBeat)
+    }
+
+    @Test func dismissedQualitySuggestionKeysSurviveANewModel() async {
+        let harness = await WeekScreenHarness.make()
+        harness.model.dismissQualitySuggestionsForViewedWeek()
+        harness.model.viewedWeekOffset = .next
+        harness.model.dismissQualitySuggestionsForViewedWeek()
+
+        let stored = harness.defaults.string(forKey: WeekScreenModel.dismissedQualitySuggestionKeysKey)
+        let id = WeekScreenFixtures.household.id
+        #expect(stored == ["\(id):\(WeekCalendar.currentWeekStartDate())", "\(id):\(ViewedWeekOffset.next.weekStartDate)"].sorted().joined(separator: "|"))
+    }
+
+    @Test func aWeekPlanDeepLinkIsConsumedExactlyOnce() async {
+        let harness = await WeekScreenHarness.make()
+        harness.pendingWeekPlanDeepLink = true
+
+        #expect(harness.model.consumePendingWeekPlanDeepLink())
+        #expect(harness.model.viewedWeekOffset == .next)
+        #expect(!harness.pendingWeekPlanDeepLink)
+
+        harness.model.viewedWeekOffset = .current
+        #expect(!harness.model.consumePendingWeekPlanDeepLink())
+        #expect(harness.model.viewedWeekOffset == .current)
+    }
+
+    @Test func aMealDeepLinkOpensItsDayExactlyOnce() async {
+        let harness = await WeekScreenHarness.make()
+        let monday = harness.row(.monday)
+        harness.pendingDeepLink = .meal(date: monday.date, recipeID: monday.recipe?.id)
+
+        let first = await harness.model.consumePendingMealDeepLink()
+        let second = await harness.model.consumePendingMealDeepLink()
+
+        #expect(first?.day.date == monday.date)
+        #expect(first?.recipe.id == monday.recipe?.id)
+        #expect(harness.pendingDeepLink == nil)
+        #expect(second == nil)
+    }
+
+    @Test func aMealDeepLinkThatNoLongerMatchesIsClearedWithoutOpening() async {
+        let harness = await WeekScreenHarness.make()
+        let sunday = harness.row(.sunday)
+        harness.pendingDeepLink = .meal(date: sunday.date, recipeID: "gone")
+
+        let opened = await harness.model.consumePendingMealDeepLink()
+
+        #expect(opened == nil)
+        #expect(harness.pendingDeepLink == nil)
+    }
+
+    @Test func reloadingTheCurrentWeekGoesThroughTheRefreshCoordinator() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.weekSummaryRequests = []
+
+        await harness.model.reloadViewedWeek(trigger: .pullToRefresh)
+
+        #expect(harness.currentWeekRefreshes.count == 1)
+        #expect(harness.invalidatedWeekFreshness.isEmpty)
+    }
+
+    @Test func browsingToAnotherWeekLoadsItAndInvalidatesCurrentWeekFreshness() async {
+        let harness = await WeekScreenHarness.make()
+        harness.api.weekSummaryRequests = []
+        harness.model.viewedWeekOffset = .last
+
+        await harness.model.reloadViewedWeek()
+
+        #expect(harness.api.weekSummaryRequests == [ViewedWeekOffset.last.weekStartDate])
+        #expect(harness.invalidatedWeekFreshness == [WeekScreenFixtures.household.id])
+        #expect(harness.currentWeekRefreshes.isEmpty)
+    }
+
+    @Test func theSeededCoreReaderNeverLoadsBrowsedWeeksOrLastWeeksRetro() async {
+        let harness = await WeekScreenHarness.make(usesSeededCoreReader: true)
+        harness.api.weekSummaryRequests = []
+        harness.model.viewedWeekOffset = .next
+
+        await harness.model.reloadViewedWeek()
+        await harness.model.activeHouseholdDidChange()
+        await harness.model.refreshNextWeekEmptyState()
+
+        #expect(harness.api.weekSummaryRequests.isEmpty)
+        #expect(harness.invalidatedWeekFreshness.isEmpty)
+        #expect(harness.model.nextWeekIsEmpty == nil)
+    }
+
+    @Test func dismissingTheWeekendNudgeLastsForToday() async {
+        let harness = await WeekScreenHarness.make()
+        harness.model.refreshWeekendNudgeDismissalState()
+        #expect(!harness.model.weekendNudgeDismissedToday)
+
+        harness.model.dismissWeekendNudgeForToday()
+        #expect(harness.model.weekendNudgeDismissedToday)
+
+        harness.defaults.set(Date().addingTimeInterval(-3 * 24 * 60 * 60), forKey: WeekScreenModel.weekendNudgeDismissalKey)
+        harness.model.refreshWeekendNudgeDismissalState()
+        #expect(!harness.model.weekendNudgeDismissedToday)
+    }
 }
 
 // MARK: - Harness
@@ -251,6 +398,19 @@ enum WeekScreenFixtures {
         prepTimeMinutes: 10,
         cookTimeMinutes: 10,
         tags: []
+    )
+
+    static let fullRecipe = FullRecipe(
+        id: "recipe-suggested",
+        title: "Suggested dinner",
+        description: "",
+        servings: 4,
+        prepTimeMinutes: 10,
+        cookTimeMinutes: 10,
+        tags: [],
+        ingredients: [],
+        steps: [],
+        userVote: nil
     )
 
     static func plannedRecipe(_ weekday: Weekday) -> WeekSummaryRecipe {
@@ -307,12 +467,22 @@ final class WeekScreenHarness {
     let prepBatchStore: PrepBatchStore
     let recipeStore: RecipeStore
     let authSessionStore: AuthSessionStore
+    let mealOutcomeStore: MealOutcomeStore
+    let defaults: UserDefaults
+    var pendingWeekPlanDeepLink = false
+    var pendingDeepLink: AppDeepLink?
+    private(set) var currentWeekRefreshes: [AppRefreshCoordinator.Trigger] = []
+    private(set) var invalidatedWeekFreshness: [String] = []
     private(set) var events: [(name: ProductEventName, weekStartDate: String?, properties: ProductEventProperties)] = []
     private(set) var unauthorizedCount = 0
     private(set) var model: WeekScreenModel!
 
-    private init(api: WeekScreenFakeAPIClient, regenerateUndoDuration: Duration) {
+    private init(api: WeekScreenFakeAPIClient, regenerateUndoDuration: Duration, usesSeededCoreReader: Bool) {
         self.api = api
+        mealOutcomeStore = MealOutcomeStore(apiClient: api, pendingStore: WeekScreenFakeOutcomePendingStore())
+        let suiteName = "WeekScreenModelTests.\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
         weekStore = WeekStore(apiClient: api)
         householdStore = HouseholdStore(apiClient: api, selectionStore: WeekScreenFakeSelectionStore())
         shoppingListStore = ShoppingListStore(apiClient: api)
@@ -326,6 +496,24 @@ final class WeekScreenHarness {
             prepBatchStore: prepBatchStore,
             recipeStore: recipeStore,
             authSessionStore: authSessionStore,
+            mealOutcomeStore: mealOutcomeStore,
+            retroClient: api,
+            weekBriefClient: api,
+            usesSeededCoreReader: usesSeededCoreReader,
+            refreshCurrentWeek: { [unowned self] household, trigger in
+                currentWeekRefreshes.append(trigger)
+                await weekStore.loadCurrentWeek(household: household, force: true)
+            },
+            invalidateWeekFreshness: { [unowned self] householdID in
+                invalidatedWeekFreshness.append(householdID)
+            },
+            deepLinks: WeekDeepLinkInbox(
+                pendingWeekPlan: { [unowned self] in pendingWeekPlanDeepLink },
+                clearPendingWeekPlan: { [unowned self] in pendingWeekPlanDeepLink = false },
+                pendingDeepLink: { [unowned self] in pendingDeepLink },
+                clearPendingDeepLink: { [unowned self] in pendingDeepLink = nil }
+            ),
+            defaults: defaults,
             recordEvent: { [unowned self] name, weekStartDate, properties in
                 events.append((name, weekStartDate, properties))
             },
@@ -342,9 +530,10 @@ final class WeekScreenHarness {
         signedIn: Bool = true,
         hasHousehold: Bool = true,
         api: WeekScreenFakeAPIClient = WeekScreenFakeAPIClient(),
-        regenerateUndoDuration: Duration = .seconds(60)
+        regenerateUndoDuration: Duration = .seconds(60),
+        usesSeededCoreReader: Bool = false
     ) async -> WeekScreenHarness {
-        let harness = WeekScreenHarness(api: api, regenerateUndoDuration: regenerateUndoDuration)
+        let harness = WeekScreenHarness(api: api, regenerateUndoDuration: regenerateUndoDuration, usesSeededCoreReader: usesSeededCoreReader)
         if signedIn { harness.authSessionStore.seedForUITests() }
         guard hasHousehold else { return harness }
         harness.householdStore.setActiveHousehold(WeekScreenFixtures.household)
@@ -367,7 +556,10 @@ final class WeekScreenFakeAPIClient:
     HouseholdStoreAPIClient,
     ShoppingListStoreAPIClient,
     PrepBatchStoreAPIClient,
-    RecipeStoreAPIClient
+    RecipeStoreAPIClient,
+    MealOutcomeStoreAPIClient,
+    RetroCardAPIClient,
+    WeekBriefAPIClient
 {
     struct WeekEvent {
         let weekStartDate: String
@@ -522,6 +714,22 @@ final class WeekScreenFakeAPIClient:
     func fillInRecipe(householdID: String, title: String, existingIngredients: [DraftIngredient], existingSteps: [String]) async throws -> RecipeDraft { throw APIError.notFound }
     func importRecipeFromURL(householdID: String, _ urlString: String) async throws -> RecipeDraft { throw APIError.notFound }
     func importRecipeFromText(householdID: String, _ text: String, sourceURL: String?) async throws -> RecipeDraft { throw APIError.notFound }
+
+    // MealOutcomeStoreAPIClient, RetroCardAPIClient, WeekBriefAPIClient
+
+    func mealOutcomes(householdID: String, weekStartDate: String) async throws -> [MealOutcomeRecord] { [] }
+    func upsertMealOutcome(_ draft: MealOutcomeDraft) async throws -> MealOutcomeRecord { throw APIError.notFound }
+    func familyRecap(householdID: String) async throws -> FamilyRecap { throw APIError.notFound }
+    func weekContextOverrides(householdID: String, weekStartDate: String) async throws -> [WeekContextOverride] { [] }
+    func upsertWeekContextOverride(householdID: String, weekStartDate: String, override: WeekContextOverride) async throws {}
+    func clearWeekContextOverride(householdID: String, weekStartDate: String, date: String) async throws {}
+}
+
+private final class WeekScreenFakeOutcomePendingStore: MealOutcomePendingPersisting {
+    private var drafts: [MealOutcomeDraft] = []
+    func load() -> [MealOutcomeDraft] { drafts }
+    func save(_ drafts: [MealOutcomeDraft]) { self.drafts = drafts }
+    func delete() { drafts = [] }
 }
 
 private final class WeekScreenFakeSelectionStore: HouseholdSelectionPersisting {

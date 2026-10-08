@@ -10,6 +10,34 @@ struct RegenerateUndoContext: Identifiable {
     var id: String { weekStartDate }
 }
 
+/// Pairs a recipe with the day it belongs to, so RecipeDetailView can offer
+/// day-level actions (skip/plan) in context.
+struct SelectedDayRecipe: Identifiable {
+    let day: WeekDayRowViewModel
+    let recipe: WeekSummaryRecipe
+    var id: String { recipe.id + day.id }
+}
+
+/// Seeds a new prep batch from a day that's already planned — "we made
+/// extra of this, mark it as eaten again on other days" — without making
+/// the user re-pick the recipe or cook date in `PrepBatchFormSheet`.
+struct PrepBatchSeed: Identifiable {
+    let recipeID: String
+    let cookDate: String
+    let weekStartDate: String
+    var assignedDate: String? = nil
+    var id: String { recipeID + cookDate + weekStartDate + (assignedDate ?? "") }
+}
+
+/// The app-level deep-link slots the Week tab consumes, as closures so the
+/// model never depends on `AppModel` itself.
+struct WeekDeepLinkInbox {
+    var pendingWeekPlan: () -> Bool
+    var clearPendingWeekPlan: () -> Void
+    var pendingDeepLink: () -> AppDeepLink?
+    var clearPendingDeepLink: () -> Void
+}
+
 struct WeekBriefPresentation: Identifiable {
     let weekStartDate: String
     let regenerate: Bool
@@ -34,8 +62,19 @@ final class WeekScreenModel {
     private let prepBatchStore: PrepBatchStore
     private let recipeStore: RecipeStore
     private let authSessionStore: AuthSessionStore
+    private let mealOutcomeStore: MealOutcomeStore
+    private let retroClient: any RetroCardAPIClient
+    private let weekBriefClient: any WeekBriefAPIClient
+    private let usesSeededCoreReader: Bool
+    private let refreshCurrentWeek: (Household, AppRefreshCoordinator.Trigger) async -> Void
+    private let invalidateWeekFreshness: (_ householdID: String) -> Void
+    private let deepLinks: WeekDeepLinkInbox
+    private let defaults: UserDefaults
     private let recordEvent: (ProductEventName, String?, ProductEventProperties) -> Void
     private let onUnauthorized: () async -> Void
+
+    static let weekendNudgeDismissalKey = "veckly.week.weekendNudgeDismissedDate"
+    static let dismissedQualitySuggestionKeysKey = "dismissedWeekQualitySuggestionKeys"
 
     // MARK: Screen state
 
@@ -49,6 +88,15 @@ final class WeekScreenModel {
     private(set) var fillCompletionNotice: WeekFillCompletionNotice?
     private(set) var failedFillWeekStartDate: String?
     var weekBriefPresentation: WeekBriefPresentation?
+    /// nil until checked — see `refreshNextWeekEmptyState`.
+    private(set) var nextWeekIsEmpty: Bool?
+    private(set) var weekendNudgeDismissedToday = false
+    /// Mirrors the persisted `dismissedWeekQualitySuggestionKeys` value
+    /// (formerly the view's `@AppStorage`), kept here so the view re-renders
+    /// when a suggestion is dismissed.
+    private(set) var dismissedQualitySuggestionKeys: Set<String>
+    /// The Sunday retro on last week's dinners.
+    let retro = RetroCardViewModel()
     @ObservationIgnored private var regenerateUndoDismissTask: Task<Void, Never>?
     /// How long the undo banner stays up after a regenerate. Injectable so
     /// tests don't have to wait out the real 8 seconds.
@@ -66,6 +114,14 @@ final class WeekScreenModel {
         prepBatchStore: PrepBatchStore,
         recipeStore: RecipeStore,
         authSessionStore: AuthSessionStore,
+        mealOutcomeStore: MealOutcomeStore,
+        retroClient: any RetroCardAPIClient,
+        weekBriefClient: any WeekBriefAPIClient,
+        usesSeededCoreReader: Bool,
+        refreshCurrentWeek: @escaping (Household, AppRefreshCoordinator.Trigger) async -> Void,
+        invalidateWeekFreshness: @escaping (_ householdID: String) -> Void,
+        deepLinks: WeekDeepLinkInbox,
+        defaults: UserDefaults = .standard,
         recordEvent: @escaping (ProductEventName, String?, ProductEventProperties) -> Void,
         onUnauthorized: @escaping () async -> Void,
         regenerateUndoDuration: Duration = .seconds(8)
@@ -76,6 +132,19 @@ final class WeekScreenModel {
         self.prepBatchStore = prepBatchStore
         self.recipeStore = recipeStore
         self.authSessionStore = authSessionStore
+        self.mealOutcomeStore = mealOutcomeStore
+        self.retroClient = retroClient
+        self.weekBriefClient = weekBriefClient
+        self.usesSeededCoreReader = usesSeededCoreReader
+        self.refreshCurrentWeek = refreshCurrentWeek
+        self.invalidateWeekFreshness = invalidateWeekFreshness
+        self.deepLinks = deepLinks
+        self.defaults = defaults
+        self.dismissedQualitySuggestionKeys = Set(
+            (defaults.string(forKey: Self.dismissedQualitySuggestionKeysKey) ?? "")
+                .split(separator: "|")
+                .map(String.init)
+        )
         self.recordEvent = recordEvent
         self.onUnauthorized = onUnauthorized
         self.regenerateUndoDuration = regenerateUndoDuration
@@ -493,6 +562,260 @@ final class WeekScreenModel {
         weekStore.clearMutationError()
     }
 
+    // MARK: Loading
+
+    /// Default trigger (`.sceneActive`) is a "make sure it's fresh" request —
+    /// used when the tab reappears or the week picker re-selects the current
+    /// week, both of which happen far more often than the data actually
+    /// needs refetching. Explicit user actions (the toolbar refresh button,
+    /// an error retry) pass `.pullToRefresh` instead, which always forces a
+    /// real reload through `AppRefreshCoordinator`. Browsing to a different
+    /// week (Last/Next) isn't a coordinator-owned resource — `loadWeek`
+    /// still checks `usesSeededCoreReader` itself here, since nothing else
+    /// on that path does — but it writes into the same `WeekStore.dayRows`
+    /// slot `refreshWeek` tracks freshness for, so it must invalidate that
+    /// tracking on the way out. Without this, browsing to Last/Next week and
+    /// back to This week inside the coordinator's freshness window left the
+    /// view stuck showing the browsed week's rows: the coordinator saw a
+    /// recent "current week" fetch and no-op'd the `.sceneActive` return,
+    /// never noticing `loadWeek` had overwritten the slot in between.
+    func reloadViewedWeek(trigger: AppRefreshCoordinator.Trigger = .sceneActive) async {
+        guard let household = householdStore.activeHousehold else { return }
+        if isViewingCurrentWeek {
+            await refreshCurrentWeek(household, trigger)
+        } else {
+            guard !usesSeededCoreReader else { return }
+            await weekStore.loadWeek(household: household, weekStartDate: viewedWeekStartDate)
+            invalidateWeekFreshness(household.id)
+        }
+    }
+
+    /// Jumps to next week and loads it — the weekend nudge's CTA and the
+    /// hero's "Plan next week".
+    func planNextWeek() {
+        viewedWeekOffset = .next
+        lastTask = Task { await reloadViewedWeek() }
+    }
+
+    /// nil until checked. Populated by a lightweight prefetch only on
+    /// weekend days while viewing the current week — it's not needed
+    /// otherwise.
+    func refreshNextWeekEmptyState() async {
+        guard !usesSeededCoreReader else { return }
+        guard isViewingCurrentWeek else { return }
+        let weekday = Calendar.current.component(.weekday, from: Date())
+        guard weekday == 1 || weekday == 7 else { return }
+        guard let household = householdStore.activeHousehold else { return }
+        let nextWeekStart = ViewedWeekOffset.next.weekStartDate
+        let hasContent = await weekStore.peekHasContent(household: household, weekStartDate: nextWeekStart)
+        nextWeekIsEmpty = !hasContent
+    }
+
+    /// Week/prep/household-details are core-reader resources —
+    /// `RootView`'s `AppRefreshCoordinator.refreshCoreReader` (cold
+    /// launch) and `AppModel.loadActiveHouseholdReaderData`
+    /// (household switch/join/leave) already guarantee them fresh by
+    /// the time this fires. Re-fetching them here too was Fas 7's
+    /// core bug: a genuine second network call for the same data,
+    /// not just a redundant guard. Retro and the next-week-empty peek
+    /// aren't coordinator-owned resources (Retro is this screen's own
+    /// `RetroCardViewModel`, reading *last* week; the peek is a
+    /// cheap, weekend-only check — see `refreshNextWeekEmptyState`),
+    /// so they stay here.
+    ///
+    /// The view runs this from `.task(id: activeHousehold?.id)`, i.e.
+    /// whenever `activeHousehold?.id` actually changes (nil → set, or a
+    /// household switch). That is also what `onAppear`'s own calls to these
+    /// two can't reliably cover on cold launch: `onAppear` fires once, as
+    /// soon as the tab mounts, which on cold launch can be *before*
+    /// `householdStore.activeHousehold` is known — its own guards then
+    /// silently no-op, and nothing re-tries until the next unrelated
+    /// `scenePhase` change or tab reappearance. On a weekend day that left
+    /// the "Plan next week" CTA (see `shouldOfferPlanNextWeekFromWeekDone`)
+    /// waiting far longer than the actual network call took (2026-08-03 bug
+    /// report) — this reliably firing the moment the household *is* known
+    /// closes that gap.
+    func activeHouseholdDidChange() async {
+        guard !usesSeededCoreReader else { return }
+        guard let household = householdStore.activeHousehold else { return }
+        await refreshNextWeekEmptyState()
+        await retro.load(household: household, weekStore: weekStore, outcomeStore: mealOutcomeStore, apiClient: retroClient)
+    }
+
+    func sceneDidBecomeActive() {
+        // Handles the app being backgrounded over a week/day boundary
+        // without needing a live timer.
+        refreshWeekendNudgeDismissalState()
+        // Week/shopping/prep/etc. are refreshed centrally by
+        // `RootView`'s own scene-active handler through
+        // `AppRefreshCoordinator` — this only covers what the
+        // coordinator doesn't own: the weekend next-week peek and the
+        // Sunday retro (see `activeHouseholdDidChange`).
+        guard !usesSeededCoreReader, isViewingCurrentWeek,
+              let household = householdStore.activeHousehold else { return }
+        lastTask = Task {
+            await refreshNextWeekEmptyState()
+            await retro.load(household: household, weekStore: weekStore, outcomeStore: mealOutcomeStore, apiClient: retroClient)
+        }
+    }
+
+    func retroResolved() {
+        recordEvent(.retroCompleted, WeekCalendar.addWeeks(to: WeekCalendar.currentWeekStartDate(), offset: -1), [:])
+        retro.clear()
+    }
+
+    func makeWeekBriefStore() -> WeekBriefStore {
+        WeekBriefStore(apiClient: weekBriefClient)
+    }
+
+    // MARK: Deep links
+
+    /// One-shot consumption of the "plan next week" deep link set by
+    /// `AppNotificationDelegate` when the user tapped the Sunday planning
+    /// reminder. Returns whether it actually fired, so callers can decide
+    /// whether to fall back to their own default week selection.
+    @discardableResult
+    func consumePendingWeekPlanDeepLink() -> Bool {
+        guard deepLinks.pendingWeekPlan() else { return false }
+        deepLinks.clearPendingWeekPlan()
+        viewedWeekOffset = .next
+        return true
+    }
+
+    /// Consumes a pending widget/notification meal link: switches to its
+    /// week, loads it, and returns the day + recipe to open — or nil when
+    /// the link doesn't (or no longer) match a planned dinner. Either way
+    /// the link is cleared, so it's acted on exactly once.
+    func consumePendingMealDeepLink() async -> SelectedDayRecipe? {
+        guard case let .meal(date, recipeID) = deepLinks.pendingDeepLink() else { return nil }
+        guard let targetDate = WeekCalendar.date(from: date) else {
+            deepLinks.clearPendingDeepLink()
+            return nil
+        }
+        let currentStart = WeekCalendar.date(from: WeekCalendar.currentWeekStartDate()) ?? targetDate
+        let targetStartString = WeekCalendar.currentWeekStartDate(now: targetDate)
+        let targetStart = WeekCalendar.date(from: targetStartString) ?? targetDate
+        let days = WeekCalendar.calendar.dateComponents([.day], from: currentStart, to: targetStart).day ?? 0
+        let weeks = days / 7
+        guard let offset = ViewedWeekOffset(rawValue: weeks) else {
+            deepLinks.clearPendingDeepLink()
+            return nil
+        }
+        viewedWeekOffset = offset
+        await reloadViewedWeek()
+        guard let row = weekStore.dayRows.first(where: { $0.date == date }),
+              let recipe = row.recipe,
+              recipeID == nil || recipe.id == recipeID else {
+            deepLinks.clearPendingDeepLink()
+            return nil
+        }
+        deepLinks.clearPendingDeepLink()
+        return SelectedDayRecipe(day: row, recipe: recipe)
+    }
+
+    // MARK: Weekend nudge
+
+    var shouldShowWeekendNudge: Bool {
+        guard isViewingCurrentWeek, !weekendNudgeDismissedToday, nextWeekIsEmpty == true else { return false }
+        let weekday = Calendar.current.component(.weekday, from: Date())
+        let isWeekend = weekday == 1 || weekday == 7 // Sunday = 1, Saturday = 7
+        return isWeekend
+    }
+
+    /// Gate for the "Plan next week" CTA inside the hero's `.weekDone`
+    /// state: only worth surfacing once the household is actually near the
+    /// week boundary (Sat/Sun) or already knows next week is unplanned —
+    /// not on an ordinary Tuesday when "the week is done" just means
+    /// today's the last relevant planning day for a household that doesn't
+    /// cook every night. Unlike the weekend nudge, this isn't
+    /// per-day-dismissible: it's the one durable exit from an otherwise
+    /// dead-end completion state (see the 2026-08-02 TestFlight bug report
+    /// — a household landed here from the Sunday reminder notification
+    /// with no visible way to start planning next week).
+    var shouldOfferPlanNextWeekFromWeekDone: Bool {
+        guard isViewingCurrentWeek, heroMode == .weekDone else { return false }
+        let weekday = Calendar.current.component(.weekday, from: Date())
+        let isLateInWeek = weekday == 1 || weekday == 7 // Sunday = 1, Saturday = 7
+        return isLateInWeek || nextWeekIsEmpty == true
+    }
+
+    func refreshWeekendNudgeDismissalState() {
+        guard let dismissedDate = defaults.object(forKey: Self.weekendNudgeDismissalKey) as? Date else {
+            weekendNudgeDismissedToday = false
+            return
+        }
+        weekendNudgeDismissedToday = Calendar.current.isDateInToday(dismissedDate)
+    }
+
+    func dismissWeekendNudgeForToday() {
+        defaults.set(Date(), forKey: Self.weekendNudgeDismissalKey)
+        weekendNudgeDismissedToday = true
+    }
+
+    // MARK: Quality suggestion
+
+    var qualitySuggestion: WeekQualitySuggestion? {
+        WeekQualitySuggestion.make(
+            days: weekPlanningScope.relevantDays(in: weekStore.dayRows),
+            recipes: recipeStore.recipes,
+            prepCoveredDates: prepCoveredDates
+        )
+    }
+
+    var visibleQualitySuggestion: WeekQualitySuggestion? {
+        guard let suggestion = qualitySuggestion else { return nil }
+        return dismissedQualitySuggestionKeys.contains(qualitySuggestionWeekKey) ? nil : suggestion
+    }
+
+    private var qualitySuggestionWeekKey: String {
+        let householdID = householdStore.activeHousehold?.id ?? ""
+        return "\(householdID):\(viewedWeekStartDate)"
+    }
+
+    func dismissQualitySuggestionsForViewedWeek() {
+        var keys = dismissedQualitySuggestionKeys
+        keys.insert(qualitySuggestionWeekKey)
+        defaults.set(keys.sorted().joined(separator: "|"), forKey: Self.dismissedQualitySuggestionKeysKey)
+        dismissedQualitySuggestionKeys = keys
+    }
+
+    /// A leftovers suggestion is reviewed in the prep-batch sheet, so it
+    /// returns the seed for the caller to present; a replacement suggestion
+    /// is applied right away (and only dismissed once the write succeeded).
+    func applyQualitySuggestion(_ suggestion: WeekQualitySuggestion) -> PrepBatchSeed? {
+        guard canMutateDay(suggestion.day) else { return nil }
+        if suggestion.kind == .useLeftovers,
+           let source = suggestion.sourceDay,
+           let recipe = source.recipe {
+            dismissQualitySuggestionsForViewedWeek()
+            return PrepBatchSeed(
+                recipeID: recipe.id,
+                cookDate: source.date,
+                weekStartDate: viewedWeekStartDate,
+                assignedDate: suggestion.day.date
+            )
+        }
+
+        guard let recipe = suggestion.replacement else { return nil }
+        guard let (household, userID) = session() else { return nil }
+        let wasEmptyBefore = hasOpenRelevantDays
+        lastTask = Task {
+            shoppingListStore.invalidateCache()
+            await weekStore.assignMeal(
+                day: suggestion.day,
+                recipe: WeekSummaryRecipe(fullRecipe: recipe),
+                household: household,
+                userID: userID,
+                viewedWeekStartDate: viewedWeekStartDate
+            )
+            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+            guard weekStore.mutationError == nil else { return }
+            dismissQualitySuggestionsForViewedWeek()
+            checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
+        }
+        return nil
+    }
+
     // MARK: Planning session end
 
     /// Fires the "Veckan är klar" beat the instant the last *relevant* open
@@ -530,6 +853,22 @@ extension WeekScreenModel {
             prepBatchStore: app.prepBatchStore,
             recipeStore: app.recipeStore,
             authSessionStore: app.authSessionStore,
+            mealOutcomeStore: app.mealOutcomeStore,
+            retroClient: app.apiClient,
+            weekBriefClient: app.apiClient,
+            usesSeededCoreReader: app.usesSeededCoreReader,
+            refreshCurrentWeek: { household, trigger in
+                await app.refreshCoordinator.refreshWeek(household: household, trigger: trigger)
+            },
+            invalidateWeekFreshness: { householdID in
+                app.refreshCoordinator.invalidateWeek(householdID: householdID)
+            },
+            deepLinks: WeekDeepLinkInbox(
+                pendingWeekPlan: { app.pendingWeekPlanDeepLink },
+                clearPendingWeekPlan: { app.pendingWeekPlanDeepLink = false },
+                pendingDeepLink: { app.pendingDeepLink },
+                clearPendingDeepLink: { app.pendingDeepLink = nil }
+            ),
             recordEvent: { eventName, weekStartDate, properties in
                 app.recordProductEvent(eventName, weekStartDate: weekStartDate, properties: properties)
             },
