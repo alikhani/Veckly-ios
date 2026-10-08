@@ -80,6 +80,7 @@ struct WeekTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var model: WeekScreenModel
     var onGoToShoppingTab: (() -> Void)? = nil
     var onGoToHouseholdTab: (() -> Void)? = nil
     @State private var selectedDayRecipe: SelectedDayRecipe?
@@ -89,7 +90,6 @@ struct WeekTabView: View {
     @State private var selectedDayForDetail: WeekDayRowViewModel?
     @State private var prepBatchSeed: PrepBatchSeed?
     @State private var leftoversWithoutRecipeSeed: LeftoversWithoutRecipeSeed?
-    @State private var viewedWeekOffset: ViewedWeekOffset = .current
     @State private var isWeekPickerPresented = false
     @State private var weekendNudgeDismissedToday = false
     @State private var nextWeekIsEmpty: Bool?
@@ -99,7 +99,6 @@ struct WeekTabView: View {
     @State private var regenerateUndoContext: RegenerateUndoContext?
     @State private var regenerateUndoDismissTask: Task<Void, Never>?
     @State private var retroViewModel = RetroCardViewModel()
-    @State private var showSessionEndBeat = false
     @State private var isWeekendExpanded = false
     @State private var failedFillWeekStartDate: String?
     @State private var fillCompletionNotice: WeekFillCompletionNotice?
@@ -107,12 +106,23 @@ struct WeekTabView: View {
     @State private var showQualitySuggestionConfirmation = false
     @AppStorage("dismissedWeekQualitySuggestionKeys") private var dismissedWeekQualitySuggestionKeys = ""
 
-    private var viewedWeekStartDate: String {
-        viewedWeekOffset.weekStartDate
+    /// `model` is only read on first creation (`State(initialValue:)`), so
+    /// a parent re-evaluating its body never replaces the live model.
+    init(
+        model: WeekScreenModel,
+        onGoToShoppingTab: (() -> Void)? = nil,
+        onGoToHouseholdTab: (() -> Void)? = nil
+    ) {
+        _model = State(initialValue: model)
+        self.onGoToShoppingTab = onGoToShoppingTab
+        self.onGoToHouseholdTab = onGoToHouseholdTab
     }
 
-    private var isViewingCurrentWeek: Bool { viewedWeekOffset == .current }
-    private var isViewingLastWeek: Bool { viewedWeekOffset == .last }
+    private var viewedWeekOffset: ViewedWeekOffset { model.viewedWeekOffset }
+    private var viewedWeekStartDate: String { model.viewedWeekStartDate }
+    private var isViewingCurrentWeek: Bool { model.isViewingCurrentWeek }
+    private var isViewingLastWeek: Bool { model.isViewingLastWeek }
+    private var showSessionEndBeat: Bool { model.showSessionEndBeat }
     private var weekPendingSyncMessage: String { L10n.string("week.sync.pending") }
 
     var body: some View {
@@ -172,7 +182,7 @@ struct WeekTabView: View {
 
                 WeekHeaderView(
                     householdName: appModel.householdStore.activeHousehold?.name ?? L10n.string("week.yourHousehold"),
-                    viewedWeekOffset: $viewedWeekOffset,
+                    viewedWeekOffset: $model.viewedWeekOffset,
                     isWeekPickerPresented: $isWeekPickerPresented,
                     onSelectWeek: { _ in Task { await reloadViewedWeek() } }
                 )
@@ -295,12 +305,8 @@ struct WeekTabView: View {
                     isSkipped: allowsDayMutation ? pair.day.isSkipped : nil,
                     onSkip: allowsDayMutation ? {
                         guard canEditDay(pair.day) else { return }
-                        guard let household = appModel.householdStore.activeHousehold else { return }
-                        if let userID = appModel.authSessionStore.userID {
+                        if model.toggleSkip(pair.day) {
                             selectedDayRecipe = nil
-                            Task { await appModel.weekStore.toggleSkip(day: pair.day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
-                        } else {
-                            Task { await appModel.handleUnauthorized() }
                         }
                     } : nil,
                     isReadOnly: !allowsDayMutation
@@ -316,45 +322,17 @@ struct WeekTabView: View {
                 weekStartDate: viewedWeekStartDate,
                 onSelect: { recipe in
                     guard canMutateDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    if let userID = appModel.authSessionStore.userID {
-                        let wasEmptyBefore = hasOpenRelevantDays
-                        Task {
-                            appModel.shoppingListStore.invalidateCache()
-                            await appModel.weekStore.assignMeal(day: day, recipe: WeekSummaryRecipe(fullRecipe: recipe), household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
-                            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
-                            checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
-                        }
-                    } else {
-                        Task { await appModel.handleUnauthorized() }
-                    }
+                    model.assignMeal(day, recipe: WeekSummaryRecipe(fullRecipe: recipe))
                 },
                 onClear: {
                     guard canMutateDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    if let userID = appModel.authSessionStore.userID {
+                    if model.unassignMeal(day) {
                         mealPickerDay = nil
-                        Task {
-                            appModel.shoppingListStore.invalidateCache()
-                            await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
-                            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
-                        }
-                    } else {
-                        Task { await appModel.handleUnauthorized() }
                     }
                 },
                 onSkip: {
                     guard canMutateDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    if let userID = appModel.authSessionStore.userID {
-                        let wasEmptyBefore = hasOpenRelevantDays
-                        Task {
-                            await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
-                            checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
-                        }
-                    } else {
-                        Task { await appModel.handleUnauthorized() }
-                    }
+                    model.toggleSkip(day, checksSessionEnd: true)
                 },
                 onMarkAsLeftover: { recipeID in
                     guard canMutateDay(day) else { return }
@@ -381,17 +359,9 @@ struct WeekTabView: View {
                 },
                 onRemoveCoverage: {
                     guard canMutateDay(day) else { return }
-                    guard let hid = appModel.householdStore.activeHousehold?.id,
-                          let dayCoverage = coverage(for: day) else { return }
+                    guard let dayCoverage = coverage(for: day),
+                          model.removeCoverage(day, coverage: dayCoverage) else { return }
                     mealPickerDay = nil
-                    Task {
-                        try? await appModel.prepBatchStore.removeAssignment(
-                            householdID: hid,
-                            batchID: dayCoverage.batchID,
-                            date: day.date,
-                            mealType: dayCoverage.mealType
-                        )
-                    }
                 },
                 onDismiss: { mealPickerDay = nil }
             )
@@ -404,8 +374,7 @@ struct WeekTabView: View {
                     weekStartDate: viewedWeekStartDate,
                     expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
                     onApplied: {
-                        appModel.shoppingListStore.invalidateCache()
-                        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+                        await model.weekPlanChangedElsewhere(household: household)
                     }
                 )
             }
@@ -417,8 +386,7 @@ struct WeekTabView: View {
                     weekStartDate: viewedWeekStartDate,
                     expectedUpdatedAt: appModel.weekStore.summary?.updatedAt,
                     onApplied: {
-                        appModel.shoppingListStore.invalidateCache()
-                        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
+                        await model.weekPlanChangedElsewhere(household: household)
                     },
                     onSwap: { date in
                         presentAfterDismiss {
@@ -447,25 +415,12 @@ struct WeekTabView: View {
                 },
                 onSkip: {
                     guard canEditDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    if let userID = appModel.authSessionStore.userID {
-                        Task { await appModel.weekStore.toggleSkip(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate) }
-                    } else {
-                        Task { await appModel.handleUnauthorized() }
-                    }
+                    model.toggleSkip(day)
                 },
                 onClear: {
                     guard canEditDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    if let userID = appModel.authSessionStore.userID {
+                    if model.unassignMeal(day) {
                         selectedDayForDetail = nil
-                        Task {
-                            appModel.shoppingListStore.invalidateCache()
-                            await appModel.weekStore.unassignMeal(day: day, household: household, userID: userID, viewedWeekStartDate: viewedWeekStartDate)
-                            await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
-                        }
-                    } else {
-                        Task { await appModel.handleUnauthorized() }
                     }
                 },
                 onMarkAsLeftover: {
@@ -484,53 +439,19 @@ struct WeekTabView: View {
                 isLocked: day.isLocked,
                 onToggleLock: {
                     guard canEditDay(day) else { return }
-                    guard let household = appModel.householdStore.activeHousehold else { return }
-                    guard let userID = appModel.authSessionStore.userID else {
-                        Task { await appModel.handleUnauthorized() }
-                        return
-                    }
-                    appModel.weekStore.clearMutationError()
+                    guard model.toggleLock(day) else { return }
                     if !hasSeenLockExplanation {
                         showLockExplanation = true
                     }
-                    Task { await appModel.weekStore.toggleLock(day: day, household: household, userID: userID) }
                 },
                 onApplyPortionSuggestion: { servings in
-                    guard let household = appModel.householdStore.activeHousehold,
-                          let userID = appModel.authSessionStore.userID else { return false }
-                    do {
-                        try await appModel.weekStore.changeServings(
-                            day: day,
-                            servings: servings,
-                            household: household,
-                            userID: userID,
-                            viewedWeekStartDate: viewedWeekStartDate,
-                            consumesPortionSuggestion: true
-                        )
-                        appModel.shoppingListStore.invalidateCache()
-                        await refreshShoppingListAfterWeekMutation(household: household, weekStartDate: viewedWeekStartDate)
-                        return true
-                    } catch {
-                        return false
-                    }
+                    await model.applyPortionSuggestion(day, servings: servings)
                 },
                 onIgnorePortionSuggestion: {
-                    guard let household = appModel.householdStore.activeHousehold,
-                          let recipeID = day.recipe?.id else { return false }
-                    return await appModel.weekStore.ignorePortionSuggestion(
-                        recipeID: recipeID,
-                        household: household,
-                        weekStartDate: viewedWeekStartDate
-                    )
+                    await model.ignorePortionSuggestion(day)
                 },
                 onResetPortionMemory: {
-                    guard let household = appModel.householdStore.activeHousehold,
-                          let recipeID = day.recipe?.id else { return false }
-                    return await appModel.weekStore.resetPortionMemory(
-                        recipeID: recipeID,
-                        household: household,
-                        weekStartDate: viewedWeekStartDate
-                    )
+                    await model.resetPortionMemory(day)
                 },
                 onDismiss: { selectedDayForDetail = nil }
             )
@@ -610,7 +531,7 @@ struct WeekTabView: View {
             // just-tapped "plan next week" notification (see
             // `AppNotificationDelegate`) asked for next week specifically.
             if !consumePendingWeekPlanDeepLink() {
-                viewedWeekOffset = .current
+                model.viewedWeekOffset = .current
             }
             isWeekendExpanded = false
             refreshWeekendNudgeDismissalState()
@@ -631,7 +552,7 @@ struct WeekTabView: View {
             guard isPending, consumePendingWeekPlanDeepLink() else { return }
             Task { await reloadViewedWeek() }
         }
-        .onChange(of: viewedWeekOffset) { _, _ in
+        .onChange(of: model.viewedWeekOffset) { _, _ in
             // The undo banner replays writes against `context.weekStartDate`
             // by matching rows on weekday only, with no check that the
             // currently-loaded `dayRows` still belong to that week — so if
@@ -823,25 +744,8 @@ struct WeekTabView: View {
         )
     }
 
-    /// Fires the "Veckan är klar" beat the instant the last *relevant* open
-    /// day gets filled or skipped by a real user action — never on merely
-    /// browsing to an already-full week (only mutators that can close the
-    /// last gap call this, each with `hasOpenRelevantDays` captured just
-    /// before they ran).
     private func checkForSessionEnd(wasEmptyBefore: Bool) {
-        guard isViewingCurrentWeek else { return }
-        let summary = weekSessionSummary
-        guard SessionEndTrigger.shouldShow(
-            wasEmptyBeforeMutation: wasEmptyBefore,
-            isCompleteNow: !hasOpenRelevantDays,
-            plannedDinnerCount: summary.plannedDinnerCount
-        ) else { return }
-        showSessionEndBeat = true
-        appModel.recordProductEvent(.weekCompleted, weekStartDate: viewedWeekStartDate, properties: [
-            "plannedDinners": .int(summary.plannedDinnerCount),
-            "quickDinners": .int(summary.quickDinnerCount),
-            "prepFriendlyDinners": .int(summary.prepFriendlyDinnerCount)
-        ])
+        model.checkForSessionEnd(wasEmptyBefore: wasEmptyBefore)
     }
 
     private func presentRegenerateUndo(rows: [WeekDayRowViewModel], weekStartDate: String) {
@@ -878,9 +782,7 @@ struct WeekTabView: View {
     }
 
     private func refreshShoppingListAfterWeekMutation(household: Household, weekStartDate: String) async {
-        guard appModel.weekStore.mutationError == nil else { return }
-        appModel.shoppingListStore.invalidateCache()
-        await appModel.shoppingListStore.loadCurrentWeek(household: household, weekStartDate: weekStartDate)
+        await model.refreshShoppingListAfterWeekMutation(household: household, weekStartDate: weekStartDate)
     }
 
     private func regenerateUndoBanner(_ context: RegenerateUndoContext) -> some View {
@@ -983,7 +885,7 @@ struct WeekTabView: View {
                     .foregroundStyle(VecklyDesign.Colors.inkDeep)
                 Spacer()
                 Button("week.weekendNudge.cta") {
-                    viewedWeekOffset = .next
+                    model.viewedWeekOffset = .next
                     Task { await reloadViewedWeek() }
                 }
                 .font(.subheadline.weight(.semibold))
@@ -1013,7 +915,7 @@ struct WeekTabView: View {
     private func consumePendingWeekPlanDeepLink() -> Bool {
         guard appModel.pendingWeekPlanDeepLink else { return false }
         appModel.pendingWeekPlanDeepLink = false
-        viewedWeekOffset = .next
+        model.viewedWeekOffset = .next
         return true
     }
 
@@ -1032,7 +934,7 @@ struct WeekTabView: View {
             appModel.pendingDeepLink = nil
             return
         }
-        viewedWeekOffset = offset
+        model.viewedWeekOffset = offset
         await reloadViewedWeek()
         guard let row = appModel.weekStore.dayRows.first(where: { $0.date == date }),
               let recipe = row.recipe,
@@ -1073,7 +975,7 @@ struct WeekTabView: View {
                             .foregroundStyle(VecklyDesign.Colors.inkDeep)
                         Spacer()
                         Button {
-                            showSessionEndBeat = false
+                            model.dismissSessionEndBeat()
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.caption.weight(.semibold))
@@ -1104,7 +1006,7 @@ struct WeekTabView: View {
                     .padding(.top, 2)
 
                     Button("week.sessionEnd.cta") {
-                        showSessionEndBeat = false
+                        model.dismissSessionEndBeat()
                         appModel.recordProductEvent(.shoppingOpenedAfterWeekCompleted, weekStartDate: viewedWeekStartDate)
                         onGoToShoppingTab?()
                     }
@@ -1117,7 +1019,7 @@ struct WeekTabView: View {
                                 .font(.footnote)
                                 .foregroundStyle(VecklyDesign.Colors.inkMid)
                             Button("week.sessionEnd.inviteCta") {
-                                showSessionEndBeat = false
+                                model.dismissSessionEndBeat()
                                 appModel.recordProductEvent(.partnerInviteClicked, weekStartDate: viewedWeekStartDate)
                                 onGoToHouseholdTab?()
                             }
@@ -1180,53 +1082,11 @@ struct WeekTabView: View {
         }
     }
 
-    /// Whether leftovers from a prep batch cover this day's dinner — checked
-    /// in the view layer so `WeekStore`/`PrepBatchStore` stay decoupled. The
-    /// week view is dinner-only today (one meal slot per day), so `.dinner`
-    /// is the correct meal type explicitly, not just a date-based guess.
-    private func coverage(for day: WeekDayRowViewModel) -> PrepBatchCoverage? {
-        prepBatchCoverage(for: day.date, mealType: .dinner, batches: appModel.prepBatchStore.batches, recipes: appModel.recipeStore.recipes)
-    }
-
-    /// Planning-days-are-the-truth (beslut 1): built from the household's
-    /// profile so open-day counts, the quality card, session-end, and the
-    /// generate/regenerate CTA all agree on which days actually count.
-    private var weekPlanningScope: WeekPlanningScope {
-        WeekPlanningScope(profile: appModel.householdStore.cachedProfile(
-            for: appModel.householdStore.activeHousehold?.id ?? ""
-        ))
-    }
-
-    /// Dates covered by a prep/leftovers batch but with no recipe of their
-    /// own — same rule `weekQualityCard` already used, now shared with the
-    /// scope so a prep-covered day counts as "done" everywhere.
-    private var prepCoveredDates: Set<String> {
-        Set(appModel.weekStore.dayRows.compactMap { day in
-            coverage(for: day) == nil ? nil : day.date
-        })
-    }
-
-    /// Scope-aware replacement for `WeekStore.hasEmptyDays`: true only when a
-    /// *relevant* planning day is still open. Days outside the household's
-    /// selected planning days never make this true.
-    private var hasOpenRelevantDays: Bool {
-        !weekPlanningScope.isComplete(days: appModel.weekStore.dayRows, coveredDates: prepCoveredDates)
-    }
-
-    private var fillAction: WeekFillAction {
-        WeekFillAction(plannedDinnerCount: plannedDinnerCount, openDayCount: openDayCount)
-    }
-
-    private var firstOpenPlanningDay: WeekDayRowViewModel? {
-        weekPlanningScope.openDays(
-            in: appModel.weekStore.dayRows,
-            coveredDates: prepCoveredDates
-        ).first
-    }
-
-    private var isFillingViewedWeek: Bool {
-        appModel.weekStore.generatingWeekStartDate == viewedWeekStartDate
-    }
+    private func coverage(for day: WeekDayRowViewModel) -> PrepBatchCoverage? { model.coverage(for: day) }
+    private var hasOpenRelevantDays: Bool { model.hasOpenRelevantDays }
+    private var fillAction: WeekFillAction { model.fillAction }
+    private var firstOpenPlanningDay: WeekDayRowViewModel? { model.firstOpenPlanningDay }
+    private var isFillingViewedWeek: Bool { model.isFillingViewedWeek }
 
     /// Sheets in SwiftUI can't be swapped directly — presenting a new one
     /// while another is still dismissing is silently dropped. A short delay
@@ -1239,41 +1099,12 @@ struct WeekTabView: View {
         }
     }
 
-    /// The four hero states (beslut 16) — only meaningful for the current
-    /// week (Last/Next week have zero `isToday` rows by definition, and are
-    /// rendered by `nextWeekHeroCard`/`nextWeekSummaryCard`/`lastWeekSummaryCard`
-    /// instead, which predate this phase and aren't "today"-framed).
-    private var heroMode: TonightMealCardMode {
-        TonightMealCardMode.compute(
-            dayRows: appModel.weekStore.dayRows,
-            scope: weekPlanningScope,
-            hasCoverage: { coverage(for: $0) != nil }
-        )
-    }
-
-    /// True when the hero card is already showing *today's* row — in that
-    /// case the matching row in the week list below must not duplicate the
-    /// hero's actions (beslut 3). In the other two modes (`.upcomingMeal`,
-    /// `.weekDone`) the hero isn't representing today, so today's row (if
-    /// shown at all) behaves like any other row.
-    private var todayRowIsHeroOwned: Bool {
-        switch heroMode {
-        case .tonightMeal, .openTonight: true
-        case .upcomingMeal, .weekDone: false
-        }
-    }
-
-    /// Single source for the "veckan är klar" counts — shared with
-    /// `WeekQualitySummary` via `RecipeTimingSignals` so "quick" and
-    /// "prep-friendly" mean the same thing on both surfaces.
-    private var weekSessionSummary: WeekSessionSummary {
-        WeekSessionSummary.make(
-            relevantDays: weekPlanningScope.relevantDays(in: appModel.weekStore.dayRows),
-            prepCoveredDates: prepCoveredDates
-        )
-    }
-
-    private var plannedDinnerCount: Int { weekSessionSummary.plannedDinnerCount }
+    private var heroMode: TonightMealCardMode { model.heroMode }
+    private var todayRowIsHeroOwned: Bool { model.todayRowIsHeroOwned }
+    private var weekSessionSummary: WeekSessionSummary { model.weekSessionSummary }
+    private var weekPlanningScope: WeekPlanningScope { model.weekPlanningScope }
+    private var prepCoveredDates: Set<String> { model.prepCoveredDates }
+    private var plannedDinnerCount: Int { model.plannedDinnerCount }
 
     private var sessionEndSummaryRows: [(icon: String, text: String)] {
         let summary = weekSessionSummary
@@ -1302,9 +1133,7 @@ struct WeekTabView: View {
         )
     }
 
-    private var openDayCount: Int {
-        weekPlanningScope.openDays(in: appModel.weekStore.dayRows, coveredDates: prepCoveredDates).count
-    }
+    private var openDayCount: Int { model.openDayCount }
 
     private var weekSummaryLine: String {
         let dinnerCount = plannedDinnerCount
@@ -1595,18 +1424,10 @@ struct WeekTabView: View {
             },
             onRemoveCoverage: { day, dayCoverage in
                 guard canMutateDay(day) else { return }
-                guard let household = appModel.householdStore.activeHousehold else { return }
-                Task {
-                    try? await appModel.prepBatchStore.removeAssignment(
-                        householdID: household.id,
-                        batchID: dayCoverage.batchID,
-                        date: day.date,
-                        mealType: dayCoverage.mealType
-                    )
-                }
+                model.removeCoverage(day, coverage: dayCoverage)
             },
             onPlanNextWeek: shouldOfferPlanNextWeekFromWeekDone ? {
-                viewedWeekOffset = .next
+                model.viewedWeekOffset = .next
                 Task { await reloadViewedWeek() }
             } : nil
         )
@@ -1738,26 +1559,9 @@ struct WeekTabView: View {
         weekListPresentation.mainDays
     }
 
-    private var weekListPresentation: WeekListPresentation {
-        WeekListPresentation(
-            days: appModel.weekStore.dayRows,
-            viewedWeekOffset: viewedWeekOffset,
-            includesWeekend: weekPlanningScope.includesWeekend
-        )
-    }
-
-    private func canEditDay(_ day: WeekDayRowViewModel) -> Bool {
-        weekListPresentation.interaction(for: day) == .editDay
-    }
-
-    private func canMutateDay(_ day: WeekDayRowViewModel) -> Bool {
-        switch weekListPresentation.interaction(for: day) {
-        case .editDay, .planDay:
-            true
-        case .none, .viewRecipe:
-            false
-        }
-    }
+    private var weekListPresentation: WeekListPresentation { model.weekListPresentation }
+    private func canEditDay(_ day: WeekDayRowViewModel) -> Bool { model.canEditDay(day) }
+    private func canMutateDay(_ day: WeekDayRowViewModel) -> Bool { model.canMutateDay(day) }
 
     /// Shared tap handling for both the main list and the collapsed weekend
     /// section — a day already owned by the hero (today, when the hero is

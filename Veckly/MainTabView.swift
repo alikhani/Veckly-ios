@@ -8,6 +8,7 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             NavigationStack {
                 WeekTabView(
+                    model: WeekScreenModel.live(appModel),
                     onGoToShoppingTab: { selectedTab = 1 },
                     onGoToHouseholdTab: { selectedTab = 2 }
                 )
