@@ -95,12 +95,17 @@ final class ShoppingScreenModel {
             hasActiveHousehold: householdStore.activeHousehold != nil,
             householdErrorMessage: householdStore.errorMessage,
             hasLoadedContentOnce: shoppingListStore.hasLoadedOnce,
-            contentErrorMessage: shoppingListStore.errorMessage
+            contentErrorMessage: shoppingListStore.errorMessage,
+            hasRestoredContent: shoppingListStore.isShowingRestoredList
         )
     }
 
     var loadErrorMessage: String? {
-        shoppingListStore.errorMessage ?? householdStore.errorMessage
+        CoreLoadingGate.blockingErrorMessage(
+            contentError: shoppingListStore.errorMessage,
+            householdError: householdStore.errorMessage,
+            hasRestoredContent: shoppingListStore.isShowingRestoredList
+        )
     }
 
     var isListEmpty: Bool {

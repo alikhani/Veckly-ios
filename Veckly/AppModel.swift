@@ -44,7 +44,8 @@ final class AppModel {
         environment: AppEnvironment,
         authSessionStore injectedAuthSessionStore: AuthSessionStore? = nil,
         weekCache: any WeekStoreCachePersisting = WeekStoreDiskCache(),
-        shoppingCache: any ShoppingListStoreCachePersisting = ShoppingListStoreDiskCache()
+        shoppingCache: any ShoppingListStoreCachePersisting = ShoppingListStoreDiskCache(),
+        householdSnapshotStore: any HouseholdSnapshotPersisting = HouseholdSnapshotDiskStore()
     ) {
         self.environment = environment
         self.usesSeededCoreReader = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "core-reader"
@@ -54,7 +55,11 @@ final class AppModel {
             accessToken: { await authSessionStore.currentValidToken() },
             refreshToken: { await authSessionStore.refreshSession() }
         )
-        let householdStore = HouseholdStore(apiClient: apiClient)
+        let householdStore = HouseholdStore(
+            apiClient: apiClient,
+            snapshotStore: householdSnapshotStore,
+            currentUserID: { authSessionStore.userID }
+        )
         let familyCookbookStore = FamilyCookbookStore(apiClient: apiClient)
         let recipeRecommendationStore = RecipeRecommendationStore(apiClient: apiClient)
 
@@ -119,11 +124,30 @@ final class AppModel {
         UNUserNotificationCenter.current().delegate = notificationDelegate
     }
 
+    /// Cold launch. Nothing before `loadCoreReader()` waits for the network:
+    /// the saved session is adopted as it is, and the household, week and
+    /// shopping list the user last saw are put on screen from disk. The
+    /// session is then confirmed (a refresh, if its token had expired) and the
+    /// real data loads behind the cached content. A session that turns out to
+    /// be rejected signs out and clears the caches, as before.
     func restoreSession() async {
-        await authSessionStore.restoreSession()
+        let needsConfirmation = authSessionStore.restoreSessionWithoutWaiting()
         if usesSeededCoreReader { return }
         guard authSessionStore.isSignedIn else { return }
+        restoreCachedCoreReader()
+        if needsConfirmation, !(await authSessionStore.confirmRestoredSession()) {
+            signOut()
+            return
+        }
         await loadCoreReader()
+    }
+
+    /// Synchronous and network-free: the remembered household and its cached
+    /// current week and shopping list. A miss at any step shows nothing.
+    func restoreCachedCoreReader() {
+        guard let household = householdStore.restoreFromSnapshot() else { return }
+        weekStore.restoreCurrentWeekFromCache(household: household)
+        shoppingListStore.restoreCurrentWeekFromCache(household: household, weekStartDate: weekStore.weekStartDate)
     }
 
     /// App-wide (not tied to the Week tab being visible) so the reminder can

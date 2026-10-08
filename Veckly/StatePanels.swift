@@ -66,12 +66,29 @@ enum CoreLoadingGate {
         hasActiveHousehold: Bool,
         householdErrorMessage: String?,
         hasLoadedContentOnce: Bool,
-        contentErrorMessage: String?
+        contentErrorMessage: String?,
+        hasRestoredContent: Bool = false
     ) -> Bool {
+        // Content restored from the disk cache is real content: it stays on
+        // screen while the household list (re)loads behind it.
+        if hasRestoredContent { return false }
         if isLoadingHouseholds || isLoadingContent { return true }
         guard hasActiveHousehold else { return householdErrorMessage == nil }
         guard householdErrorMessage == nil else { return false }
         return !hasLoadedContentOnce && contentErrorMessage == nil
+    }
+}
+
+extension CoreLoadingGate {
+    /// The error that should replace the screen's content, if any. A failure
+    /// to load the household list is not one while restored content is
+    /// showing: the cached content stays and the next foreground retries.
+    static func blockingErrorMessage(
+        contentError: String?,
+        householdError: String?,
+        hasRestoredContent: Bool
+    ) -> String? {
+        contentError ?? (hasRestoredContent ? nil : householdError)
     }
 }
 

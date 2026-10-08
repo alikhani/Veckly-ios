@@ -60,12 +60,17 @@ struct WeekTabView: View {
                     hasActiveHousehold: appModel.householdStore.activeHousehold != nil,
                     householdErrorMessage: appModel.householdStore.errorMessage,
                     hasLoadedContentOnce: appModel.weekStore.hasLoadedOnce,
-                    contentErrorMessage: appModel.weekStore.errorMessage
+                    contentErrorMessage: appModel.weekStore.errorMessage,
+                    hasRestoredContent: showsRestoredWeek
                 ) {
                     LoadingPanel(title: L10n.string("week.loading"))
                 } else if model.isFillingViewedWeek, !appModel.weekStore.hasWeekContent {
                     LoadingPanel(title: L10n.string("week.generating"))
-                } else if let errorMessage = appModel.weekStore.errorMessage ?? appModel.householdStore.errorMessage {
+                } else if let errorMessage = CoreLoadingGate.blockingErrorMessage(
+                    contentError: appModel.weekStore.errorMessage,
+                    householdError: appModel.householdStore.errorMessage,
+                    hasRestoredContent: showsRestoredWeek
+                ) {
                     ErrorPanel(message: errorMessage) {
                         Task { await model.reloadViewedWeek(trigger: .pullToRefresh) }
                     }
@@ -191,6 +196,12 @@ struct WeekTabView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: model.regenerateUndo?.id)
+    }
+
+    /// The viewed week is on screen from the disk cache and the network hasn't
+    /// answered for it yet.
+    private var showsRestoredWeek: Bool {
+        appModel.weekStore.isShowingRestoredWeek(model.viewedWeekStartDate)
     }
 
     private var toolbarMode: WeekToolbar.Mode {
