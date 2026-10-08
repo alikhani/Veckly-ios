@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  openapi-client:
+    name: Generated client matches the committed spec
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/codegen-build
+          key: codegen-${{ hashFiles('OpenAPI/Codegen/Package.resolved') }}
+      - name: Regenerate and compare
+        run: |
+          mkdir -p /tmp/out
+          swift run --package-path OpenAPI/Codegen --scratch-path /tmp/codegen-build \
+            swift-openapi-generator generate OpenAPI/veckly-openapi.json \
+            --config OpenAPI/openapi-generator-config.yaml --output-directory /tmp/out
+          for f in Client.swift Types.swift; do
+            cmp -s /tmp/out/$f Veckly/Generated/OpenAPI/$f || {
+              echo "::error file=Veckly/Generated/OpenAPI/$f::Out of date with OpenAPI/veckly-openapi.json. Run scripts/generate-openapi-client.sh and commit."
+              exit 1
+            }
+          done
+
+  prod-contract:
+    name: Committed spec vs production backend (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare with veckly-backend.vercel.app/openapi.json
+        run: |
+          curl -fsS https://veckly-backend.vercel.app/openapi.json -o /tmp/prod.json
+          python3 -c "import json,sys; sys.exit(0 if json.load(open('/tmp/prod.json')) == json.load(open('OpenAPI/veckly-openapi.json')) else 1)" || {
+            echo "::warning::OpenAPI/veckly-openapi.json differs from production. TestFlight and the simulator talk to production: deploy the backend (and its migrations) before shipping a build that depends on the new contract."
+            exit 1
+          }
+
+  unit-tests:
+    name: VecklyTests
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 27
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then
+            echo "::error::Xcode 27 is not installed on this runner image. Available:"; ls -d /Applications/Xcode*.app
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+      - name: Debug test account placeholder
+        run: cp Veckly/DebugTestAccount.Local.swift.example Veckly/DebugTestAccount.Local.swift
+      - name: Test
+        run: |
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -E "^\s+iPhone" | grep -oE "[0-9A-F-]{36}")
+          echo "Simulator: $DEVICE"
+          set -o pipefail
+          xcodebuild test -scheme Veckly -destination "id=$DEVICE" -only-testing:VecklyTests \
+            -collect-test-diagnostics never CODE_SIGNING_ALLOWED=NO | tail -200
