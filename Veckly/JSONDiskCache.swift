@@ -36,4 +36,23 @@ struct JSONDiskCache<Value: Codable> {
     func delete() {
         try? fileManager.removeItem(at: fileURL)
     }
+
+    /// Removes a whole sub-folder of cache files (those created with a
+    /// `fileName` of `"<folder>/<name>.json"`) — for caches that hold one file
+    /// per household and must be cleared together, e.g. on sign-out.
+    static func deleteFolder(
+        _ folder: String,
+        fileManager: FileManager = .default,
+        baseDirectory: URL? = nil
+    ) {
+        guard !folder.isEmpty, !folder.contains("/") else { return }
+        let cacheDirectory = baseDirectory
+            ?? fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        try? fileManager.removeItem(
+            at: cacheDirectory
+                .appendingPathComponent("Veckly", isDirectory: true)
+                .appendingPathComponent(folder, isDirectory: true)
+        )
+    }
 }
