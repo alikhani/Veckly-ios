@@ -40,10 +40,15 @@ final class AppModel {
     let usesSeededCoreReader: Bool
     let refreshCoordinator: AppRefreshCoordinator
 
-    init(environment: AppEnvironment) {
+    init(
+        environment: AppEnvironment,
+        authSessionStore injectedAuthSessionStore: AuthSessionStore? = nil,
+        weekCache: any WeekStoreCachePersisting = WeekStoreDiskCache(),
+        shoppingCache: any ShoppingListStoreCachePersisting = ShoppingListStoreDiskCache()
+    ) {
         self.environment = environment
         self.usesSeededCoreReader = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "core-reader"
-        let authSessionStore = AuthSessionStore(environment: environment)
+        let authSessionStore = injectedAuthSessionStore ?? AuthSessionStore(environment: environment)
         let apiClient = VecklyAPIClient(
             baseURL: environment.apiBaseURL,
             accessToken: { await authSessionStore.currentValidToken() },
@@ -56,8 +61,8 @@ final class AppModel {
         self.authSessionStore = authSessionStore
         self.apiClient = apiClient
         self.householdStore = householdStore
-        self.weekStore = WeekStore(apiClient: apiClient)
-        self.shoppingListStore = ShoppingListStore(apiClient: apiClient)
+        self.weekStore = WeekStore(apiClient: apiClient, cacheStore: weekCache, currentUserID: { authSessionStore.userID })
+        self.shoppingListStore = ShoppingListStore(apiClient: apiClient, cacheStore: shoppingCache, currentUserID: { authSessionStore.userID })
         self.recipeStore = RecipeStore(apiClient: apiClient)
         self.prepBatchStore = PrepBatchStore(apiClient: apiClient)
         self.feedbackStore = FeedbackStore(
@@ -275,6 +280,9 @@ final class AppModel {
         householdStore.reset()
         weekStore.reset()
         shoppingListStore.reset(discardPendingMutations: true)
+        // The disk caches hold household data: they go with the session.
+        weekStore.clearPersistedCache()
+        shoppingListStore.clearPersistedCache()
         recipeStore.reset()
         prepBatchStore.reset()
         feedbackStore.reset()
