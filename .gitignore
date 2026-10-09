@@ -3,3 +3,4 @@ OpenAPI/Codegen/.build/
 build/
 *.xcuserstate
 Veckly/DebugTestAccount.Local.swift
+xcuserdata/
