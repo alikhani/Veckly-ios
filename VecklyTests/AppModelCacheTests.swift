@@ -72,6 +72,54 @@ struct AppModelCacheTests {
         #expect(shoppingCache.loadList(scope: Self.scope(), weekStartDate: week) == nil)
     }
 
+    /// Cache files the stores write per household and week (recipes, prep batches)
+    /// cannot be listed by their stores. Signing out or deleting the account must
+    /// remove all of them, for every household the user was ever in.
+    private func seedUnlistableCaches(in directory: URL) -> [JSONDiskCache<[String]>] {
+        ["recipes-hA.json", "recipes-hB.json", "prep-batches-hA-2026-10-05.json", "prep-batches-hB-2026-09-28.json"]
+            .map { JSONDiskCache<[String]>(fileName: $0, baseDirectory: directory) }
+    }
+
+    @Test func signingOutDeletesEveryDiskCacheFileForEveryHousehold() {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("SignOutWipe-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let caches = seedUnlistableCaches(in: directory)
+        for cache in caches { cache.save(["household data"]) }
+        let model = AppModel(
+            environment: Self.unreachable,
+            authSessionStore: AuthSessionStore(authClient: StubAuthService(), sessionStorage: InMemoryAuthSessionStorage()),
+            weekCache: WeekStoreDiskCache(baseDirectory: directory),
+            shoppingCache: ShoppingListStoreDiskCache(baseDirectory: directory),
+            householdSnapshotStore: HouseholdSnapshotDiskStore(baseDirectory: directory),
+            diskCacheDirectory: directory
+        )
+
+        model.signOut()
+
+        for cache in caches { #expect(cache.load() == nil) }
+    }
+
+    @Test func deletingTheAccountDeletesEveryDiskCacheFile() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("DeleteAccountWipe-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let caches = seedUnlistableCaches(in: directory)
+        for cache in caches { cache.save(["household data"]) }
+        let storage = InMemoryAuthSessionStorage(session: validSession())
+        let model = AppModel(
+            environment: Self.unreachable,
+            authSessionStore: AuthSessionStore(authClient: StubAuthService(), sessionStorage: storage),
+            weekCache: WeekStoreDiskCache(baseDirectory: directory),
+            shoppingCache: ShoppingListStoreDiskCache(baseDirectory: directory),
+            householdSnapshotStore: HouseholdSnapshotDiskStore(baseDirectory: directory),
+            diskCacheDirectory: directory
+        )
+        model.authSessionStore.restoreSessionWithoutWaiting()
+
+        try await model.deleteAccount()
+
+        for cache in caches { #expect(cache.load() == nil) }
+    }
+
     // MARK: Cold start from disk
 
     private struct ColdStart {

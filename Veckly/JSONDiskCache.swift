@@ -13,12 +13,16 @@ struct JSONDiskCache<Value: Codable> {
     ) {
         self.fileManager = fileManager
 
+        self.fileURL = Self.rootDirectory(fileManager: fileManager, baseDirectory: baseDirectory)
+            .appendingPathComponent(fileName)
+    }
+
+    /// `<Caches>/Veckly` — the one folder every cache file lives under.
+    private static func rootDirectory(fileManager: FileManager, baseDirectory: URL?) -> URL {
         let cacheDirectory = baseDirectory
             ?? fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
-        self.fileURL = cacheDirectory
-            .appendingPathComponent("Veckly", isDirectory: true)
-            .appendingPathComponent(fileName)
+        return cacheDirectory.appendingPathComponent("Veckly", isDirectory: true)
     }
 
     func load() -> Value? {
@@ -46,13 +50,18 @@ struct JSONDiskCache<Value: Codable> {
         baseDirectory: URL? = nil
     ) {
         guard !folder.isEmpty, !folder.contains("/") else { return }
-        let cacheDirectory = baseDirectory
-            ?? fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
-            ?? fileManager.temporaryDirectory
         try? fileManager.removeItem(
-            at: cacheDirectory
-                .appendingPathComponent("Veckly", isDirectory: true)
+            at: rootDirectory(fileManager: fileManager, baseDirectory: baseDirectory)
                 .appendingPathComponent(folder, isDirectory: true)
         )
+    }
+
+    /// Removes every cache file the app has written, for every household and
+    /// week. Callers can't list them (prep batches are cached per household and
+    /// week), so sign-out and account deletion wipe the whole folder instead of
+    /// asking each store to delete what it remembers. Anything stored outside
+    /// `<Caches>/Veckly` is untouched.
+    static func deleteAll(fileManager: FileManager = .default, baseDirectory: URL? = nil) {
+        try? fileManager.removeItem(at: rootDirectory(fileManager: fileManager, baseDirectory: baseDirectory))
     }
 }

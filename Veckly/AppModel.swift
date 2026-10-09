@@ -39,14 +39,18 @@ final class AppModel {
     /// same flag once at construction time as its single source of truth.
     let usesSeededCoreReader: Bool
     let refreshCoordinator: AppRefreshCoordinator
+    /// Where the JSON disk caches live (`nil` = the app's Caches directory). Injected by tests.
+    private let diskCacheDirectory: URL?
 
     init(
         environment: AppEnvironment,
         authSessionStore injectedAuthSessionStore: AuthSessionStore? = nil,
         weekCache: any WeekStoreCachePersisting = WeekStoreDiskCache(),
         shoppingCache: any ShoppingListStoreCachePersisting = ShoppingListStoreDiskCache(),
-        householdSnapshotStore: any HouseholdSnapshotPersisting = HouseholdSnapshotDiskStore()
+        householdSnapshotStore: any HouseholdSnapshotPersisting = HouseholdSnapshotDiskStore(),
+        diskCacheDirectory: URL? = nil
     ) {
+        self.diskCacheDirectory = diskCacheDirectory
         self.environment = environment
         self.usesSeededCoreReader = ProcessInfo.processInfo.environment["VECKLY_UI_TEST_MODE"] == "core-reader"
         let authSessionStore = injectedAuthSessionStore ?? AuthSessionStore(environment: environment)
@@ -320,6 +324,10 @@ final class AppModel {
         familyCookbookStore.reset()
         householdSavedRecipesStore.reset()
         userProfileStore.reset()
+        // Last, and for every cache file at once: the per-store calls above only
+        // know their own household, but recipes and prep batches are cached per
+        // household (and week), so files of other households would stay behind.
+        JSONDiskCache<String>.deleteAll(baseDirectory: diskCacheDirectory)
     }
 
     /// Loads recipes for the household then seeds FeedbackStore from the
